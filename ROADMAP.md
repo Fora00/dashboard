@@ -84,12 +84,16 @@ GitHub Pages itself is public but holds no data; auth protects the synced data.
   - [x] `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` in `.env.local` and repo Actions secrets
   - [x] Client: `src/lib/sync.ts` (client + OTP auth), `src/lib/useAuth.ts`,
         `src/components/SyncCard.tsx` (sign-in card on shop-list; local mode always works)
-  - [ ] Apply backend to hosted project (needs owner login):
-        `npx supabase login` → `npx supabase link --project-ref undeyznqkmnhgdetpbdk`
-        → `npx supabase db push` → `npx supabase config push`
-        (config push sets site_url + the OTP email template with `{{ .Token }}`).
-        **Don't push to `main` before `db push` succeeds** — the deployed app
-        would allow non-whitelisted sign-ups until the trigger exists.
+  - [x] Backend applied to hosted project (2026-07-04): migration + config
+        pushed, whitelist trigger verified live via the auth API.
+        To re-apply after changes: `npx supabase db push` (migrations) and
+        `SMTP_PASS=<gmail app password> npx supabase config push` (config).
+  - [x] Sign-in emails via **Gmail SMTP** (franzmito@gmail.com, app password —
+        revocable at myaccount.google.com/apppasswords). Needed because the
+        free tier can't customize email templates with the default mailer, and
+        the OTP-code flow needs `{{ .Token }}` in the template
+        (`supabase/templates/magic_link.html`). Free-tier gotcha: keep
+        `[storage.vector] enabled = false` in config.toml or `config push` 402s.
 
 ## Ideas / later
 
