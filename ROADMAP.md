@@ -65,8 +65,8 @@ GitHub Pages itself is public but holds no data; auth protects the synced data.
 
 - [x] GitHub Actions workflow to deploy `dist/` to GitHub Pages on push to `main`
 - [x] Local git repository with initial commit
-- [ ] Create GitHub repo named `dashboard` and push (needs owner: `gh` CLI not installed)
-- [ ] Enable Pages (Settings → Pages → Source: GitHub Actions)
+- [x] GitHub repo: https://github.com/Fora00/dashboard (public — free plan doesn't allow Pages on private repos; owner approved)
+- [x] Pages enabled, live at https://fora00.github.io/dashboard/
 - [ ] **Supabase project** (owner must create it, free tier):
   - [ ] Auth: magic-link login; `allowed_emails` whitelist table + RLS
   - [ ] `project_members(project_id, email)` for per-project guest access
