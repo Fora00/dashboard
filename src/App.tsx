@@ -1,0 +1,21 @@
+import { HashRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { Layout } from './components/Layout'
+import { Home } from './projects/home/Home'
+import { LocalTransfer } from './projects/local-transfer/LocalTransfer'
+import { ShopList } from './projects/shop-list/ShopList'
+
+// Hash-based routing so deep links work on GitHub Pages without a server.
+export default function App() {
+  return (
+    <HashRouter>
+      <Routes>
+        <Route element={<Layout />}>
+          <Route index element={<Home />} />
+          <Route path="/local-transfer" element={<LocalTransfer />} />
+          <Route path="/shop-list" element={<ShopList />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Route>
+      </Routes>
+    </HashRouter>
+  )
+}
