@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { HashRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { Layout } from './components/Layout'
 import { startShopSync } from './lib/shopSync'
+import { startTransferSync } from './lib/transferSync'
 import { useAuth } from './lib/useAuth'
 import { Home } from './projects/home/Home'
 import { LocalTransfer } from './projects/local-transfer/LocalTransfer'
@@ -15,7 +16,13 @@ export default function App() {
 
   // Run cloud sync app-wide whenever someone is signed in.
   useEffect(() => {
-    if (session) return startShopSync()
+    if (!session) return
+    const stopShop = startShopSync()
+    const stopTransfer = startTransferSync()
+    return () => {
+      stopShop()
+      stopTransfer()
+    }
   }, [session])
 
   return (
