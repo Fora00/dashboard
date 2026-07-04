@@ -1,9 +1,11 @@
 import { useState, type FormEvent } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, type Todo as TodoItem } from '../../lib/db'
+import { addTodo as createTodo, clearDoneTodos, deleteTodo, toggleTodo } from '../../lib/todoSync'
 import { Button } from '../../components/Button'
 import { PageHeader } from '../../components/PageHeader'
 import { EmptyState } from '../../components/EmptyState'
+import { SyncCard } from '../../components/SyncCard'
 
 export function Todo() {
   const [text, setText] = useState('')
@@ -16,25 +18,20 @@ export function Todo() {
     e.preventDefault()
     const trimmed = text.trim()
     if (!trimmed) return
-    await db.todos.add({
-      id: crypto.randomUUID(),
-      text: trimmed,
-      done: 0,
-      createdAt: Date.now(),
-    })
+    await createTodo(trimmed)
     setText('')
   }
 
   async function toggle(t: TodoItem) {
-    await db.todos.update(t.id, { done: t.done === 0 ? 1 : 0 })
+    await toggleTodo(t)
   }
 
   async function remove(t: TodoItem) {
-    await db.todos.delete(t.id)
+    await deleteTodo(t.id)
   }
 
   async function clearDone() {
-    await db.todos.where('done').equals(1).delete()
+    await clearDoneTodos()
   }
 
   const renderTodo = (t: TodoItem) => (
@@ -75,6 +72,8 @@ export function Todo() {
         title="Todo"
         subtitle="A simple list — tap to mark done. Saved on this device."
       />
+
+      <SyncCard />
 
       <form onSubmit={addTodo} className="mb-6 flex gap-2">
         <input

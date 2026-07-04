@@ -3,7 +3,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db, type Climb, type ClimbSession } from '../../lib/db'
 import { Button } from '../../components/Button'
 import { Card } from '../../components/Card'
-import { addClimb, deleteClimb, deleteSession, toggleClimbSent } from './data'
+import { addClimb, deleteClimb, deleteSession, toggleClimbSent } from '../../lib/climbSync'
 import { DISCIPLINE_LABEL, GRADES } from './grades'
 
 const inputClass =

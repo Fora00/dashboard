@@ -1,7 +1,10 @@
 import { useEffect } from 'react'
 import { HashRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { Layout } from './components/Layout'
+import { startClimbSync } from './lib/climbSync'
+import { startHabitSync } from './lib/habitSync'
 import { startShopSync } from './lib/shopSync'
+import { startTodoSync } from './lib/todoSync'
 import { startTransferSync } from './lib/transferSync'
 import { useAuth } from './lib/useAuth'
 import { Climbing } from './projects/climbing/Climbing'
@@ -17,17 +20,24 @@ import { ShopList } from './projects/shop-list/ShopList'
 // Hash-based routing so deep links work on GitHub Pages without a server.
 export default function App() {
   const session = useAuth()
+  // Key on the user id, not the session object: token refreshes swap the
+  // session identity and would otherwise re-subscribe + full-pull every time.
+  const userId = session?.user?.id
 
   // Run cloud sync app-wide whenever someone is signed in.
   useEffect(() => {
-    if (!session) return
-    const stopShop = startShopSync()
-    const stopTransfer = startTransferSync()
+    if (!userId) return
+    const stops = [
+      startShopSync(),
+      startTodoSync(),
+      startClimbSync(),
+      startHabitSync(),
+      startTransferSync(),
+    ]
     return () => {
-      stopShop()
-      stopTransfer()
+      for (const stop of stops) stop()
     }
-  }, [session])
+  }, [userId])
 
   return (
     <HashRouter>

@@ -4,7 +4,9 @@ import { db, type Habit } from '../../lib/db'
 import { Button } from '../../components/Button'
 import { PageHeader } from '../../components/PageHeader'
 import { EmptyState } from '../../components/EmptyState'
-import { addHabit, dayKey, deleteHabit, lastDays, setArchived, streak, toggleCheck } from './habitStore'
+import { SyncCard } from '../../components/SyncCard'
+import { addHabit, deleteHabit, setArchived, toggleCheck } from '../../lib/habitSync'
+import { dayKey, lastDays, streak } from './habitStore'
 
 const DOT_DAYS = 14
 
@@ -113,6 +115,8 @@ export function Habits() {
         title="Habits"
         subtitle="Tap a habit to check it off for today. Saved on this device."
       />
+
+      <SyncCard />
 
       <form onSubmit={createHabit} className="mb-6 flex gap-2">
         <input

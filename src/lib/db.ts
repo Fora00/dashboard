@@ -81,23 +81,54 @@ export interface HabitCheck {
   createdAt: number
 }
 
-// A generic todo. Local-only for now — no cloud sync.
+// A generic todo. Cloud-syncable via the generic engine (src/lib/cloudSync.ts).
 export interface Todo {
   id: string
   text: string
   done: 0 | 1
   createdAt: number
+  // Last local mutation time — the engine uses it for last-writer-wins on
+  // realtime/pull. Backfilled from createdAt for pre-v5 rows.
+  updatedAt: number
 }
 
+// Remote table names that the generic sync engine can push to. Each is also
+// the discriminator on an outbox entry. Mirrors the Supabase tables.
+export type OutboxTable =
+  | 'shop_items'
+  | 'shop_areas'
+  | 'todos'
+  | 'climb_sessions'
+  | 'climbs'
+  | 'habits'
+  | 'habit_checks'
+
+// Local rows that may travel through the outbox (any synced project's shape).
+export type OutboxPayload =
+  | ShopItem
+  | ShopArea
+  | Todo
+  | ClimbSession
+  | Climb
+  | Habit
+  | HabitCheck
+
 // Queue of local mutations not yet pushed to the cloud. Written alongside
-// every local write so changes made offline sync on reconnect (see shopSync.ts).
+// every local write so changes made offline sync on reconnect (see cloudSync.ts).
 export interface OutboxEntry {
   seq?: number
-  table: 'shop_items' | 'shop_areas'
+  table: OutboxTable
   op: 'upsert' | 'delete'
   rowId: string
-  payload?: ShopItem | ShopArea
+  payload?: OutboxPayload
   ts: number
+  // Number of push attempts so far — used to dead-letter a stuck entry.
+  tries?: number
+  // 1 once the entry is a permanent dead-letter (RLS/constraint denial or
+  // retry cap hit). Dead entries are NEVER re-pushed and NEVER deleted: they
+  // stay as a tombstone so pull() keeps shielding the local row from deletion.
+  // This is what prevents a guest sign-in from wiping local-only data.
+  dead?: 0 | 1
 }
 
 export const db = new Dexie('dashboard') as Dexie & {
@@ -150,6 +181,31 @@ db.version(4).stores({
   habitChecks: 'id, habitId, day, [habitId+day]',
   todos: 'id, done, createdAt',
 })
+
+// v5: todos gain an `updatedAt` for the generic sync engine's last-writer-wins.
+// Indexes are unchanged (updatedAt isn't indexed); the upgrade only backfills
+// existing rows so every todo has a valid updatedAt before it can be pushed.
+// This upgrade never deletes data.
+db.version(5)
+  .stores({
+    files: 'id, name, createdAt, synced',
+    shopItems: 'id, done, createdAt, areaId',
+    shopAreas: 'id, createdAt',
+    outbox: '++seq, rowId',
+    climbSessions: 'id, date',
+    climbs: 'id, sessionId, date',
+    habits: 'id, createdAt',
+    habitChecks: 'id, habitId, day, [habitId+day]',
+    todos: 'id, done, createdAt',
+  })
+  .upgrade(async (tx) => {
+    await tx
+      .table('todos')
+      .toCollection()
+      .modify((t: Todo) => {
+        if (t.updatedAt === undefined) t.updatedAt = t.createdAt ?? Date.now()
+      })
+  })
 
 // Ask the browser not to evict our data under storage pressure (important on iOS).
 export async function requestPersistentStorage(): Promise<boolean> {

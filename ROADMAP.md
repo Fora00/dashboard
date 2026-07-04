@@ -16,6 +16,25 @@ Owner: franzmito@gmail.com. Access model: **email whitelist** — the owner plus
 guest emails invitable per project (e.g. share shop-list with one guest).
 GitHub Pages itself is public but holds no data; auth protects the synced data.
 
+## Workflow — model delegation
+
+Full playbook (briefs, parallelism rules, human guidelines): **`WORKFLOW.md`**.
+Agent-facing hard rules: **`CLAUDE.md`**. Short version — work is orchestrated
+by a top-tier model that reads this roadmap, thinks, and delegates
+implementation to cheaper workers defined in `.claude/agents/`:
+
+- **`opus-builder`** takes tasks tagged **[opus]**: sync logic, Supabase
+  migrations/RLS, auth, cross-project refactors, anything with tricky state.
+- **`sonnet-builder`** takes tasks tagged **[sonnet]**: well-specified work
+  with an existing pattern to copy (new CRUD page, replicating a sync
+  integration, UI, docs). Its brief must name the reference implementation.
+
+Rules for writing tasks here: every unchecked task carries a model tag; a task
+must be self-contained (goal, files to touch, pattern to copy, acceptance
+criteria live in or next to the checkbox). The orchestrator reviews worker
+output, runs `npm run build`, and owns commits and anything touching the hosted
+Supabase project (`db push` / `config push` are never done by workers).
+
 ## Conventions (do not break)
 
 - **Stack:** Vite + React + TypeScript, Tailwind v4 (via `@tailwindcss/vite`),
@@ -31,6 +50,94 @@ GitHub Pages itself is public but holds no data; auth protects the synced data.
   ~40px; respects safe-area insets (see `index.css`).
 - `base: '/dashboard/'` in `vite.config.ts` must match the GitHub repo name.
 - Verify with `npm run build` before committing.
+
+## Urgent bugs (audit 2026-07-04, ranked)
+
+Full failure scenarios in the audit; fix top-down. Blockers for extending sync:
+
+- [x] **CRITICAL — guest sign-in wipes local shop list** — fixed 2026-07-04
+      in `src/lib/cloudSync.ts`: permanently rejected outbox entries are
+      dead-lettered (`dead: 1`) and kept as tombstones that shield local rows
+      from pull-deletion and realtime clobber. Offline data survives sign-in;
+      it just stays local-only.
+- [x] **HIGH — `isPermanent()` drops transient errors** — fixed: explicit
+      `classify()` (network/PGRST301 → retry; 42501/23xxx → dead-letter;
+      otherwise retry up to 8 tries), transient failure stops the flush to
+      preserve per-row ordering.
+- [x] **HIGH — guest removal doesn't revoke access** — fixed 2026-07-04
+      (`20260704170000_sharing_hardening.sql`): `revoke_area_guest` RPC
+      removes membership + rotates `share_token` (old links die); manual
+      "♻️ Reset link" in AreaManager. *Backend pending `db push`.*
+- [x] **MED-HIGH — `redeem_invite` whitelists arbitrary emails forever** —
+      fixed: email normalized/validated, auto-created whitelist rows are
+      flagged `auto_whitelisted` and cleaned up on revoke when the guest has
+      no memberships left. *Backend pending `db push`.*
+- [x] **MED — transfer bucket free-for-all** — fixed: uploads go to
+      `<uid>/…`, write/delete policies scoped to own folder (owner keeps
+      full control incl. legacy flat paths); guests can no longer touch
+      others' files. *Backend pending `db push`.*
+- [x] **MED — realtime handler ignores `updatedAt` + pending outbox** —
+      fixed in the engine: events for rows with outbox entries are skipped,
+      LWW by `updatedAt` where configured; `shop_areas` added to the
+      realtime publication (sync_parity migration).
+- [x] **MED — `pull()`/`syncNow()` unguarded reentrancy** — fixed: `running`
+      guard around the whole flush+pull cycle; pull aborts entirely on any
+      failed select (never partial-deletes).
+- [x] **LOW — sync effect keys on session object identity** — fixed in
+      `App.tsx`: keyed on `session?.user?.id`.
+- [x] **LOW — `shop_areas` UPDATE policy missing `WITH CHECK`** — fixed in
+      the hardening migration. *Backend pending `db push`.*
+- [x] **HIGH (user-reported 2026-07-04) — invited guest can't complete/add
+      shop items** — root cause: the two sharing systems were disjoint
+      (/sharing wrote only `project_members`; `shop_items` RLS checks
+      `shop_area_members`). Fixed in `Sharing.tsx` (client-only, no SQL):
+      invite has a 🛒 Shop List toggle that grants the default Groceries
+      area; per-area toggles per guest; disabling shop access or removing
+      the guest deletes their `shop_area_members` rows; an amber hint
+      self-heals guests with shop access but zero areas; all mutations
+      surface errors loudly. Existing broken guests: open /sharing and tap
+      an area for them (or just re-toggle Shop List).
+
+## Sync parity — every project cloud-syncable
+
+Goal: todo, climbing and habits get the same optional cloud sync as shop-list,
+via ONE generic outbox engine instead of three copies of `shopSync.ts`.
+
+- [x] Generic sync engine `src/lib/cloudSync.ts` — done 2026-07-04:
+      `createCloudSync({ projectId, tables })`, per-table config (Dexie
+      table, remote name, mappers, explicit columns — never `select('*')`,
+      optional realtime/updatedAt), dead-letter outbox, guarded cycle, LWW.
+      `shopSync.ts` ported onto it (same nine exports, UI unchanged).
+- [x] Supabase migration `20260704160000_sync_parity.sql`: `todos`,
+      `climb_sessions`, `climbs`, `habits`, `habit_checks`, RLS by
+      `is_member()`, realtime incl. `shop_areas`. *Pending `db push`.*
+- [x] Wire todo page to the engine (`src/lib/todoSync.ts` — THE reference
+      integration; Dexie v5 adds `todos.updatedAt`, backfill-only upgrade)
+- [x] Wire climbing to the engine (`src/lib/climbSync.ts`; `data.ts`
+      superseded; session delete = one tombstone + local cascade)
+- [x] Wire habits to the engine (`src/lib/habitSync.ts`; `habitStore.ts`
+      keeps only pure date helpers)
+- [ ] Owner applies backend: `npx supabase db push` (orchestrator/owner only)
+
+## DX — new project in minutes (goal: add a project without doing a lot)
+
+Target: creating a new subproject (with optional cloud sync) takes ONE small
+config + one page component, no bespoke sync code. Concretely:
+
+- [ ] **Project scaffold recipe** [opus, after cloudSync lands]: distill the
+      todo reference integration into a repeatable kit — a new project =
+      (1) entry in `src/lib/projects.ts`, (2) route in `App.tsx`,
+      (3) Dexie table in `db.ts`, (4) one `cloudSync` table-config object,
+      (5) one SQL snippet template for the table + `is_member()` RLS +
+      realtime. Anything more than that is engine debt — fix the engine,
+      not the project.
+- [ ] **`docs/NEW_PROJECT.md` checklist** [sonnet]: step-by-step copy-paste
+      guide (with the SQL template) so any model — or Francesco — can stamp
+      out a synced project in minutes. Link it from CLAUDE.md/WORKFLOW.md.
+- [ ] **SyncCard/empty-state as drop-ins** [sonnet]: shared components a new
+      project mounts as-is, so sync UI is free.
+- [ ] Stretch: `npm run new-project <id>` generator script that stamps the
+      files from templates [sonnet].
 
 ## Project 1 — Dashboard shell (entry point)
 
@@ -108,21 +215,79 @@ GitHub Pages itself is public but holds no data; auth protects the synced data.
 ## Project 4 — todo (generic list)
 
 - [x] Local-first generic todo list (`/todo`, `db.todos`): add, toggle, delete, clear done
-- [ ] Cloud sync (reuse the shop-list outbox pattern) if ever needed
+- [x] Cloud sync via `src/lib/todoSync.ts` on the generic engine (2026-07-04)
 
 ## Project 5 — climbing (progress tracker)
 
 - [x] Sessions (date, location, boulder/lead, notes) + climbs with French/Font grades, sent/attempted (`db.climbSessions`, `db.climbs`)
 - [x] Progress: hardest send per month as grade-scaled bars, session/send totals
-- [ ] Cloud sync if ever needed
+- [x] Cloud sync via `src/lib/climbSync.ts` on the generic engine (2026-07-04)
 
 ## Project 6 — habits (daily tracker)
 
 - [x] Habits with emoji, daily check-off, streak + 14-day dot row, archive/restore/delete (`db.habits`, `db.habitChecks`)
-- [ ] Cloud sync if ever needed
+- [x] Cloud sync via `src/lib/habitSync.ts` on the generic engine (2026-07-04)
+
+## UI & UX improvements
+
+- [ ] **Visible sync state** [sonnet, after cloudSync lands]: pending-changes
+      badge (outbox count), "last synced" time, and a visible error toast
+      when a push is rejected — no more silent failures (the user-reported
+      guest bug went unnoticed because rejects are invisible).
+- [ ] **Guest-aware empty states** [sonnet]: a signed-in guest with access to
+      nothing should see "Ask the owner for an invite", not an empty list.
+- [ ] **Undo snackbar** for destructive actions (delete area, clear bought,
+      delete file, wipe data) instead of irreversible instant deletes [sonnet]
+- [ ] **Swipe-to-delete / swipe-to-complete** on list rows (shop, todo) with
+      the buttons kept as fallback [sonnet]
+- [ ] **OTP sign-in polish** [sonnet]: `inputmode="numeric"`, autofocus,
+      one-time-code autocomplete so iOS offers the code from Mail, paste
+      support.
+- [ ] **SW update toast** [sonnet]: with `autoUpdate` a reload can swap code
+      mid-use; show a small "app updated" notice instead of surprising users.
+- [ ] **Home grid live badges** [sonnet]: unchecked-items count on Shop List,
+      due habits today on Habits, open todos on Todo.
+- [ ] **iOS install hint** [sonnet]: one-time dismissible "Add to Home
+      Screen" tip in Safari (the PWA is the intended experience).
+- [ ] **Dark mode** [sonnet]: respect `prefers-color-scheme` via Tailwind
+      dark variants across all pages.
+- [ ] **Skeleton loading + consistent offline banner** across projects
+      [sonnet]
 
 ## Ideas / later
 
-- [ ] More projects (add to `src/lib/projects.ts`)
-- [ ] Export/import all local data as a backup file
-- [ ] E2E encryption for synced files
+Candidate new subprojects (brainstormed 2026-07-04, not committed to):
+
+- [ ] **💰 Expenses / shared budget** [opus] — couple-shared ledger with
+      who-paid and running balance (mini Splitwise). Reuses the shop-list
+      area-sharing + outbox pattern almost exactly. Effort L. *Top pick.*
+- [ ] **🍲 Meal planner + recipe box** [sonnet CRUD, opus for shop-list
+      integration] — plan the week, "add ingredients to shop list" button
+      writing into `db.shopItems`. Effort M–L. *Top pick.*
+- [ ] **📚 Reading / watch list** [sonnet] — `todos`-shaped table with a
+      status field + "pick something random" button; couple-shareable.
+      Effort S. *Top pick, best value/effort.*
+- [ ] **📔 Daily journal** [sonnet] — mood + free text per day; pairs with
+      habits. Local-only (private). Effort S.
+- [ ] **⚖️ Weight / body metrics** [sonnet] — daily weight log + line chart;
+      synergy with climbing. Effort S.
+- [ ] **🔁 Subscriptions tracker** [sonnet] — recurring bills with next-due
+      and monthly-total rollup. Effort S.
+- [ ] **🎒 Gear tracker** [sonnet] — climbing gear wear/retire dates,
+      cross-referencing `climbSessions` counts. Effort M.
+- [ ] **🎯 Climbing wishlist** [sonnet] — "want to climb" list that links to a
+      `climbs` entry when sent. Effort S–M.
+- [ ] **📈 Habit insights** [sonnet] — read-only cross-project charts
+      (habits × climbing × metrics); no new tables. Effort M.
+- [ ] **🧳 Packing list templates** [sonnet] — reusable trip checklists,
+      shareable. Effort S–M.
+- [ ] **🔐 Info vault** [opus if encrypted] — local-only private store
+      (documents, emergency contacts); never sync in cleartext. Effort S–M.
+- [ ] **🎙️ Voice memos / camera capture** [opus] — capture media straight
+      into `db.files`, reusing `transferSync`. iOS media APIs are fiddly.
+      Effort M.
+
+Infrastructure ideas:
+
+- [ ] Export/import all local data as a backup file [sonnet]
+- [ ] E2E encryption for synced files [opus]

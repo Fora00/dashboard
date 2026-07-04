@@ -1,8 +1,7 @@
-import { db, type Habit } from '../../lib/db'
-
-// Local-only data helpers for the Habits project. Days are 'YYYY-MM-DD'
-// strings in the device's local time zone, so a check belongs to the calendar
-// day the user actually saw (no UTC drift around midnight).
+// Pure date helpers for the Habits project. Days are 'YYYY-MM-DD' strings in
+// the device's local time zone, so a check belongs to the calendar day the
+// user actually saw (no UTC drift around midnight). Mutation helpers live in
+// src/lib/habitSync.ts (local-first, optionally cloud-synced).
 
 export function dayKey(date: Date): string {
   const y = date.getFullYear()
@@ -33,47 +32,4 @@ export function streak(doneDays: ReadonlySet<string>, today = new Date()): numbe
     cursor = shiftDay(cursor, -1)
   }
   return count
-}
-
-export async function addHabit(name: string, emoji: string): Promise<Habit> {
-  const habit: Habit = {
-    id: crypto.randomUUID(),
-    name,
-    emoji: emoji || '✅',
-    createdAt: Date.now(),
-  }
-  await db.habits.add(habit)
-  return habit
-}
-
-export async function setArchived(habit: Habit, archived: boolean): Promise<void> {
-  await db.habits.update(habit.id, { archivedAt: archived ? Date.now() : undefined })
-}
-
-// Deleting a habit also drops its check history.
-export async function deleteHabit(habit: Habit): Promise<void> {
-  await db.transaction('rw', db.habits, db.habitChecks, async () => {
-    await db.habitChecks.where('habitId').equals(habit.id).delete()
-    await db.habits.delete(habit.id)
-  })
-}
-
-// Flip a habit's done state for one day (used for today's check-off).
-export async function toggleCheck(habitId: string, day: string): Promise<void> {
-  await db.transaction('rw', db.habitChecks, async () => {
-    const existing = await db.habitChecks
-      .where('[habitId+day]')
-      .equals([habitId, day])
-      .first()
-    if (existing) {
-      await db.habitChecks.delete(existing.id)
-    } else {
-      await db.habitChecks.add({
-        id: crypto.randomUUID(),
-        habitId,
-        day,
-        createdAt: Date.now(),
-      })
-    }
-  })
 }

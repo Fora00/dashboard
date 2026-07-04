@@ -5,9 +5,10 @@ import { Button } from '../../components/Button'
 import { Card } from '../../components/Card'
 import { PageHeader } from '../../components/PageHeader'
 import { EmptyState } from '../../components/EmptyState'
-import { addSession } from './data'
+import { addSession } from '../../lib/climbSync'
 import { DISCIPLINES, DISCIPLINE_LABEL, gradeFraction, gradeIndex } from './grades'
 import { SessionCard } from './SessionCard'
+import { SyncCard } from '../../components/SyncCard'
 
 const inputClass =
   'min-h-10 w-full rounded-lg border border-slate-700 bg-slate-800 px-3.5 text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none'
@@ -92,6 +93,8 @@ export function Climbing() {
       >
         {!showForm && <Button onClick={() => setShowForm(true)}>+ Session</Button>}
       </PageHeader>
+
+      <SyncCard />
 
       {showForm && (
         <form onSubmit={createSession} className="mb-6">

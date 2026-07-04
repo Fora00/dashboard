@@ -95,13 +95,35 @@ export function AreaManager({ area }: { area: ShopArea }) {
     setBusy(true)
     setError(null)
     try {
-      const { error: err } = await supabase
-        .from('shop_area_members')
-        .delete()
-        .eq('area_id', area.id)
-        .eq('email', guest)
+      // Drops the membership, undoes the auto-whitelist if the guest has no
+      // access left, and rotates the token so the old invite link dies.
+      const { error: err } = await supabase.rpc('revoke_area_guest', {
+        aid: area.id,
+        guest_email: guest,
+      })
       if (err) throw err
       await loadMembers()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  // Rotate the share token: any previously shared #/join/<token> link stops
+  // working, and a fresh link is copied/shared.
+  async function resetLink() {
+    if (!supabase) return
+    setBusy(true)
+    setError(null)
+    try {
+      const { data, error: err } = await supabase.rpc('rotate_area_token', { aid: area.id })
+      if (err) throw err
+      if (!data) throw new Error('Could not reset the link.')
+      const url = `${APP_URL}#/join/${data}`
+      const text = `Join my "${area.name}" shopping list: ${url}`
+      if (navigator.share) await navigator.share({ text }).catch(() => {})
+      else await navigator.clipboard.writeText(text)
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err))
     } finally {
@@ -125,6 +147,9 @@ export function AreaManager({ area }: { area: ShopArea }) {
           <>
             <Button variant="ghost" disabled={busy} onClick={() => void shareLink()}>
               🔗 Share link
+            </Button>
+            <Button variant="ghost" disabled={busy} onClick={() => void resetLink()}>
+              ♻️ Reset link
             </Button>
             <Button
               variant="ghost"
