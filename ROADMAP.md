@@ -56,8 +56,8 @@ GitHub Pages itself is public but holds no data; auth protects the synced data.
 
 ## Project 3 — shop-list (sharable groceries)
 
-- [x] Route + placeholder page; `db.shopItems` schema exists
-- [ ] Add/check/uncheck/delete items (local-first against `db.shopItems`)
+- [x] Route + page; `db.shopItems` schema exists
+- [x] Add/check/uncheck items, clear bought (local-first against `db.shopItems`)
 - [ ] Sync via Supabase table + realtime
 - [ ] Guest sharing: whitelist a guest email (girlfriend) with read/write on this project only
 

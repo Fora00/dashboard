@@ -26,6 +26,6 @@ export const projects: ProjectMeta[] = [
     emoji: '🛒',
     description: 'Groceries todo list, sharable with whitelisted guests.',
     path: '/shop-list',
-    status: 'planned',
+    status: 'live',
   },
 ]
