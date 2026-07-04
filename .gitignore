@@ -28,3 +28,6 @@ dev-dist
 
 # env with Supabase keys
 .env.local
+
+# Claude Code worktrees/session data
+.claude/

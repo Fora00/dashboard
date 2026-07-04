@@ -36,6 +36,59 @@ export interface ShopArea {
 // server migration uses the same id so local and remote merge cleanly.
 export const DEFAULT_AREA_ID = '00000000-0000-0000-0000-000000000001'
 
+// A climbing session at a gym or crag. Local-only for now (no cloud sync).
+export type Discipline = 'boulder' | 'lead'
+
+export interface ClimbSession {
+  id: string
+  // 'YYYY-MM-DD' — sortable as a string, month key is date.slice(0, 7).
+  date: string
+  location: string
+  discipline: Discipline
+  notes?: string
+  createdAt: number
+}
+
+// A single climb logged inside a session. `date` and `discipline` are
+// denormalized from the session so progress stats don't need a join.
+export interface Climb {
+  id: string
+  sessionId: string
+  date: string
+  discipline: Discipline
+  grade: string
+  sent: 0 | 1
+  createdAt: number
+}
+
+// A daily habit ("Stretch", "Read", …). Local-only for now — no cloud sync.
+export interface Habit {
+  id: string
+  name: string
+  emoji: string
+  createdAt: number
+  // Set when the habit is archived; archived habits keep their history but
+  // are hidden from the daily check-off list.
+  archivedAt?: number
+}
+
+// One check-off of a habit on one local calendar day.
+export interface HabitCheck {
+  id: string
+  habitId: string
+  // Local-date string 'YYYY-MM-DD' so a check belongs to the day the user saw.
+  day: string
+  createdAt: number
+}
+
+// A generic todo. Local-only for now — no cloud sync.
+export interface Todo {
+  id: string
+  text: string
+  done: 0 | 1
+  createdAt: number
+}
+
 // Queue of local mutations not yet pushed to the cloud. Written alongside
 // every local write so changes made offline sync on reconnect (see shopSync.ts).
 export interface OutboxEntry {
@@ -52,6 +105,11 @@ export const db = new Dexie('dashboard') as Dexie & {
   shopItems: EntityTable<ShopItem, 'id'>
   shopAreas: EntityTable<ShopArea, 'id'>
   outbox: EntityTable<OutboxEntry, 'seq'>
+  climbSessions: EntityTable<ClimbSession, 'id'>
+  climbs: EntityTable<Climb, 'id'>
+  habits: EntityTable<Habit, 'id'>
+  habitChecks: EntityTable<HabitCheck, 'id'>
+  todos: EntityTable<Todo, 'id'>
 }
 
 db.version(1).stores({
@@ -80,6 +138,18 @@ db.version(3)
     })
     await tx.table('shopItems').toCollection().modify({ areaId: DEFAULT_AREA_ID })
   })
+
+db.version(4).stores({
+  files: 'id, name, createdAt, synced',
+  shopItems: 'id, done, createdAt, areaId',
+  shopAreas: 'id, createdAt',
+  outbox: '++seq, rowId',
+  climbSessions: 'id, date',
+  climbs: 'id, sessionId, date',
+  habits: 'id, createdAt',
+  habitChecks: 'id, habitId, day, [habitId+day]',
+  todos: 'id, done, createdAt',
+})
 
 // Ask the browser not to evict our data under storage pressure (important on iOS).
 export async function requestPersistentStorage(): Promise<boolean> {

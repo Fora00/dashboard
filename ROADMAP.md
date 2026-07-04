@@ -40,8 +40,8 @@ GitHub Pages itself is public but holds no data; auth protects the synced data.
 - [x] Shared components: `Button`, `Card`, `PageHeader`, `EmptyState`, `OnlineBadge`
 - [x] PWA: manifest, icons, offline precache (`vite-plugin-pwa`, autoUpdate)
 - [x] Placeholder app icons (solid rounded square)
-- [ ] Nicer app icons / branding
-- [ ] Settings page (storage usage, clear data, sync status)
+- [x] App icons: dashboard tile motif (generated via ImageMagick from SVG)
+- [x] Settings page (`/settings`): storage usage/persistence, sync status, wipe device data
 
 ## Project 2 — local-transfer (offline file stash)
 
@@ -50,9 +50,9 @@ GitHub Pages itself is public but holds no data; auth protects the synced data.
 - [x] Native share sheet (`navigator.share`) — AirDrop/apps on iOS/macOS
 - [x] Persistent-storage request so iOS doesn't evict data
 - [x] Online/offline awareness (badge + copy)
-- [ ] Upload to Supabase Storage when online (`synced` flag + `remoteUrl` are already in the schema)
-- [ ] Shareable download links for uploaded files
-- [ ] Auto-sync queue on reconnect (`online` event)
+- [x] Auto-upload to Supabase Storage when signed in (`src/lib/transferSync.ts`, bucket `transfer`, flat `<uuid>_<name>` paths; `remoteUrl` stores the object path)
+- [x] Shareable download links (7-day signed URLs, 🔗 Link button)
+- [x] Auto-sync on reconnect + cloud file list with per-device download ("Get on this device")
 
 ## Project 3 — shop-list (sharable groceries)
 
@@ -104,6 +104,22 @@ GitHub Pages itself is public but holds no data; auth protects the synced data.
         the OTP-code flow needs `{{ .Token }}` in the template
         (`supabase/templates/magic_link.html`). Free-tier gotcha: keep
         `[storage.vector] enabled = false` in config.toml or `config push` 402s.
+
+## Project 4 — todo (generic list)
+
+- [x] Local-first generic todo list (`/todo`, `db.todos`): add, toggle, delete, clear done
+- [ ] Cloud sync (reuse the shop-list outbox pattern) if ever needed
+
+## Project 5 — climbing (progress tracker)
+
+- [x] Sessions (date, location, boulder/lead, notes) + climbs with French/Font grades, sent/attempted (`db.climbSessions`, `db.climbs`)
+- [x] Progress: hardest send per month as grade-scaled bars, session/send totals
+- [ ] Cloud sync if ever needed
+
+## Project 6 — habits (daily tracker)
+
+- [x] Habits with emoji, daily check-off, streak + 14-day dot row, archive/restore/delete (`db.habits`, `db.habitChecks`)
+- [ ] Cloud sync if ever needed
 
 ## Ideas / later
 
