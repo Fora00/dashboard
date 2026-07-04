@@ -27,6 +27,10 @@ ACCEPTANCE: npm run build green; <behavioral checks>.
 REPORT: files changed, build result, what was left out.
 ```
 
+Briefs for "add a new subproject" tasks should point the builder at
+`docs/NEW_PROJECT.md` — it is the complete 7-step recipe (registry, route,
+Dexie, sync wrapper, SQL template, SyncCard, owner-applied `db push`).
+
 ## Parallelism rules (learned 2026-07-04, they work)
 
 - Parallel builders must have **disjoint file sets**; name each agent's

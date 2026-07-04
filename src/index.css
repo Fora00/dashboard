@@ -1,8 +1,17 @@
 @import "tailwindcss";
 
 html {
-  background-color: #0f172a;
-  color-scheme: dark;
+  /* Light by default; dark follows prefers-color-scheme via Tailwind's
+     `dark:` variant everywhere else. This is just the pre-paint background
+     so there's no flash before React mounts. */
+  background-color: #f8fafc;
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  html {
+    background-color: #0f172a;
+  }
 }
 
 body {

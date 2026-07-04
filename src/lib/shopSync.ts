@@ -1,5 +1,6 @@
 import { db, DEFAULT_AREA_ID, type ShopArea, type ShopItem } from './db'
 import { createCloudSync, type TableSync } from './cloudSync'
+import { useSyncStatus } from './useSyncStatus'
 
 // Local-first sync for shop-list (areas + items), built on the generic engine
 // in cloudSync.ts. The UI only ever talks to Dexie via the mutation helpers
@@ -119,6 +120,12 @@ export async function clearBoughtItems(areaId: string): Promise<void> {
 
 export const flush = engine.flush
 export const syncNow = engine.syncNow
+
+/** The sync engine instance — pass to <SyncCard sync={sync} /> for status UI. */
+export const sync = engine
+
+/** Bound React hook: this project's live SyncStatus. */
+export const useStatus = () => useSyncStatus(engine)
 
 /** Start syncing (call when a session exists). Returns a stop function. */
 export const startShopSync = engine.start

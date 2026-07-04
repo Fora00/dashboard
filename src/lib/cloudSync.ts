@@ -58,6 +58,20 @@ export interface SyncConfig {
   tables: AnyTableSync[]
 }
 
+/** Live, observable sync state for one engine instance (one project). */
+export interface SyncStatus {
+  /** Live outbox entries for this project's tables not yet pushed. */
+  pending: number
+  /** Dead-lettered entries — permanently rejected, kept local-only. */
+  dead: number
+  /** ms epoch of the last successful flush + pull cycle, or null. */
+  lastSyncedAt: number | null
+  /** Human-readable last error (dead-letter), or null when all is well. */
+  lastError: string | null
+  /** True while a flush is in progress. */
+  syncing: boolean
+}
+
 export interface CloudSync {
   /** Push this project's queued mutations. No-op when signed out/offline. */
   flush: () => Promise<void>
@@ -71,6 +85,11 @@ export interface CloudSync {
   remove: (remote: OutboxTable, id: string) => Promise<void>
   /** Delete many local rows + queue their deletes, in one transaction. */
   removeMany: (remote: OutboxTable, ids: string[]) => Promise<void>
+  /** Current status snapshot (stable identity until it changes). */
+  getStatus: () => SyncStatus
+  /** Subscribe to status changes. Returns an unsubscribe function.
+   *  Shaped for React's useSyncExternalStore (see useSyncStatus.ts). */
+  subscribe: (listener: () => void) => () => void
 }
 
 // After this many failed attempts a transient error is treated as poison and
@@ -105,6 +124,52 @@ export function createCloudSync(config: SyncConfig): CloudSync {
   let flushing = false
   let running = false
 
+  // --- Observable status ----------------------------------------------------
+  let status: SyncStatus = {
+    pending: 0,
+    dead: 0,
+    lastSyncedAt: null,
+    lastError: null,
+    syncing: false,
+  }
+  const listeners = new Set<() => void>()
+
+  function setStatus(patch: Partial<SyncStatus>): void {
+    const next = { ...status, ...patch }
+    // Skip the emit when nothing actually changed (avoids render churn).
+    if (
+      next.pending === status.pending &&
+      next.dead === status.dead &&
+      next.lastSyncedAt === status.lastSyncedAt &&
+      next.lastError === status.lastError &&
+      next.syncing === status.syncing
+    ) {
+      return
+    }
+    status = next
+    for (const l of listeners) l()
+  }
+
+  function deadMessage(n: number): string {
+    return n === 1
+      ? '1 change was rejected by the server and kept on this device only'
+      : `${n} changes were rejected by the server and kept on this device only`
+  }
+
+  // Recount live/dead outbox entries for this project's tables and derive the
+  // error line from the dead-letter count (a dead-letter is permanent, so the
+  // error persists until the tombstone is gone — i.e. never, by design).
+  async function refreshCounts(): Promise<void> {
+    let pending = 0
+    let dead = 0
+    for (const e of await db.outbox.toArray()) {
+      if (!remotes.has(e.table)) continue
+      if (e.dead) dead++
+      else pending++
+    }
+    setStatus({ pending, dead, lastError: dead > 0 ? deadMessage(dead) : null })
+  }
+
   async function pushEntry(entry: OutboxEntry): Promise<void> {
     if (!supabase) return
     const tc = byRemote.get(entry.table)
@@ -122,9 +187,12 @@ export function createCloudSync(config: SyncConfig): CloudSync {
 
   async function flush(): Promise<void> {
     if (!supabase || flushing) return
+    // Reflect a just-enqueued mutation even when signed out (pending count).
+    void refreshCounts()
     const { data } = await supabase.auth.getSession()
     if (!data.session) return
     flushing = true
+    setStatus({ syncing: true })
     try {
       const entries = await db.outbox.orderBy('seq').toArray()
       for (const entry of entries) {
@@ -138,6 +206,8 @@ export function createCloudSync(config: SyncConfig): CloudSync {
             // Dead-letter: keep the entry (never drop it) so its rowId still
             // shields the local row from pull() deletion. Local data survives.
             await db.outbox.update(entry.seq!, { dead: 1, tries })
+            // Surface the rejection — otherwise the failure is invisible.
+            await refreshCounts()
             continue
           }
           // Transient (offline / expired JWT / 5xx): bump the counter and stop,
@@ -149,17 +219,19 @@ export function createCloudSync(config: SyncConfig): CloudSync {
       }
     } finally {
       flushing = false
+      setStatus({ syncing: false })
+      await refreshCounts()
     }
   }
 
-  async function pull(): Promise<void> {
-    if (!supabase) return
+  async function pull(): Promise<boolean> {
+    if (!supabase) return false
     const results = await Promise.all(
       config.tables.map((tc) => supabase!.from(tc.remote).select(tc.columns)),
     )
     // If any table errored, abort the whole pull — never partial-delete based
     // on an incomplete remote view.
-    if (results.some((r) => r.error || !r.data)) return
+    if (results.some((r) => r.error || !r.data)) return false
 
     const dexieTables = config.tables.map((t) => t.table())
     await db.transaction('rw', [...dexieTables, db.outbox], async () => {
@@ -181,6 +253,7 @@ export function createCloudSync(config: SyncConfig): CloudSync {
           .bulkDelete(localIds.filter((id) => !remoteIds.has(id) && !pending.has(id)))
       }
     })
+    return true
   }
 
   async function syncNow(): Promise<void> {
@@ -189,7 +262,8 @@ export function createCloudSync(config: SyncConfig): CloudSync {
     running = true
     try {
       await flush()
-      await pull()
+      // Only stamp lastSyncedAt on a real, complete pull (signed in + online).
+      if (await pull()) setStatus({ lastSyncedAt: Date.now() })
     } finally {
       running = false
     }
@@ -269,6 +343,7 @@ export function createCloudSync(config: SyncConfig): CloudSync {
       await tc.table().put(row)
       await db.outbox.add({ table: remote, op: 'upsert', rowId: row.id, payload: row, ts: Date.now() })
     })
+    void refreshCounts()
     void flush()
   }
 
@@ -279,6 +354,7 @@ export function createCloudSync(config: SyncConfig): CloudSync {
       await tc.table().delete(id)
       await db.outbox.add({ table: remote, op: 'delete', rowId: id, ts: Date.now() })
     })
+    void refreshCounts()
     void flush()
   }
 
@@ -292,8 +368,23 @@ export function createCloudSync(config: SyncConfig): CloudSync {
         ids.map((id) => ({ table: remote, op: 'delete' as const, rowId: id, ts: Date.now() })),
       )
     })
+    void refreshCounts()
     void flush()
   }
 
-  return { flush, syncNow, start, upsert, remove, removeMany }
+  function getStatus(): SyncStatus {
+    return status
+  }
+
+  function subscribe(listener: () => void): () => void {
+    listeners.add(listener)
+    return () => {
+      listeners.delete(listener)
+    }
+  }
+
+  // Seed the initial counts (fire-and-forget; UI updates when it resolves).
+  void refreshCounts()
+
+  return { flush, syncNow, start, upsert, remove, removeMany, getStatus, subscribe }
 }

@@ -1,16 +1,22 @@
 import { useState, type FormEvent } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, type Habit } from '../../lib/db'
+import { useAuth } from '../../lib/useAuth'
+import { useOwner } from '../../lib/useOwner'
 import { Button } from '../../components/Button'
 import { PageHeader } from '../../components/PageHeader'
 import { EmptyState } from '../../components/EmptyState'
 import { SyncCard } from '../../components/SyncCard'
-import { addHabit, deleteHabit, setArchived, toggleCheck } from '../../lib/habitSync'
+import { SkeletonList } from '../../components/Skeleton'
+import { addHabit, deleteHabit, setArchived, sync, toggleCheck } from '../../lib/habitSync'
 import { dayKey, lastDays, streak } from './habitStore'
 
 const DOT_DAYS = 14
 
 export function Habits() {
+  const session = useAuth()
+  const owner = useOwner()
+  const isGuestViewer = Boolean(session) && owner === false
   const [name, setName] = useState('')
   const [emoji, setEmoji] = useState('')
 
@@ -58,16 +64,16 @@ export function Habits() {
           type="button"
           onClick={() => void toggleCheck(habit.id, today)}
           aria-pressed={done}
-          className={`min-h-16 w-full min-w-0 flex-1 rounded-xl border px-4 py-3 text-left transition-colors active:bg-slate-800 ${
+          className={`min-h-16 w-full min-w-0 flex-1 rounded-xl border px-4 py-3 text-left transition-colors active:bg-slate-100 dark:active:bg-slate-800 ${
             done
               ? 'border-emerald-400/60 bg-emerald-400/10'
-              : 'border-slate-800 bg-slate-800/50 hover:border-slate-600'
+              : 'border-slate-200 bg-white hover:border-slate-400 dark:border-slate-800 dark:bg-slate-800/50 dark:hover:border-slate-600'
           }`}
         >
           <div className="flex items-center gap-3">
             <span
               className={`flex size-7 shrink-0 items-center justify-center rounded-full border text-sm ${
-                done ? 'border-emerald-400 bg-emerald-400 text-slate-900' : 'border-slate-500'
+                done ? 'border-emerald-400 bg-emerald-400 text-slate-900' : 'border-slate-400 dark:border-slate-500'
               }`}
             >
               {done && '✓'}
@@ -76,7 +82,7 @@ export function Habits() {
               <span className="mr-2">{habit.emoji}</span>
               {habit.name}
             </span>
-            <span className={`shrink-0 text-sm ${run > 0 ? 'text-amber-300' : 'text-slate-500'}`}>
+            <span className={`shrink-0 text-sm ${run > 0 ? 'text-amber-700 dark:text-amber-300' : 'text-slate-500'}`}>
               🔥 {run}
             </span>
           </div>
@@ -88,8 +94,8 @@ export function Habits() {
                   days.has(day)
                     ? 'bg-emerald-400'
                     : day === today
-                      ? 'bg-slate-600 ring-1 ring-slate-400'
-                      : 'bg-slate-700'
+                      ? 'bg-slate-300 ring-1 ring-slate-400 dark:bg-slate-600'
+                      : 'bg-slate-300 dark:bg-slate-700'
                 }`}
               />
             ))}
@@ -116,7 +122,7 @@ export function Habits() {
         subtitle="Tap a habit to check it off for today. Saved on this device."
       />
 
-      <SyncCard />
+      <SyncCard sync={sync} />
 
       <form onSubmit={createHabit} className="mb-6 flex gap-2">
         <input
@@ -125,7 +131,7 @@ export function Habits() {
           placeholder="✅"
           autoComplete="off"
           aria-label="Habit emoji"
-          className="min-h-10 w-14 shrink-0 rounded-lg border border-slate-700 bg-slate-800 text-center text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none"
+          className="min-h-10 w-14 shrink-0 rounded-lg border border-slate-300 bg-white text-center text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none dark:border-slate-700 dark:bg-slate-800"
         />
         <input
           value={name}
@@ -134,24 +140,30 @@ export function Habits() {
           autoComplete="off"
           enterKeyHint="done"
           aria-label="Habit name"
-          className="min-h-10 w-full rounded-lg border border-slate-700 bg-slate-800 px-3.5 text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none"
+          className="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none dark:border-slate-700 dark:bg-slate-800"
         />
         <Button type="submit" disabled={!name.trim()}>
           Add
         </Button>
       </form>
 
-      {habits === undefined ? null : active.length === 0 && archived.length === 0 ? (
+      {habits === undefined ? (
+        <SkeletonList rows={3} rowClassName="h-16" />
+      ) : active.length === 0 && archived.length === 0 ? (
         <EmptyState
           emoji="🌱"
           title="No habits yet"
-          hint="Add a habit above — check it off each day to grow a streak."
+          hint={
+            isGuestViewer
+              ? 'Nothing shared with you yet — ask Francesco to invite you from the Sharing page.'
+              : 'Add a habit above — check it off each day to grow a streak.'
+          }
         />
       ) : (
         <div className="space-y-6">
           {active.length > 0 && (
             <section>
-              <h2 className="mb-2 text-sm font-medium text-slate-400">
+              <h2 className="mb-2 text-sm font-medium text-slate-500 dark:text-slate-400">
                 Today · {doneToday}/{active.length} done
               </h2>
               <ul className="space-y-2">{active.map(renderHabit)}</ul>
@@ -160,16 +172,16 @@ export function Habits() {
 
           {archived.length > 0 && (
             <section>
-              <h2 className="mb-2 text-sm font-medium text-slate-400">
+              <h2 className="mb-2 text-sm font-medium text-slate-500 dark:text-slate-400">
                 Archived · {archived.length}
               </h2>
               <ul className="space-y-2">
                 {archived.map((habit) => (
                   <li
                     key={habit.id}
-                    className="flex min-h-12 items-center gap-3 rounded-lg border border-slate-800 bg-slate-800/30 px-4 py-2"
+                    className="flex min-h-12 items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 px-4 py-2 dark:border-slate-800 dark:bg-slate-800/30"
                   >
-                    <span className="min-w-0 flex-1 truncate text-slate-400">
+                    <span className="min-w-0 flex-1 truncate text-slate-500 dark:text-slate-400">
                       <span className="mr-2">{habit.emoji}</span>
                       {habit.name}
                     </span>

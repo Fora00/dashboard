@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
-import type { ShopArea } from '../../lib/db'
+import { db, type ShopArea } from '../../lib/db'
 import { supabase } from '../../lib/sync'
 import { useAuth } from '../../lib/useAuth'
 import { useOwner } from '../../lib/useOwner'
-import { deleteArea } from '../../lib/shopSync'
+import { useUndoSnackbar } from '../../lib/useUndoSnackbar'
+import { deleteArea, sync } from '../../lib/shopSync'
 import { Button } from '../../components/Button'
 import { Card } from '../../components/Card'
+import { Snackbar } from '../../components/Snackbar'
 
 // Owner controls for the selected area: share an invite link, manage which
 // guest emails can access it, delete it. Guests see nothing (RLS enforces
@@ -23,6 +25,7 @@ export function AreaManager({ area }: { area: ShopArea }) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const { pending, trigger, confirmUndo } = useUndoSnackbar()
 
   useEffect(() => {
     setShowMembers(false)
@@ -136,13 +139,22 @@ export function AreaManager({ area }: { area: ShopArea }) {
       setConfirmDelete(true)
       return
     }
+    // Snapshot the area row and its items before the (unchanged) delete
+    // call, so Undo can re-upsert both — area first, then items, same ids.
+    const areaSnapshot = area
+    const itemsSnapshot = await db.shopItems.where('areaId').equals(area.id).toArray()
     await deleteArea(area.id)
+    setConfirmDelete(false)
+    trigger(`Deleted "${areaSnapshot.name}" · Undo`, async () => {
+      await sync.upsert('shop_areas', areaSnapshot)
+      for (const item of itemsSnapshot) await sync.upsert('shop_items', item)
+    })
   }
 
   return (
     <Card className="mb-6 space-y-3 text-sm">
       <div className="flex flex-wrap items-center gap-2">
-        <span className="mr-auto text-slate-400">Area settings</span>
+        <span className="mr-auto text-slate-500 dark:text-slate-400">Area settings</span>
         {isOwner && (
           <>
             <Button variant="ghost" disabled={busy} onClick={() => void shareLink()}>
@@ -169,7 +181,7 @@ export function AreaManager({ area }: { area: ShopArea }) {
       </div>
 
       {showMembers && (
-        <div className="space-y-2 border-t border-slate-800 pt-3">
+        <div className="space-y-2 border-t border-slate-200 pt-3 dark:border-slate-800">
           {members === null ? (
             <p className="text-slate-500">Loading…</p>
           ) : members.length === 0 ? (
@@ -193,7 +205,7 @@ export function AreaManager({ area }: { area: ShopArea }) {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="guest@example.com"
               autoComplete="off"
-              className="min-h-10 w-full rounded-lg border border-slate-700 bg-slate-800 px-3.5 text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none"
+              className="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none dark:border-slate-700 dark:bg-slate-800"
             />
             <Button type="submit" disabled={busy || !email.trim()}>
               Add
@@ -202,7 +214,9 @@ export function AreaManager({ area }: { area: ShopArea }) {
         </div>
       )}
 
-      {error && <p className="text-rose-400">{error}</p>}
+      {error && <p className="text-rose-600 dark:text-rose-400">{error}</p>}
+
+      {pending && <Snackbar label={pending.label} onUndo={confirmUndo} />}
     </Card>
   )
 }

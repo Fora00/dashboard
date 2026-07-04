@@ -1,5 +1,6 @@
 import { db, type Habit, type HabitCheck } from './db'
 import { createCloudSync, type TableSync } from './cloudSync'
+import { useSyncStatus } from './useSyncStatus'
 
 // Local-first sync for the habits project, built on the generic engine in
 // cloudSync.ts. Copies the todo reference integration (src/lib/todoSync.ts):
@@ -118,6 +119,12 @@ export async function toggleCheck(habitId: string, day: string): Promise<void> {
 
 export const flush = engine.flush
 export const syncNow = engine.syncNow
+
+/** The sync engine instance — pass to <SyncCard sync={sync} /> for status UI. */
+export const sync = engine
+
+/** Bound React hook: this project's live SyncStatus. */
+export const useStatus = () => useSyncStatus(engine)
 
 /** Start syncing (call when a session exists). Returns a stop function. */
 export const startHabitSync = engine.start

@@ -1,5 +1,6 @@
 import { db, type Climb, type ClimbSession, type Discipline } from './db'
 import { createCloudSync, type TableSync } from './cloudSync'
+import { useSyncStatus } from './useSyncStatus'
 
 // Local-first sync for the climbing project, built on the generic engine in
 // cloudSync.ts. Copies the todo reference integration (src/lib/todoSync.ts):
@@ -142,6 +143,12 @@ export async function deleteClimb(id: string): Promise<void> {
 
 export const flush = engine.flush
 export const syncNow = engine.syncNow
+
+/** The sync engine instance — pass to <SyncCard sync={sync} /> for status UI. */
+export const sync = engine
+
+/** Bound React hook: this project's live SyncStatus. */
+export const useStatus = () => useSyncStatus(engine)
 
 /** Start syncing (call when a session exists). Returns a stop function. */
 export const startClimbSync = engine.start

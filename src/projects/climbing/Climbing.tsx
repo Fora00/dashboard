@@ -1,17 +1,20 @@
 import { useMemo, useState, type FormEvent } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, type Discipline } from '../../lib/db'
+import { useAuth } from '../../lib/useAuth'
+import { useOwner } from '../../lib/useOwner'
 import { Button } from '../../components/Button'
 import { Card } from '../../components/Card'
 import { PageHeader } from '../../components/PageHeader'
 import { EmptyState } from '../../components/EmptyState'
-import { addSession } from '../../lib/climbSync'
+import { addSession, sync } from '../../lib/climbSync'
 import { DISCIPLINES, DISCIPLINE_LABEL, gradeFraction, gradeIndex } from './grades'
 import { SessionCard } from './SessionCard'
 import { SyncCard } from '../../components/SyncCard'
+import { Skeleton } from '../../components/Skeleton'
 
 const inputClass =
-  'min-h-10 w-full rounded-lg border border-slate-700 bg-slate-800 px-3.5 text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none'
+  'min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none dark:border-slate-700 dark:bg-slate-800'
 
 const BAR_COLOR: Record<Discipline, string> = {
   boulder: 'bg-indigo-400/70',
@@ -38,6 +41,9 @@ interface MonthProgress {
 }
 
 export function Climbing() {
+  const session = useAuth()
+  const owner = useOwner()
+  const isGuestViewer = Boolean(session) && owner === false
   const [showForm, setShowForm] = useState(false)
   const [date, setDate] = useState(today)
   const [location, setLocation] = useState('')
@@ -94,7 +100,7 @@ export function Climbing() {
         {!showForm && <Button onClick={() => setShowForm(true)}>+ Session</Button>}
       </PageHeader>
 
-      <SyncCard />
+      <SyncCard sync={sync} />
 
       {showForm && (
         <form onSubmit={createSession} className="mb-6">
@@ -107,8 +113,8 @@ export function Climbing() {
                   onClick={() => setDiscipline(d)}
                   className={`min-h-10 rounded-full border px-3.5 text-sm transition-colors ${
                     d === discipline
-                      ? 'border-indigo-400 bg-indigo-500/20 text-indigo-300'
-                      : 'border-slate-700 text-slate-400'
+                      ? 'border-indigo-400 bg-indigo-500/20 text-indigo-600 dark:text-indigo-300'
+                      : 'border-slate-300 text-slate-500 dark:border-slate-700 dark:text-slate-400'
                   }`}
                 >
                   {DISCIPLINE_LABEL[d]}
@@ -151,27 +157,27 @@ export function Climbing() {
       )}
 
       <section className="mb-6">
-        <h2 className="mb-2 text-sm font-medium text-slate-400">Progress</h2>
+        <h2 className="mb-2 text-sm font-medium text-slate-500 dark:text-slate-400">Progress</h2>
         <Card>
           <div className="flex gap-6">
             <div>
-              <p className="text-2xl font-semibold text-slate-100">
+              <p className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
                 {sessions?.length ?? 0}
               </p>
-              <p className="text-xs text-slate-400">sessions</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">sessions</p>
             </div>
             <div>
-              <p className="text-2xl font-semibold text-slate-100">{sendCount}</p>
-              <p className="text-xs text-slate-400">sends</p>
+              <p className="text-2xl font-semibold text-slate-900 dark:text-slate-100">{sendCount}</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">sends</p>
             </div>
           </div>
 
           {monthly.length > 0 && (
-            <div className="mt-4 space-y-3 border-t border-slate-800 pt-3">
+            <div className="mt-4 space-y-3 border-t border-slate-200 pt-3 dark:border-slate-800">
               <p className="text-xs text-slate-500">Hardest send per month</p>
               {monthly.map(({ month, best }) => (
                 <div key={month}>
-                  <p className="mb-1 text-xs text-slate-400">{formatMonth(month)}</p>
+                  <p className="mb-1 text-xs text-slate-500 dark:text-slate-400">{formatMonth(month)}</p>
                   <div className="space-y-1">
                     {DISCIPLINES.map((d) => {
                       const grade = best[d]
@@ -181,13 +187,13 @@ export function Climbing() {
                           <span className="w-14 shrink-0 text-xs text-slate-500">
                             {DISCIPLINE_LABEL[d]}
                           </span>
-                          <div className="h-3 flex-1 overflow-hidden rounded-full bg-slate-800">
+                          <div className="h-3 flex-1 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800">
                             <div
                               className={`h-full rounded-full ${BAR_COLOR[d]}`}
                               style={{ width: `${gradeFraction(d, grade) * 100}%` }}
                             />
                           </div>
-                          <span className="w-8 shrink-0 text-right text-xs font-semibold text-slate-200">
+                          <span className="w-8 shrink-0 text-right text-xs font-semibold text-slate-800 dark:text-slate-200">
                             {grade}
                           </span>
                         </div>
@@ -202,14 +208,23 @@ export function Climbing() {
       </section>
 
       <section>
-        <h2 className="mb-2 text-sm font-medium text-slate-400">
+        <h2 className="mb-2 text-sm font-medium text-slate-500 dark:text-slate-400">
           Sessions{sessions && sessions.length > 0 ? ` · ${sessions.length}` : ''}
         </h2>
-        {sessions === undefined ? null : sessions.length === 0 ? (
+        {sessions === undefined ? (
+          <div className="space-y-3">
+            <Skeleton className="h-24 w-full" />
+            <Skeleton className="h-24 w-full" />
+          </div>
+        ) : sessions.length === 0 ? (
           <EmptyState
             emoji="🪨"
             title="No sessions yet"
-            hint="Add a session, then log each climb with its grade."
+            hint={
+              isGuestViewer
+                ? 'Nothing shared with you yet — ask Francesco to invite you from the Sharing page.'
+                : 'Add a session, then log each climb with its grade.'
+            }
           />
         ) : (
           <div className="space-y-3">

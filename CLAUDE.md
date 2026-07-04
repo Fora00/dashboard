@@ -30,6 +30,9 @@ conventions and the task queue. `WORKFLOW.md` defines how work is delegated.
 
 - Registry `src/lib/projects.ts` + a folder per project in `src/projects/`
   + a route in `src/App.tsx`. One shared Dexie db: `src/lib/db.ts`.
+- **New project?** Follow `docs/NEW_PROJECT.md` verbatim — 7 steps, SQL
+  template included. If a project needs more than those steps, fix the
+  engine, not the project.
 - Sync pattern: Dexie outbox → flush on reconnect/foreground → pull remote as
   source of truth → realtime. Generic engine: `src/lib/cloudSync.ts` (once
   landed); shop-list (`src/lib/shopSync.ts`) is the original reference.

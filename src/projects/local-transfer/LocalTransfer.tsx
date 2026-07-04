@@ -4,6 +4,7 @@ import { db, requestPersistentStorage, type TransferFile } from '../../lib/db'
 import { formatBytes, formatDate } from '../../lib/format'
 import { useOnline } from '../../lib/useOnline'
 import { useAuth } from '../../lib/useAuth'
+import { useUndoSnackbar } from '../../lib/useUndoSnackbar'
 import {
   downloadRemote,
   listRemote,
@@ -17,6 +18,8 @@ import { Card } from '../../components/Card'
 import { PageHeader } from '../../components/PageHeader'
 import { EmptyState } from '../../components/EmptyState'
 import { SyncCard } from '../../components/SyncCard'
+import { Snackbar } from '../../components/Snackbar'
+import { SkeletonList } from '../../components/Skeleton'
 
 export function LocalTransfer() {
   const online = useOnline()
@@ -25,6 +28,7 @@ export function LocalTransfer() {
   const [dragActive, setDragActive] = useState(false)
   const [remote, setRemote] = useState<RemoteFile[] | null>(null)
   const [busy, setBusy] = useState(false)
+  const { pending, trigger, confirmUndo } = useUndoSnackbar()
 
   const files = useLiveQuery(() => db.files.orderBy('createdAt').reverse().toArray())
   const totalBytes = files?.reduce((sum, f) => sum + f.size, 0) ?? 0
@@ -104,11 +108,20 @@ export function LocalTransfer() {
   async function remove(f: TransferFile) {
     const where = f.synced === 1 ? 'on all devices' : 'on this device only'
     if (!window.confirm(`Delete "${f.name}"? This removes it ${where}.`)) return
+    // Snapshot (including the Blob) before the unchanged delete, so Undo can
+    // re-put the local row and let uploadPending() re-sync it — the cloud
+    // object was just removed above, so it goes back to "pending upload".
+    const snapshot: TransferFile = { ...f }
     await db.files.delete(f.id)
     if (f.synced === 1 && f.remoteUrl) {
       await removeRemote(f.remoteUrl)
       await refreshRemote()
     }
+    trigger(`Deleted "${f.name}" · Undo`, async () => {
+      await db.files.put({ ...snapshot, synced: 0, remoteUrl: undefined })
+      await uploadPending()
+      await refreshRemote()
+    })
   }
 
   async function fetchRemote(r: RemoteFile) {
@@ -148,7 +161,7 @@ export function LocalTransfer() {
         className={`mb-6 flex cursor-pointer flex-col items-center gap-1 rounded-xl border-2 border-dashed px-6 py-10 text-center transition-colors ${
           dragActive
             ? 'border-indigo-400 bg-indigo-500/10'
-            : 'border-slate-700 hover:border-slate-500'
+            : 'border-slate-300 hover:border-slate-400 dark:border-slate-700 dark:hover:border-slate-500'
         }`}
       >
         <span className="text-3xl">⬆️</span>
@@ -168,7 +181,9 @@ export function LocalTransfer() {
 
       <SyncCard />
 
-      {files === undefined ? null : files.length === 0 && cloudOnly.length === 0 ? (
+      {files === undefined ? (
+        <SkeletonList rows={3} rowClassName="h-20" />
+      ) : files.length === 0 && cloudOnly.length === 0 ? (
         <EmptyState
           emoji="🗂️"
           title="Nothing stored yet"
@@ -178,7 +193,7 @@ export function LocalTransfer() {
         <div className="space-y-6">
           {files.length > 0 && (
             <section>
-              <p className="mb-3 text-sm text-slate-400">
+              <p className="mb-3 text-sm text-slate-500 dark:text-slate-400">
                 On this device: {files.length} file{files.length === 1 ? '' : 's'} ·{' '}
                 {formatBytes(totalBytes)}
               </p>
@@ -224,7 +239,7 @@ export function LocalTransfer() {
 
           {cloudOnly.length > 0 && (
             <section>
-              <p className="mb-3 text-sm text-slate-400">
+              <p className="mb-3 text-sm text-slate-500 dark:text-slate-400">
                 ☁️ In the cloud (not on this device): {cloudOnly.length}
               </p>
               <ul className="space-y-3">
@@ -251,6 +266,8 @@ export function LocalTransfer() {
           )}
         </div>
       )}
+
+      {pending && <Snackbar label={pending.label} onUndo={confirmUndo} />}
     </div>
   )
 }

@@ -86,7 +86,7 @@ export function JoinArea() {
     return (
       <div>
         {header}
-        <Card className="text-sm text-slate-400">This link can't be used right now.</Card>
+        <Card className="text-sm text-slate-500 dark:text-slate-400">This link can't be used right now.</Card>
       </div>
     )
   }
@@ -97,7 +97,7 @@ export function JoinArea() {
     return (
       <div>
         {header}
-        <Card className="text-sm text-slate-400">
+        <Card className="text-sm text-slate-500 dark:text-slate-400">
           🚫 This invite link isn't valid (it may have been revoked).
         </Card>
       </div>
@@ -112,12 +112,12 @@ export function JoinArea() {
         subtitle="You've been invited to a shared shopping list."
       />
       {session ? (
-        <Card className="text-sm text-slate-400">Joining…</Card>
+        <Card className="text-sm text-slate-500 dark:text-slate-400">Joining…</Card>
       ) : (
         <Card className="space-y-3 text-sm">
           {stage === 'email' ? (
             <>
-              <p className="text-slate-400">
+              <p className="text-slate-500 dark:text-slate-400">
                 Enter your email — we'll send you a 6-digit sign-in code.
               </p>
               <form onSubmit={redeem} className="flex gap-2">
@@ -128,7 +128,7 @@ export function JoinArea() {
                   placeholder="you@example.com"
                   autoComplete="email"
                   required
-                  className="min-h-10 w-full rounded-lg border border-slate-700 bg-slate-800 px-3.5 text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none"
+                  className="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none dark:border-slate-700 dark:bg-slate-800"
                 />
                 <Button type="submit" disabled={busy || !email.trim()}>
                   {busy ? '…' : 'Continue'}
@@ -137,9 +137,9 @@ export function JoinArea() {
             </>
           ) : (
             <>
-              <p className="text-slate-400">
+              <p className="text-slate-500 dark:text-slate-400">
                 Check your inbox — enter the 6-digit code we sent to{' '}
-                <span className="text-slate-200">{email.trim()}</span>.
+                <span className="text-slate-800 dark:text-slate-200">{email.trim()}</span>.
               </p>
               <form onSubmit={confirm} className="flex gap-2">
                 <input
@@ -150,7 +150,7 @@ export function JoinArea() {
                   placeholder="6-digit code"
                   autoComplete="one-time-code"
                   required
-                  className="min-h-10 w-full rounded-lg border border-slate-700 bg-slate-800 px-3.5 text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none"
+                  className="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none dark:border-slate-700 dark:bg-slate-800"
                 />
                 <Button type="submit" disabled={busy || code.trim().length < 6}>
                   {busy ? '…' : 'Join'}
@@ -158,7 +158,7 @@ export function JoinArea() {
               </form>
             </>
           )}
-          {error && <p className="text-rose-400">{error}</p>}
+          {error && <p className="text-rose-600 dark:text-rose-400">{error}</p>}
         </Card>
       )}
     </div>

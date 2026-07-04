@@ -7,7 +7,7 @@ import { addClimb, deleteClimb, deleteSession, toggleClimbSent } from '../../lib
 import { DISCIPLINE_LABEL, GRADES } from './grades'
 
 const inputClass =
-  'min-h-10 rounded-lg border border-slate-700 bg-slate-800 px-3.5 text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none'
+  'min-h-10 rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none dark:border-slate-700 dark:bg-slate-800'
 
 function formatDate(date: string): string {
   return new Date(`${date}T00:00:00`).toLocaleDateString(undefined, {
@@ -43,8 +43,8 @@ export function SessionCard({ session }: { session: ClimbSession }) {
         title="Tap to toggle sent / attempted"
         className={`flex min-h-10 items-center gap-1.5 rounded-l-lg border py-1.5 pr-2 pl-3 text-sm transition-colors ${
           climb.sent === 1
-            ? 'border-emerald-400/40 bg-emerald-400/10 text-emerald-300'
-            : 'border-slate-700 bg-slate-800/50 text-slate-400'
+            ? 'border-emerald-400/40 bg-emerald-400/10 text-emerald-600 dark:text-emerald-300'
+            : 'border-slate-300 bg-white text-slate-500 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-400'
         }`}
       >
         <span className="font-semibold">{climb.grade}</span>
@@ -54,7 +54,7 @@ export function SessionCard({ session }: { session: ClimbSession }) {
         type="button"
         onClick={() => void deleteClimb(climb.id)}
         aria-label={`Remove ${climb.grade}`}
-        className="flex min-h-10 min-w-8 items-center justify-center rounded-r-lg border border-slate-800 bg-slate-800/30 text-xs text-slate-500 transition-colors hover:text-rose-400"
+        className="flex min-h-10 min-w-8 items-center justify-center rounded-r-lg border border-slate-200 bg-slate-50 text-xs text-slate-500 transition-colors hover:text-rose-600 dark:border-slate-800 dark:bg-slate-800/30 dark:hover:text-rose-400"
       >
         ✕
       </button>
@@ -65,8 +65,8 @@ export function SessionCard({ session }: { session: ClimbSession }) {
     <Card>
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
-          <p className="font-medium text-slate-200">{session.location}</p>
-          <p className="mt-0.5 text-sm text-slate-400">
+          <p className="font-medium text-slate-800 dark:text-slate-200">{session.location}</p>
+          <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
             {formatDate(session.date)}
             {climbs && climbs.length > 0 && (
               <span className="text-slate-500">
@@ -78,15 +78,15 @@ export function SessionCard({ session }: { session: ClimbSession }) {
         <span
           className={`rounded-full border px-2.5 py-1 text-xs ${
             session.discipline === 'boulder'
-              ? 'border-indigo-400/40 bg-indigo-500/10 text-indigo-300'
-              : 'border-sky-400/40 bg-sky-500/10 text-sky-300'
+              ? 'border-indigo-400/40 bg-indigo-500/10 text-indigo-600 dark:text-indigo-300'
+              : 'border-sky-400/40 bg-sky-500/10 text-sky-600 dark:text-sky-300'
           }`}
         >
           {DISCIPLINE_LABEL[session.discipline]}
         </span>
       </div>
 
-      {session.notes && <p className="mt-2 text-sm text-slate-400">{session.notes}</p>}
+      {session.notes && <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">{session.notes}</p>}
 
       {climbs && climbs.length > 0 && (
         <ul className="mt-3 flex flex-wrap gap-2">{climbs.map(renderClimb)}</ul>
@@ -105,7 +105,7 @@ export function SessionCard({ session }: { session: ClimbSession }) {
             </option>
           ))}
         </select>
-        <div className="flex overflow-hidden rounded-lg border border-slate-700">
+        <div className="flex overflow-hidden rounded-lg border border-slate-300 dark:border-slate-700">
           {([true, false] as const).map((isSent) => (
             <button
               key={String(isSent)}
@@ -114,9 +114,9 @@ export function SessionCard({ session }: { session: ClimbSession }) {
               className={`min-h-10 px-3 text-sm transition-colors ${
                 sent === isSent
                   ? isSent
-                    ? 'bg-emerald-400/20 text-emerald-300'
-                    : 'bg-slate-700 text-slate-200'
-                  : 'bg-slate-800 text-slate-500'
+                    ? 'bg-emerald-400/20 text-emerald-600 dark:text-emerald-300'
+                    : 'bg-slate-200 text-slate-800 dark:bg-slate-700 dark:text-slate-200'
+                  : 'bg-slate-100 text-slate-500 dark:bg-slate-800'
               }`}
             >
               {isSent ? 'Sent' : 'Attempt'}
@@ -128,7 +128,7 @@ export function SessionCard({ session }: { session: ClimbSession }) {
         </Button>
       </form>
 
-      <div className="mt-3 flex justify-end gap-2 border-t border-slate-800 pt-2">
+      <div className="mt-3 flex justify-end gap-2 border-t border-slate-200 pt-2 dark:border-slate-800">
         {confirmDelete ? (
           <>
             <Button variant="ghost" onClick={() => setConfirmDelete(false)}>
@@ -142,7 +142,7 @@ export function SessionCard({ session }: { session: ClimbSession }) {
           <button
             type="button"
             onClick={() => setConfirmDelete(true)}
-            className="min-h-10 px-2 text-xs text-slate-500 transition-colors hover:text-rose-400"
+            className="min-h-10 px-2 text-xs text-slate-500 transition-colors hover:text-rose-600 dark:hover:text-rose-400"
           >
             Delete…
           </button>

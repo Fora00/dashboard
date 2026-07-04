@@ -6,9 +6,9 @@ interface Props {
 
 export function EmptyState({ emoji, title, hint }: Props) {
   return (
-    <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-slate-700 px-6 py-12 text-center">
+    <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-slate-300 px-6 py-12 text-center dark:border-slate-700">
       <span className="text-4xl">{emoji}</span>
-      <p className="font-medium text-slate-300">{title}</p>
+      <p className="font-medium text-slate-600 dark:text-slate-300">{title}</p>
       {hint && <p className="text-sm text-slate-500">{hint}</p>}
     </div>
   )

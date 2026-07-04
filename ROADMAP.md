@@ -124,20 +124,24 @@ via ONE generic outbox engine instead of three copies of `shopSync.ts`.
 Target: creating a new subproject (with optional cloud sync) takes ONE small
 config + one page component, no bespoke sync code. Concretely:
 
-- [ ] **Project scaffold recipe** [opus, after cloudSync lands]: distill the
-      todo reference integration into a repeatable kit — a new project =
-      (1) entry in `src/lib/projects.ts`, (2) route in `App.tsx`,
-      (3) Dexie table in `db.ts`, (4) one `cloudSync` table-config object,
-      (5) one SQL snippet template for the table + `is_member()` RLS +
-      realtime. Anything more than that is engine debt — fix the engine,
-      not the project.
-- [ ] **`docs/NEW_PROJECT.md` checklist** [sonnet]: step-by-step copy-paste
-      guide (with the SQL template) so any model — or Francesco — can stamp
-      out a synced project in minutes. Link it from CLAUDE.md/WORKFLOW.md.
-- [ ] **SyncCard/empty-state as drop-ins** [sonnet]: shared components a new
-      project mounts as-is, so sync UI is free.
-- [ ] Stretch: `npm run new-project <id>` generator script that stamps the
-      files from templates [sonnet].
+- [x] **Project scaffold recipe** — done 2026-07-04 as `docs/NEW_PROJECT.md`:
+      the 7-step kit (registry, route, Dexie table + versioned upgrade,
+      `<id>Sync.ts` config, SQL template with `is_member()` RLS + realtime,
+      SyncCard mount, owner-only `db push`). Engine-debt principle stated
+      in the doc.
+- [x] **`docs/NEW_PROJECT.md` checklist** — same deliverable as above;
+      linked from CLAUDE.md and WORKFLOW.md.
+- [x] **SyncCard/empty-state as drop-ins** — `SyncCard` now takes an
+      optional `sync` engine prop (drop-in status UI); `EmptyState` was
+      already shared. Every synced page mounts `<SyncCard sync={sync} />`.
+- [x] Stretch: `npm run new-project <id> [--synced]` — done 2026-07-04:
+      `scripts/new-project.mjs` stamps the page (+ sync wrapper + SQL
+      migration with --synced) and PRINTS paste-ready snippets for the three
+      manual edits (registry, route, db.ts with auto-detected next version)
+      instead of rewriting source files. Generated files compile standalone
+      via `db.table()` + two commented casts that the printed TODOs say to
+      remove after the real db.ts edit. Verified with a probe project
+      (generated, typechecked, removed).
 
 ## Project 1 — Dashboard shell (entry point)
 
@@ -230,29 +234,53 @@ config + one page component, no bespoke sync code. Concretely:
 
 ## UI & UX improvements
 
-- [ ] **Visible sync state** [sonnet, after cloudSync lands]: pending-changes
-      badge (outbox count), "last synced" time, and a visible error toast
-      when a push is rejected — no more silent failures (the user-reported
-      guest bug went unnoticed because rejects are invisible).
-- [ ] **Guest-aware empty states** [sonnet]: a signed-in guest with access to
-      nothing should see "Ask the owner for an invite", not an empty list.
-- [ ] **Undo snackbar** for destructive actions (delete area, clear bought,
-      delete file, wipe data) instead of irreversible instant deletes [sonnet]
-- [ ] **Swipe-to-delete / swipe-to-complete** on list rows (shop, todo) with
-      the buttons kept as fallback [sonnet]
-- [ ] **OTP sign-in polish** [sonnet]: `inputmode="numeric"`, autofocus,
-      one-time-code autocomplete so iOS offers the code from Mail, paste
-      support.
-- [ ] **SW update toast** [sonnet]: with `autoUpdate` a reload can swap code
-      mid-use; show a small "app updated" notice instead of surprising users.
-- [ ] **Home grid live badges** [sonnet]: unchecked-items count on Shop List,
-      due habits today on Habits, open todos on Todo.
-- [ ] **iOS install hint** [sonnet]: one-time dismissible "Add to Home
-      Screen" tip in Safari (the PWA is the intended experience).
-- [ ] **Dark mode** [sonnet]: respect `prefers-color-scheme` via Tailwind
-      dark variants across all pages.
-- [ ] **Skeleton loading + consistent offline banner** across projects
-      [sonnet]
+- [x] **Visible sync state** — done 2026-07-04: engine exposes observable
+      `SyncStatus` (`getStatus`/`subscribe` + `useSyncStatus` hook; each
+      `*Sync.ts` exports `sync` and `useStatus`). SyncCard shows pending
+      pill, "Synced Nm ago", and a persistent rose error line derived from
+      the dead-letter count (a rejected change can't be un-rejected, so the
+      message stays until the tombstone count drops). Wired into shop-list,
+      todo, climbing, habits. Nit for later: "Nm ago" doesn't tick on a
+      timer, it refreshes on status changes.
+- [x] **Guest-aware empty states** — done: signed-in non-owner with an empty
+      list sees "ask Francesco to invite you" copy (shop-list: only on the
+      no-areas state — an empty shared area is legitimately empty).
+- [x] **Undo snackbar** — done 2026-07-04: `Snackbar.tsx` + `useUndoSnackbar`
+      (delete runs immediately, in-memory snapshot, Undo re-upserts the same
+      ids through the engine — sync flow untouched, works offline). Wired:
+      todo delete/clear-done, shop item delete (new — swipe is the only
+      per-item delete), clear bought, area delete (area + items), local file
+      delete (re-enters upload path). Deliberate exceptions: Settings wipe
+      keeps its confirm (no sane snapshot); cloud-only file delete has no
+      undo. Known gap: undo is lost if the deleted area was the last one
+      (AreaManager unmounts with its snackbar).
+- [x] **Swipe-to-delete / swipe-to-complete** — done: `SwipeableRow.tsx`
+      (pointer events, 10px horizontal-intent gate, 72px threshold,
+      touch-action pan-y so scrolling wins) on shop + todo rows; right =
+      toggle, left = delete with undo; buttons kept.
+- [x] **OTP sign-in polish** — done: autofocus on email and (on stage flip)
+      code inputs, `maxLength`/`pattern` on the code, pasted codes stripped
+      of non-digits; `inputmode` + `one-time-code` were already in.
+- [x] **SW update toast** — done: `UpdateToast.tsx` hooks `onNeedReload`
+      (real API in this vite-plugin-pwa version — verified in
+      node_modules), sets a localStorage breadcrumb before the auto-reload,
+      shows a passive "App updated ✓" toast after it. Mounted in Layout.
+- [x] **Home grid live badges** — done: pill counts on Shop List (unchecked
+      items), Todo (open todos), Habits (unchecked today); hidden at zero.
+- [x] **iOS install hint** — done: `IosInstallHint.tsx` on Home, iOS-Safari
+      + not-standalone detection, dismissal persisted in localStorage.
+- [x] **Dark mode** — done 2026-07-05 (really: added a light theme — the
+      old dark look is now the `dark:` variant, pixel-identical for dark-
+      scheme users; light users get white/slate-50 surfaces, darkened
+      accents for AA contrast). Media-query only, no toggle. `color-scheme:
+      light dark` + pre-paint background in index.css, dual `theme-color`
+      metas. Known accepted gap: PWA manifest splash stays dark (manifests
+      can't do media queries).
+- [x] **Skeleton loading + consistent offline banner** — done:
+      `Skeleton.tsx`/`SkeletonList` on todo, shop-list, habits, climbing,
+      local-transfer load states (row-height matched, no layout shift);
+      `OfflineBanner.tsx` mounted once in Layout — amber "Offline — changes
+      are saved on this device and sync when you're back."
 
 ## Ideas / later
 
@@ -286,6 +314,36 @@ Candidate new subprojects (brainstormed 2026-07-04, not committed to):
 - [ ] **🎙️ Voice memos / camera capture** [opus] — capture media straight
       into `db.files`, reusing `transferSync`. iOS media APIs are fiddly.
       Effort M.
+
+Second batch (brainstormed 2026-07-04, later the same day):
+
+- [ ] **🥫 Pantry inventory** [opus for the shop-list bridge] — what's in the
+      house, optional expiry dates, one-tap "running low → add to shop list"
+      writing into `db.shopItems`. Third leg of the shop-list + meal-planner
+      triangle. Effort M. *Top pick of this batch.*
+- [ ] **🎁 Gift ideas** [sonnet] — per-person gift jottings year-round, mark
+      bought/given. Deliberately NOT shared (the giftee must never see it):
+      local-only or owner-only sync. Simplest possible table. Effort S.
+      *Top pick of this batch.*
+- [ ] **🗺️ Places wishlist** [sonnet] — restaurants/trips/spots to try, with
+      visited flag and a "pick one at random" date-night button;
+      `todos`-shaped, couple-shareable. Pairs with the reading list idea.
+      Effort S.
+- [ ] **🗓️ Countdowns & dates** [sonnet] — birthdays, renewals, trips; home
+      grid badge shows the nearest one ("Trip in 12d"), reusing the live
+      badge pattern. Effort S.
+- [ ] **🧾 Warranties & receipts** [sonnet] — snap the receipt (Blob into
+      `db.files`, reusing `transferSync`), purchase + warranty-end dates,
+      "expiring soon" view. Effort M.
+- [ ] **🌱 Plant care** [sonnet] — per-plant watering/feeding interval,
+      "due today" list, streak-style dot row copied from habits. Effort S–M.
+- [ ] **🧹 Chores rotation** [sonnet] — recurring household tasks that
+      alternate between partners ("whose turn is the bathroom"); shared and
+      assignable, unlike habits; reuses `project_members` sharing as-is.
+      Effort M.
+- [ ] **🚗 Vehicle log** [sonnet] — fuel fill-ups, maintenance, Italian
+      paperwork deadlines (bollo, revisione, insurance) with next-due
+      rollup — the subscriptions tracker idea, but for the car. Effort S–M.
 
 Infrastructure ideas:
 

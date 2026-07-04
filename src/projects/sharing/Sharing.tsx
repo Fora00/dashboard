@@ -243,7 +243,7 @@ export function Sharing() {
     return (
       <div>
         {header}
-        <Card className="text-sm text-slate-400">
+        <Card className="text-sm text-slate-500 dark:text-slate-400">
           ☁️ Cloud sync isn't configured in this build, so there's nothing to share.
         </Card>
       </div>
@@ -263,7 +263,7 @@ export function Sharing() {
     return (
       <div>
         {header}
-        <Card className="text-sm text-slate-400">
+        <Card className="text-sm text-slate-500 dark:text-slate-400">
           🔒 Only the dashboard owner can manage sharing.
         </Card>
       </div>
@@ -276,9 +276,9 @@ export function Sharing() {
     `min-h-10 rounded-full border px-3.5 text-sm transition-colors ${
       on
         ? accent === 'indigo'
-          ? 'border-indigo-400 bg-indigo-500/20 text-indigo-300'
-          : 'border-emerald-400 bg-emerald-500/15 text-emerald-300'
-        : 'border-slate-700 text-slate-500'
+          ? 'border-indigo-400 bg-indigo-500/20 text-indigo-600 dark:text-indigo-300'
+          : 'border-emerald-400 bg-emerald-500/15 text-emerald-600 dark:text-emerald-300'
+        : 'border-slate-300 text-slate-500 dark:border-slate-700'
     }`
 
   return (
@@ -294,7 +294,7 @@ export function Sharing() {
             placeholder="guest@example.com"
             autoComplete="off"
             required
-            className="min-h-10 w-full rounded-lg border border-slate-700 bg-slate-800 px-3.5 text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none"
+            className="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none dark:border-slate-700 dark:bg-slate-800"
           />
           <Button type="submit" disabled={busy || !email.trim() || (selected.length === 0 && !shopOn)}>
             Invite
@@ -326,7 +326,7 @@ export function Sharing() {
         </div>
       </form>
 
-      {error && <p className="mb-4 text-sm text-rose-400">{error}</p>}
+      {error && <p className="mb-4 text-sm text-rose-600 dark:text-rose-400">{error}</p>}
 
       {guests === null ? null : guests.length === 0 ? (
         <EmptyState
@@ -372,7 +372,7 @@ export function Sharing() {
                     })}
                   </div>
                   {shopEnabled && areas.length > 0 && (
-                    <div className="space-y-2 border-t border-slate-800 pt-3">
+                    <div className="space-y-2 border-t border-slate-200 pt-3 dark:border-slate-800">
                       <p className="text-xs text-slate-500">Shop areas this guest can use</p>
                       <div className="flex flex-wrap gap-2">
                         {areas.map((a) => {
@@ -391,7 +391,7 @@ export function Sharing() {
                         })}
                       </div>
                       {g.areas.length === 0 && (
-                        <p className="text-xs text-amber-400">
+                        <p className="text-xs text-amber-700 dark:text-amber-400">
                           No area granted yet — tap one above so this guest can see items.
                         </p>
                       )}
@@ -404,7 +404,7 @@ export function Sharing() {
         </ul>
       )}
 
-      <Card className="mt-6 flex items-center justify-between gap-3 text-sm text-slate-400">
+      <Card className="mt-6 flex items-center justify-between gap-3 text-sm text-slate-500 dark:text-slate-400">
         <span>Send guests the app link — they sign in with their email.</span>
         <Button variant="ghost" onClick={() => void shareAppLink()}>
           Share link

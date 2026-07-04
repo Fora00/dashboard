@@ -45,31 +45,31 @@ export function Settings() {
 
       <div className="space-y-6">
         <section>
-          <h2 className="mb-2 text-sm font-medium text-slate-400">Cloud sync</h2>
+          <h2 className="mb-2 text-sm font-medium text-slate-500 dark:text-slate-400">Cloud sync</h2>
           {syncEnabled ? (
             <SyncCard />
           ) : (
-            <Card className="text-sm text-slate-400">
+            <Card className="text-sm text-slate-500 dark:text-slate-400">
               ☁️ Sync isn't configured in this build.
             </Card>
           )}
         </section>
 
         <section>
-          <h2 className="mb-2 text-sm font-medium text-slate-400">Storage</h2>
+          <h2 className="mb-2 text-sm font-medium text-slate-500 dark:text-slate-400">Storage</h2>
           <Card className="space-y-3 text-sm">
-            <p className="text-slate-400">
+            <p className="text-slate-500 dark:text-slate-400">
               Used:{' '}
-              <span className="text-slate-200">
+              <span className="text-slate-800 dark:text-slate-200">
                 {estimate?.usage !== undefined ? formatBytes(estimate.usage) : '…'}
               </span>
               {estimate?.quota !== undefined && (
                 <> of {formatBytes(estimate.quota)} available</>
               )}
             </p>
-            <p className="text-slate-400">
+            <p className="text-slate-500 dark:text-slate-400">
               Protected from eviction:{' '}
-              <span className="text-slate-200">
+              <span className="text-slate-800 dark:text-slate-200">
                 {persisted === null ? '…' : persisted ? 'yes ✅' : 'no'}
               </span>
               {persisted === false && (
@@ -82,9 +82,9 @@ export function Settings() {
         </section>
 
         <section>
-          <h2 className="mb-2 text-sm font-medium text-slate-400">Danger zone</h2>
+          <h2 className="mb-2 text-sm font-medium text-slate-500 dark:text-slate-400">Danger zone</h2>
           <Card className="flex items-center justify-between gap-3 text-sm">
-            <span className="text-slate-400">
+            <span className="text-slate-500 dark:text-slate-400">
               Delete all data stored on this device.
               {session && ' Synced data in the cloud is kept.'}
             </span>
