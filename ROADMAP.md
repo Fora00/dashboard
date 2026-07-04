@@ -61,6 +61,15 @@ GitHub Pages itself is public but holds no data; auth protects the synced data.
 - [x] Sync via Supabase table + realtime (`src/lib/shopSync.ts`: Dexie outbox →
       flush on reconnect/foreground, pull remote as source of truth, realtime
       channel; UI unchanged, still local-first)
+- [x] **Areas**: the list is split into sub-areas (`shop_areas`, items carry
+      `area_id`); sharing is per-area only. Owner sees all areas implicitly;
+      guests need a `shop_area_members` row. Invite ways: (1) per-area member
+      management in the list (AreaManager), (2) invite link `#/join/<token>` —
+      the token is the area's `share_token` (owner-only via `area_share_token`
+      RPC); `redeem_invite` lets a new guest self-whitelist for that one area
+      (the link IS the invitation — revoke by removing the guest). Migration
+      `20260704150000_shop_areas.sql`; local data migrated into a fixed-id
+      "Groceries" area that matches the server default.
 - [x] Guest sharing: **Sharing** project (`/sharing`, owner-only card on home) —
       invite a guest email, toggle per-project access, remove guests, share the
       app link. Backed by owner-only RLS policies on `allowed_emails` +

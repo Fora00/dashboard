@@ -15,7 +15,8 @@ import { SyncCard } from '../../components/SyncCard'
 // only allow the owner, so this page is a convenience, not a security gate.
 
 const APP_URL = 'https://fora00.github.io/dashboard/'
-const shareable = projects.filter((p) => !p.ownerOnly)
+// Shop List is shared per-area from inside the list itself, not here.
+const shareable = projects.filter((p) => !p.ownerOnly && p.id !== 'shop-list')
 
 interface Guest {
   email: string
@@ -128,7 +129,7 @@ export function Sharing() {
     <PageHeader
       emoji="👥"
       title="Sharing"
-      subtitle="Invite guests by email and choose which projects they can use."
+      subtitle="Guests and their project access. Shop List areas are shared from inside the list."
     />
   )
 

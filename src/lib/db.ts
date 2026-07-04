@@ -19,24 +19,38 @@ export interface ShopItem {
   id: string
   text: string
   done: 0 | 1
+  areaId: string
   createdAt: number
   updatedAt: number
 }
+
+// A sub-area of the shop list ("Groceries", "Pharmacy", …). Sharing with
+// guests happens per-area, never for the whole list.
+export interface ShopArea {
+  id: string
+  name: string
+  createdAt: number
+}
+
+// Fixed id for the area that pre-area local items are migrated into; the
+// server migration uses the same id so local and remote merge cleanly.
+export const DEFAULT_AREA_ID = '00000000-0000-0000-0000-000000000001'
 
 // Queue of local mutations not yet pushed to the cloud. Written alongside
 // every local write so changes made offline sync on reconnect (see shopSync.ts).
 export interface OutboxEntry {
   seq?: number
-  table: 'shop_items'
+  table: 'shop_items' | 'shop_areas'
   op: 'upsert' | 'delete'
   rowId: string
-  payload?: ShopItem
+  payload?: ShopItem | ShopArea
   ts: number
 }
 
 export const db = new Dexie('dashboard') as Dexie & {
   files: EntityTable<TransferFile, 'id'>
   shopItems: EntityTable<ShopItem, 'id'>
+  shopAreas: EntityTable<ShopArea, 'id'>
   outbox: EntityTable<OutboxEntry, 'seq'>
 }
 
@@ -50,6 +64,22 @@ db.version(2).stores({
   shopItems: 'id, done, createdAt',
   outbox: '++seq, rowId',
 })
+
+db.version(3)
+  .stores({
+    files: 'id, name, createdAt, synced',
+    shopItems: 'id, done, createdAt, areaId',
+    shopAreas: 'id, createdAt',
+    outbox: '++seq, rowId',
+  })
+  .upgrade(async (tx) => {
+    await tx.table('shopAreas').add({
+      id: DEFAULT_AREA_ID,
+      name: 'Groceries',
+      createdAt: Date.now(),
+    })
+    await tx.table('shopItems').toCollection().modify({ areaId: DEFAULT_AREA_ID })
+  })
 
 // Ask the browser not to evict our data under storage pressure (important on iOS).
 export async function requestPersistentStorage(): Promise<boolean> {
