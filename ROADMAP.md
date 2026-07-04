@@ -58,8 +58,14 @@ GitHub Pages itself is public but holds no data; auth protects the synced data.
 
 - [x] Route + page; `db.shopItems` schema exists
 - [x] Add/check/uncheck items, clear bought (local-first against `db.shopItems`)
-- [ ] Sync via Supabase table + realtime
-- [ ] Guest sharing: whitelist a guest email (girlfriend) with read/write on this project only
+- [x] Sync via Supabase table + realtime (`src/lib/shopSync.ts`: Dexie outbox →
+      flush on reconnect/foreground, pull remote as source of truth, realtime
+      channel; UI unchanged, still local-first)
+- [ ] Guest sharing: whitelist a guest email (girlfriend) with read/write on
+      this project only. Backend is ready — to invite, run in Supabase Studio:
+      `insert into allowed_emails (email) values ('<guest>');`
+      `insert into project_members (project_id, email) values ('shop-list', '<guest>');`
+      Still to do: small owner UI for this (or keep it SQL-only)
 
 ## Infrastructure
 
@@ -67,13 +73,23 @@ GitHub Pages itself is public but holds no data; auth protects the synced data.
 - [x] Local git repository with initial commit
 - [x] GitHub repo: https://github.com/Fora00/dashboard (public — free plan doesn't allow Pages on private repos; owner approved)
 - [x] Pages enabled, live at https://fora00.github.io/dashboard/
-- [ ] **Supabase project** (owner must create it, free tier):
-  - [ ] Auth: magic-link login; `allowed_emails` whitelist table + RLS
-  - [ ] `project_members(project_id, email)` for per-project guest access
-  - [ ] Storage bucket `transfer` for local-transfer files
-  - [ ] `shop_items` table with realtime + RLS by membership
-  - [ ] Put `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` in `.env.local` and in repo Actions secrets
-  - [ ] Implement client in `src/lib/sync.ts` (`npm i @supabase/supabase-js`); login screen gating sync only (local mode always works)
+- [x] **Supabase project**: `undeyznqkmnhgdetpbdk` (https://undeyznqkmnhgdetpbdk.supabase.co),
+      CLI as dev dependency (`npx supabase`), config in `supabase/`
+  - [x] Auth: email **OTP code** login (not link-click — links open Safari, not
+        the installed PWA, on iOS); `allowed_emails` whitelist enforced by a
+        `before insert on auth.users` trigger (migration `20260704000000_init_sync.sql`)
+  - [x] `project_members(project_id, email)` + `is_member()`/`is_owner()` RLS helpers
+  - [x] Storage bucket `transfer` + member-only policies (client upload not wired yet)
+  - [x] `shop_items` table with realtime + RLS by membership
+  - [x] `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` in `.env.local` and repo Actions secrets
+  - [x] Client: `src/lib/sync.ts` (client + OTP auth), `src/lib/useAuth.ts`,
+        `src/components/SyncCard.tsx` (sign-in card on shop-list; local mode always works)
+  - [ ] Apply backend to hosted project (needs owner login):
+        `npx supabase login` → `npx supabase link --project-ref undeyznqkmnhgdetpbdk`
+        → `npx supabase db push` → `npx supabase config push`
+        (config push sets site_url + the OTP email template with `{{ .Token }}`).
+        **Don't push to `main` before `db push` succeeds** — the deployed app
+        would allow non-whitelisted sign-ups until the trigger exists.
 
 ## Ideas / later
 

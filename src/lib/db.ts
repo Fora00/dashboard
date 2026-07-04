@@ -23,14 +23,32 @@ export interface ShopItem {
   updatedAt: number
 }
 
+// Queue of local mutations not yet pushed to the cloud. Written alongside
+// every local write so changes made offline sync on reconnect (see shopSync.ts).
+export interface OutboxEntry {
+  seq?: number
+  table: 'shop_items'
+  op: 'upsert' | 'delete'
+  rowId: string
+  payload?: ShopItem
+  ts: number
+}
+
 export const db = new Dexie('dashboard') as Dexie & {
   files: EntityTable<TransferFile, 'id'>
   shopItems: EntityTable<ShopItem, 'id'>
+  outbox: EntityTable<OutboxEntry, 'seq'>
 }
 
 db.version(1).stores({
   files: 'id, name, createdAt, synced',
   shopItems: 'id, done, createdAt',
+})
+
+db.version(2).stores({
+  files: 'id, name, createdAt, synced',
+  shopItems: 'id, done, createdAt',
+  outbox: '++seq, rowId',
 })
 
 // Ask the browser not to evict our data under storage pressure (important on iOS).

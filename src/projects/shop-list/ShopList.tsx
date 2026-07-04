@@ -1,9 +1,9 @@
 import { useState, type FormEvent } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, type ShopItem } from '../../lib/db'
-import { syncEnabled } from '../../lib/sync'
+import { addShopItem, toggleShopItem, clearBoughtItems } from '../../lib/shopSync'
 import { Button } from '../../components/Button'
-import { Card } from '../../components/Card'
+import { SyncCard } from '../../components/SyncCard'
 import { PageHeader } from '../../components/PageHeader'
 import { EmptyState } from '../../components/EmptyState'
 
@@ -18,32 +18,15 @@ export function ShopList() {
     e.preventDefault()
     const trimmed = text.trim()
     if (!trimmed) return
-    await db.shopItems.add({
-      id: crypto.randomUUID(),
-      text: trimmed,
-      done: 0,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-    })
+    await addShopItem(trimmed)
     setText('')
-  }
-
-  async function toggle(item: ShopItem) {
-    await db.shopItems.update(item.id, {
-      done: item.done === 0 ? 1 : 0,
-      updatedAt: Date.now(),
-    })
-  }
-
-  async function clearBought() {
-    await db.shopItems.where('done').equals(1).delete()
   }
 
   const renderItem = (item: ShopItem) => (
     <li key={item.id}>
       <button
         type="button"
-        onClick={() => toggle(item)}
+        onClick={() => void toggleShopItem(item)}
         className="flex min-h-12 w-full items-center gap-3 rounded-lg border border-slate-800 bg-slate-800/50 px-4 text-left transition-colors hover:border-slate-600 active:bg-slate-800"
       >
         <span
@@ -84,12 +67,7 @@ export function ShopList() {
         </Button>
       </form>
 
-      {!syncEnabled && (
-        <Card className="mb-6 text-sm text-slate-400">
-          👥 Sharing with guests needs cloud sync, which isn't configured yet —
-          for now the list lives on this device only. See ROADMAP.md.
-        </Card>
-      )}
+      <SyncCard />
 
       {items === undefined ? null : items.length === 0 ? (
         <EmptyState
@@ -113,7 +91,7 @@ export function ShopList() {
                 <h2 className="text-sm font-medium text-slate-400">
                   Bought · {bought.length}
                 </h2>
-                <Button variant="danger" onClick={clearBought}>
+                <Button variant="danger" onClick={() => void clearBoughtItems()}>
                   Clear bought
                 </Button>
               </div>
