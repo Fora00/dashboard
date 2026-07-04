@@ -5,6 +5,7 @@ import { startShopSync } from './lib/shopSync'
 import { useAuth } from './lib/useAuth'
 import { Home } from './projects/home/Home'
 import { LocalTransfer } from './projects/local-transfer/LocalTransfer'
+import { Sharing } from './projects/sharing/Sharing'
 import { ShopList } from './projects/shop-list/ShopList'
 
 // Hash-based routing so deep links work on GitHub Pages without a server.
@@ -23,6 +24,7 @@ export default function App() {
           <Route index element={<Home />} />
           <Route path="/local-transfer" element={<LocalTransfer />} />
           <Route path="/shop-list" element={<ShopList />} />
+          <Route path="/sharing" element={<Sharing />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>

@@ -61,11 +61,12 @@ GitHub Pages itself is public but holds no data; auth protects the synced data.
 - [x] Sync via Supabase table + realtime (`src/lib/shopSync.ts`: Dexie outbox →
       flush on reconnect/foreground, pull remote as source of truth, realtime
       channel; UI unchanged, still local-first)
-- [ ] Guest sharing: whitelist a guest email (girlfriend) with read/write on
-      this project only. Backend is ready — to invite, run in Supabase Studio:
-      `insert into allowed_emails (email) values ('<guest>');`
-      `insert into project_members (project_id, email) values ('shop-list', '<guest>');`
-      Still to do: small owner UI for this (or keep it SQL-only)
+- [x] Guest sharing: **Sharing** project (`/sharing`, owner-only card on home) —
+      invite a guest email, toggle per-project access, remove guests, share the
+      app link. Backed by owner-only RLS policies on `allowed_emails` +
+      `project_members` (migration `20260704120000_owner_sharing.sql`). The
+      owner bypasses membership checks (`is_member()` returns true for owner on
+      every project); only guests are granular.
 
 ## Infrastructure
 

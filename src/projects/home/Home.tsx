@@ -3,12 +3,15 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../../lib/db'
 import { projects } from '../../lib/projects'
 import { formatBytes } from '../../lib/format'
+import { useOwner } from '../../lib/useOwner'
 import { Card } from '../../components/Card'
 
 // The dashboard home is itself the first "project": the entry point that
 // surfaces every subproject and a live stat pulled from its data — an example
 // of one project reading another project's data through the shared db.
 export function Home() {
+  const owner = useOwner()
+  const visible = projects.filter((p) => !p.ownerOnly || owner)
   const fileStats = useLiveQuery(async () => {
     const files = await db.files.toArray()
     return {
@@ -37,10 +40,11 @@ export function Home() {
     <div>
       <h1 className="mb-1 text-2xl font-semibold tracking-tight">Projects</h1>
       <p className="mb-6 text-sm text-slate-400">
-        Everything lives on this device and works offline. Cloud sync coming soon.
+        Everything lives on this device and works offline. Sign in to sync
+        across devices.
       </p>
       <div className="grid gap-4 sm:grid-cols-2">
-        {projects.map((p) => (
+        {visible.map((p) => (
           <Link key={p.id} to={p.path} className="group">
             <Card className="h-full transition-colors group-hover:border-slate-600 group-active:bg-slate-800">
               <div className="mb-2 flex items-center justify-between">

@@ -9,6 +9,8 @@ export interface ProjectMeta {
   description: string
   path: string
   status: 'live' | 'planned'
+  // Shown on the home grid only to the signed-in owner.
+  ownerOnly?: boolean
 }
 
 export const projects: ProjectMeta[] = [
@@ -27,5 +29,14 @@ export const projects: ProjectMeta[] = [
     description: 'Groceries todo list, sharable with whitelisted guests.',
     path: '/shop-list',
     status: 'live',
+  },
+  {
+    id: 'sharing',
+    name: 'Sharing',
+    emoji: '👥',
+    description: 'Invite guests by email and choose which projects they can use.',
+    path: '/sharing',
+    status: 'live',
+    ownerOnly: true,
   },
 ]
