@@ -55,6 +55,22 @@ export const projects: ProjectMeta[] = [
     status: 'live',
   },
   {
+    id: 'book-ideas',
+    name: 'Book Ideas',
+    emoji: '📖',
+    description: 'Capture writing ideas for books, with room for notes.',
+    path: '/book-ideas',
+    status: 'live',
+  },
+  {
+    id: 'boardgame-ideas',
+    name: 'Boardgame Ideas',
+    emoji: '🎲',
+    description: 'Capture board game design ideas, with room for notes.',
+    path: '/boardgame-ideas',
+    status: 'live',
+  },
+  {
     id: 'settings',
     name: 'Settings',
     emoji: '⚙️',

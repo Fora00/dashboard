@@ -1,12 +1,16 @@
 import { useEffect } from 'react'
 import { HashRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { Layout } from './components/Layout'
+import { startBoardgameIdeasSync } from './lib/boardgameIdeasSync'
+import { startBookIdeasSync } from './lib/bookIdeasSync'
 import { startClimbSync } from './lib/climbSync'
 import { startHabitSync } from './lib/habitSync'
 import { startShopSync } from './lib/shopSync'
 import { startTodoSync } from './lib/todoSync'
 import { startTransferSync } from './lib/transferSync'
 import { useAuth } from './lib/useAuth'
+import { BoardgameIdeas } from './projects/boardgame-ideas/BoardgameIdeas'
+import { BookIdeas } from './projects/book-ideas/BookIdeas'
 import { Climbing } from './projects/climbing/Climbing'
 import { Habits } from './projects/habits/Habits'
 import { Home } from './projects/home/Home'
@@ -33,6 +37,8 @@ export default function App() {
       startClimbSync(),
       startHabitSync(),
       startTransferSync(),
+      startBookIdeasSync(),
+      startBoardgameIdeasSync(),
     ]
     return () => {
       for (const stop of stops) stop()
@@ -49,6 +55,8 @@ export default function App() {
           <Route path="/todo" element={<Todo />} />
           <Route path="/climbing" element={<Climbing />} />
           <Route path="/habits" element={<Habits />} />
+          <Route path="/book-ideas" element={<BookIdeas />} />
+          <Route path="/boardgame-ideas" element={<BoardgameIdeas />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/sharing" element={<Sharing />} />
           <Route path="/join/:token" element={<JoinArea />} />

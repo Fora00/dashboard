@@ -117,7 +117,9 @@ via ONE generic outbox engine instead of three copies of `shopSync.ts`.
       superseded; session delete = one tombstone + local cascade)
 - [x] Wire habits to the engine (`src/lib/habitSync.ts`; `habitStore.ts`
       keeps only pure date helpers)
-- [ ] Owner applies backend: `npx supabase db push` (orchestrator/owner only)
+- [x] Owner applied backend 2026-07-05: `npx supabase db push` — verified via
+      `migration list`, all five migrations (init, owner_sharing, shop_areas,
+      sync_parity, sharing_hardening) live on the hosted project.
 
 ## DX — new project in minutes (goal: add a project without doing a lot)
 
@@ -231,6 +233,26 @@ config + one page component, no bespoke sync code. Concretely:
 
 - [x] Habits with emoji, daily check-off, streak + 14-day dot row, archive/restore/delete (`db.habits`, `db.habitChecks`)
 - [x] Cloud sync via `src/lib/habitSync.ts` on the generic engine (2026-07-04)
+
+## Project 7 — book-ideas · Project 8 — boardgame-ideas (idea capture)
+
+Both added 2026-07-05 via the NEW_PROJECT.md kit + generator (first real use):
+
+- [x] `book-ideas` 📖 and `boardgame-ideas` 🎲: title + optional notes per
+      idea (tap row to expand, textarea saves on blur), swipe-left delete
+      with undo, skeletons, guest-aware empty states, theme-aware. Dexie v6
+      (`bookIdeas`) + v7 (`boardgameIdeas`); wrappers
+      `bookIdeasSync.ts`/`boardgameIdeasSync.ts` on the generic engine.
+- [x] Migrations `20260705100000_book_ideas.sql`,
+      `20260705110000_boardgame_ideas.sql` (RLS `is_member()` with
+      WITH CHECK, realtime). *Pending `db push`.*
+- [x] Generator hardening found by dogfooding: `npm run new-project`
+      requires `--` before args (npm swallows flags otherwise — usage +
+      docs now say so); double-pluralization of already-plural ids fixed
+      (`book_ideass` → `book_ideas`); wrapper filenames now camelCase
+      (`bookIdeasSync.ts`, not `book-ideasSync.ts`).
+- [ ] Owner applies backend: `npx supabase db push` for the two new
+      migrations (pages already work local-only).
 
 ## UI & UX improvements
 

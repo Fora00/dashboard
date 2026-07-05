@@ -92,6 +92,26 @@ export interface Todo {
   updatedAt: number
 }
 
+// A book-writing idea: a title plus optional free-text notes.
+// Cloud-syncable via the generic engine (src/lib/cloudSync.ts).
+export interface BookIdea {
+  id: string
+  text: string
+  notes: string
+  createdAt: number
+  updatedAt: number
+}
+
+// A board game design idea: a title plus optional free-text notes. Same
+// shape as BookIdea — cloud-syncable via the generic engine.
+export interface BoardgameIdea {
+  id: string
+  text: string
+  notes: string
+  createdAt: number
+  updatedAt: number
+}
+
 // Remote table names that the generic sync engine can push to. Each is also
 // the discriminator on an outbox entry. Mirrors the Supabase tables.
 export type OutboxTable =
@@ -102,6 +122,8 @@ export type OutboxTable =
   | 'climbs'
   | 'habits'
   | 'habit_checks'
+  | 'book_ideas'
+  | 'boardgame_ideas'
 
 // Local rows that may travel through the outbox (any synced project's shape).
 export type OutboxPayload =
@@ -112,6 +134,8 @@ export type OutboxPayload =
   | Climb
   | Habit
   | HabitCheck
+  | BookIdea
+  | BoardgameIdea
 
 // Queue of local mutations not yet pushed to the cloud. Written alongside
 // every local write so changes made offline sync on reconnect (see cloudSync.ts).
@@ -141,6 +165,8 @@ export const db = new Dexie('dashboard') as Dexie & {
   habits: EntityTable<Habit, 'id'>
   habitChecks: EntityTable<HabitCheck, 'id'>
   todos: EntityTable<Todo, 'id'>
+  bookIdeas: EntityTable<BookIdea, 'id'>
+  boardgameIdeas: EntityTable<BoardgameIdea, 'id'>
 }
 
 db.version(1).stores({
@@ -206,6 +232,35 @@ db.version(5)
         if (t.updatedAt === undefined) t.updatedAt = t.createdAt ?? Date.now()
       })
   })
+
+// v6: adds bookIdeas — a brand-new empty table, so no backfill upgrade needed.
+db.version(6).stores({
+  files: 'id, name, createdAt, synced',
+  shopItems: 'id, done, createdAt, areaId',
+  shopAreas: 'id, createdAt',
+  outbox: '++seq, rowId',
+  climbSessions: 'id, date',
+  climbs: 'id, sessionId, date',
+  habits: 'id, createdAt',
+  habitChecks: 'id, habitId, day, [habitId+day]',
+  todos: 'id, done, createdAt',
+  bookIdeas: 'id, createdAt',
+})
+
+// v7: adds boardgameIdeas — a brand-new empty table, so no backfill upgrade needed.
+db.version(7).stores({
+  files: 'id, name, createdAt, synced',
+  shopItems: 'id, done, createdAt, areaId',
+  shopAreas: 'id, createdAt',
+  outbox: '++seq, rowId',
+  climbSessions: 'id, date',
+  climbs: 'id, sessionId, date',
+  habits: 'id, createdAt',
+  habitChecks: 'id, habitId, day, [habitId+day]',
+  todos: 'id, done, createdAt',
+  bookIdeas: 'id, createdAt',
+  boardgameIdeas: 'id, createdAt',
+})
 
 // Ask the browser not to evict our data under storage pressure (important on iOS).
 export async function requestPersistentStorage(): Promise<boolean> {

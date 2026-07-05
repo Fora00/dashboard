@@ -1,11 +1,21 @@
 # Stamp out a new (optionally synced) project
 
-> **Shortcut:** `npm run new-project <id> [--synced]` stamps out steps 4-6
+> **Shortcut:** `npm run new-project -- <id> [--synced]` stamps out steps 4-6
 > below (the page, the sync wrapper, the SQL migration) from these exact
 > templates, and prints the remaining manual edits (steps 1, 2, 3) as
 > paste-ready snippets — it never rewrites an existing file. This checklist
 > stays the source of truth for what "correct" looks like; run
 > `node scripts/new-project.mjs` with no args for usage.
+>
+> **The `--` before `<id>` is required.** Without it, `npm run` swallows
+> `--synced`/`--name`/`--emoji` as npm's own (unknown) config flags instead of
+> forwarding them to the script — you silently get a local-only page with the
+> default 📦 emoji and only an easy-to-miss `npm warn` as a clue.
+>
+> The script also naively pluralizes `<id>` for table/column names (e.g.
+> `reading` → `readings`); for an id whose last word is already plural (e.g.
+> `book-ideas`), it detects the trailing "s" and does not double-pluralize
+> (`book_ideas`, not `book_ideass`).
 
 This is the copy-paste checklist for adding a subproject to the dashboard. A new
 project that syncs across devices is **seven small steps** and no bespoke sync
@@ -145,7 +155,11 @@ db.version(6)
 Adding a brand-new empty table needs no `.upgrade()` — just the new
 `db.version(N).stores({...})`.
 
-## 4. Sync wrapper — `src/lib/<id>Sync.ts`
+## 4. Sync wrapper — `src/lib/<idCamel>Sync.ts`
+
+The filename is the **camelCase** id + `Sync.ts` — hyphenated ids flatten
+(`shop-list` → `shopSync.ts`, `book-ideas` → `bookIdeasSync.ts`); the generator
+does this for you.
 
 One file. Define the remote row shape, one `TableSync` per table, create the
 engine, and export mutation helpers the UI calls **instead of raw Dexie
