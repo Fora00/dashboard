@@ -244,7 +244,9 @@ export function createCloudSync(config: SyncConfig): CloudSync {
       )
       for (let i = 0; i < config.tables.length; i++) {
         const tc = config.tables[i]
-        const rows = (results[i].data as unknown[]).map((r) => tc.fromRow(r))
+        const result = results[i]
+        if (!tc || !result) continue
+        const rows = (result.data as unknown[]).map((r) => tc.fromRow(r))
         const remoteIds = new Set(rows.map((r) => r.id))
         const localIds = (await tc.table().toCollection().primaryKeys()) as string[]
         await tc.table().bulkPut(rows.filter((r) => !pending.has(r.id)))

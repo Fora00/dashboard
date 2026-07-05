@@ -1,4 +1,5 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import type { Database } from './database.types'
 
 // Cloud sync layer (Supabase).
 //
@@ -17,8 +18,8 @@ export const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string 
 
 export const syncEnabled = Boolean(supabaseUrl && supabaseAnonKey)
 
-export const supabase: SupabaseClient | null = syncEnabled
-  ? createClient(supabaseUrl!, supabaseAnonKey!)
+export const supabase: SupabaseClient<Database> | null = syncEnabled
+  ? createClient<Database>(supabaseUrl!, supabaseAnonKey!)
   : null
 
 /** Email a 6-digit sign-in code. Fails if the email isn't whitelisted. */

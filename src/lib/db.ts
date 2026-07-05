@@ -12,7 +12,7 @@ export interface TransferFile {
   createdAt: number
   // 0 = local only, 1 = uploaded to cloud (once sync is configured)
   synced: 0 | 1
-  remoteUrl?: string
+  remoteUrl?: string | undefined
 }
 
 export interface ShopItem {
@@ -45,7 +45,7 @@ export interface ClimbSession {
   date: string
   location: string
   discipline: Discipline
-  notes?: string
+  notes?: string | undefined
   createdAt: number
 }
 
@@ -69,7 +69,7 @@ export interface Habit {
   createdAt: number
   // Set when the habit is archived; archived habits keep their history but
   // are hidden from the daily check-off list.
-  archivedAt?: number
+  archivedAt?: number | undefined
 }
 
 // One check-off of a habit on one local calendar day.

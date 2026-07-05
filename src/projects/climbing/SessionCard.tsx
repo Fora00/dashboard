@@ -20,7 +20,8 @@ function formatDate(date: string): string {
 
 export function SessionCard({ session }: { session: ClimbSession }) {
   const grades = GRADES[session.discipline]
-  const [grade, setGrade] = useState(grades[Math.floor(grades.length / 3)])
+  // GRADES arrays are non-empty compile-time constants.
+  const [grade, setGrade] = useState(grades[Math.floor(grades.length / 3)]!)
   const [sent, setSent] = useState(true)
   const [confirmDelete, setConfirmDelete] = useState(false)
 
