@@ -67,15 +67,15 @@ Full failure scenarios in the audit; fix top-down. Blockers for extending sync:
 - [x] **HIGH — guest removal doesn't revoke access** — fixed 2026-07-04
       (`20260704170000_sharing_hardening.sql`): `revoke_area_guest` RPC
       removes membership + rotates `share_token` (old links die); manual
-      "♻️ Reset link" in AreaManager. *Backend pending `db push`.*
+      "♻️ Reset link" in AreaManager. *Backend applied 2026-07-05.*
 - [x] **MED-HIGH — `redeem_invite` whitelists arbitrary emails forever** —
       fixed: email normalized/validated, auto-created whitelist rows are
       flagged `auto_whitelisted` and cleaned up on revoke when the guest has
-      no memberships left. *Backend pending `db push`.*
+      no memberships left. *Backend applied 2026-07-05.*
 - [x] **MED — transfer bucket free-for-all** — fixed: uploads go to
       `<uid>/…`, write/delete policies scoped to own folder (owner keeps
       full control incl. legacy flat paths); guests can no longer touch
-      others' files. *Backend pending `db push`.*
+      others' files. *Backend applied 2026-07-05.*
 - [x] **MED — realtime handler ignores `updatedAt` + pending outbox** —
       fixed in the engine: events for rows with outbox entries are skipped,
       LWW by `updatedAt` where configured; `shop_areas` added to the
@@ -86,7 +86,7 @@ Full failure scenarios in the audit; fix top-down. Blockers for extending sync:
 - [x] **LOW — sync effect keys on session object identity** — fixed in
       `App.tsx`: keyed on `session?.user?.id`.
 - [x] **LOW — `shop_areas` UPDATE policy missing `WITH CHECK`** — fixed in
-      the hardening migration. *Backend pending `db push`.*
+      the hardening migration. *Backend applied 2026-07-05.*
 - [x] **HIGH (user-reported 2026-07-04) — invited guest can't complete/add
       shop items** — root cause: the two sharing systems were disjoint
       (/sharing wrote only `project_members`; `shop_items` RLS checks
@@ -110,7 +110,7 @@ via ONE generic outbox engine instead of three copies of `shopSync.ts`.
       `shopSync.ts` ported onto it (same nine exports, UI unchanged).
 - [x] Supabase migration `20260704160000_sync_parity.sql`: `todos`,
       `climb_sessions`, `climbs`, `habits`, `habit_checks`, RLS by
-      `is_member()`, realtime incl. `shop_areas`. *Pending `db push`.*
+      `is_member()`, realtime incl. `shop_areas`. *Applied 2026-07-05.*
 - [x] Wire todo page to the engine (`src/lib/todoSync.ts` — THE reference
       integration; Dexie v5 adds `todos.updatedAt`, backfill-only upgrade)
 - [x] Wire climbing to the engine (`src/lib/climbSync.ts`; `data.ts`
@@ -245,14 +245,14 @@ Both added 2026-07-05 via the NEW_PROJECT.md kit + generator (first real use):
       `bookIdeasSync.ts`/`boardgameIdeasSync.ts` on the generic engine.
 - [x] Migrations `20260705100000_book_ideas.sql`,
       `20260705110000_boardgame_ideas.sql` (RLS `is_member()` with
-      WITH CHECK, realtime). *Pending `db push`.*
+      WITH CHECK, realtime). *Applied 2026-07-05.*
 - [x] Generator hardening found by dogfooding: `npm run new-project`
       requires `--` before args (npm swallows flags otherwise — usage +
       docs now say so); double-pluralization of already-plural ids fixed
       (`book_ideass` → `book_ideas`); wrapper filenames now camelCase
       (`bookIdeasSync.ts`, not `book-ideasSync.ts`).
-- [ ] Owner applies backend: `npx supabase db push` for the two new
-      migrations (pages already work local-only).
+- [x] Owner applied backend 2026-07-05: `npx supabase db push` — verified via
+      `migration list`, all seven migrations live on the hosted project.
 
 ## UI & UX improvements
 
