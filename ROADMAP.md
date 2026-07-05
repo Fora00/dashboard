@@ -304,6 +304,118 @@ Both added 2026-07-05 via the NEW_PROJECT.md kit + generator (first real use):
       `OfflineBanner.tsx` mounted once in Layout — amber "Offline — changes
       are saved on this device and sync when you're back."
 
+## Engineering quality (audit 2026-07-05)
+
+Not new features — gaps found while auditing the current codebase against
+what's already shipped. Ranked by how cheap + how load-bearing.
+
+> **Parked — not being worked on right now.** Logged so the findings aren't
+> lost, not dispatched to any builder. Pick items up explicitly when ready.
+
+- [ ] **Stale "local-only" copy on todo/habits** [sonnet] — `src/lib/projects.ts`
+      still describes `todo` as "Local-only on this device for now" and
+      `habits` as "Local-only on this device," but both have synced via the
+      generic engine since 2026-07-04 (Projects 5/6, `App.tsx` starts
+      `startTodoSync()`/`startHabitSync()`). The home grid is telling users
+      the wrong thing about their own data. Effort XS — one-line copy fix
+      each, no code paths touched.
+- [ ] **No automated tests for `cloudSync.ts`** [opus] — this one file is the
+      shared engine behind every synced project, and its entire content is a
+      list of manually-audited-and-fixed concurrency/data-loss bugs (dead-
+      letter classification via `classify()`, last-writer-wins by
+      `updatedAt`, the `running` reentrancy guard, ordered flush that stops
+      on first transient failure). None of it has regression coverage — a
+      future refactor could silently reintroduce the guest-sign-in-wipes-
+      data bug this engine exists to prevent. Needs a test harness that can
+      fake the Supabase client + Dexie (or run against a local Supabase);
+      scope that decision to the brief. Effort M.
+- [ ] **CI never runs `npm run lint`** [sonnet] — `.github/workflows/*.yml`
+      only runs `npm run build` (tsc + vite build); the `lint` script
+      (`oxlint`) exists but nothing invokes it in CI, so lint regressions on
+      `main` go unnoticed until someone runs it locally. Add a step (or fold
+      into the existing build step) before `npm run build`. Effort XS.
+- [ ] **No top-level React error boundary** [sonnet] — no `ErrorBoundary`
+      exists in `src/components/`. An uncaught render error in any one
+      subproject page currently white-screens the whole PWA with no
+      recovery affordance, worse on an installed home-screen app than a
+      browser tab (no obvious "reload" chrome). Wrap the routed `<Layout />`
+      content with a small boundary that shows an EmptyState-style fallback
+      + a reload button. Effort S.
+- [ ] **No route-level code splitting — confirmed 617 KB single JS bundle**
+      [sonnet] — `src/App.tsx` eagerly imports all nine project pages; a
+      throwaway `npm run build` on 2026-07-05 shipped one
+      `index-*.js` at 617 KB (176 KB gzip), and Vite's own build output
+      flags it ("Some chunks are larger than 500 kB"). Every visitor
+      downloads climbing, habits, book-ideas, etc. even if they only ever
+      open shop-list. Fix: `React.lazy()` + `<Suspense>` per `<Route>` in
+      `App.tsx`, one shared loading fallback (reuse `Skeleton`-style UI).
+      Effort S–M.
+- [ ] **Whitelist-rejection detection is a message-text regex** [sonnet] —
+      `requestLoginCode` in `src/lib/sync.ts` detects "this email isn't
+      invited" by matching `/database error/i` against the raw Supabase
+      error message string. This is exactly the kind of check that breaks
+      silently after a Supabase SDK/API wording change — the whitelist
+      rejection would then fall through to a generic error and the nice
+      "This email isn't invited to this dashboard" UX would quietly regress
+      to something less clear. Prefer a structured check (error code/status,
+      or a custom SQLSTATE raised by the trigger) over message matching.
+      Effort XS–S.
+- [ ] **`database.types.ts` regeneration is undocumented** [sonnet] — the
+      typed Supabase client (`src/lib/database.types.ts`, added in "ts:
+      strict mode + typed supabase client") is currently up to date, but
+      nothing in `docs/NEW_PROJECT.md`'s 7-step recipe, `package.json`
+      scripts, or CI mentions regenerating it. The next new synced
+      subproject can easily add a migration (step 5) and forget the types
+      never got refreshed, since nothing points at that step or fails
+      loudly if it's skipped. Add an `npm run db:types` script wrapping
+      `npx supabase gen types typescript --linked > src/lib/database.types.ts`
+      and reference it as an explicit step in `docs/NEW_PROJECT.md`. Effort
+      XS.
+- [ ] **No automated dependency/security-update tooling** [sonnet] — no
+      Dependabot or Renovate config exists in the repo, and CI never runs
+      `npm audit`. `npm audit` is clean today (0 vulnerabilities, checked
+      2026-07-05), but nothing keeps that true — a future CVE in
+      `@supabase/supabase-js` or a transitive dep would go unnoticed until
+      someone happens to run it locally. Add a `.github/dependabot.yml`
+      (weekly, npm ecosystem) and/or an `npm audit --audit-level=high` CI
+      step. Effort XS.
+- [ ] **Dead-lettered outbox entries have no recovery path except a full
+      device wipe** [sonnet] — a permanently-rejected sync entry is (by
+      design, see `cloudSync.ts`) never deleted, so it keeps shielding its
+      local row from `pull()` forever — see `SyncCard`'s persistent "⚠️ N
+      changes were rejected" line. Right now the *only* way to clear that
+      state is Settings' nuclear "Wipe device data" (deletes every local
+      table). If access is later restored (guest re-invited, RLS bug fixed)
+      there's no way to retry or discard just the stuck entries — the row
+      stays shielded indefinitely. Settings could list dead-lettered entries
+      per project with per-entry "Discard" (drop the tombstone, let the next
+      pull take the remote version) and/or "Retry" (clear `dead`, requeue).
+      Effort S.
+- [ ] **No length limits on user-entered text** [sonnet] — todo text, shop
+      item names, book-idea/boardgame-idea title + notes, etc. have no
+      `maxLength` on their inputs (checked all `src/projects/*` — the only
+      `maxLength` in the codebase is the 6-digit OTP code field in
+      `SyncCard.tsx`). A pathologically long paste can bloat an IndexedDB
+      row, a synced Postgres row, and break list-row layout on mobile.
+      Add a sane cap (e.g. 500-2000 chars depending on field) at the input
+      level, mirrored as a `check` constraint in the matching migration so
+      a client bypass can't blow past it server-side either. Effort XS–S
+      per field; do it once as a shared pattern, not per project.
+
+Low-confidence — flagged for completeness, not verified as real problems:
+
+- [ ] **`apple-touch-icon` uses the 192px icon, Apple recommends 180px**
+      [sonnet] — `index.html` links `icons/icon-192.png` for
+      `apple-touch-icon`; iOS scales it down fine in practice, this is
+      cosmetic at best. Only worth doing if a 180px asset is trivial to
+      generate alongside the existing 192/512 set. Effort XS.
+- [ ] **Accessibility pass unverified** [sonnet] — 10 of 28 `.tsx` files use
+      `aria-`/`role` attributes; that ratio alone doesn't establish a real
+      gap (most files may not need any), so this isn't a confirmed finding.
+      Would need an actual manual pass (keyboard-only nav, screen reader)
+      per screen before treating it as a bug list. Effort to scope: S just
+      to figure out if there's anything real here.
+
 ## Ideas / later
 
 Candidate new subprojects (brainstormed 2026-07-04, not committed to):
