@@ -20,6 +20,7 @@ import { Todo } from './projects/todo/Todo'
 import { Sharing } from './projects/sharing/Sharing'
 import { JoinArea } from './projects/shop-list/JoinArea'
 import { ShopList } from './projects/shop-list/ShopList'
+import { YtDeclutter } from './projects/yt-declutter/YtDeclutter'
 
 // Hash-based routing so deep links work on GitHub Pages without a server.
 export default function App() {
@@ -60,6 +61,7 @@ export default function App() {
           <Route path="/settings" element={<Settings />} />
           <Route path="/sharing" element={<Sharing />} />
           <Route path="/join/:token" element={<JoinArea />} />
+          <Route path="/yt-declutter" element={<YtDeclutter />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>

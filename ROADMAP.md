@@ -254,6 +254,43 @@ Both added 2026-07-05 via the NEW_PROJECT.md kit + generator (first real use):
 - [x] Owner applied backend 2026-07-05: `npx supabase db push` — verified via
       `migration list`, all seven migrations live on the hosted project.
 
+## Project 9 — yt-declutter (hide YouTube's Home tab, bookmarklet)
+
+Added 2026-08-08. Not a data project — no Dexie table, no sync, no Supabase
+migration. It's a static informational page that hands the user a
+`javascript:` bookmarklet: tap it once while on YouTube (mobile web) and the
+Home tab/feed is hidden for that session. This is the ceiling on iOS — Chrome
+on iOS is a WebKit wrapper with no extension/userscript support, so a
+persistent no-tap solution can't work identically in both Safari and Chrome
+there; a bookmarklet is the only thing that behaves the same in both.
+
+- [x] **[opus] Core script** — done 2026-08-08. `src/projects/yt-declutter/script.ts`:
+      targets `ytm-pivot-bar-item-renderer` with `.pivot-home`/`.pivot-w2w`
+      (confirmed live on m.youtube.com today + three corroborating public
+      sources — no positional `:nth-of-type` guessing), with href/label
+      fallbacks and a desktop `ytd-guide-entry-renderer` branch for iPad
+      Safari's desktop-site default. `MutationObserver` + SPA nav listeners
+      re-hide after in-app navigation; every DOM call individually
+      try/catch-guarded so an unrecognized layout is a silent no-op, never a
+      broken page. `display:none !important` (not `.remove()`) deliberately
+      avoids feeding its own mutation back into the observer. Exports
+      `HIDE_HOME_SOURCE`, `buildBookmarkletHref()`, and `bookmarkletRef` (a
+      ref callback — React 19 throws on a `javascript:` URL passed directly
+      as a JSX `href`, discovered during this task). No imports; plain ES5
+      inside the string. `npm run build` verified green.
+- [x] **[sonnet] Dashboard page** — done 2026-08-08. Registry entry in
+      `src/lib/projects.ts` (📺, `/yt-declutter`), route in `src/App.tsx`,
+      and `src/projects/yt-declutter/YtDeclutter.tsx`: explainer card, a
+      primary "Copy bookmarklet code" button (`navigator.clipboard`) as the
+      lead mobile affordance, a secondary `bookmarkletRef`-driven `<a>` for
+      desktop drag-to-bookmarks-bar, and two SEPARATE numbered install
+      blocks for iOS Safari (tap the bookmark to run it) vs. iOS Chrome
+      (type the bookmark's name in the address bar — Chrome iOS can't run a
+      bookmarklet from a tap), since those flows genuinely differ. Muted
+      note at the bottom that YouTube markup drift can silently break the
+      hide. Fully static, no Dexie/auth/SyncCard. `npm run build` verified
+      green by both the builder and a follow-up check.
+
 ## UI & UX improvements
 
 - [x] **Visible sync state** — done 2026-07-04: engine exposes observable

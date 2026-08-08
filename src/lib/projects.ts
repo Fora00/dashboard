@@ -79,6 +79,14 @@ export const projects: ProjectMeta[] = [
     status: 'live',
   },
   {
+    id: 'yt-declutter',
+    name: 'YouTube Declutter',
+    emoji: '📺',
+    description: "Bookmarklet that hides YouTube's Home tab on mobile.",
+    path: '/yt-declutter',
+    status: 'live',
+  },
+  {
     id: 'sharing',
     name: 'Sharing',
     emoji: '👥',
