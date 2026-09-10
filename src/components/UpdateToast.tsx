@@ -4,6 +4,27 @@ import { useRegisterSW } from 'virtual:pwa-register/react'
 
 const UPDATED_FLAG = 'dashboard.sw-updated'
 
+// Safari private mode / "block all cookies" makes localStorage access THROW
+// rather than silently no-op. This component is mounted in Layout on every
+// route, so an unguarded call here would white-screen the whole app.
+function markUpdated(): void {
+  try {
+    localStorage.setItem(UPDATED_FLAG, '1')
+  } catch {
+    // Storage blocked — the post-reload toast just won't show this time.
+  }
+}
+
+function consumeUpdatedFlag(): boolean {
+  try {
+    if (localStorage.getItem(UPDATED_FLAG) !== '1') return false
+    localStorage.removeItem(UPDATED_FLAG)
+    return true
+  } catch {
+    return false
+  }
+}
+
 // vite-plugin-pwa runs in `registerType: 'autoUpdate'` mode: when a new
 // service worker activates it reloads the page immediately with no prompt
 // (see registerSW's default `onNeedReload` — `window.location.reload()`).
@@ -16,14 +37,13 @@ export function UpdateToast() {
 
   useRegisterSW({
     onNeedReload() {
-      localStorage.setItem(UPDATED_FLAG, '1')
+      markUpdated()
       window.location.reload()
     },
   })
 
   useEffect(() => {
-    if (localStorage.getItem(UPDATED_FLAG) !== '1') return
-    localStorage.removeItem(UPDATED_FLAG)
+    if (!consumeUpdatedFlag()) return
     setVisible(true)
     const timer = setTimeout(() => setVisible(false), 4000)
     return () => clearTimeout(timer)

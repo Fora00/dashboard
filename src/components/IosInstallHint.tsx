@@ -2,6 +2,25 @@ import { useEffect, useState } from 'react'
 
 const DISMISS_KEY = 'dashboard.ios-install-hint-dismissed'
 
+// Safari private mode / "block all cookies" makes localStorage access THROW
+// rather than return null or silently no-op — this runs on the home page,
+// so an unguarded call here would white-screen the app's entry point.
+function readDismissed(): boolean {
+  try {
+    return localStorage.getItem(DISMISS_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+
+function storeDismissed(): void {
+  try {
+    localStorage.setItem(DISMISS_KEY, '1')
+  } catch {
+    // Storage blocked — the dismissal just won't survive a reload this session.
+  }
+}
+
 function isIosSafari(): boolean {
   const ua = navigator.userAgent
   const iOSDevice = /iphone|ipad|ipod/i.test(ua)
@@ -20,7 +39,7 @@ function isStandalone(): boolean {
 // full-screen, no browser chrome. Hidden entirely once installed, or once
 // dismissed (persisted in localStorage).
 export function IosInstallHint() {
-  const [dismissed, setDismissed] = useState(() => localStorage.getItem(DISMISS_KEY) === '1')
+  const [dismissed, setDismissed] = useState(() => readDismissed())
   const [eligible, setEligible] = useState(false)
 
   useEffect(() => {
@@ -30,7 +49,7 @@ export function IosInstallHint() {
   if (dismissed || !eligible) return null
 
   function dismiss() {
-    localStorage.setItem(DISMISS_KEY, '1')
+    storeDismissed()
     setDismissed(true)
   }
 
