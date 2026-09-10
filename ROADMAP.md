@@ -310,6 +310,59 @@ helpers made a copy cleaner than a stamp-and-edit).
       parentheses in the `Tables<>`/`TablesInsert<>` helper generics),
       unrelated to this project. Build + lint green after.
 
+### Tags (added 2026-09-10, same day)
+
+- [x] Per-link tags + a tag filter bar. `LinkItem.tags: string[]`, Dexie v9
+      with `links: 'id, read, createdAt, *tags'` — the **first multiEntry
+      index in this db** — plus a backfill `.upgrade()` setting `tags = []`
+      on the v8 rows that already existed. Tags normalize to lowercase,
+      whitespace-collapsed, deduped via `normalizeTag()` in `linksSync.ts`
+      (single source of truth for UI and mutations); caps are 10 tags x 30
+      chars, mirrored in SQL.
+- [x] UI: tag chips with a 40px ✕ in the expanded panel, an add-tag input
+      committing on Enter *and* blur backed by a `<datalist>` of tags
+      already in use (kills near-duplicate drift), up to 3 dim chips + `+N`
+      on collapsed rows, and a frequency-sorted horizontal filter bar.
+      **Filter semantics are AND** (a link needs every selected tag) — a
+      one-line change to OR if that turns out wrong in use. Selected chips
+      are distinguished by fill *and* a ✓ glyph, never colour alone;
+      `border-2` on both states so toggling causes no layout shift.
+      "✕ Clear" sits FIRST in the scroll row so it can't scroll out of
+      reach on a phone, and the bar renders while a selection exists even
+      if its tags are gone — otherwise the filter could get stuck on with
+      no way out. Filter state is component-only, never persisted.
+- [x] Two data-loss guards worth keeping (both in `linksSync.ts`):
+      `toRow` sends `l.tags ?? []` because a row queued in the outbox under
+      v8 has no `tags` — the Dexie upgrade rewrites the `links` table, not
+      queued outbox payloads, so the first flush after upgrading would
+      otherwise push `undefined` into a NOT NULL column and dead-letter the
+      entry. `fromRow` uses `r.tags ?? []` so a null from the server never
+      reaches the multiEntry index.
+- [x] The v9 backfill was **executed, not assumed**: the builder drove the
+      real `db.ts` against `fake-indexeddb` (installed `--no-save`, removed
+      after; `package.json` untouched), created a genuine v8 database with
+      an untagged row, reopened at v9 and asserted the backfill, the
+      normalizer cases, the caps, the `*tags` index and the AND filter.
+- [x] Migration `20260910140000_links_tags.sql` — *applied 2026-09-10*
+      (owner explicitly authorised the orchestrator to run `db push` +
+      `npm run db:types` for this one; the CLAUDE.md rule still stands as
+      the default). `migration list` shows all nine local+remote, and the
+      regenerated types carry `tags: string[]`. Adds the column
+      plus `links_tags_max_count` and `links_tags_max_length`. The
+      per-element check calls an IMMUTABLE helper
+      (`public.links_tags_within_length`) because a CHECK can't contain the
+      `unnest` subquery it needs. The orchestrator briefly replaced this
+      with `char_length(array_to_string(tags, ','))` to avoid the extra
+      schema object, then reverted: **array_to_string is only STABLE**
+      (it calls the element type's output function), which is exactly why
+      indexing it errors, so it has no business inside a CHECK. Known minor
+      wrinkle, accepted: a CHECK calling a user-defined function is a
+      `pg_dump`/`pg_restore` ordering hazard if data is restored before the
+      function exists — not a concern on Supabase's schema-then-data path.
+- [ ] **Tag rename/merge** [sonnet] — `normalizeTag` + the datalist prevent
+      most drift, but there's no way to fix `readng` → `reading` once it's
+      on several links. Effort S.
+
 Follow-ups this project surfaced:
 
 - [ ] **Bake length caps into the new-project templates** [sonnet] — the
@@ -328,6 +381,69 @@ Follow-ups this project surfaced:
       user-editable, so it's a papercut not a bug. Fix would be
       `decodeURIComponent` on the path plus an IDN-aware host display.
       Effort XS. Low priority.
+
+## Home grid — stars, usage ordering, sort selector
+
+Added 2026-09-10. **Local-only by design** — no Supabase table, no migration,
+no `*Sync.ts`: open counts are inherently per-device. Accepted tradeoff: stars
+do NOT carry across devices (see the follow-up below).
+
+- [x] `ProjectStat` in `db.ts` (`id`, `opens`, `starred`, `lastOpenedAt`),
+      Dexie v10 `projectStats: 'id, starred, opens'` — new empty table, no
+      backfill needed. Deliberately absent from `OutboxTable`/`OutboxPayload`.
+      Writes live only in `src/lib/projectStats.ts` (`recordOpen`,
+      `toggleStar`), both transactional read-then-put upserts so two fast
+      navigations can't lose a count, and `toggleStar` works with no
+      pre-existing row (starring a never-opened project).
+- [x] Opens are counted in `Layout.tsx` on `location.pathname` change, not on
+      card tap — so deep links, back/forward and the PWA start URL all count.
+      A `useRef` guards StrictMode's dev double-invoke without blocking a real
+      re-visit.
+- [x] ★ toggle per card, rendered as a SIBLING of the `<Link>`, never nested
+      inside it: a `<button>` inside an `<a>` is invalid HTML and the tap
+      would navigate instead of starring. Card header got `pr-10` so the live
+      badge never sits under the star.
+- [x] Sort selector (native `<select>`, four modes: Most used / Recently
+      opened / Name / Default order) + a reverse toggle, both persisted in
+      `localStorage` (`dashboard:home-order`, `dashboard:home-order-reversed`)
+      rather than Dexie — a per-device UI preference doesn't warrant a schema
+      version. Starred projects stay pinned on top in every mode and in both
+      directions.
+- [x] **Reversal reverses the OUTPUT, not the comparator's sign.** The two
+      groups (starred, unstarred) are sorted independently, then each is
+      `.reverse()`d. Negating the comparator would have been a silent no-op
+      for 'Default order' (its comparator returns 0 for every pair and lets
+      the stable sort do the work — and `-0 === 0`) and would also have left
+      tied entries unmoved, e.g. the all-zero fresh-device case. If anyone
+      "simplifies" this back to a sign flip, that's the regression.
+- [x] Verified by driving the real dev server headlessly with a `localStorage`
+      whose `getItem`/`setItem`/`removeItem` all throw, plus fixture scripts
+      over all four modes x reversed, ties, never-opened rows, and
+      starred-stays-on-top.
+
+- [ ] **Sync the starred flag across devices** [opus] — stars are currently
+      per-device because `projectStats` is local-only. Open counts should
+      stay local (they're per-device by nature), so this is NOT a
+      straight "add it to the engine" job: it needs a split between a synced
+      `starred` and a local `opens`/`lastOpenedAt`, or a synced
+      preferences table keyed by user. Decide the shape before building.
+      Effort M.
+
+### Pre-existing bug found while verifying the above (2026-09-10)
+
+- [x] **Unguarded `localStorage` white-screened the whole app under Safari
+      private mode / "block all cookies"** — in those modes `localStorage`
+      access THROWS rather than returning null. `IosInstallHint.tsx` called
+      `getItem` inside a `useState` initializer (killing the home page) and
+      `UpdateToast.tsx` called `getItem`/`setItem`/`removeItem` unguarded
+      while being mounted in `Layout` on EVERY route (killing every page).
+      With no error boundary in the tree (see the parked "No top-level React
+      error boundary" item, still open — it would have contained this), the
+      result was a blank screen with no recovery affordance on an installed
+      PWA. Both wrapped in try/catch; caught by headless verification, not by
+      review or by `tsc`. **Any future `localStorage` use must be guarded** —
+      the three call sites in the codebase now all follow the same
+      read-guarded / write-guarded helper pattern.
 
 ## UI & UX improvements
 

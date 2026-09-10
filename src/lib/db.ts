@@ -128,6 +128,16 @@ export interface LinkItem {
   updatedAt: number
 }
 
+// Per-device usage stats for a dashboard project, keyed by ProjectMeta.id.
+// Drives the home grid's ordering. Deliberately local-only — open counts
+// are per-device, so this never syncs and has no remote table.
+export interface ProjectStat {
+  id: string          // matches ProjectMeta.id in src/lib/projects.ts
+  opens: number
+  starred: 0 | 1      // Dexie can't index booleans — store 0/1
+  lastOpenedAt: number
+}
+
 // Remote table names that the generic sync engine can push to. Each is also
 // the discriminator on an outbox entry. Mirrors the Supabase tables.
 export type OutboxTable =
@@ -186,6 +196,7 @@ export const db = new Dexie('dashboard') as Dexie & {
   bookIdeas: EntityTable<BookIdea, 'id'>
   boardgameIdeas: EntityTable<BoardgameIdea, 'id'>
   links: EntityTable<LinkItem, 'id'>
+  projectStats: EntityTable<ProjectStat, 'id'>
 }
 
 db.version(1).stores({
@@ -326,6 +337,24 @@ db.version(9)
         if (l.tags === undefined) l.tags = []
       })
   })
+
+// v10: adds projectStats — a brand-new empty table, so no backfill upgrade
+// needed. Deliberately local-only: never added to OutboxTable/OutboxPayload.
+db.version(10).stores({
+  files: 'id, name, createdAt, synced',
+  shopItems: 'id, done, createdAt, areaId',
+  shopAreas: 'id, createdAt',
+  outbox: '++seq, rowId',
+  climbSessions: 'id, date',
+  climbs: 'id, sessionId, date',
+  habits: 'id, createdAt',
+  habitChecks: 'id, habitId, day, [habitId+day]',
+  todos: 'id, done, createdAt',
+  bookIdeas: 'id, createdAt',
+  boardgameIdeas: 'id, createdAt',
+  links: 'id, read, createdAt, *tags',
+  projectStats: 'id, starred, opens',
+})
 
 // Ask the browser not to evict our data under storage pressure (important on iOS).
 export async function requestPersistentStorage(): Promise<boolean> {
