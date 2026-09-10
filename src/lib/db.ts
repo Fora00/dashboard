@@ -120,6 +120,10 @@ export interface LinkItem {
   title: string        // user-editable; defaults to the URL's hostname + path
   notes: string
   read: 0 | 1          // Dexie can't index booleans — store 0/1
+  // Free-form tags. Always normalized to lowercase and deduped on write (see
+  // normalizeTag/addTag in linksSync.ts), and indexed multi-entry (`*tags`) so
+  // Dexie can query by a single tag. Never undefined — v9 backfills [].
+  tags: string[]
   createdAt: number
   updatedAt: number
 }
@@ -292,6 +296,36 @@ db.version(8).stores({
   boardgameIdeas: 'id, createdAt',
   links: 'id, read, createdAt',
 })
+
+// v9: links gain `tags: string[]`, indexed multi-entry (`*tags` — the first
+// multiEntry index in this db) so `db.links.where('tags').anyOf([...])` works.
+// Links already exist on devices from v8, and a row with `tags === undefined`
+// would both break the multiEntry index and push `undefined` into a NOT NULL
+// column, so existing rows are backfilled with []. Same shape as the v5
+// todos.updatedAt backfill; this upgrade never deletes data.
+db.version(9)
+  .stores({
+    files: 'id, name, createdAt, synced',
+    shopItems: 'id, done, createdAt, areaId',
+    shopAreas: 'id, createdAt',
+    outbox: '++seq, rowId',
+    climbSessions: 'id, date',
+    climbs: 'id, sessionId, date',
+    habits: 'id, createdAt',
+    habitChecks: 'id, habitId, day, [habitId+day]',
+    todos: 'id, done, createdAt',
+    bookIdeas: 'id, createdAt',
+    boardgameIdeas: 'id, createdAt',
+    links: 'id, read, createdAt, *tags',
+  })
+  .upgrade(async (tx) => {
+    await tx
+      .table('links')
+      .toCollection()
+      .modify((l: LinkItem) => {
+        if (l.tags === undefined) l.tags = []
+      })
+  })
 
 // Ask the browser not to evict our data under storage pressure (important on iOS).
 export async function requestPersistentStorage(): Promise<boolean> {

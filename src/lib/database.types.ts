@@ -235,6 +235,7 @@ export type Database = {
           id: string
           notes: string
           read: boolean
+          tags: string[]
           title: string
           updated_at: number
           url: string
@@ -244,6 +245,7 @@ export type Database = {
           id: string
           notes?: string
           read?: boolean
+          tags?: string[]
           title?: string
           updated_at: number
           url: string
@@ -253,6 +255,7 @@ export type Database = {
           id?: string
           notes?: string
           read?: boolean
+          tags?: string[]
           title?: string
           updated_at?: number
           url?: string
@@ -395,6 +398,7 @@ export type Database = {
       is_owner: { Args: never; Returns: boolean }
       join_area: { Args: { token: string }; Returns: undefined }
       jwt_email: { Args: never; Returns: string }
+      links_tags_within_length: { Args: { tags: string[] }; Returns: boolean }
       redeem_invite: {
         Args: { guest_email: string; token: string }
         Returns: undefined
