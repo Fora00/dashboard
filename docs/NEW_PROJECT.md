@@ -357,6 +357,22 @@ npx supabase db push          # owner only — applies migrations to the hosted 
 **Workers must NEVER run `npx supabase db push` or `config push`.** Creating the
 migration file (step 5) is the whole job; the owner reviews and applies it.
 
+Then **regenerate the typed client**, in this order — never before the push:
+
+```
+npm run db:types              # owner only — reads the hosted schema
+```
+
+`src/lib/database.types.ts` types the Supabase client, so a new synced table
+must appear there or `tsc` fails. The generator reads the **hosted** schema, so
+running it before `db push` writes a types file that doesn't know about your new
+table — which deletes the block you need and breaks the build. Order is: create
+the migration → owner pushes → regenerate types.
+
+A worker who can't run either command (the normal case) hand-writes the new
+table's `Row`/`Insert`/`Update` block into `database.types.ts` by copying an
+existing one, so the build stays green until the owner pushes and regenerates.
+
 ---
 
 ## Checklist
@@ -371,7 +387,8 @@ migration file (step 5) is the whole job; the owner reviews and applies it.
 - [ ] 5. `supabase/migrations/<datestamp>_<id>.sql` — table, RLS via
        `is_member('<id>')` with `with check`, realtime publication
 - [ ] 6. Page component reads Dexie via `useLiveQuery`, mounts `<SyncCard sync={sync} />`
-- [ ] 7. Owner runs `npx supabase db push` (workers never do)
+- [ ] 7. Owner runs `npx supabase db push`, then `npm run db:types` — in that
+       order (workers never do either; they hand-write the types block instead)
 
 Build green before you call it done:
 

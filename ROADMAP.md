@@ -269,6 +269,66 @@ in the build) — no solution, ours or a paid App Store one, covers it.
 Registry entry, route, and `src/projects/yt-declutter/` deleted; nothing was
 ever pushed to `main`, so GitHub Pages never served it.
 
+## Project 10 — links (shared link stash)
+
+Added 2026-09-10 via the NEW_PROJECT.md kit (hand-written from the
+`book-ideas` reference rather than the generator — the read flag and the URL
+helpers made a copy cleaner than a stamp-and-edit).
+
+- [x] `links` 🔗 (`/links`): paste a URL, it saves with an editable title
+      (defaulted to hostname + path) and optional notes; tap a row to expand
+      (title input + notes textarea, save-on-blur-if-changed, 🔗 Copy and
+      ✕ Delete), ↗ opens in a new tab, ○/● toggles read. Swipe right =
+      toggle read, swipe left = delete with undo. Unread sorts first,
+      newest-first within each group. Home grid shows an unread badge.
+      Dexie v8 (`links`), wrapper `src/lib/linksSync.ts` on the generic
+      engine; shared with guests through /sharing + `project_members`.
+- [x] URL handling is deliberately offline-only: `normalizeUrl()` in
+      `linksSync.ts` trims, prepends `https://` when there's no scheme, and
+      validates via `new URL()` + an http(s)-only protocol check — it never
+      fetches the page for a real title (must work offline, and cross-origin
+      fetches are CORS-blocked anyway). The protocol check is load-bearing:
+      the URL is rendered straight into an `<a href>`, and it rejects
+      `javascript:` (all casings, with and without `//`), `data:`, `file:`
+      and `ftp:` — verified against those cases 2026-09-10.
+- [x] First project to ship the roadmap's parked "no length limits on
+      user-entered text" fix as a *new-project default* rather than a
+      retrofit: `maxLength` on url/title/notes (2000/300/2000) mirrored as
+      `check (char_length(...) <= N)` constraints in the migration, so a
+      client bypass can't blow past it server-side. Worth copying into
+      `docs/NEW_PROJECT.md`'s SQL template — see the follow-up below.
+- [x] Migration `20260910120000_links.sql` (RLS `is_member('links')` with
+      WITH CHECK, realtime publication, length checks). *Applied by the
+      owner 2026-09-10* — verified via `migration list` (local+remote) and
+      by reading the hosted schema back, which returns the `links` table
+      with all seven columns.
+- [x] `src/lib/database.types.ts` hand-edited with the `links` block (the
+      typed client won't compile without it), then replaced 2026-09-10 by
+      the real generated file via `npm run db:types` after the push — the
+      generated `links` block matched the hand-written one exactly. The
+      same run also picked up a codegen change from a newer CLI (added
+      parentheses in the `Tables<>`/`TablesInsert<>` helper generics),
+      unrelated to this project. Build + lint green after.
+
+Follow-ups this project surfaced:
+
+- [ ] **Bake length caps into the new-project templates** [sonnet] — the
+      `links` migration and page carry `maxLength` + `char_length` checks,
+      but `docs/NEW_PROJECT.md`'s SQL template and
+      `scripts/new-project.mjs` still stamp uncapped `text` columns and
+      uncapped inputs, so project 11 will start unprotected again. Copy the
+      pattern from `20260910120000_links.sql` + `src/projects/links/Links.tsx`
+      into both. Effort XS. Partially retires the parked "No length limits
+      on user-entered text" item for *future* projects; existing projects
+      still need the retrofit.
+- [ ] **IDN links display as punycode** [sonnet] — `defaultTitle()` and the
+      page's `hostname()` helper both show `new URL().hostname`, which is
+      punycode for non-ASCII domains (`https://例え.jp/パス` titles as
+      `xn--r8jz45g.jp/%E3%83%91%E3%82%B9`). Cosmetic only, and the title is
+      user-editable, so it's a papercut not a bug. Fix would be
+      `decodeURIComponent` on the path plus an IDN-aware host display.
+      Effort XS. Low priority.
+
 ## UI & UX improvements
 
 - [x] **Visible sync state** — done 2026-07-04: engine exposes observable
@@ -375,7 +435,16 @@ what's already shipped. Ranked by how cheap + how load-bearing.
       to something less clear. Prefer a structured check (error code/status,
       or a custom SQLSTATE raised by the trigger) over message matching.
       Effort XS–S.
-- [ ] **`database.types.ts` regeneration is undocumented** [sonnet] — the
+- [x] **`database.types.ts` regeneration is undocumented** [sonnet] — DONE
+      2026-09-10 while adding `links`: `npm run db:types` added to
+      package.json (writes to a temp file first, so a failed/offline run
+      can't truncate the real one), and `docs/NEW_PROJECT.md` step 7 now
+      documents it as an explicit owner step. The doc calls out the ordering
+      trap the `links` build hit: the generator reads the **hosted** schema,
+      so running it *before* `db push` silently deletes the new table's block
+      and breaks `tsc`. Original finding follows.
+
+      Original: the
       typed Supabase client (`src/lib/database.types.ts`, added in "ts:
       strict mode + typed supabase client") is currently up to date, but
       nothing in `docs/NEW_PROJECT.md`'s 7-step recipe, `package.json`

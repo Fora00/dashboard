@@ -71,6 +71,14 @@ export const projects: ProjectMeta[] = [
     status: 'live',
   },
   {
+    id: 'links',
+    name: 'Links',
+    emoji: '🔗',
+    description: 'Save links to read later, shared with whitelisted guests.',
+    path: '/links',
+    status: 'live',
+  },
+  {
     id: 'settings',
     name: 'Settings',
     emoji: '⚙️',

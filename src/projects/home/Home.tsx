@@ -45,6 +45,10 @@ export function Home() {
     const doneIds = new Set(checksToday.map((c) => c.habitId))
     return { remaining: active.filter((h) => !doneIds.has(h.id)).length }
   })
+  const linksStats = useLiveQuery(async () => {
+    const unread = await db.links.where('read').equals(0).count()
+    return { unread }
+  })
 
   const statFor = (id: string): string | null => {
     if (id === 'local-transfer' && fileStats) {
@@ -60,6 +64,7 @@ export function Home() {
     if (id === 'shop-list') return shopStats && shopStats.open > 0 ? shopStats.open : null
     if (id === 'todo') return todoStats && todoStats.open > 0 ? todoStats.open : null
     if (id === 'habits') return habitStats && habitStats.remaining > 0 ? habitStats.remaining : null
+    if (id === 'links') return linksStats && linksStats.unread > 0 ? linksStats.unread : null
     return null
   }
 

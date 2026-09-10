@@ -112,6 +112,18 @@ export interface BoardgameIdea {
   updatedAt: number
 }
 
+// A saved link to read later: a URL plus an editable title and optional
+// notes. Cloud-syncable via the generic engine.
+export interface LinkItem {
+  id: string
+  url: string          // absolute, always has a scheme (normalized on add)
+  title: string        // user-editable; defaults to the URL's hostname + path
+  notes: string
+  read: 0 | 1          // Dexie can't index booleans — store 0/1
+  createdAt: number
+  updatedAt: number
+}
+
 // Remote table names that the generic sync engine can push to. Each is also
 // the discriminator on an outbox entry. Mirrors the Supabase tables.
 export type OutboxTable =
@@ -124,6 +136,7 @@ export type OutboxTable =
   | 'habit_checks'
   | 'book_ideas'
   | 'boardgame_ideas'
+  | 'links'
 
 // Local rows that may travel through the outbox (any synced project's shape).
 export type OutboxPayload =
@@ -136,6 +149,7 @@ export type OutboxPayload =
   | HabitCheck
   | BookIdea
   | BoardgameIdea
+  | LinkItem
 
 // Queue of local mutations not yet pushed to the cloud. Written alongside
 // every local write so changes made offline sync on reconnect (see cloudSync.ts).
@@ -167,6 +181,7 @@ export const db = new Dexie('dashboard') as Dexie & {
   todos: EntityTable<Todo, 'id'>
   bookIdeas: EntityTable<BookIdea, 'id'>
   boardgameIdeas: EntityTable<BoardgameIdea, 'id'>
+  links: EntityTable<LinkItem, 'id'>
 }
 
 db.version(1).stores({
@@ -260,6 +275,22 @@ db.version(7).stores({
   todos: 'id, done, createdAt',
   bookIdeas: 'id, createdAt',
   boardgameIdeas: 'id, createdAt',
+})
+
+// v8: adds links — a brand-new empty table, so no backfill upgrade needed.
+db.version(8).stores({
+  files: 'id, name, createdAt, synced',
+  shopItems: 'id, done, createdAt, areaId',
+  shopAreas: 'id, createdAt',
+  outbox: '++seq, rowId',
+  climbSessions: 'id, date',
+  climbs: 'id, sessionId, date',
+  habits: 'id, createdAt',
+  habitChecks: 'id, habitId, day, [habitId+day]',
+  todos: 'id, done, createdAt',
+  bookIdeas: 'id, createdAt',
+  boardgameIdeas: 'id, createdAt',
+  links: 'id, read, createdAt',
 })
 
 // Ask the browser not to evict our data under storage pressure (important on iOS).
