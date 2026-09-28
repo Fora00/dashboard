@@ -236,7 +236,12 @@ export interface LifeSundayEntry extends LifeEntryBase {
 }
 export interface LifeSentEntry extends LifeEntryBase {
   kind: 'sent'
-  value: { sent: boolean }
+  // `sends`: epoch ms of every "Send/Resend to Things" for this task. Things
+  // stamps each created to-do with its creation time and never changes it,
+  // so scripts/life-things-status.ts finds the batch by time even after the
+  // to-do is renamed in Things. Optional: rows written before 2026-09-28
+  // have none.
+  value: { sent: boolean; sends?: number[] }
 }
 
 // One row per logged thing. Keyed toggles (focus/sunday/sent) are never

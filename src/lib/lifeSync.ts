@@ -262,7 +262,12 @@ export async function markTasksSent(week: string, taskIds: string[], sent = true
       kind: 'sent',
       ref: taskId,
       day: today,
-      value: { sent },
+      // Every send is recorded (last 10), so a resend of a batch that had in
+      // fact worked shows up as a duplicate instead of hiding the first one.
+      value: {
+        sent,
+        sends: sent ? [...(prev[i]?.value.sends ?? []), now].slice(-10) : (prev[i]?.value.sends ?? []),
+      },
       createdAt: prev[i]?.createdAt ?? now,
       updatedAt: now,
     }),

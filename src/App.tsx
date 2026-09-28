@@ -17,6 +17,7 @@ import { Climbing } from './projects/climbing/Climbing'
 import { Habits } from './projects/habits/Habits'
 import { Home } from './projects/home/Home'
 import { Life } from './projects/life/Life'
+import { LifeEditor } from './projects/life/LifeEditor'
 import { LifeImport } from './projects/life/LifeImport'
 import { Links } from './projects/links/Links'
 import { LocalTransfer } from './projects/local-transfer/LocalTransfer'
@@ -67,6 +68,7 @@ export default function App() {
           <Route path="/links" element={<Links />} />
           <Route path="/life" element={<Life />} />
           <Route path="/life/import" element={<LifeImport />} />
+          <Route path="/life/edit" element={<LifeEditor />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/sharing" element={<Sharing />} />
           <Route path="/join/:token" element={<JoinArea />} />

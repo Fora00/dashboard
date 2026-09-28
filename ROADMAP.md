@@ -498,6 +498,55 @@ data, routes and sync are untouched, and a hidden project's URL still opens.
         console errors, 375px without horizontal scroll). The orchestrator
         reordered the Things send so tasks are marked sent *before*
         navigating: iOS may suspend the PWA the moment Things opens.
+  - [x] Logged tracker entries editable, done 2026-09-28 (owner-reported):
+        a "N logged · edit" list per tracker to fix energy or delete with
+        undo. Browser-verified (10 checks).
+  - [x] **Plan editor, "By hand"** — done 2026-09-28: `LifeEditor.tsx` at
+        `/life/edit?week=…`, plus `PlanPreview.tsx` shared with the import.
+        Browser-verified with 18 checks: a renamed tracker keeps its +1s,
+        and "Copy last week" keeps the ids. Original spec: [sonnet] a form that
+        builds the same `LifePlan` as the JSON import and saves through
+        `validatePlan` → diff preview → `importWeek`. It covers focus
+        (≤3), rules, trackers (emoji/label/target|max/energy), Sunday
+        questions (label/type), check-ins and tasks (title,
+        when/deadline, free-text area/project). Ids are generated on add
+        and kept on rename, never shown. It is reachable three ways: an
+        "Edit week" button (prefilled), a "By hand" option next to
+        "Paste JSON", and "Copy last week" for a new week (trackers, rules
+        and questions keep their ids). UI only: no schema or sync change.
+  - [x] **Things status back into `/settimana`**, done 2026-09-28:
+        `scripts/life-things-status.ts` reads a Life export from stdin and
+        asks Things, read-only via AppleScript, for to-dos created around
+        each send. How matching works:
+        - Every send is timestamped in `value.sends` of the sent entry
+          (last 10, no schema change). "Resend selected" now records its
+          time too, before navigating.
+        - Things never changes a to-do's creation time, so a batch is found
+          even after renames. Within a batch: exact title first; a single
+          leftover pairs for certain; more leftovers pair by shared words
+          only when the best candidate is unique. Anything else is
+          reported, never guessed.
+        - AppleScript gotchas: `st` is a reserved word, and Things terms
+          inside a handler need their own `tell` block. Dates are read as
+          "seconds ago", because date↔epoch conversion is
+          locale-fragile.
+
+        Verified against real Things with fake to-dos: exact match, a
+        single rename, two renames in one batch, NOT FOUND, not sent.
+        The "completed" path is untested, because it would need ticking a
+        real to-do.
+  - [ ] **Life layout pass** (owner-requested 2026-09-28):
+        - [ ] [opus] Actionable check-ins, data side: new entry kind
+              `checkin`, mark done + optional note, plus migration
+              `20260928150000_life_checkins.sql`; check-ins get stable ids;
+              the export includes them. Also `buildThingsUrl` gets an
+              optional `x-success` return URL, used on the Mac only (iOS
+              can't route a link into an installed PWA).
+        - [ ] [sonnet] UI: collapsible sections (state kept per device);
+              one-line explanations for Sunday check and Export; a
+              check-in list with done/note and overdue highlight; sent
+              tasks tappable (`things:///search`); a "Sent N at HH:MM"
+              confirmation; the iOS "◀ Dashboard" hint.
   - [ ] **Owner, on the iPhone:** tap "Send to Things" from the installed
         PWA and confirm Things opens with the to-dos. That's the last
         unverified piece.

@@ -77,9 +77,12 @@ export function Life() {
 
   const header = (
     <PageHeader emoji="🧭" title="Life" subtitle="This week: focus, trackers, Sunday check. Owner only.">
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         <Link to="/life/import">
           <Button variant="ghost">Import</Button>
+        </Link>
+        <Link to={`/life/edit?week=${week}`}>
+          <Button variant="ghost">Edit week</Button>
         </Link>
         <Button variant="ghost" onClick={() => setView({ tab: 'history' })}>
           History
@@ -106,9 +109,12 @@ export function Life() {
           title="No plan for this week"
           hint="Import this week's plan to get started — paste JSON or open an import link from your Mac."
         />
-        <div className="mt-4 flex justify-center">
+        <div className="mt-4 flex flex-wrap justify-center gap-2">
           <Link to="/life/import">
             <Button>Import week</Button>
+          </Link>
+          <Link to="/life/edit">
+            <Button variant="ghost">Create by hand</Button>
           </Link>
         </div>
         <div className="mt-6">
@@ -240,10 +246,12 @@ function WeekBody({ week, plan, entries, readOnly }: WeekBodyProps) {
     window.location.href = buildThingsUrl(unsent)
   }
 
-  // Selected tasks are already marked sent; just open them again.
-  function resendSelected() {
+  // Records the resend time too (before navigating, same reason as above):
+  // the Things status check finds each batch by its send time.
+  async function resendSelected() {
     const tasks = plan.tasks.filter((t) => selectedTaskIds.has(t.id))
     if (tasks.length === 0) return
+    await markTasksSent(week, tasks.map((t) => t.id), true)
     setSelectedTaskIds(new Set())
     window.location.href = buildThingsUrl(tasks)
   }
@@ -443,7 +451,7 @@ function WeekBody({ week, plan, entries, readOnly }: WeekBodyProps) {
                     </li>
                   ))}
                 </ul>
-                <Button variant="ghost" disabled={selectedTaskIds.size === 0} onClick={resendSelected}>
+                <Button variant="ghost" disabled={selectedTaskIds.size === 0} onClick={() => void resendSelected()}>
                   Resend selected
                 </Button>
               </div>

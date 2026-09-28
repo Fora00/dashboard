@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { db } from '../../lib/db'
 import { importWeek } from '../../lib/lifeSync'
 import { useAuth } from '../../lib/useAuth'
-import { decodeImportParam, diffPlans, parseWeekJson, type ParseResult } from './model'
+import { decodeImportParam, parseWeekJson, type ParseResult } from './model'
+import { PlanPreview } from './PlanPreview'
 import { Button } from '../../components/Button'
 import { Card } from '../../components/Card'
 import { PageHeader } from '../../components/PageHeader'
@@ -46,7 +47,6 @@ export function LifeImport() {
     () => (planWeek ? db.lifeWeeks.get(planWeek).then((w) => w ?? null) : null),
     [planWeek],
   )
-  const diff = result?.ok ? diffPlans(existing?.plan ?? null, result.plan) : null
 
   async function save() {
     if (!result?.ok) return
@@ -71,6 +71,12 @@ export function LifeImport() {
           Signed out — this week stays on this device only.
         </p>
       )}
+
+      <div className="mb-4">
+        <Link to="/life/edit">
+          <Button variant="ghost">✍️ Build by hand</Button>
+        </Link>
+      </div>
 
       <textarea
         value={text}
@@ -108,40 +114,14 @@ export function LifeImport() {
         </Card>
       )}
 
-      {result?.ok && diff && (
-        <Card className="mb-4 space-y-3 text-sm">
-          <p className="font-medium text-slate-800 dark:text-slate-100">Week of {result.plan.week}</p>
-          <ul className="space-y-0.5 text-slate-600 dark:text-slate-300">
-            <li>{result.plan.focus.length} focus item{result.plan.focus.length === 1 ? '' : 's'}</li>
-            <li>{result.plan.tasks.length} task{result.plan.tasks.length === 1 ? '' : 's'}</li>
-            <li>{result.plan.trackers.length} tracker{result.plan.trackers.length === 1 ? '' : 's'}</li>
-            <li>
-              {result.plan.sundayCheck.length} Sunday question{result.plan.sundayCheck.length === 1 ? '' : 's'}
-            </li>
-            <li>{result.plan.rules.length} rule{result.plan.rules.length === 1 ? '' : 's'}</li>
-            <li>{result.plan.checkins.length} check-in{result.plan.checkins.length === 1 ? '' : 's'}</li>
-          </ul>
-
-          <div className="border-t border-slate-200 pt-2 dark:border-slate-800">
-            {diff.firstImport ? (
-              <p className="text-slate-500 dark:text-slate-400">First import for this week.</p>
-            ) : diff.unchanged ? (
-              <p className="text-slate-500 dark:text-slate-400">Identical to the saved plan — nothing will change.</p>
-            ) : (
-              <ul className="list-disc space-y-0.5 pl-5 text-slate-600 dark:text-slate-300">
-                {diff.summary.map((line, i) => (
-                  <li key={i}>{line}</li>
-                ))}
-              </ul>
-            )}
-          </div>
-
-          {saveError && <p className="text-rose-600 dark:text-rose-400">{saveError}</p>}
-
-          <Button onClick={() => void save()} disabled={saving}>
-            {saving ? 'Saving…' : 'Save'}
-          </Button>
-        </Card>
+      {result?.ok && (
+        <PlanPreview
+          plan={result.plan}
+          existingPlan={existing?.plan ?? null}
+          saving={saving}
+          saveError={saveError}
+          onConfirm={() => void save()}
+        />
       )}
     </div>
   )
