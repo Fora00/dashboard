@@ -14,6 +14,7 @@ import {
   logTracker,
   markTasksSent,
   removeTrackerEntry,
+  restoreEntry,
   setSundayAnswer,
   setTrackerEnergy,
   sync,
@@ -24,6 +25,7 @@ import {
   buildThingsUrl,
   dayKey,
   nextCheckin,
+  parseDayKey,
   summarizeWeek,
   validateAnswer,
   weekKey,
@@ -324,8 +326,13 @@ function WeekBody({ week, plan, entries, readOnly }: WeekBodyProps) {
                 energyPromptId={energyPromptId}
                 setEnergyPromptId={setEnergyPromptId}
                 onLogged={(entry) =>
-                  trigger(`+1 ${ts.tracker.label} · Undo`, () => removeTrackerEntry(entry.id))
+                  trigger(`+1 ${ts.tracker.label}`, () => removeTrackerEntry(entry.id))
                 }
+                onRemove={(entry) => {
+                  if (energyPromptId === entry.id) setEnergyPromptId(null)
+                  void removeTrackerEntry(entry.id)
+                  trigger(`Removed ${ts.tracker.label}`, () => restoreEntry(entry))
+                }}
               />
             ))}
           </ul>
@@ -485,6 +492,7 @@ function TrackerRow({
   energyPromptId,
   setEnergyPromptId,
   onLogged,
+  onRemove,
 }: {
   ts: TrackerSummary
   week: string
@@ -492,8 +500,10 @@ function TrackerRow({
   energyPromptId: string | null
   setEnergyPromptId: (id: string | null) => void
   onLogged: (entry: LifeTrackerEntry) => void
+  onRemove: (entry: LifeTrackerEntry) => void
 }) {
   const { tracker, total, perDay, atMax, entries } = ts
+  const [showEntries, setShowEntries] = useState(false)
   const goal = tracker.target !== null ? `${total} / ${tracker.target}` : tracker.max !== null ? `${total} / ${tracker.max}` : `${total}`
   const activeEntry = energyPromptId ? entries.find((e) => e.id === energyPromptId) : undefined
 
@@ -542,9 +552,61 @@ function TrackerRow({
         </div>
         {atMax && <p className="text-xs text-amber-700 dark:text-amber-400">⚠️ Reached the max for this week</p>}
         {!readOnly && activeEntry && <EnergyPicker entry={activeEntry} onDone={() => setEnergyPromptId(null)} />}
+        {/* Every logged entry stays editable: fix its energy or delete it
+            (with undo). The +1 undo alone only covered the last few seconds. */}
+        {!readOnly && entries.length > 0 && (
+          <div>
+            <button
+              type="button"
+              onClick={() => setShowEntries((v) => !v)}
+              aria-expanded={showEntries}
+              className="flex min-h-10 items-center text-xs text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+            >
+              {showEntries ? '▾' : '▸'} {entries.length} logged · edit
+            </button>
+            {showEntries && (
+              <ul className="divide-y divide-slate-200 dark:divide-slate-800">
+                {entries.map((e) => (
+                  <li key={e.id} className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => tracker.energy && setEnergyPromptId(energyPromptId === e.id ? null : e.id)}
+                      disabled={!tracker.energy}
+                      aria-pressed={tracker.energy ? energyPromptId === e.id : undefined}
+                      className="flex min-h-10 min-w-0 flex-1 items-center gap-2 text-left text-sm"
+                    >
+                      <span className="w-10 shrink-0 font-medium capitalize">{weekdayShort(e.day)}</span>
+                      <span className="truncate text-slate-500 dark:text-slate-400">
+                        {tracker.energy ? describeEnergy(e) : 'logged'}
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onRemove(e)}
+                      aria-label={`Delete ${tracker.label} on ${e.day}`}
+                      className="flex size-10 shrink-0 items-center justify-center rounded-lg text-slate-400 hover:bg-rose-500/10 hover:text-rose-600 dark:hover:text-rose-400"
+                    >
+                      ✕
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
       </Card>
     </li>
   )
+}
+
+function weekdayShort(day: string): string {
+  return parseDayKey(day).toLocaleDateString(undefined, { weekday: 'short' })
+}
+
+function describeEnergy(e: LifeTrackerEntry): string {
+  const { energyBefore: b, energyAfter: a } = e.value
+  if (b === undefined && a === undefined) return 'energy not set · tap to add'
+  return `energy ${b ?? '–'} → ${a ?? '–'}`
 }
 
 function EnergyPicker({ entry, onDone }: { entry: LifeTrackerEntry; onDone: () => void }) {
