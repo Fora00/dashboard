@@ -81,6 +81,8 @@ export interface CloudSync {
   start: () => () => void
   /** Write a local upsert + queue it, in one transaction. */
   upsert: (remote: OutboxTable, row: OutboxPayload) => Promise<void>
+  /** Write many local upserts + queue them, in one transaction. */
+  upsertMany: (remote: OutboxTable, rows: OutboxPayload[]) => Promise<void>
   /** Delete a local row + queue the delete, in one transaction. */
   remove: (remote: OutboxTable, id: string) => Promise<void>
   /** Delete many local rows + queue their deletes, in one transaction. */
@@ -349,6 +351,21 @@ export function createCloudSync(config: SyncConfig): CloudSync {
     void flush()
   }
 
+  async function upsertMany(remote: OutboxTable, rows: OutboxPayload[]): Promise<void> {
+    if (rows.length === 0) return
+    const tc = byRemote.get(remote)
+    if (!tc) throw new Error(`cloudSync: unknown table ${remote}`)
+    await db.transaction('rw', tc.table(), db.outbox, async () => {
+      await tc.table().bulkPut(rows)
+      const ts = Date.now()
+      await db.outbox.bulkAdd(
+        rows.map((row) => ({ table: remote, op: 'upsert' as const, rowId: row.id, payload: row, ts })),
+      )
+    })
+    void refreshCounts()
+    void flush()
+  }
+
   async function remove(remote: OutboxTable, id: string): Promise<void> {
     const tc = byRemote.get(remote)
     if (!tc) throw new Error(`cloudSync: unknown table ${remote}`)
@@ -388,5 +405,5 @@ export function createCloudSync(config: SyncConfig): CloudSync {
   // Seed the initial counts (fire-and-forget; UI updates when it resolves).
   void refreshCounts()
 
-  return { flush, syncNow, start, upsert, remove, removeMany, getStatus, subscribe }
+  return { flush, syncNow, start, upsert, upsertMany, remove, removeMany, getStatus, subscribe }
 }

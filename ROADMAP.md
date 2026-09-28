@@ -459,9 +459,51 @@ data, routes and sync are untouched, and a hidden project's URL still opens.
       section in Settings with one 40px switch per hideable project; Home
       filters hidden projects after `ownerOnly`, with a "N hidden · manage"
       link to `/settings` at the bottom. Effort S.
-- [ ] **Life 🧭** — spec in `docs/HANDOFF-life.md`; the owner's two open
-      questions (sync, Habits link) get asked one at a time before
-      building. Not started.
+- [ ] **Life 🧭** — spec in `docs/HANDOFF-life.md`, design agreed with the
+      owner 2026-09-28: synced with `is_owner()` RLS, plan (`life_weeks`)
+      split from the log (`life_entries`), stable ids, Things via
+      `things:///json` (Inbox fallback verified), import link
+      `#/life/import?d=…` opened on the Mac.
+  - [x] Phase 1 [opus], done 2026-09-28:
+        - migration `20260928120000_life.sql` (`life_weeks` + `life_entries`,
+          all eight policies `is_owner()`, CHECKs mirrored by `LIFE_CAPS`,
+          realtime);
+        - Dexie v11 and `src/lib/lifeSync.ts`;
+        - engine `upsertMany`;
+        - pure `src/projects/life/model.ts`: validator, diff, `summarizeWeek`,
+          Things URL, export, import link.
+
+        Verified with throwaway scripts: model over three timezones, a
+        v10→v11 upgrade on fake-indexeddb, the migration on PGlite with a
+        guest denied at every operation. Design notes:
+        - `life_weeks` has `id` = the week's ISO date, because the engine
+          addresses rows by `id`.
+        - Keyed toggles are never deleted, only set false, so a delete can't
+          lose to a stale update.
+        - The export's JSON block is `{ plan, entries }`.
+
+        **Owner:** `npx supabase db push`, then `npm run db:types`.
+  - [x] `/settimana` command: `.claude/commands/settimana.md` (canonical;
+        `.claude/` is gitignored, so it lives only on the owner's Mac) and
+        the committed `scripts/life-link.ts`, which validates with the real
+        `parseWeekJson` and prints the import link. `~/life` has a
+        same-named pointer command. `~/life` itself never leaves the Mac.
+  - [ ] Phase 2 [sonnet] — UI on the phase-1 API:
+        - registry entry (`ownerOnly`, 🧭; ownerOnly already keeps it off
+          `/sharing`);
+        - `/life` and `/life/import` routes;
+        - Week screen, Import with preview/diff, Things button with
+          "Resend selected", Export (clipboard + share), History, SyncCard.
+
+        Then test the Things link from the installed iOS PWA.
+- [ ] **Engine flush race** [opus] — in `cloudSync.ts`, `flush()` checks
+      `flushing` before `await supabase.auth.getSession()` and only sets it
+      after, so two flushes fired together can both push the same entries.
+      That can re-push an upsert after its delete and resurrect a row.
+      Entries queued mid-flush also wait for the next online/visibility
+      trigger. Fix: set `flushing = true` before the await (try/finally).
+      Pre-existing, found by the Life phase-1 builder. Effort XS, but it's
+      the shared engine: test it.
 
 ### Pre-existing bug found while verifying the above (2026-09-10)
 

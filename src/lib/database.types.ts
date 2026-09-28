@@ -229,6 +229,63 @@ export type Database = {
         }
         Relationships: []
       }
+      life_entries: {
+        Row: {
+          created_at: number
+          day: string
+          id: string
+          kind: string
+          ref: string
+          updated_at: number
+          value: Json
+          week: string
+        }
+        Insert: {
+          created_at: number
+          day: string
+          id: string
+          kind: string
+          ref: string
+          updated_at: number
+          value?: Json
+          week: string
+        }
+        Update: {
+          created_at?: number
+          day?: string
+          id?: string
+          kind?: string
+          ref?: string
+          updated_at?: number
+          value?: Json
+          week?: string
+        }
+        Relationships: []
+      }
+      life_weeks: {
+        Row: {
+          id: string
+          imported_at: number
+          plan: Json
+          updated_at: number
+          week: string
+        }
+        Insert: {
+          id: string
+          imported_at: number
+          plan: Json
+          updated_at: number
+          week: string
+        }
+        Update: {
+          id?: string
+          imported_at?: number
+          plan?: Json
+          updated_at?: number
+          week?: string
+        }
+        Relationships: []
+      }
       links: {
         Row: {
           created_at: number

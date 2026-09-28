@@ -142,6 +142,107 @@ export interface ProjectStat {
   hidden?: 0 | 1
 }
 
+// --- Life (owner-only weekly plan + log; spec in docs/HANDOFF-life.md) ------
+// The plan is imported as JSON and validated by parseWeekJson() in
+// src/projects/life/model.ts, which also normalizes it into exactly these
+// shapes (every array present, absent task fields as null). Every item has a
+// stable `id`; log entries link to it by id, never by text or position.
+
+export interface LifeFocus {
+  id: string
+  title: string
+}
+
+export interface LifeTask {
+  id: string
+  title: string
+  // 'YYYY-MM-DD' or a Things keyword ('today', 'evening', …); null = unset.
+  when: string | null
+  deadline: string | null // 'YYYY-MM-DD'
+  area: string | null
+  project: string | null
+  tags: string[]
+  notes: string
+}
+
+export interface LifeTracker {
+  id: string
+  emoji: string
+  label: string
+  target: number | null // weekly goal, shown as n / target
+  max: number | null // soft weekly ceiling (warns, never blocks)
+  energy: boolean // ask energy before/after (1–5) on log
+}
+
+export type LifeQuestionType = 'number' | 'boolean' | 'text' | 'scale5'
+
+export interface LifeQuestion {
+  id: string
+  label: string
+  type: LifeQuestionType
+}
+
+export interface LifeCheckin {
+  date: string // 'YYYY-MM-DD'
+  label: string
+}
+
+export interface LifePlan {
+  version: 1
+  week: string // Monday, 'YYYY-MM-DD'
+  focus: LifeFocus[]
+  rules: string[]
+  tasks: LifeTask[]
+  trackers: LifeTracker[]
+  sundayCheck: LifeQuestion[]
+  checkins: LifeCheckin[]
+}
+
+// One row per week. `id` IS the week (the engine addresses rows by id); the
+// `week` field duplicates it for readability. Replaced wholesale on import.
+export interface LifeWeek {
+  id: string
+  week: string
+  plan: LifePlan
+  importedAt: number
+  updatedAt: number
+}
+
+export type LifeEntryKind = 'focus' | 'tracker' | 'sunday' | 'sent'
+
+export type LifeAnswer = number | boolean | string | null
+
+interface LifeEntryBase {
+  // tracker: random uuid (append-only); others: `${week}:${kind}:${ref}`.
+  id: string
+  week: string // Monday 'YYYY-MM-DD' of the week the entry belongs to
+  ref: string // the plan item's id
+  day: string // local 'YYYY-MM-DD' the entry was logged on
+  createdAt: number
+  updatedAt: number
+}
+
+export interface LifeTrackerEntry extends LifeEntryBase {
+  kind: 'tracker'
+  value: { energyBefore?: number; energyAfter?: number }
+}
+export interface LifeFocusEntry extends LifeEntryBase {
+  kind: 'focus'
+  value: { done: boolean }
+}
+export interface LifeSundayEntry extends LifeEntryBase {
+  kind: 'sunday'
+  value: { answer: LifeAnswer }
+}
+export interface LifeSentEntry extends LifeEntryBase {
+  kind: 'sent'
+  value: { sent: boolean }
+}
+
+// One row per logged thing. Keyed toggles (focus/sunday/sent) are never
+// deleted, only flipped, so last-writer-wins by updatedAt resolves them.
+export type LifeEntry = LifeTrackerEntry | LifeFocusEntry | LifeSundayEntry | LifeSentEntry
+
 // Remote table names that the generic sync engine can push to. Each is also
 // the discriminator on an outbox entry. Mirrors the Supabase tables.
 export type OutboxTable =
@@ -155,6 +256,8 @@ export type OutboxTable =
   | 'book_ideas'
   | 'boardgame_ideas'
   | 'links'
+  | 'life_weeks'
+  | 'life_entries'
 
 // Local rows that may travel through the outbox (any synced project's shape).
 export type OutboxPayload =
@@ -168,6 +271,8 @@ export type OutboxPayload =
   | BookIdea
   | BoardgameIdea
   | LinkItem
+  | LifeWeek
+  | LifeEntry
 
 // Queue of local mutations not yet pushed to the cloud. Written alongside
 // every local write so changes made offline sync on reconnect (see cloudSync.ts).
@@ -201,6 +306,8 @@ export const db = new Dexie('dashboard') as Dexie & {
   boardgameIdeas: EntityTable<BoardgameIdea, 'id'>
   links: EntityTable<LinkItem, 'id'>
   projectStats: EntityTable<ProjectStat, 'id'>
+  lifeWeeks: EntityTable<LifeWeek, 'id'>
+  lifeEntries: EntityTable<LifeEntry, 'id'>
 }
 
 db.version(1).stores({
@@ -358,6 +465,26 @@ db.version(10).stores({
   boardgameIdeas: 'id, createdAt',
   links: 'id, read, createdAt, *tags',
   projectStats: 'id, starred, opens',
+})
+
+// v11: adds lifeWeeks + lifeEntries — brand-new empty tables, so no backfill
+// upgrade needed. lifeEntries is read per week (and per kind within a week).
+db.version(11).stores({
+  files: 'id, name, createdAt, synced',
+  shopItems: 'id, done, createdAt, areaId',
+  shopAreas: 'id, createdAt',
+  outbox: '++seq, rowId',
+  climbSessions: 'id, date',
+  climbs: 'id, sessionId, date',
+  habits: 'id, createdAt',
+  habitChecks: 'id, habitId, day, [habitId+day]',
+  todos: 'id, done, createdAt',
+  bookIdeas: 'id, createdAt',
+  boardgameIdeas: 'id, createdAt',
+  links: 'id, read, createdAt, *tags',
+  projectStats: 'id, starred, opens',
+  lifeWeeks: 'id, importedAt',
+  lifeEntries: 'id, week, [week+kind]',
 })
 
 // Ask the browser not to evict our data under storage pressure (important on iOS).
