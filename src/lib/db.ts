@@ -183,6 +183,10 @@ export interface LifeQuestion {
 }
 
 export interface LifeCheckin {
+  // Stable id like every other plan item. Plans written before 2026-09-28
+  // have none: validatePlan()/withCheckinIds() in model.ts derive a
+  // deterministic one from date + label, so old plans keep working.
+  id: string
   date: string // 'YYYY-MM-DD'
   label: string
 }
@@ -208,7 +212,7 @@ export interface LifeWeek {
   updatedAt: number
 }
 
-export type LifeEntryKind = 'focus' | 'tracker' | 'sunday' | 'sent'
+export type LifeEntryKind = 'focus' | 'tracker' | 'sunday' | 'sent' | 'checkin'
 
 export type LifeAnswer = number | boolean | string | null
 
@@ -244,9 +248,16 @@ export interface LifeSentEntry extends LifeEntryBase {
   value: { sent: boolean; sends?: number[] }
 }
 
-// One row per logged thing. Keyed toggles (focus/sunday/sent) are never
-// deleted, only flipped, so last-writer-wins by updatedAt resolves them.
-export type LifeEntry = LifeTrackerEntry | LifeFocusEntry | LifeSundayEntry | LifeSentEntry
+export interface LifeCheckinEntry extends LifeEntryBase {
+  kind: 'checkin'
+  // `note`: optional free text, trimmed, ≤ LIFE_CAPS.checkinNote chars
+  // (mirrored in SQL); absent when empty.
+  value: { done: boolean; note?: string }
+}
+
+// One row per logged thing. Keyed toggles (focus/sunday/sent/checkin) are
+// never deleted, only flipped, so last-writer-wins by updatedAt resolves them.
+export type LifeEntry = LifeTrackerEntry | LifeFocusEntry | LifeSundayEntry | LifeSentEntry | LifeCheckinEntry
 
 // Remote table names that the generic sync engine can push to. Each is also
 // the discriminator on an outbox entry. Mirrors the Supabase tables.

@@ -20,7 +20,8 @@ import { dayKey } from '../habits/habitStore'
 export { dayKey }
 
 // --- Caps -------------------------------------------------------------------
-// Mirrored by CHECKs in supabase/migrations/20260928120000_life.sql. The
+// Mirrored by CHECKs in supabase/migrations/20260928120000_life.sql (and
+// 20260928150000_life_checkins.sql for the check-in note). The
 // client side is the stricter one: the plan's JSON is capped at 64 KiB here
 // and pg_column_size(plan) at 128 KiB there, so anything that passes here is
 // always accepted by the server.
@@ -49,6 +50,8 @@ export const LIFE_CAPS = {
   questionLabel: 300,
   checkins: 20,
   checkinLabel: 200,
+  /** Check-in note (SQL: life_entries_checkin_value, char_length ≤ 1000). */
+  checkinNote: 1000,
   /** Sunday text answers (SQL: pg_column_size(value) ≤ 16 KiB). */
   answerText: 2000,
   /** |number| answers. */
@@ -247,15 +250,25 @@ export function validatePlan(value: unknown): ParseResult {
   )
   uniqueIds(sundayCheck, 'sundayCheck', err)
 
-  const checkins = arrayField(value, 'checkins', LIFE_CAPS.checkins, err).map((raw, i): LifeCheckin => {
+  // Check-in ids are optional in the input (plans written before 2026-09-28
+  // have none); a missing one is derived from date + label, see
+  // withCheckinIds(). Explicit ids are validated like every other id.
+  const checkinsRaw = arrayField(value, 'checkins', LIFE_CAPS.checkins, err).map((raw, i) => {
     const p = `checkins[${i}]`
-    const o = itemObj(raw, p, ['date', 'label'], err)
+    const o = itemObj(raw, p, ['id', 'date', 'label'], err)
     if (!isDateKey(o.date)) err(`${p}.date must be YYYY-MM-DD`)
     return {
+      id: o.id === undefined || o.id === null || o.id === '' ? undefined : idField(o, p, err),
       date: typeof o.date === 'string' ? o.date : '',
       label: textField(o, 'label', p, LIFE_CAPS.checkinLabel, true, err),
     }
   })
+  uniqueIds(
+    checkinsRaw.filter((c): c is LifeCheckin => c.id !== undefined),
+    'checkins',
+    err,
+  )
+  const checkins = assignCheckinIds(checkinsRaw)
 
   if (errors.length > 0) return { ok: false, errors }
 
@@ -274,6 +287,62 @@ export function validatePlan(value: unknown): ParseResult {
     return { ok: false, errors: [`The week is too large (${bytes} bytes, max ${LIFE_CAPS.planBytes})`] }
   }
   return { ok: true, plan }
+}
+
+// --- Check-in ids -------------------------------------------------------------
+// Check-ins got ids on 2026-09-28. For a check-in without one, the id is
+// derived from what the owner sees — `c-<date>-<label slug>` — never from its
+// position, so it survives reordering and re-importing the same JSON, and the
+// same legacy plan read on two devices yields the same ids. Renaming a legacy
+// check-in (no stored id) before it's ever saved with one would change it;
+// once a plan passes validatePlan()/importWeek() the ids are stored with it.
+
+/** Lowercase ASCII slug of a label ("Café review!" → "cafe-review"). */
+function slug(label: string): string {
+  return label
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+}
+
+/** The deterministic id of a check-in with no id of its own (≤ 40 chars). */
+export function derivedCheckinId(date: string, label: string, n = 1): string {
+  const suffix = n > 1 ? `-${n}` : ''
+  const head = `c-${date}`
+  const room = 40 - head.length - 1 - suffix.length
+  const s = slug(label).slice(0, room).replace(/-+$/, '')
+  return `${head}${s ? `-${s}` : ''}${suffix}`
+}
+
+/**
+ * Give every check-in an id: explicit ids are kept; missing ones are derived
+ * from date + label, skipping ids already taken (explicit ones first, then
+ * earlier derived ones — identical date + label pairs get `-2`, `-3`, …).
+ */
+function assignCheckinIds(list: readonly { id?: string | undefined; date: string; label: string }[]): LifeCheckin[] {
+  const taken = new Set(list.map((c) => c.id).filter((id): id is string => !!id))
+  return list.map((c) => {
+    if (c.id) return { id: c.id, date: c.date, label: c.label }
+    let n = 1
+    let id = derivedCheckinId(c.date, c.label, n)
+    while (taken.has(id)) id = derivedCheckinId(c.date, c.label, ++n)
+    taken.add(id)
+    return { id, date: c.date, label: c.label }
+  })
+}
+
+/**
+ * A plan with every check-in carrying an id. Plans validated before check-in
+ * ids existed are still stored without them (Dexie and life_weeks); every
+ * reader goes through this (summarizeWeek, nextCheckin, the export, the
+ * editor, the sync pull). Returns the same object when nothing is missing.
+ */
+export function withCheckinIds(plan: LifePlan): LifePlan {
+  const checkins = plan.checkins ?? []
+  if (checkins.every((c) => typeof c.id === 'string' && c.id)) return plan
+  return { ...plan, checkins: assignCheckinIds(checkins) }
 }
 
 function unknownKeys(o: Obj, allowed: string[], path: string, err: (m: string) => void): void {
@@ -404,8 +473,21 @@ export interface TrackerSummary {
   atMax: boolean
 }
 
+export interface CheckinStatus {
+  checkin: LifeCheckin
+  done: boolean
+  /** The saved note, or null. Independent of `done` (a note can stand alone). */
+  note: string | null
+  /** Days from `today` to the check-in date: 0 = today, negative = past. */
+  daysLeft: number
+  /** The date is before today and it isn't done. */
+  overdue: boolean
+}
+
 export interface WeekSummary {
   focusDone: Set<string>
+  /** Every check-in of the plan with its status, by date (then plan order). */
+  checkins: CheckinStatus[]
   trackers: TrackerSummary[]
   answers: Map<string, LifeAnswer>
   sentTaskIds: Set<string>
@@ -413,8 +495,21 @@ export interface WeekSummary {
   removed: LifeEntry[]
 }
 
-/** Fold a week's entries onto its plan. Entries of other weeks are ignored. */
-export function summarizeWeek(plan: LifePlan, entries: readonly LifeEntry[]): WeekSummary {
+/** Whole days from day key `from` to day key `to` (DST-safe). */
+export function daysBetween(from: string, to: string): number {
+  return Math.round((parseDayKey(to).getTime() - parseDayKey(from).getTime()) / 86_400_000)
+}
+
+/**
+ * Fold a week's entries onto its plan. Entries of other weeks are ignored.
+ * `today` (a local day key) only drives the check-ins' daysLeft/overdue.
+ */
+export function summarizeWeek(
+  planIn: LifePlan,
+  entries: readonly LifeEntry[],
+  today: string = dayKey(new Date()),
+): WeekSummary {
+  const plan = withCheckinIds(planIn)
   const days = weekDays(plan.week)
   const mine = entries
     .filter((e) => e.week === plan.week)
@@ -425,11 +520,13 @@ export function summarizeWeek(plan: LifePlan, entries: readonly LifeEntry[]): We
     tracker: new Set(plan.trackers.map((t) => t.id)),
     sunday: new Set(plan.sundayCheck.map((q) => q.id)),
     sent: new Set(plan.tasks.map((t) => t.id)),
+    checkin: new Set(plan.checkins.map((c) => c.id)),
   }
 
   const focusDone = new Set<string>()
   const answers = new Map<string, LifeAnswer>()
   const sentTaskIds = new Set<string>()
+  const checkinValues = new Map<string, { done: boolean; note?: string }>()
   const removed: LifeEntry[] = []
 
   for (const e of mine) {
@@ -441,7 +538,23 @@ export function summarizeWeek(plan: LifePlan, entries: readonly LifeEntry[]): We
     if (e.kind === 'focus' && e.value.done) focusDone.add(e.ref)
     else if (e.kind === 'sunday' && e.value.answer !== null) answers.set(e.ref, e.value.answer)
     else if (e.kind === 'sent' && e.value.sent) sentTaskIds.add(e.ref)
+    else if (e.kind === 'checkin') checkinValues.set(e.ref, e.value)
   }
+
+  const checkins = plan.checkins
+    .map((checkin, i) => ({ checkin, i }))
+    .sort((a, b) => a.checkin.date.localeCompare(b.checkin.date) || a.i - b.i)
+    .map(({ checkin }): CheckinStatus => {
+      const v = checkinValues.get(checkin.id)
+      const done = v?.done === true
+      return {
+        checkin,
+        done,
+        note: v?.note?.trim() ? v.note : null,
+        daysLeft: daysBetween(today, checkin.date),
+        overdue: checkin.date < today && !done,
+      }
+    })
 
   const trackers = plan.trackers.map((tracker): TrackerSummary => {
     const list = mine.filter(
@@ -459,7 +572,7 @@ export function summarizeWeek(plan: LifePlan, entries: readonly LifeEntry[]): We
     }
   })
 
-  return { focusDone, trackers, answers, sentTaskIds, removed }
+  return { focusDone, checkins, trackers, answers, sentTaskIds, removed }
 }
 
 function isMeaningful(e: LifeEntry): boolean {
@@ -472,20 +585,24 @@ function isMeaningful(e: LifeEntry): boolean {
       return e.value.answer !== null
     case 'sent':
       return e.value.sent
+    case 'checkin':
+      return e.value.done || !!e.value.note?.trim()
   }
 }
 
-/** The nearest check-in on or after `today` (a day key), or null. */
+/**
+ * The nearest check-in on or after `today` (a day key), or null. Kept for
+ * compatibility; summarizeWeek().checkins has every check-in with its status.
+ */
 export function nextCheckin(
   plan: LifePlan,
   today: string = dayKey(new Date()),
 ): (LifeCheckin & { daysLeft: number }) | null {
-  const next = plan.checkins
-    .filter((c) => c.date >= today)
+  const next = withCheckinIds(plan)
+    .checkins.filter((c) => c.date >= today)
     .sort((a, b) => a.date.localeCompare(b.date))[0]
   if (!next) return null
-  const ms = parseDayKey(next.date).getTime() - parseDayKey(today).getTime()
-  return { ...next, daysLeft: Math.round(ms / 86_400_000) }
+  return { ...next, daysLeft: daysBetween(today, next.date) }
 }
 
 // --- Import preview diff -------------------------------------------------------
@@ -541,7 +658,9 @@ function plural(n: number, one: string, many = `${one}s`): string {
 /** What re-importing `next` over `prev` changes (prev null = first import). */
 export function diffPlans(prev: LifePlan | null, next: LifePlan): PlanDiff {
   const empty: LifePlan = { ...next, focus: [], rules: [], tasks: [], trackers: [], sundayCheck: [], checkins: [] }
-  const old = prev ?? empty
+  // A plan stored before check-in ids existed gets the same derived ids the
+  // new one got, so an identical re-import still reads as "unchanged".
+  const old = prev ? withCheckinIds(prev) : empty
   const d = {
     focus: diffById(old.focus, next.focus),
     tasks: diffById(old.tasks, next.tasks),
@@ -565,7 +684,7 @@ export function diffPlans(prev: LifePlan | null, next: LifePlan): PlanDiff {
     if (s.removed.length) summary.push(`${plural(s.removed.length, one, many)} removed`)
     if ('changed' in s && s.changed.length) summary.push(`${plural(s.changed.length, one, many)} changed`)
   }
-  const unchanged = prev !== null && JSON.stringify(prev) === JSON.stringify(next)
+  const unchanged = prev !== null && JSON.stringify(old) === JSON.stringify(next)
   // Same items, different order: still worth saying before the owner saves.
   if (!unchanged && summary.length === 0) summary.push('order changed')
   return { firstImport: prev === null, ...d, summary: unchanged ? [] : summary, unchanged }
@@ -601,15 +720,71 @@ export function thingsItems(tasks: readonly LifeTask[]): ThingsTodo[] {
   })
 }
 
+export interface ThingsUrlOptions {
+  /**
+   * x-callback-url `x-success`: the URL Things opens after creating the
+   * to-dos (it appends `x-things-ids=<JSON array>` to it). Only pass it where
+   * canReturnFromThings() is true — see there.
+   */
+  xSuccess?: string
+}
+
 /**
  * `things:///json?data=…&reveal=true` creating one to-do per task (creation
  * only, no auth token). `list` is the project, else the area; a list or tag
  * that doesn't exist in Things is ignored by Things (to-do lands in the
  * Inbox), so "Area › Project" is always appended to the notes.
+ *
+ * With `xSuccess`, appends `&x-success=<encoded URL>`: every Things command
+ * supports the x-callback-url convention as plain extra parameters on the
+ * same `things:///<command>` URL (Things URL scheme docs).
  */
-export function buildThingsUrl(tasks: readonly LifeTask[]): string {
+export function buildThingsUrl(tasks: readonly LifeTask[], opts: ThingsUrlOptions = {}): string {
   const data = encodeURIComponent(JSON.stringify(thingsItems(tasks)))
-  return `things:///json?data=${data}&reveal=true`
+  const back = opts.xSuccess ? `&x-success=${encodeURIComponent(opts.xSuccess)}` : ''
+  return `things:///json?data=${data}&reveal=true${back}`
+}
+
+/** True on iPhone/iPod/iPad, including iPadOS, which reports itself as a Mac. */
+export function isIosLike(
+  nav: { userAgent?: string; platform?: string; maxTouchPoints?: number } | undefined = typeof navigator ===
+  'undefined'
+    ? undefined
+    : navigator,
+): boolean {
+  if (!nav) return false
+  if (/iPad|iPhone|iPod/.test(nav.userAgent ?? '')) return true
+  // iPadOS 13+ desktop-class Safari: platform "MacIntel", but a touchscreen.
+  // Real Macs report 0 touch points.
+  return (nav.platform ?? '') === 'MacIntel' && (nav.maxTouchPoints ?? 0) > 1
+}
+
+/**
+ * Whether Things can bring the owner back here via x-success. False on
+ * iOS/iPadOS: an https link opened from another app goes to Safari, never
+ * into the installed PWA (separate storage, wrong app). True elsewhere (the
+ * Mac, where the link reopens the browser the dashboard runs in).
+ */
+export function canReturnFromThings(
+  nav: { userAgent?: string; platform?: string; maxTouchPoints?: number } | undefined = typeof navigator ===
+  'undefined'
+    ? undefined
+    : navigator,
+): boolean {
+  return !!nav && !isIosLike(nav)
+}
+
+/**
+ * The URL of the Life page of this very deployment (e.g.
+ * `https://…/dashboard/#/life`), for buildThingsUrl's xSuccess. Things
+ * appends `?x-things-ids=…`, which HashRouter reads as the route's search
+ * string, so the route still matches /life.
+ */
+export function lifeReturnUrl(
+  loc: { origin: string; pathname: string } = window.location,
+  route = '/life',
+): string {
+  return `${loc.origin}${loc.pathname}#${route}`
 }
 
 // --- Export ---------------------------------------------------------------------
@@ -629,10 +804,16 @@ function energyPair(e: Extract<LifeEntry, { kind: 'tracker' }>): string | null {
   return `${b ?? '?'}→${a ?? '?'}`
 }
 
-/** Markdown for the week: focus, trackers per day + energy, Sunday, tasks,
- *  entries removed from the plan, and the raw JSON in a <details> block. */
-export function buildExportMarkdown(plan: LifePlan, entries: readonly LifeEntry[]): string {
-  const s = summarizeWeek(plan, entries)
+/** Markdown for the week: focus, trackers per day + energy, Sunday, check-ins,
+ *  tasks, entries removed from the plan, and the raw JSON in a <details>
+ *  block. `today` (a day key) only marks overdue check-ins. */
+export function buildExportMarkdown(
+  planIn: LifePlan,
+  entries: readonly LifeEntry[],
+  today: string = dayKey(new Date()),
+): string {
+  const plan = withCheckinIds(planIn)
+  const s = summarizeWeek(plan, entries, today)
   const mine = entries.filter((e) => e.week === plan.week)
   const out: string[] = [`# Week of ${plan.week}`, '']
 
@@ -664,6 +845,16 @@ export function buildExportMarkdown(plan: LifePlan, entries: readonly LifeEntry[
     out.push('## Sunday check', '')
     for (const q of plan.sundayCheck) {
       out.push(`- ${q.label}: ${formatAnswer(q, s.answers.get(q.id) ?? null)}`)
+    }
+    out.push('')
+  }
+
+  if (s.checkins.length) {
+    out.push('## Check-ins', '')
+    for (const c of s.checkins) {
+      const flag = c.overdue ? ' (overdue)' : ''
+      const note = c.note ? ` — ${oneLine(c.note)}` : ''
+      out.push(`- [${c.done ? 'x' : ' '}] ${c.checkin.date} ${c.checkin.label}${flag}${note}`)
     }
     out.push('')
   }
@@ -703,6 +894,11 @@ export function buildExportMarkdown(plan: LifePlan, entries: readonly LifeEntry[
   return out.join('\n')
 }
 
+/** A note on one Markdown list line (newlines would break the list). */
+function oneLine(s: string): string {
+  return s.trim().replace(/\s*\n+\s*/g, ' / ')
+}
+
 function describeRemoved(e: LifeEntry): string {
   switch (e.kind) {
     case 'tracker': {
@@ -715,6 +911,10 @@ function describeRemoved(e: LifeEntry): string {
       return `Sunday ${e.ref}: ${formatAnswer(undefined, e.value.answer)}`
     case 'sent':
       return `task ${e.ref}: sent to Things`
+    case 'checkin': {
+      const parts = [e.value.done ? 'done' : null, e.value.note?.trim() ? oneLine(e.value.note) : null]
+      return `check-in ${e.ref}: ${parts.filter(Boolean).join(' — ')}`
+    }
   }
 }
 

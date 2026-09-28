@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import {
   db,
   type LifeAnswer,
@@ -15,6 +15,7 @@ import {
   markTasksSent,
   removeTrackerEntry,
   restoreEntry,
+  setCheckin,
   setSundayAnswer,
   setTrackerEnergy,
   sync,
@@ -23,12 +24,16 @@ import {
 import {
   buildExportMarkdown,
   buildThingsUrl,
+  canReturnFromThings,
   dayKey,
-  nextCheckin,
+  isIosLike,
+  LIFE_CAPS,
+  lifeReturnUrl,
   parseDayKey,
   summarizeWeek,
   validateAnswer,
   weekKey,
+  type CheckinStatus,
   type TrackerSummary,
 } from './model'
 import { useUndoSnackbar } from '../../lib/useUndoSnackbar'
@@ -47,11 +52,146 @@ import { SkeletonList } from '../../components/Skeleton'
 const DAY_LABELS = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
 const SCALE5 = [1, 2, 3, 4, 5]
 
+// --- Collapsible sections (per-device UI preference, guarded localStorage) --
+// Every section except Rules starts open; Rules keeps its pre-existing
+// default of closed. Sunday check is special: its default depends on the day
+// of week (open on Sat/Sun), so only an explicit choice made THIS week
+// (sundayWeek matches the current week key) overrides that default — next
+// week it falls back to the day-of-week default again. Read-only history
+// pages never read or write this: they always render fully expanded (see
+// CollapsibleSection's readOnly branch).
+
+const SECTIONS_KEY = 'dashboard:life-sections'
+
+type SectionId = 'focus' | 'trackers' | 'rules' | 'checkins' | 'things' | 'export'
+
+interface SectionsState {
+  focus: boolean
+  trackers: boolean
+  rules: boolean
+  checkins: boolean
+  things: boolean
+  export: boolean
+  sundayWeek: string | null
+  sundayOpen: boolean
+}
+
+const DEFAULT_SECTIONS: SectionsState = {
+  focus: true,
+  trackers: true,
+  rules: false,
+  checkins: true,
+  things: true,
+  export: true,
+  sundayWeek: null,
+  sundayOpen: false,
+}
+
+function isBool(v: unknown): v is boolean {
+  return typeof v === 'boolean'
+}
+
+function sanitizeSections(raw: unknown): SectionsState {
+  if (typeof raw !== 'object' || raw === null) return DEFAULT_SECTIONS
+  const r = raw as Record<string, unknown>
+  return {
+    focus: isBool(r.focus) ? r.focus : DEFAULT_SECTIONS.focus,
+    trackers: isBool(r.trackers) ? r.trackers : DEFAULT_SECTIONS.trackers,
+    rules: isBool(r.rules) ? r.rules : DEFAULT_SECTIONS.rules,
+    checkins: isBool(r.checkins) ? r.checkins : DEFAULT_SECTIONS.checkins,
+    things: isBool(r.things) ? r.things : DEFAULT_SECTIONS.things,
+    export: isBool(r.export) ? r.export : DEFAULT_SECTIONS.export,
+    sundayWeek: typeof r.sundayWeek === 'string' ? r.sundayWeek : null,
+    sundayOpen: isBool(r.sundayOpen) ? r.sundayOpen : DEFAULT_SECTIONS.sundayOpen,
+  }
+}
+
+// Safari private mode / "block all cookies" makes localStorage THROW rather
+// than return null (see src/projects/home/Home.tsx's readStoredOrder) — every
+// access here is guarded so a blocked store never breaks the page.
+function readStoredSections(): SectionsState {
+  try {
+    const raw = localStorage.getItem(SECTIONS_KEY)
+    if (!raw) return DEFAULT_SECTIONS
+    return sanitizeSections(JSON.parse(raw))
+  } catch {
+    return DEFAULT_SECTIONS
+  }
+}
+
+function storeSections(state: SectionsState): void {
+  try {
+    localStorage.setItem(SECTIONS_KEY, JSON.stringify(state))
+  } catch {
+    // Storage blocked — the choice just won't survive a reload this session.
+  }
+}
+
+/** Header button (▸/▾ + title + collapsed summary) wrapping a section's
+ * content. In read-only history, always expanded with a plain header and no
+ * persistence — see the module comment above. */
+function CollapsibleSection({
+  title,
+  summary,
+  open,
+  onToggle,
+  readOnly,
+  children,
+}: {
+  title: string
+  summary?: string
+  open: boolean
+  onToggle: () => void
+  readOnly: boolean
+  children: ReactNode
+}) {
+  if (readOnly) {
+    return (
+      <section className="mb-6">
+        <h2 className="mb-2 text-sm font-medium text-slate-500 dark:text-slate-400">{title}</h2>
+        {children}
+      </section>
+    )
+  }
+  return (
+    <section className="mb-6">
+      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-800/50">
+        <button
+          type="button"
+          onClick={onToggle}
+          aria-expanded={open}
+          className="flex min-h-12 w-full items-center justify-between gap-3 px-4 text-left text-sm font-medium text-slate-700 dark:text-slate-200"
+        >
+          <span className="truncate">{title}</span>
+          <span className="flex shrink-0 items-center gap-2">
+            {!open && summary && (
+              <span className="truncate text-xs font-normal text-slate-500 dark:text-slate-400">{summary}</span>
+            )}
+            <span aria-hidden>{open ? '▾' : '▸'}</span>
+          </span>
+        </button>
+        {open && <div className="border-t border-slate-200 px-4 py-3 dark:border-slate-800">{children}</div>}
+      </div>
+    </section>
+  )
+}
+
 type View = { tab: 'week' } | { tab: 'history' } | { tab: 'past'; week: string }
 
 export function Life() {
   const week = weekKey()
   const [view, setView] = useState<View>({ tab: 'week' })
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  // Things appends `?x-things-ids=<JSON array>` to the xSuccess return URL
+  // (see lifeReturnUrl in model.ts) — strip it once so the address bar stays
+  // clean. `replace: true` so it doesn't leave an extra history entry.
+  useEffect(() => {
+    if (!searchParams.has('x-things-ids')) return
+    const next = new URLSearchParams(searchParams)
+    next.delete('x-things-ids')
+    setSearchParams(next, { replace: true })
+  }, [searchParams, setSearchParams])
 
   // .get() resolves to undefined both while still loading and when no row
   // exists — map "no row" to null so `weekRow === undefined` means loading
@@ -215,18 +355,43 @@ interface WeekBodyProps {
 function WeekBody({ week, plan, entries, readOnly }: WeekBodyProps) {
   const summary = useMemo(() => summarizeWeek(plan, entries), [plan, entries])
   const { pending, trigger, confirmUndo } = useUndoSnackbar()
-  const [rulesOpen, setRulesOpen] = useState(false)
   const [energyPromptId, setEnergyPromptId] = useState<string | null>(null)
   const [selectedTaskIds, setSelectedTaskIds] = useState<Set<string>>(new Set())
   const [exportState, setExportState] = useState<{ text: string; copied: boolean } | null>(null)
 
+  // Read-only history never persists or reads localStorage — see the module
+  // comment above CollapsibleSection.
+  const [sections, setSections] = useState<SectionsState>(() => (readOnly ? DEFAULT_SECTIONS : readStoredSections()))
+
+  function toggleSection(id: SectionId) {
+    setSections((s) => {
+      const next = { ...s, [id]: !s[id] }
+      if (!readOnly) storeSections(next)
+      return next
+    })
+  }
+
   const dow = new Date().getDay()
   const isWeekendToday = dow === 0 || dow === 6
-  const [sundayOpen, setSundayOpen] = useState(isWeekendToday)
+  // Only an explicit choice made THIS week overrides the day-of-week default.
+  const sundayOpen = readOnly
+    ? true
+    : sections.sundayWeek === week
+      ? sections.sundayOpen
+      : isWeekendToday
 
-  const checkin = nextCheckin(plan)
+  function toggleSunday() {
+    setSections((s) => {
+      const currentOpen = s.sundayWeek === week ? s.sundayOpen : isWeekendToday
+      const next = { ...s, sundayWeek: week, sundayOpen: !currentOpen }
+      storeSections(next)
+      return next
+    })
+  }
+
   const unsent = plan.tasks.filter((t) => !summary.sentTaskIds.has(t.id))
   const sent = plan.tasks.filter((t) => summary.sentTaskIds.has(t.id))
+  const lastSent = useMemo(() => lastSentInfo(entries), [entries])
 
   function toggleSelected(id: string) {
     setSelectedTaskIds((current) => {
@@ -237,13 +402,18 @@ function WeekBody({ week, plan, entries, readOnly }: WeekBodyProps) {
     })
   }
 
+  // x-success only works on the Mac: an https link opened from another app
+  // on iOS goes to Safari, never back into the installed PWA (see
+  // canReturnFromThings in model.ts).
+  const thingsOpts = canReturnFromThings() ? { xSuccess: lifeReturnUrl() } : {}
+
   // Mark sent BEFORE opening Things: on iOS the PWA can be suspended the
   // moment Things opens, so a write after the navigation may never land and
   // a second tap would duplicate every to-do.
   async function sendAll() {
     if (unsent.length === 0) return
     await markTasksSent(week, unsent.map((t) => t.id), true)
-    window.location.href = buildThingsUrl(unsent)
+    window.location.href = buildThingsUrl(unsent, thingsOpts)
   }
 
   // Records the resend time too (before navigating, same reason as above):
@@ -253,7 +423,7 @@ function WeekBody({ week, plan, entries, readOnly }: WeekBodyProps) {
     if (tasks.length === 0) return
     await markTasksSent(week, tasks.map((t) => t.id), true)
     setSelectedTaskIds(new Set())
-    window.location.href = buildThingsUrl(tasks)
+    window.location.href = buildThingsUrl(tasks, thingsOpts)
   }
 
   async function doExport() {
@@ -283,8 +453,13 @@ function WeekBody({ week, plan, entries, readOnly }: WeekBodyProps) {
   return (
     <div>
       {plan.focus.length > 0 && (
-        <section className="mb-6">
-          <h2 className="mb-2 text-sm font-medium text-slate-500 dark:text-slate-400">Focus</h2>
+        <CollapsibleSection
+          title="Focus"
+          summary={`${summary.focusDone.size}/${plan.focus.length}`}
+          open={sections.focus}
+          onToggle={() => toggleSection('focus')}
+          readOnly={readOnly}
+        >
           <ul className="space-y-2">
             {plan.focus.map((f) => {
               const done = summary.focusDone.has(f.id)
@@ -318,12 +493,17 @@ function WeekBody({ week, plan, entries, readOnly }: WeekBodyProps) {
               )
             })}
           </ul>
-        </section>
+        </CollapsibleSection>
       )}
 
       {plan.trackers.length > 0 && (
-        <section className="mb-6">
-          <h2 className="mb-2 text-sm font-medium text-slate-500 dark:text-slate-400">Trackers</h2>
+        <CollapsibleSection
+          title="Trackers"
+          summary={`Trackers · ${trackersSummary(summary.trackers)}`}
+          open={sections.trackers}
+          onToggle={() => toggleSection('trackers')}
+          readOnly={readOnly}
+        >
           <ul className="space-y-2">
             {summary.trackers.map((ts) => (
               <TrackerRow
@@ -344,89 +524,108 @@ function WeekBody({ week, plan, entries, readOnly }: WeekBodyProps) {
               />
             ))}
           </ul>
-        </section>
+        </CollapsibleSection>
       )}
 
       {plan.rules.length > 0 && (
-        <section className="mb-6">
-          <div className="overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-800/50">
-            <button
-              type="button"
-              onClick={() => setRulesOpen((o) => !o)}
-              aria-expanded={rulesOpen}
-              className="flex min-h-12 w-full items-center justify-between px-4 text-left text-sm font-medium text-slate-700 dark:text-slate-200"
-            >
-              <span>📜 Rules</span>
-              <span aria-hidden>{rulesOpen ? '▾' : '▸'}</span>
-            </button>
-            {rulesOpen && (
-              <ul className="space-y-1 border-t border-slate-200 px-4 py-3 text-sm text-slate-600 dark:border-slate-800 dark:text-slate-300">
-                {plan.rules.map((r, i) => (
-                  <li key={i}>• {r}</li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </section>
+        <CollapsibleSection
+          title="📜 Rules"
+          summary={`${plan.rules.length} rule${plan.rules.length === 1 ? '' : 's'}`}
+          open={sections.rules}
+          onToggle={() => toggleSection('rules')}
+          readOnly={readOnly}
+        >
+          <ul className="space-y-1 text-sm text-slate-600 dark:text-slate-300">
+            {plan.rules.map((r, i) => (
+              <li key={i}>• {r}</li>
+            ))}
+          </ul>
+        </CollapsibleSection>
       )}
 
-      {checkin && (
-        <p className="mb-6 text-sm text-slate-500 dark:text-slate-400">
-          📅 {checkin.label}{' '}
-          {checkin.daysLeft <= 0 ? 'today' : checkin.daysLeft === 1 ? 'tomorrow' : `in ${checkin.daysLeft} days`}
-        </p>
+      {summary.checkins.length > 0 && (
+        <CollapsibleSection
+          title="Check-ins"
+          summary={`Check-ins · ${summary.checkins.filter((c) => c.done).length}/${summary.checkins.length} done`}
+          open={sections.checkins}
+          onToggle={() => toggleSection('checkins')}
+          readOnly={readOnly}
+        >
+          <ul className="space-y-2">
+            {summary.checkins.map((cs) => (
+              <CheckinRow key={cs.checkin.id} week={week} status={cs} readOnly={readOnly} />
+            ))}
+          </ul>
+        </CollapsibleSection>
       )}
 
       {plan.sundayCheck.length > 0 && (
-        <section className="mb-6">
+        <CollapsibleSection
+          title="🗓️ Sunday check"
+          summary={`${summary.answers.size}/${plan.sundayCheck.length} answered`}
+          open={sundayOpen}
+          onToggle={toggleSunday}
+          readOnly={readOnly}
+        >
+          <p className="mb-3 text-sm text-slate-500 dark:text-slate-400">
+            A 10-minute look back at the week, on Sunday. Answers go into the export for your notes.
+          </p>
           {readOnly ? (
-            <>
-              <h2 className="mb-2 text-sm font-medium text-slate-500 dark:text-slate-400">Sunday check</h2>
-              <Card className="space-y-2 text-sm">
-                {plan.sundayCheck.map((q) => (
-                  <div key={q.id} className="flex items-center justify-between gap-3">
-                    <span className="text-slate-600 dark:text-slate-300">{q.label}</span>
-                    <span className="font-medium text-slate-800 dark:text-slate-100">
-                      {describeAnswer(q, summary.answers.get(q.id) ?? null)}
-                    </span>
-                  </div>
-                ))}
-              </Card>
-            </>
-          ) : sundayOpen ? (
-            <>
-              <div className="mb-2 flex items-center justify-between">
-                <h2 className="text-sm font-medium text-slate-500 dark:text-slate-400">Sunday check</h2>
-                {!isWeekendToday && (
-                  <Button variant="ghost" onClick={() => setSundayOpen(false)}>
-                    Hide
-                  </Button>
-                )}
-              </div>
-              <Card className="space-y-4">
-                {plan.sundayCheck.map((q) => (
-                  <SundayQuestion key={q.id} week={week} question={q} value={summary.answers.get(q.id) ?? null} />
-                ))}
-              </Card>
-            </>
+            <Card className="space-y-2 text-sm">
+              {plan.sundayCheck.map((q) => (
+                <div key={q.id} className="flex items-center justify-between gap-3">
+                  <span className="text-slate-600 dark:text-slate-300">{q.label}</span>
+                  <span className="font-medium text-slate-800 dark:text-slate-100">
+                    {describeAnswer(q, summary.answers.get(q.id) ?? null)}
+                  </span>
+                </div>
+              ))}
+            </Card>
           ) : (
-            <Button variant="ghost" onClick={() => setSundayOpen(true)}>
-              🗓️ Sunday check
-            </Button>
+            <Card className="space-y-4">
+              {plan.sundayCheck.map((q) => (
+                <SundayQuestion key={q.id} week={week} question={q} value={summary.answers.get(q.id) ?? null} />
+              ))}
+            </Card>
           )}
-        </section>
+        </CollapsibleSection>
       )}
 
       {!readOnly && plan.tasks.length > 0 && (
-        <section className="mb-6">
-          <h2 className="mb-2 text-sm font-medium text-slate-500 dark:text-slate-400">Things</h2>
+        <CollapsibleSection
+          title="Things"
+          summary={`Things · ${sent.length} of ${plan.tasks.length} sent`}
+          open={sections.things}
+          onToggle={() => toggleSection('things')}
+          readOnly={false}
+        >
           <Card className="space-y-3 text-sm">
             {unsent.length > 0 ? (
-              <Button onClick={() => void sendAll()}>
-                Send {unsent.length} task{unsent.length === 1 ? '' : 's'} to Things
-              </Button>
+              <>
+                <Button onClick={() => void sendAll()}>
+                  Send {unsent.length} task{unsent.length === 1 ? '' : 's'} to Things
+                </Button>
+                {isIosLike() && (
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    After Things opens, tap ◀ Dashboard at the top-left to come back.
+                  </p>
+                )}
+                <ul className="space-y-1 border-t border-slate-200 pt-2 dark:border-slate-800">
+                  {unsent.map((t) => (
+                    <li key={t.id} className="flex items-center justify-between gap-2">
+                      <span className="min-w-0 flex-1 truncate">{t.title}</span>
+                      <span className="shrink-0 text-xs text-slate-400 dark:text-slate-500">{t.when ?? '—'}</span>
+                    </li>
+                  ))}
+                </ul>
+              </>
             ) : (
               <p className="text-slate-500 dark:text-slate-400">All tasks sent.</p>
+            )}
+            {lastSent && (
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Last sent {formatLastSent(lastSent.at)} · {lastSent.count} task{lastSent.count === 1 ? '' : 's'}
+              </p>
             )}
             {sent.length > 0 && (
               <div className="space-y-2 border-t border-slate-200 pt-3 dark:border-slate-800">
@@ -447,7 +646,18 @@ function WeekBody({ week, plan, entries, readOnly }: WeekBodyProps) {
                       >
                         {selectedTaskIds.has(t.id) && '✓'}
                       </button>
-                      <span className="min-w-0 flex-1 truncate">{t.title}</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          window.location.href = `things:///search?query=${encodeURIComponent(t.title)}`
+                        }}
+                        className="flex min-h-10 min-w-0 flex-1 items-center justify-between gap-2 rounded-lg px-2 text-left hover:bg-slate-100 dark:hover:bg-slate-800"
+                      >
+                        <span className="min-w-0 flex-1 truncate">{t.title}</span>
+                        <span aria-hidden className="shrink-0 text-slate-400">
+                          ↗
+                        </span>
+                      </button>
                     </li>
                   ))}
                 </ul>
@@ -460,11 +670,19 @@ function WeekBody({ week, plan, entries, readOnly }: WeekBodyProps) {
               Requires Things → Settings → General → Enable Things URLs.
             </p>
           </Card>
-        </section>
+        </CollapsibleSection>
       )}
 
-      <section className="mb-6">
-        <h2 className="mb-2 text-sm font-medium text-slate-500 dark:text-slate-400">Export</h2>
+      <CollapsibleSection
+        title="Export"
+        open={sections.export}
+        onToggle={() => toggleSection('export')}
+        readOnly={readOnly}
+      >
+        <p className="mb-3 text-sm text-slate-500 dark:text-slate-400">
+          Copies a summary of this week — focus, trackers with energy, Sunday answers, check-ins, tasks — to paste
+          into /settimana on your Mac.
+        </p>
         <Card className="space-y-3 text-sm">
           <div className="flex flex-wrap gap-2">
             <Button onClick={() => void doExport()}>{exportState?.copied ? 'Copied ✓' : '📋 Export week'}</Button>
@@ -484,10 +702,140 @@ function WeekBody({ week, plan, entries, readOnly }: WeekBodyProps) {
             />
           )}
         </Card>
-      </section>
+      </CollapsibleSection>
 
       {!readOnly && pending && <Snackbar label={pending.label} onUndo={confirmUndo} />}
     </div>
+  )
+}
+
+// --- Trackers summary / Things "Last sent" ---------------------------------
+
+function trackersSummary(trackers: TrackerSummary[]): string {
+  if (trackers.length === 0) return '0/0'
+  const onTrack = trackers.filter((t) => (t.tracker.target !== null ? t.reachedTarget : t.total > 0)).length
+  return `${onTrack}/${trackers.length}`
+}
+
+interface LastSentInfo {
+  at: number
+  count: number
+}
+
+/** The latest timestamp across every sent entry's `value.sends`, plus how
+ * many tasks share that exact timestamp (one send/resend call stamps every
+ * task in the batch with the same `Date.now()`, so this counts the batch). */
+function lastSentInfo(entries: readonly LifeEntry[]): LastSentInfo | null {
+  let maxAt = 0
+  for (const e of entries) {
+    if (e.kind !== 'sent') continue
+    for (const t of e.value.sends ?? []) {
+      if (t > maxAt) maxAt = t
+    }
+  }
+  if (maxAt === 0) return null
+  let count = 0
+  for (const e of entries) {
+    if (e.kind !== 'sent') continue
+    if ((e.value.sends ?? []).includes(maxAt)) count++
+  }
+  return { at: maxAt, count }
+}
+
+function formatLastSent(at: number): string {
+  const d = new Date(at)
+  const time = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  if (dayKey(d) === dayKey(new Date())) return time
+  return `${d.toLocaleDateString([], { month: 'short', day: 'numeric' })}, ${time}`
+}
+
+/** "today" / "tomorrow" / "in N days" / "N days ago" from summarizeWeek's daysLeft. */
+function relativeCheckinDate(daysLeft: number): string {
+  if (daysLeft === 0) return 'today'
+  if (daysLeft === 1) return 'tomorrow'
+  if (daysLeft === -1) return '1 day ago'
+  if (daysLeft > 0) return `in ${daysLeft} days`
+  return `${-daysLeft} days ago`
+}
+
+// --- Check-ins ---------------------------------------------------------------
+
+function CheckinRow({ week, status, readOnly }: { week: string; status: CheckinStatus; readOnly: boolean }) {
+  const { checkin, done, note, daysLeft, overdue } = status
+  const [expanded, setExpanded] = useState(false)
+
+  async function toggleDone() {
+    await setCheckin(week, checkin.id, { done: !done, note })
+  }
+
+  async function saveNote(value: string) {
+    const trimmed = value.trim()
+    if (trimmed === (note ?? '')) return
+    await setCheckin(week, checkin.id, { done, note: trimmed })
+  }
+
+  const dateClass = overdue ? 'font-medium text-amber-600 dark:text-amber-400' : 'text-slate-500 dark:text-slate-400'
+  const badgeClass = done
+    ? 'border-emerald-400 bg-emerald-400 text-slate-900'
+    : overdue
+      ? 'border-amber-500 text-amber-600 dark:text-amber-400'
+      : 'border-slate-400 dark:border-slate-500'
+
+  if (readOnly) {
+    return (
+      <li
+        className={`rounded-lg border px-3 py-2 ${overdue ? 'border-amber-400/60 bg-amber-400/10' : 'border-slate-200 dark:border-slate-800'}`}
+      >
+        <div className="flex items-center gap-2">
+          <span className={`flex size-7 shrink-0 items-center justify-center rounded-full border text-xs ${badgeClass}`}>
+            {done && '✓'}
+          </span>
+          <span className="min-w-0 flex-1 truncate text-sm">{checkin.label}</span>
+          <span className={`shrink-0 text-xs ${dateClass}`}>{relativeCheckinDate(daysLeft)}</span>
+        </div>
+        {note && <p className="mt-1 pl-9 text-xs text-slate-500 dark:text-slate-400">{note}</p>}
+      </li>
+    )
+  }
+
+  return (
+    <li
+      className={`rounded-lg border px-3 py-2 ${overdue ? 'border-amber-400/60 bg-amber-400/10' : 'border-slate-200 dark:border-slate-800'}`}
+    >
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          aria-pressed={done}
+          aria-label={done ? `Mark ${checkin.label} not done` : `Mark ${checkin.label} done`}
+          onClick={() => void toggleDone()}
+          className={`flex size-10 shrink-0 items-center justify-center rounded-full border text-sm transition-colors ${badgeClass}`}
+        >
+          {done && '✓'}
+        </button>
+        <button
+          type="button"
+          onClick={() => setExpanded((v) => !v)}
+          aria-expanded={expanded}
+          className="flex min-h-10 min-w-0 flex-1 flex-col items-start justify-center text-left"
+        >
+          <span className={`truncate text-sm font-medium ${done ? 'text-slate-500 line-through' : ''}`}>
+            {checkin.label}
+          </span>
+          {!expanded && note && <span className="truncate text-xs text-slate-400 dark:text-slate-500">{note}</span>}
+        </button>
+        <span className={`shrink-0 text-xs ${dateClass}`}>{relativeCheckinDate(daysLeft)}</span>
+      </div>
+      {expanded && (
+        <textarea
+          defaultValue={note ?? ''}
+          rows={2}
+          maxLength={LIFE_CAPS.checkinNote}
+          placeholder="Note (optional)"
+          onBlur={(e) => void saveNote(e.target.value)}
+          className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm focus:border-indigo-400 focus:outline-none dark:border-slate-700 dark:bg-slate-800"
+        />
+      )}
+    </li>
   )
 }
 

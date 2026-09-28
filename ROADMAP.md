@@ -536,13 +536,25 @@ data, routes and sync are untouched, and a hidden project's URL still opens.
         The "completed" path is untested, because it would need ticking a
         real to-do.
   - [ ] **Life layout pass** (owner-requested 2026-09-28):
-        - [ ] [opus] Actionable check-ins, data side: new entry kind
+        - [x] Done 2026-09-28, verified on PGlite and with a throwaway
+              script. Check-ins without an id get a deterministic one,
+              `c-<date>-<label slug>`, derived when read; `setCheckin`;
+              `canReturnFromThings()`/`isIosLike()`/`lifeReturnUrl()`.
+              *Migration applied by the owner 2026-09-28*, before the
+              UI shipped: until then the server would reject check-in
+              entries and the engine would dead-letter them.
+              `migration list` shows it local and remote.
+              Original spec: [opus] Actionable check-ins, data side: new entry kind
               `checkin`, mark done + optional note, plus migration
               `20260928150000_life_checkins.sql`; check-ins get stable ids;
               the export includes them. Also `buildThingsUrl` gets an
               optional `x-success` return URL, used on the Mac only (iOS
               can't route a link into an installed PWA).
-        - [ ] [sonnet] UI: collapsible sections (state kept per device);
+        - [x] Done 2026-09-28, browser-verified with 35 checks plus an
+              iPhone emulation for the hint and the missing x-success.
+              Collapsible state is in guarded localStorage
+              `dashboard:life-sections`. Original spec: [sonnet] UI:
+              collapsible sections (state kept per device);
               one-line explanations for Sunday check and Export; a
               check-in list with done/note and overdue highlight; sent
               tasks tappable (`things:///search`); a "Sent N at HH:MM"

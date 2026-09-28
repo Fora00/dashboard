@@ -10,7 +10,16 @@ import {
 } from '../../lib/db'
 import { importWeek } from '../../lib/lifeSync'
 import { useAuth } from '../../lib/useAuth'
-import { LIFE_CAPS, THINGS_WHEN_KEYWORDS, addDays, dayKey, isMondayKey, validatePlan, weekKey } from './model'
+import {
+  LIFE_CAPS,
+  THINGS_WHEN_KEYWORDS,
+  addDays,
+  dayKey,
+  isMondayKey,
+  validatePlan,
+  weekKey,
+  withCheckinIds,
+} from './model'
 import { PlanPreview } from './PlanPreview'
 import { Button } from '../../components/Button'
 import { Card } from '../../components/Card'
@@ -66,7 +75,8 @@ interface QuestionRow {
   type: LifeQuestionType
 }
 interface CheckinRow {
-  key: string
+  // The check-in's stable id (entries link to it); also the React key.
+  id: string
   date: string
   label: string
 }
@@ -168,7 +178,7 @@ export function LifeEditor() {
       setTasks(plan.tasks.map(taskToRow))
       setTrackers(plan.trackers.map(trackerToRow))
       setSundayCheck(plan.sundayCheck.map((q) => ({ id: q.id, label: q.label, type: q.type })))
-      setCheckins(plan.checkins.map((c) => ({ key: newKey(), date: c.date, label: c.label })))
+      setCheckins(withCheckinIds(plan).checkins.map((c) => ({ id: c.id, date: c.date, label: c.label })))
       setInitialized(true)
       return
     }
@@ -186,7 +196,9 @@ export function LifeEditor() {
     setSundayCheck(plan.sundayCheck.map((q) => ({ id: q.id, label: q.label, type: q.type })))
     const today = dayKey(new Date())
     setCheckins(
-      plan.checkins.filter((c) => c.date >= today).map((c) => ({ key: newKey(), date: c.date, label: c.label })),
+      withCheckinIds(plan)
+        .checkins.filter((c) => c.date >= today)
+        .map((c) => ({ id: c.id, date: c.date, label: c.label })),
     )
   }
 
@@ -221,7 +233,7 @@ export function LifeEditor() {
         }
       }),
       sundayCheck: sundayCheck.map((q) => ({ id: q.id, label: q.label, type: q.type })),
-      checkins: checkins.map((c) => ({ date: c.date, label: c.label })),
+      checkins: checkins.map((c) => ({ id: c.id, date: c.date, label: c.label })),
     }
   }
 
@@ -587,7 +599,7 @@ function CheckinsSection({
       <h2 className="mb-2 text-sm font-medium text-slate-500 dark:text-slate-400">Check-ins</h2>
       <Card className="space-y-2">
         {checkins.map((c, i) => (
-          <div key={c.key} className="flex items-center gap-2">
+          <div key={c.id} className="flex items-center gap-2">
             <input
               type="date"
               value={c.date}
@@ -616,7 +628,7 @@ function CheckinsSection({
         {checkins.length < LIFE_CAPS.checkins && (
           <Button
             variant="ghost"
-            onClick={() => setCheckins([...checkins, { key: newKey(), date: '', label: '' }])}
+            onClick={() => setCheckins([...checkins, { id: newId(), date: '', label: '' }])}
           >
             + Add check-in
           </Button>

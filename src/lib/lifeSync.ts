@@ -1,6 +1,7 @@
 import {
   db,
   type LifeAnswer,
+  type LifeCheckinEntry,
   type LifeEntry,
   type LifeFocusEntry,
   type LifePlan,
@@ -11,7 +12,7 @@ import {
 } from './db'
 import { createCloudSync, type TableSync } from './cloudSync'
 import { useSyncStatus } from './useSyncStatus'
-import { dayKey, entryId, isEnergy, validatePlan } from '../projects/life/model'
+import { LIFE_CAPS, dayKey, entryId, isEnergy, validatePlan, withCheckinIds } from '../projects/life/model'
 
 // Local-first sync for the Life project (owner-only), built on the generic
 // engine in cloudSync.ts. Copied from src/lib/linksSync.ts — see
@@ -20,7 +21,8 @@ import { dayKey, entryId, isEnergy, validatePlan } from '../projects/life/model'
 // Two tables so concurrent logging never collides:
 //   life_weeks    one row per week, replaced wholesale on import (plan only).
 //   life_entries  one row per logged thing. Tracker +1s are append-only rows
-//                 with random ids; focus-done / Sunday answer / task-sent use
+//                 with random ids; focus-done / Sunday answer / task-sent /
+//                 check-in done+note use
 //                 a deterministic id `${week}:${kind}:${ref}` and are flipped
 //                 in place (never deleted), so two devices toggling the same
 //                 thing converge by last-writer-wins on updatedAt.
@@ -64,7 +66,9 @@ const weeksTable: TableSync<LifeWeek, LifeWeekRow> = {
   fromRow: (r) => ({
     id: r.id,
     week: r.week,
-    plan: r.plan,
+    // Rows imported before check-ins had ids get the same derived ids the
+    // client computes everywhere else (model.ts withCheckinIds).
+    plan: r.plan ? withCheckinIds(r.plan) : r.plan,
     importedAt: Number(r.imported_at),
     updatedAt: Number(r.updated_at),
   }),
@@ -243,6 +247,42 @@ export async function setSundayAnswer(week: string, questionId: string, answer: 
     updatedAt: now,
   }
   await engine.upsert('life_entries', entry)
+}
+
+export interface CheckinInput {
+  done: boolean
+  /** Optional note; trimmed, empty/omitted clears it. ≤ LIFE_CAPS.checkinNote chars. */
+  note?: string | null
+}
+
+/**
+ * Mark a check-in done / not done, with an optional note. A keyed toggle
+ * (`${week}:checkin:${checkinId}`): updated in place, never deleted. Throws
+ * if the note is over LIFE_CAPS.checkinNote characters (the UI caps the
+ * input with maxLength, so this is a backstop). Returns the saved entry.
+ */
+export async function setCheckin(week: string, checkinId: string, input: CheckinInput): Promise<LifeCheckinEntry> {
+  const note = (input.note ?? '').trim()
+  if (note.length > LIFE_CAPS.checkinNote) {
+    throw new Error(`Keep the note under ${LIFE_CAPS.checkinNote} characters`)
+  }
+  const id = entryId(week, 'checkin', checkinId)
+  const prev = await existing<LifeCheckinEntry>(id)
+  const now = Date.now()
+  const value: LifeCheckinEntry['value'] = { done: input.done === true }
+  if (note) value.note = note
+  const entry: LifeCheckinEntry = {
+    id,
+    week,
+    kind: 'checkin',
+    ref: checkinId,
+    day: dayKey(new Date()),
+    value,
+    createdAt: prev?.createdAt ?? now,
+    updatedAt: now,
+  }
+  await engine.upsert('life_entries', entry)
+  return entry
 }
 
 /**
