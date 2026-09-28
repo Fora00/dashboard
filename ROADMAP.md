@@ -482,7 +482,12 @@ data, routes and sync are untouched, and a hidden project's URL still opens.
           lose to a stale update.
         - The export's JSON block is `{ plan, entries }`.
 
-        **Owner:** `npx supabase db push`, then `npm run db:types`.
+        *Applied 2026-09-28* by the owner, after restoring the project
+        from a free-tier auto-pause (`status: INACTIVE`, which makes
+        `db push` fail with "login role status 544 … connection timeout").
+        `migration list` shows all ten migrations local and remote, and
+        `npm run db:types` regenerated a file identical to the hand-written
+        blocks.
   - [x] `/settimana` command: `.claude/commands/settimana.md` (canonical;
         `.claude/` is gitignored, so it lives only on the owner's Mac) and
         the committed `scripts/life-link.ts`, which validates with the real
