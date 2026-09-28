@@ -526,6 +526,21 @@ data, routes and sync are untouched, and a hidden project's URL still opens.
           leftover pairs for certain; more leftovers pair by shared words
           only when the best candidate is unique. Anything else is
           reported, never guessed.
+        - Things gotchas found on first real use (2026-09-28):
+          - The app-level `to dos` **excludes the Logbook**, so completed
+            items were "NOT FOUND". The Logbook is now its own pass,
+            filtered by completion date with a window of at least 14 days.
+          - `repeat with t in (… whose …)` re-runs the query on every
+            step, which took 2m16s. Five bulk property gets per list take
+            8s.
+          - The title fallback only considers to-dos created from the
+            week's Monday on.
+        - [ ] **Canceled to-dos unverified** [opus, XS]: the Logbook pass
+              filters on `completion date`. If Things stores cancellations
+              in a separate `cancellation date`, canceled to-dos show as
+              NOT FOUND instead of canceled. Check with a real canceled
+              to-do and extend the filter if needed. Parked by the owner
+              until the next week's run.
         - AppleScript gotchas: `st` is a reserved word, and Things terms
           inside a handler need their own `tell` block. Dates are read as
           "seconds ago", because date↔epoch conversion is
