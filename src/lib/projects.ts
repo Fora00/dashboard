@@ -79,6 +79,15 @@ export const projects: ProjectMeta[] = [
     status: 'live',
   },
   {
+    id: 'life',
+    name: 'Life',
+    emoji: '🧭',
+    description: 'This week: focus, trackers, Sunday check. Owner only.',
+    path: '/life',
+    status: 'live',
+    ownerOnly: true,
+  },
+  {
     id: 'settings',
     name: 'Settings',
     emoji: '⚙️',

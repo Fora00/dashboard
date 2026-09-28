@@ -488,7 +488,15 @@ data, routes and sync are untouched, and a hidden project's URL still opens.
         the committed `scripts/life-link.ts`, which validates with the real
         `parseWeekJson` and prints the import link. `~/life` has a
         same-named pointer command. `~/life` itself never leaves the Mac.
-  - [ ] Phase 2 [sonnet] — UI on the phase-1 API:
+  - [x] Phase 2, done 2026-09-28: `Life.tsx` + `LifeImport.tsx`, driven
+        end-to-end in headless Chromium with fake data (21 assertions, no
+        console errors, 375px without horizontal scroll). The orchestrator
+        reordered the Things send so tasks are marked sent *before*
+        navigating: iOS may suspend the PWA the moment Things opens.
+  - [ ] **Owner, on the iPhone:** tap "Send to Things" from the installed
+        PWA and confirm Things opens with the to-dos. That's the last
+        unverified piece.
+  - Original phase 2 spec [sonnet] — UI on the phase-1 API:
         - registry entry (`ownerOnly`, 🧭; ownerOnly already keeps it off
           `/sharing`);
         - `/life` and `/life/import` routes;
