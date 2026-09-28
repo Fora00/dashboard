@@ -384,6 +384,10 @@ Follow-ups this project surfaced:
 
 ## Home grid — stars, usage ordering, sort selector
 
+**Shipped live 2026-09-10** (commits `849857a` localStorage fix, `6497466`
+links tags, `eb03216` home ordering; Pages deploy run 34451623653 green,
+https://fora00.github.io/dashboard/ serving the new bundle).
+
 Added 2026-09-10. **Local-only by design** — no Supabase table, no migration,
 no `*Sync.ts`: open counts are inherently per-device. Accepted tradeoff: stars
 do NOT carry across devices (see the follow-up below).
@@ -428,6 +432,36 @@ do NOT carry across devices (see the follow-up below).
       `starred` and a local `opens`/`lastOpenedAt`, or a synced
       preferences table keyed by user. Decide the shape before building.
       Effort M.
+
+### Show / hide per project (added 2026-09-28)
+
+Hiding is a per-device **view preference**, not deletion or permission:
+data, routes and sync are untouched, and a hidden project's URL still opens.
+
+- [x] **Hide projects from the home grid** — done 2026-09-28 (build + lint
+      green; not yet spot-checked on a phone). A code-level `disabled` flag
+      that also removes the route was considered and rejected: it adds no
+      privacy (repo and bundle are public, data is behind RLS or on-device)
+      and would be a second, deploy-only hide mechanism. A project that stays
+      hidden for months and isn't missed gets deleted instead, like
+      yt-declutter. Original spec: [sonnet, pattern: `toggleStar` in
+      `src/lib/projectStats.ts` + the star button in `Home.tsx`] —
+      `ProjectStat.hidden?: 0 | 1`, **not indexed, so no Dexie bump**.
+      Unset means "use the default": `DEFAULT_HIDDEN` = todo, habits,
+      climbing, shop-list, boardgame-ideas, book-ideas (the owner's choice
+      2026-09-28). Everything else, including future projects, defaults to
+      visible. Nothing is written until the owner toggles, so an explicit
+      choice is never overwritten. Never hideable: `settings`, `sharing`.
+      **Defaults apply only to the owner and to signed-out users.** A
+      signed-in guest gets no default hides, so a guest's phone never loses
+      Shop List. `recordOpen`/`toggleStar` must preserve `hidden` (both
+      currently `put` a fresh object, which would drop it). UI: a "Projects"
+      section in Settings with one 40px switch per hideable project; Home
+      filters hidden projects after `ownerOnly`, with a "N hidden · manage"
+      link to `/settings` at the bottom. Effort S.
+- [ ] **Life 🧭** — spec in `docs/HANDOFF-life.md`; the owner's two open
+      questions (sync, Habits link) get asked one at a time before
+      building. Not started.
 
 ### Pre-existing bug found while verifying the above (2026-09-10)
 
@@ -615,6 +649,25 @@ Low-confidence — flagged for completeness, not verified as real problems:
       Would need an actual manual pass (keyboard-only nav, screen reader)
       per screen before treating it as a bug list. Effort to scope: S just
       to figure out if there's anything real here.
+
+## Infrastructure maintenance
+
+- [ ] **CI actions target the deprecated Node 20 runtime** [sonnet] — every
+      deploy since 2026-09-10 emits: "Node.js 20 is deprecated. The following
+      actions target Node.js 20 but are being forced to run on Node.js 24:
+      actions/checkout@v4, actions/configure-pages@v5, actions/deploy-pages@v4,
+      actions/setup-node@v4, actions/upload-artifact@v4." Deploys still
+      SUCCEED — GitHub is force-running them on Node 24 — so this is a
+      warning, not a breakage, and there is no rush. It becomes a real
+      failure whenever GitHub drops the compatibility shim. Fix: bump the
+      five action majors in `.github/workflows/deploy.yml` (currently
+      `checkout@v4`, `setup-node@v4`, `configure-pages@v5`,
+      `upload-pages-artifact@v3`, `deploy-pages@v4`) to their current
+      releases, then push and confirm the run stays green — the workflow is
+      the only thing standing between a commit and the live site, so verify
+      the deploy rather than just the diff. `node-version: 22` in the
+      workflow is unrelated and already fine. Effort XS.
+      Ref: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
 
 ## Ideas / later
 

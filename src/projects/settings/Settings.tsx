@@ -1,14 +1,73 @@
 import { useEffect, useState } from 'react'
-import { db, requestPersistentStorage } from '../../lib/db'
+import { useLiveQuery } from 'dexie-react-hooks'
+import { db, requestPersistentStorage, type ProjectStat } from '../../lib/db'
 import { formatBytes } from '../../lib/format'
+import { projects } from '../../lib/projects'
+import { NEVER_HIDDEN, isHidden, setHidden, useApplyHiddenDefaults } from '../../lib/projectStats'
 import { syncEnabled } from '../../lib/sync'
 import { useAuth } from '../../lib/useAuth'
+import { useOwner } from '../../lib/useOwner'
 import { Button } from '../../components/Button'
 import { Card } from '../../components/Card'
 import { PageHeader } from '../../components/PageHeader'
 import { SyncCard } from '../../components/SyncCard'
 
-// Per-device settings: storage usage, persistence, sync status, local wipe.
+// Per-device settings: project visibility, storage usage, persistence, sync
+// status, local wipe.
+
+// Show/hide switches for the home grid. Same ownerOnly rule as Home, minus
+// the never-hideable projects (this page and Sharing).
+function ProjectVisibility() {
+  const owner = useOwner()
+  const applyDefaults = useApplyHiddenDefaults()
+  const stats = useLiveQuery(() => db.projectStats.toArray())
+  if (stats === undefined) return null
+  const statsById = new Map<string, ProjectStat>(stats.map((s) => [s.id, s]))
+  const hideable = projects.filter((p) => (!p.ownerOnly || owner) && !NEVER_HIDDEN.has(p.id))
+
+  return (
+    <section>
+      <h2 className="mb-2 text-sm font-medium text-slate-500 dark:text-slate-400">Projects</h2>
+      <Card className="text-sm">
+        <p className="mb-2 text-slate-500 dark:text-slate-400">
+          Hidden projects stay reachable by URL; no data is deleted.
+        </p>
+        <ul className="divide-y divide-slate-200 dark:divide-slate-700/60">
+          {hideable.map((p) => {
+            const shown = !isHidden(p.id, statsById.get(p.id), applyDefaults)
+            return (
+              <li key={p.id}>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={shown}
+                  aria-label={`Show ${p.name} on home`}
+                  onClick={() => void setHidden(p.id, shown)}
+                  className="flex min-h-11 w-full items-center gap-3 text-left"
+                >
+                  <span className="text-xl" aria-hidden="true">{p.emoji}</span>
+                  <span className="flex-1 text-slate-800 dark:text-slate-200">{p.name}</span>
+                  <span
+                    aria-hidden="true"
+                    className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${
+                      shown ? 'bg-indigo-500' : 'bg-slate-300 dark:bg-slate-600'
+                    }`}
+                  >
+                    <span
+                      className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${
+                        shown ? 'translate-x-5' : 'translate-x-0.5'
+                      }`}
+                    />
+                  </span>
+                </button>
+              </li>
+            )
+          })}
+        </ul>
+      </Card>
+    </section>
+  )
+}
 
 export function Settings() {
   const session = useAuth()
@@ -44,6 +103,8 @@ export function Settings() {
       />
 
       <div className="space-y-6">
+        <ProjectVisibility />
+
         <section>
           <h2 className="mb-2 text-sm font-medium text-slate-500 dark:text-slate-400">Cloud sync</h2>
           {syncEnabled ? (

@@ -136,6 +136,10 @@ export interface ProjectStat {
   opens: number
   starred: 0 | 1      // Dexie can't index booleans — store 0/1
   lastOpenedAt: number
+  // Hidden from the home grid. Unset = use DEFAULT_HIDDEN (projectStats.ts),
+  // so an explicit choice is never overwritten by the defaults. Not indexed,
+  // hence no schema version bump.
+  hidden?: 0 | 1
 }
 
 // Remote table names that the generic sync engine can push to. Each is also

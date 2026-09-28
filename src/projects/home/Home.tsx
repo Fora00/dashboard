@@ -5,7 +5,7 @@ import { db, type ProjectStat } from '../../lib/db'
 import { projects, type ProjectMeta } from '../../lib/projects'
 import { formatBytes } from '../../lib/format'
 import { useOwner } from '../../lib/useOwner'
-import { toggleStar } from '../../lib/projectStats'
+import { isHidden, toggleStar, useApplyHiddenDefaults } from '../../lib/projectStats'
 import { Card } from '../../components/Card'
 import { IosInstallHint } from '../../components/IosInstallHint'
 
@@ -83,9 +83,14 @@ function storeReversed(reversed: boolean): void {
 // of one project reading another project's data through the shared db.
 export function Home() {
   const owner = useOwner()
-  const visible = projects.filter((p) => !p.ownerOnly || owner)
+  const applyDefaults = useApplyHiddenDefaults()
   const stats = useLiveQuery(() => db.projectStats.toArray())
   const statsById = new Map<string, ProjectStat>((stats ?? []).map((s) => [s.id, s]))
+  // Hidden projects drop out after the ownerOnly filter. While stats load,
+  // statsById is empty so only the defaults apply — no flash of every tile.
+  const permitted = projects.filter((p) => !p.ownerOnly || owner)
+  const visible = permitted.filter((p) => !isHidden(p.id, statsById.get(p.id), applyDefaults))
+  const hiddenCount = permitted.length - visible.length
   const [order, setOrder] = useState<HomeOrder>(() => readStoredOrder())
   const [reversed, setReversed] = useState<boolean>(() => readStoredReversed())
 
@@ -269,6 +274,16 @@ export function Home() {
           )
         })}
       </div>
+      {hiddenCount > 0 && (
+        <div className="mt-6 flex justify-center">
+          <Link
+            to="/settings"
+            className="flex min-h-10 items-center rounded-lg px-3 text-sm text-slate-500 hover:text-slate-700 active:bg-slate-200/60 dark:text-slate-400 dark:hover:text-slate-200 dark:active:bg-slate-700/60"
+          >
+            {hiddenCount} hidden · manage
+          </Link>
+        </div>
+      )}
     </div>
   )
 }
