@@ -660,6 +660,61 @@ data, routes and sync are untouched, and a hidden project's URL still opens.
       `OfflineBanner.tsx` mounted once in Layout — amber "Offline — changes
       are saved on this device and sync when you're back."
 
+## ▶ Resume here (session paused 2026-09-28)
+
+Everything below is committed and live unless noted. Pick up in this order:
+
+1. **Events, phase 1: crawler** [opus] — design agreed with the owner
+   (GitHub Actions daily, a collector project, visible to all, board
+   games first). A builder was dispatched and **stopped before writing
+   anything**, so nothing is in the tree. Re-dispatch with the brief
+   implied by the "Project 12" section below. The source formats were
+   verified by the orchestrator on 2026-09-28. After it lands, watch the
+   first scheduled Actions run.
+2. **Events, phase 2: `/events` page** [sonnet], after phase 1.
+3. **Owner on the iPhone:** "Send to Things" from the installed PWA
+   (the last unverified Life piece), plus the new Life layout.
+4. **Canceled to-dos in Things** [opus, XS] — see the unchecked item
+   under Life. The owner parked it until the next `/settimana` run.
+5. **Engine flush race** [opus] — pre-existing, in `cloudSync.ts`.
+6. Unchanged backlog: Life sync of `starred`, link tag rename, the
+   engineering-quality audit items, Node 20 actions.
+
+Session conventions worth keeping:
+- The owner works **one thing at a time**: ask one question per turn,
+  about the current feature only.
+- `~/life` never leaves the Mac. Life data may sync owner-only.
+- `.claude/` is gitignored. `/settimana` lives only on the owner's Mac.
+- The Supabase free tier auto-pauses after about a week idle
+  (`status: INACTIVE`). The owner restores it, then runs `db push`.
+
+## Project 12 — events 📍 (Trentino event collector)
+
+Added 2026-09-28. Public events from many sources in one list, tagged by
+interest. The site is static, so crawling can't run in the browser (CORS):
+a **GitHub Actions** job crawls daily and publishes `events.json` with the
+site. Events are public data, so they can live in the public build. The
+owner's saved/hidden events and favourite tags stay on the device (owner-only
+sync can come later).
+
+- [ ] **Phase 1: crawler** [opus] — `scripts/events/`, one adapter per
+      source with a common `Event` shape, keyword tag rules in one file,
+      dedup across sources, and `public/events.json` with per-source status.
+      A failing source keeps its previous events (read from the deployed
+      `events.json`) and never fails the deploy. Politeness: daily,
+      robots.txt respected, delays, an honest User-Agent. The deploy
+      workflow gets a daily `schedule`. First sources (board games,
+      verified 2026-09-28):
+      - Ludimus: static HTML, date in the URL;
+      - OpenPA JSON API: bibcom.trento.it, trentogiovani.it;
+      - Volkan TDG: per-event iCal, but possibly stale.
+- [ ] **Phase 2: `/events` page** [sonnet] — list with tag and city
+      filters, favourite tags first, save/hide (Dexie, local), "to
+      Things", offline via the last cached copy.
+- [ ] Later: more categories, one at a time (SAT/hikes, climbing,
+      art/ceramics, the owner's Sunday sources: ViviRovereto, Visit
+      Rovereto, Roveretogiovani).
+
 ## Engineering quality (audit 2026-07-05)
 
 Not new features — gaps found while auditing the current codebase against
