@@ -4,6 +4,9 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+  schedule:
+    # Daily events crawl (~06:23 Rome; GitHub cron is UTC and may run late).
+    - cron: '23 4 * * *'
 
 permissions:
   contents: read
@@ -27,6 +30,11 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      # Writes public/events.json (copied into dist by the build). A crawler
+      # crash must never block the deploy: failing sources keep the events
+      # of the currently deployed events.json.
+      - run: npm run events:crawl
+        continue-on-error: true
       - run: npm run build
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}

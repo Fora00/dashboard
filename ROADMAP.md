@@ -690,12 +690,8 @@ data, routes and sync are untouched, and a hidden project's URL still opens.
 
 Everything below is committed and live unless noted. Pick up in this order:
 
-1. **Events, phase 1: crawler** [opus] — design agreed with the owner
-   (GitHub Actions daily, a collector project, visible to all, board
-   games first). A builder was dispatched and **stopped before writing
-   anything**, so nothing is in the tree. Re-dispatch with the brief
-   implied by the "Project 12" section below. The source formats were
-   verified by the orchestrator on 2026-09-28. After it lands, watch the
+1. **Events, phase 1: crawler** — built and reviewed 2026-09-29 (see
+   Project 12). Next: the owner decides on commit and push, then watch the
    first scheduled Actions run.
 2. **Events, phase 2: `/events` page** [sonnet], after phase 1.
 3. **Owner on the iPhone:** "Send to Things" from the installed PWA
@@ -723,20 +719,65 @@ site. Events are public data, so they can live in the public build. The
 owner's saved/hidden events and favourite tags stay on the device (owner-only
 sync can come later).
 
-- [ ] **Phase 1: crawler** [opus] — `scripts/events/`, one adapter per
-      source with a common `Event` shape, keyword tag rules in one file,
-      dedup across sources, and `public/events.json` with per-source status.
-      A failing source keeps its previous events (read from the deployed
-      `events.json`) and never fails the deploy. Politeness: daily,
-      robots.txt respected, delays, an honest User-Agent. The deploy
-      workflow gets a daily `schedule`. First sources (board games,
-      verified 2026-09-28):
-      - Ludimus: static HTML, date in the URL;
-      - OpenPA JSON API: bibcom.trento.it, trentogiovani.it;
-      - Volkan TDG: per-event iCal, but possibly stale.
+- [x] **Phase 1: crawler** [opus] — done 2026-09-29, not yet pushed.
+      `scripts/events/` (zero deps, run by Node's type stripping:
+      `npm run events:crawl`), schema + how to add a source/category in
+      **`docs/EVENTS.md`** (schemaVersion 1, additive changes only: a local
+      tool outside this repo reads it). Categories/keywords: one file,
+      `scripts/events/tags.ts`. Deploy workflow: daily cron `23 4 * * *`
+      plus a crawl step with `continue-on-error`. `public/events.json` is
+      gitignored (built in CI, about 1 MB raw, 215 KB gzipped, not precached by the SW).
+      A failing source keeps its events from the deployed `events.json`.
+      Each event has `image` (a URL or null), a full `description` and a short `summary`.
+      First run: 861 events after dedup, 62 requests, about 90 s.
+      Per source (first run):
+      - ludimus: 67, all board games. Detail pages (time, venue,
+        image) fetched only for the next 30 days.
+      - bibcom-trento: 94 (61 after dedup with comune-trento).
+        OpenPA `/opendata/api/content/search`. No images (the API
+        gives only an object id). Branch prefix stripped from titles.
+      - trentogiovani: 3. OpenPA `/opendata/api/calendar`, the only
+        opendata path its robots.txt allows (`/api/` and `/opendata`
+        are disallowed). The brief's `/api/opendata/v2` is off-limits
+        here and on comune-trento and Verona.
+      - volkan: 0, stale. Whole-site iCal `?ical=1`, flagged `mayBeEmpty`.
+      - rovereto (eventi.comune.rovereto.tn.it): 11, content/search
+        filtered to future dates (the archive of about 1,900 is never paged).
+      - comune-trento: 213, OpenPA calendar, 30-day chunks.
+      - mart: 71 (exhibitions and events). Umbraco JSON API on
+        media.mart.tn.it, found via `__NEXT_DATA__`.
+      - bolzano: 292 from Open Data Hub. Mostly no text, venue or
+        image; URL `mysuedtirol.info/it/eventi?eventid=…`.
+      - verona: 152 from `www.comune.verona.it/opendata/api/calendar`,
+        which robots.txt explicitly allows (unlike `/api/` and
+        `/content/search`). No images. Heavy: about 5 MB per 30-day chunk,
+        about 30 MB per run.
+      - **Skipped: visitrovereto.it.** Events Manager REST
+        `wp-json/events-manager/v1/events` returns 401, `/events.ics` is
+        empty, there is no event type in `wp/v2`, and no JSON-LD. Only
+        scraping rendered markup is left.
+      Known data quirks: a few sources publish end < start (the pipeline
+      drops that end); series with more than 8 dates are folded into one
+      all-day record (`occurrences`); keyword noise ("mostra" also means
+      "shows"); fuzzy near-duplicates across sources not merged.
+- [ ] **Watch the first scheduled Actions run** [orchestrator] — after
+      push: check the crawl step's summary table in the log and that
+      `https://fora00.github.io/dashboard/events.json` is served.
 - [ ] **Phase 2: `/events` page** [sonnet] — list with tag and city
-      filters, favourite tags first, save/hide (Dexie, local), "to
-      Things", offline via the last cached copy.
+      filters, favourite tags first, save/hide (Dexie, local), offline via
+      the last cached copy. Each event shows its `image` (when present),
+      `summary`, and an expandable full `description`. A **"to Things"**
+      action per event (owner wants events actionable) builds the to-do
+      from `title`, `url`, `start`/`end`, `venue`, `city` (reuse the
+      Life "Send to Things" URL builder in `src/projects/life/model.ts`). Read `docs/EVENTS.md` first:
+      fetch `events.json` with `cache: 'no-store'`, recompute `ongoing`
+      with the device clock ("open now" filter for exhibitions), and
+      treat unknown categories as `other`.
+- [ ] Crawler follow-ups [sonnet, each XS–S]: images for bibcom,
+      trentogiovani and Verona (capped extra object reads); fuzzier dedup
+      (e.g. "Pietre di pane" on mart and comune-trento); more keywords
+      per category; shorter horizon for Verona if its roughly 30 MB per run is too heavy;
+      a visitrovereto source if it ever exposes a feed.
 - [ ] Later: more categories, one at a time (SAT/hikes, climbing,
       art/ceramics, the owner's Sunday sources: ViviRovereto, Visit
       Rovereto, Roveretogiovani).
