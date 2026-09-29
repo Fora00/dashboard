@@ -62,12 +62,12 @@ function carryOver(previous: EventsFile | null, sourceId: string, now: number): 
 function table(rows: SourceStatus[], ms: Map<string, number>): string {
   const lines = rows.map((s) => [
     s.ok ? 'ok ' : 'ERR',
-    s.id.padEnd(15),
+    s.id.padEnd(20),
     String(s.count).padStart(5),
     `${((ms.get(s.id) ?? 0) / 1000).toFixed(1)}s`.padStart(7),
     s.error ?? '',
   ].join('  '))
-  return ['     source           count     time  error', ...lines].join('\n')
+  return ['     source                count     time  error', ...lines].join('\n')
 }
 
 async function main(): Promise<void> {

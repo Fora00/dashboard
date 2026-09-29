@@ -14,9 +14,13 @@
 //   FullCalendar shape; all-day `end` is exclusive. Requested in 30-day chunks.
 //   The nested time_interval.recurrences carry wrong offsets on some hosts,
 //   so only the top-level start/end are used.
+//
+// Field names differ per install (cultura.trentino.it has `luogo_della_cultura`,
+// `comune`, `informazioni`, `orario_svolgimento`; teatro-zandonai.it has a
+// `spettacolo` class with `main_datetime`): `extract` reads all known ones.
 import type { Adapter, AdapterContext, RawEvent } from '../types.ts'
 import type { CategoryId } from '../tags.ts'
-import { addDays, normalizeIso, romeDate } from '../time.ts'
+import { addDays, localToIso, normalizeIso, romeDate } from '../time.ts'
 import { absUrl, cityFromAddress, firstNonEmpty, htmlToText } from '../text.ts'
 
 export interface OpenPaConfig {
@@ -35,6 +39,11 @@ export interface OpenPaConfig {
   defaultCategory?: CategoryId
   mayBeEmpty?: boolean
   maxRequests?: number
+  /**
+   * Search mode only: date fields of the class (default from_time/to_time).
+   * Without `to`, the event is a single moment at `from` (e.g. a show).
+   */
+  timeFields?: { from: string; to?: string }
 }
 
 const PAGE = 100
@@ -93,15 +102,19 @@ function imageUrl(d: Json, host: string): string | null {
 
 /** Venue, city, texts, image and tag text from an OpenPA data block (any class). */
 function extract(d: Json, cfg: OpenPaConfig) {
-  const places = ['takes_place_in', 'virtual_takes_place_in', 'site', 'luogo', 'luogo_svolgimento']
+  const places = ['takes_place_in', 'virtual_takes_place_in', 'site', 'luogo', 'luogo_svolgimento', 'luogo_della_cultura']
   const venue = places.flatMap((k) => names(d[k]))[0] ?? (typeof d.presso === 'string' ? d.presso : null) ?? null
   const addr = [...places.flatMap((k) => addresses(d[k])), ...addresses(d.geo), ...addresses(d.gps)]
-  const city = cfg.fixedCity ? cfg.city : addr.map(cityFromAddress).find(Boolean) ?? cfg.city
-  const abstract = firstNonEmpty(d.event_abstract as string, d.abstract as string)
-  const full = firstNonEmpty(d.description as string, d.text as string)
+  const city = cfg.fixedCity
+    ? cfg.city
+    : names(d.comune)[0] ?? addr.map(cityFromAddress).find(Boolean) ?? cfg.city
+  const str = (k: string) => (typeof d[k] === 'string' ? (d[k] as string) : '')
+  const abstract = firstNonEmpty(str('event_abstract'), str('abstract'), str('short_description'), str('sottotitolo'))
+  const full = firstNonEmpty(str('description'), str('text'), str('descrizione'), str('informazioni'))
   const tagText = [
     'has_public_event_typology', 'virtual_has_public_event_typology', 'tipo_evento', 'tipologia',
-    'topics', 'virtual_topic', 'materia', 'argomento',
+    'topics', 'virtual_topic', 'materia', 'argomento', 'utenza_target', 'destinatari', 'target',
+    'sottotitolo',
   ].flatMap((k) => names(d[k])).join(' · ')
   return {
     venue,
@@ -115,7 +128,7 @@ function extract(d: Json, cfg: OpenPaConfig) {
 }
 
 function cleanTitle(title: string, cfg: OpenPaConfig): string {
-  const t = title.replace(/\s+/g, ' ').trim()
+  const t = title.replace(/''/g, '"').replace(/\s+/g, ' ').trim()
   return cfg.titlePrefix ? t.replace(cfg.titlePrefix, '').trim() || t : t
 }
 
@@ -124,11 +137,29 @@ function isMidnight(iso: string): boolean {
   return iso.slice(11, 19) === '00:00:00'
 }
 
+/** "<p>ore 20.30</p>", "alle 17:30", "h. 21" → "20:30"; only the first time, only when unambiguous. */
+function timeFromText(html: unknown): string | null {
+  const t = htmlToText(typeof html === 'string' ? html : '')
+  const all = [...t.matchAll(/(?:\bore|\balle|\bdalle|\bh\.?)\s*(\d{1,2})(?:[.:](\d{2}))?\b/gi)]
+  const first = all[0]
+  const clockTimes = t.match(/\b\d{1,2}[.:]\d{2}\b/g) ?? []
+  // "lun, ven ore 11.30, 14.30…" is a schedule, not one start time.
+  if (!first || all.length > 1 || clockTimes.length > 2) return null
+  const h = Number(first[1])
+  if (h > 23) return null
+  return `${String(h).padStart(2, '0')}:${first[2] ?? '00'}`
+}
+
 async function runSearch(cfg: OpenPaConfig, ctx: AdapterContext): Promise<RawEvent[]> {
-  const horizon = addDays(romeDate(ctx.now), ctx.horizonDays)
+  const today = romeDate(ctx.now)
+  const horizon = addDays(today, ctx.horizonDays)
+  const from = cfg.timeFields?.from ?? 'from_time'
+  const to = cfg.timeFields ? cfg.timeFields.to : 'to_time'
   const out: RawEvent[] = []
   for (let offset = 0; ; offset += PAGE) {
-    const q = `classes ${cfg.classes} and to_time range [now,*] and from_time range [*,${horizon}] sort [from_time=>asc] limit ${PAGE} offset ${offset}`
+    const q = to
+      ? `classes ${cfg.classes} and ${to} range [now,*] and ${from} range [*,${horizon}] sort [${from}=>asc] limit ${PAGE} offset ${offset}`
+      : `classes ${cfg.classes} and ${from} range [${today},${horizon}] sort [${from}=>asc] limit ${PAGE} offset ${offset}`
     const res = await ctx.fetchJson<{ totalCount?: number; searchHits?: Json[]; error_message?: string }>(
       `https://${cfg.host}/opendata/api/content/search/${encodeURIComponent(q)}`,
     )
@@ -137,11 +168,18 @@ async function runSearch(cfg: OpenPaConfig, ctx: AdapterContext): Promise<RawEve
     for (const hit of hits) {
       const meta = asObj(hit.metadata) ?? {}
       const d = langData(hit)
-      const start = normalizeIso(d.from_time as string)
+      let start = normalizeIso(d[from] as string)
       if (!start) continue
-      let end = normalizeIso(d.to_time as string)
-      const allDay = isMidnight(start) && (!end || isMidnight(end) || end.slice(11, 16) === '23:59')
+      let end = to ? normalizeIso(d[to] as string) : null
+      let allDay = isMidnight(start) && (!end || isMidnight(end) || end.slice(11, 16) === '23:59')
       if (allDay && end) end = normalizeIso(end.slice(0, 10))
+      // Date-only single-day events often carry the time in free text.
+      const at = allDay && (!end || end.slice(0, 10) === start.slice(0, 10)) ? timeFromText(d.orario_svolgimento) : null
+      if (at) {
+        start = localToIso(start.slice(0, 10), at)
+        end = null
+        allDay = false
+      }
       const title = cleanTitle(firstNonEmpty(d.titolo as string, loc(meta.name) as string), cfg)
       const x = extract(d, cfg)
       out.push({

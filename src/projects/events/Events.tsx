@@ -5,14 +5,16 @@ import { PageHeader } from '../../components/PageHeader'
 import { EmptyState } from '../../components/EmptyState'
 import { Button } from '../../components/Button'
 import { SkeletonList } from '../../components/Skeleton'
+import { FilterSheet } from './FilterSheet'
 import { EventCard } from './EventCard'
 import type { EventItem } from './types'
 import {
   CATEGORIES,
   categoryLabel,
-  categoryOf,
   fetchEventsFile,
   groupByDay,
+  inCategory,
+  isKidsEvent,
   isLongRunning,
   isOngoingNow,
   isOver,
@@ -45,7 +47,7 @@ export function Events() {
   const [selectedCats, setSelectedCats] = useState<string[] | null>(null)
   const [selectedCities, setSelectedCities] = useState<string[]>([])
   const [showHidden, setShowHidden] = useState(false)
-  const [editFavs, setEditFavs] = useState(false)
+  const [sheetOpen, setSheetOpen] = useState(false)
   const [showSources, setShowSources] = useState(false)
   const [limit, setLimit] = useState(PAGE)
   // The clock is read once per mount/refresh, not on every render.
@@ -74,7 +76,9 @@ export function Events() {
   const activeCats = selectedCats ?? favourites
 
   const file = cache?.file
-  const events = useMemo(() => file?.events ?? [], [file])
+  // Children's/family events are never shown (owner's choice); saved ones
+  // still appear under Saved from their snapshot.
+  const events = useMemo(() => (file?.events ?? []).filter((e) => !isKidsEvent(e)), [file])
 
   // Base list of the current view, before category/city filters.
   const base = useMemo(() => {
@@ -105,7 +109,7 @@ export function Events() {
     const m = new Map<string, number>()
     for (const e of base) {
       if (selectedCities.length && !selectedCities.includes(e.city)) continue
-      m.set(categoryOf(e), (m.get(categoryOf(e)) ?? 0) + 1)
+      for (const c of CATEGORIES) if (inCategory(e, c.id)) m.set(c.id, (m.get(c.id) ?? 0) + 1)
     }
     return m
   }, [base, selectedCities])
@@ -120,7 +124,7 @@ export function Events() {
     () =>
       base.filter(
         (e) =>
-          (activeCats.length === 0 || activeCats.includes(categoryOf(e))) &&
+          (activeCats.length === 0 || activeCats.some((c) => inCategory(e, c))) &&
           (selectedCities.length === 0 || selectedCities.includes(e.city)),
       ),
     [base, activeCats, selectedCities],
@@ -175,6 +179,13 @@ export function Events() {
     resetLimit()
   }
 
+  function clearAll() {
+    setSelectedCats([])
+    setSelectedCities([])
+    setShowHidden(false)
+    resetLimit()
+  }
+
   async function toggleFavourite(id: string) {
     const next = favourites.includes(id) ? favourites.filter((c) => c !== id) : [...favourites, id]
     await db.eventPrefs.put({ id: 'prefs', favouriteCategories: next })
@@ -187,6 +198,7 @@ export function Events() {
 
   const failed = file?.sources.filter((s) => !s.ok) ?? []
   const filtering = activeCats.length > 0 || selectedCities.length > 0
+  const filterCount = activeCats.length + selectedCities.length
 
   const header = (
     <PageHeader
@@ -291,88 +303,66 @@ export function Events() {
         ))}
       </div>
 
-      {/* Category chips: favourites first. In edit mode a tap toggles the star. */}
-      <div className="-mx-4 mb-2 overflow-x-auto px-4 pb-1">
+      <div className="-mx-4 mb-4 overflow-x-auto px-4 pb-1">
         <div className="flex w-max items-center gap-2">
-          {(filtering || selectedCats !== null) && (
-            <button
-              type="button"
-              onClick={() => {
-                setSelectedCats([])
-                setSelectedCities([])
-                resetLimit()
-              }}
-              className="min-h-10 shrink-0 rounded-full border-2 border-slate-300 bg-white px-3.5 text-xs font-medium whitespace-nowrap text-slate-700 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200"
-            >
-              ✕ Clear
-            </button>
-          )}
           <button
             type="button"
-            onClick={() => setEditFavs((v) => !v)}
-            aria-pressed={editFavs}
-            aria-label="Edit favourite categories"
-            className={`${CHIP_BASE} ${editFavs ? CHIP_ON : CHIP_OFF}`}
+            onClick={() => setSheetOpen(true)}
+            className={`${CHIP_BASE} ${filterCount ? CHIP_ON : CHIP_OFF}`}
           >
-            {editFavs ? '★ Done' : '☆'}
+            Filters{filterCount ? ` · ${filterCount}` : ''}
           </button>
-          {catOrder.map((id) => {
-            const on = activeCats.includes(id)
-            const fav = favourites.includes(id)
-            const count = catCounts.get(id) ?? 0
-            if (!editFavs && count === 0 && !on) return null
-            return (
-              <button
-                key={id}
-                type="button"
-                onClick={() => (editFavs ? void toggleFavourite(id) : toggleCat(id))}
-                aria-pressed={editFavs ? fav : on}
-                className={`${CHIP_BASE} ${(editFavs ? fav : on) ? CHIP_ON : CHIP_OFF}`}
-              >
-                {editFavs ? (fav ? '★ ' : '☆ ') : on ? '✓ ' : fav ? '★ ' : ''}
-                {categoryLabel(id)} · {count}
-              </button>
-            )
-          })}
+          {activeCats.map((id) => (
+            <button
+              key={`c-${id}`}
+              type="button"
+              aria-label={`Remove filter ${categoryLabel(id)}`}
+              onClick={() => toggleCat(id)}
+              className={`${CHIP_BASE} ${CHIP_OFF}`}
+            >
+              {categoryLabel(id)} ✕
+            </button>
+          ))}
+          {selectedCities.map((city) => (
+            <button
+              key={`t-${city}`}
+              type="button"
+              aria-label={`Remove filter ${city}`}
+              onClick={() => toggleCity(city)}
+              className={`${CHIP_BASE} max-w-48 truncate ${CHIP_OFF}`}
+            >
+              {city} ✕
+            </button>
+          ))}
+          {(filtering || selectedCats !== null) && (
+            <button type="button" onClick={clearAll} className={`${CHIP_BASE} ${CHIP_OFF} underline`}>
+              Clear
+            </button>
+          )}
         </div>
       </div>
 
-      {cityCounts.length > 1 && (
-        <div className="-mx-4 mb-2 overflow-x-auto px-4 pb-1">
-          <div className="flex w-max items-center gap-2">
-            {cityCounts.map(([city, n]) => {
-              const on = selectedCities.includes(city)
-              return (
-                <button
-                  key={city}
-                  type="button"
-                  onClick={() => toggleCity(city)}
-                  aria-pressed={on}
-                  className={`${CHIP_BASE} max-w-48 truncate ${on ? CHIP_ON : CHIP_OFF}`}
-                >
-                  {on ? '✓ ' : ''}
-                  {city} · {n}
-                </button>
-              )
-            })}
-          </div>
-        </div>
-      )}
-
-      {view !== 'saved' && (
-        <label className="mb-4 flex min-h-10 items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
-          <input
-            type="checkbox"
-            checked={showHidden}
-            onChange={(e) => {
-              setShowHidden(e.target.checked)
-              resetLimit()
-            }}
-            className="size-5"
-          />
-          Show hidden
-        </label>
-      )}
+      <FilterSheet
+        open={sheetOpen}
+        onClose={() => setSheetOpen(false)}
+        catOrder={catOrder}
+        catCounts={catCounts}
+        activeCats={activeCats}
+        favourites={favourites}
+        cityCounts={cityCounts}
+        selectedCities={selectedCities}
+        showHidden={showHidden}
+        canShowHidden={view !== 'saved'}
+        total={total}
+        onToggleCat={toggleCat}
+        onToggleFavourite={(id) => void toggleFavourite(id)}
+        onToggleCity={toggleCity}
+        onShowHidden={(v) => {
+          setShowHidden(v)
+          resetLimit()
+        }}
+        onClearAll={clearAll}
+      />
 
       {total === 0 ? (
         <EmptyState

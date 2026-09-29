@@ -1,7 +1,7 @@
 // Shared shapes for the events crawler. The public contract (events.json) is
 // documented field by field in docs/EVENTS.md — keep the two in sync, and only
 // make additive changes while schemaVersion is 1.
-import type { CategoryId } from './tags.ts'
+import type { CategoryId, TagId } from './tags.ts'
 
 /** One event as published in events.json. */
 export interface Event {
@@ -23,7 +23,8 @@ export interface Event {
   /** Every adapter id that listed this event (dedup across sources); includes `source`. */
   sources: string[]
   category: CategoryId
-  tags: CategoryId[]
+  /** Every matching category id in priority order (always includes `category`), plus `kids` for children's/family events. */
+  tags: TagId[]
   /** Full plain text (HTML stripped, entities decoded), paragraphs separated by "\n\n", at most ~2000 chars. '' when none. */
   description: string
   /** One-line plain-text snippet, at most ~300 chars. '' when none. */

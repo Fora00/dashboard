@@ -10,6 +10,8 @@ const LOCALE = 'it-IT'
 export const CATEGORIES: { id: string; label: string }[] = [
   { id: 'boardgames', label: 'Board games' },
   { id: 'nerd', label: 'Comics & games' },
+  { id: 'creative', label: 'Creative' },
+  { id: 'theatre', label: 'Theatre' },
   { id: 'exhibitions', label: 'Exhibitions' },
   { id: 'concerts', label: 'Concerts & music' },
   { id: 'cinema', label: 'Cinema' },
@@ -22,6 +24,24 @@ const KNOWN = new Set(CATEGORIES.map((c) => c.id))
 /** Unknown category ids (a newer crawler) are treated like `other`. */
 export function categoryOf(e: EventItem): string {
   return KNOWN.has(e.category) ? e.category : 'other'
+}
+
+/**
+ * Children's / family events (the crawler's `kids` tag). The owner never
+ * wants them, so the page leaves them out entirely; the tag stays in
+ * events.json for other consumers.
+ */
+export function isKidsEvent(e: EventItem): boolean {
+  return Array.isArray(e.tags) && e.tags.includes('kids')
+}
+
+/**
+ * A category chip matches the event's primary category or any of its tags,
+ * so e.g. a workshop filed under Talks with a `creative` tag shows under
+ * Creative too.
+ */
+export function inCategory(e: EventItem, id: string): boolean {
+  return categoryOf(e) === id || (Array.isArray(e.tags) && e.tags.includes(id))
 }
 
 export function categoryLabel(id: string): string {

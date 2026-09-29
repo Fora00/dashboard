@@ -778,6 +778,50 @@ sync can come later).
       Scraped `url`/`image` are rendered only if http(s) (`safeHttpUrl`).
       Verified in headless Chrome at 390 px: no horizontal overflow, no
       console errors, filter → save → reload keeps the save.
+- [x] **Creative + theatre, no kids, more sources** [opus] — done
+      2026-09-29. `tags.ts`: new categories `creative` (hands-on adult
+      workshops; art media count only next to laboratorio/corso/workshop)
+      and `theatre` (opera included), chosen in tiers (title first, then
+      typology, summary, full text); fixed `comic*` matching "comicità".
+      New `kids` tag (conservative; the long description can only veto).
+      The page NEVER shows kids events (owner: "no kids and family stuff";
+      no toggle), but the tag stays in events.json for other consumers.
+      Category chips match the primary category OR a tag (`inCategory`).
+      `http.ts` honours robots `Crawl-delay` (capped at 30 s).
+      Six new sources, all ok on the first run (1,401 events, 86 requests, about 170 s):
+      - cultura-trentino (cultura.trentino.it, OpenPA search, Crawl-delay
+        10): 467, the whole province. Images are object-id only.
+      - rovereto-comune (ViviRovereto, OpenPA calendar): 9. Carries the
+        **RAM film festival** (7–11 Oct 2026, category Cinema).
+      - zandonai (teatro-zandonai.it, OpenPA class `spettacolo`): 1 for now,
+        `mayBeEmpty`. The existing `rovereto` source is really the library
+        agenda on the same install; rename its label some day.
+      - buonconsiglio (Events Manager `/events.ics`): 12; its
+        Adulti/Famiglie categories feed the kids tag.
+      - trentinospettacoli (schema.org microdata on the listing): 97, no
+        descriptions.
+      - tebe (apstebe.org, Teatro comunale di Bedollo; static HTML of a
+        Next.js page): 8. Confirmed by the owner as the association they meant.
+      Skipped, with reasons in docs/EVENTS.md: visittrentino.info (paging and
+      iCal disallowed by robots), muse.it, fondazionemcr.it,
+      centrosantachiara.it, artesella.it, museion.it, eventi.unitn.it
+      (empty RSS), fablab.unitn.it (Eventbrite), small ceramics studios (no
+      feed, or Wix, or robots 500). Facebook and Instagram are never scraped
+      (ToS and robots); the alternatives are organisers' own feeds or a manual "add event".
+- [x] **Filter modal on /events** [sonnet] — done 2026-09-29. Category and
+      city chips and "Show hidden" moved into a bottom sheet
+      (`src/projects/events/FilterSheet.tsx`). Page shows only the "Filters · N"
+      button plus removable pills. ★ per category sets favourites (the old edit
+      mode is gone). New shared **`src/components/Sheet.tsx`**, the repo's
+      first modal: native `<dialog>`, bottom sheet on phones, centred from
+      `sm:`, closes on Esc, backdrop or ✕, safe-area padded. Reuse it for any future modal.
+      Verified in headless Chrome at 390 px.
+- [ ] Events tagging/source follow-ups [sonnet, each XS–S]: images for
+      cultura-trentino (capped object reads, like bibcom); Trentino Spettacoli
+      descriptions via detail-page JSON-LD for the next 30 days (the Ludimus
+      pattern); creative recall is limited by the sources, so check Spazio
+      Piera and Hortus Artieri for feeds; "Halloween al Castello"
+      (a family Halloween at the castle, Bondone) is tagged creative but not kids, a known miss.
 - [ ] Events page polish [sonnet, XS] — when there's time: folded
       series (`occurrences > 1`, e.g. weekly game nights) show in "Open
       now" next to real exhibitions; consider listing them per next date

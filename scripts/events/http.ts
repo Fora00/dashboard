@@ -3,6 +3,7 @@
 // - robots.txt fetched once per origin (RFC 9309 groups: our product token,
 //   else `*`; Allow/Disallow with `*` and `$`, longest match wins, Allow wins
 //   ties). 404/410 = allow all; any other failure = skip that host;
+// - a robots.txt `Crawl-delay` (our group or `*`) raises the per-host delay;
 // - a disallowed URL is never requested, redirects included (every hop is
 //   checked, so a redirect to another host re-checks that host's robots);
 // - ≥ MIN_DELAY_MS between requests to the same host, a timeout per request,
@@ -14,9 +15,11 @@ const PRODUCT_TOKEN = 'dashboard-events-crawler'
 const MIN_DELAY_MS = 1500
 const TIMEOUT_MS = 20_000
 const MAX_REDIRECTS = 5
+/** Ignore absurd Crawl-delay values rather than stall the whole run. */
+const MAX_CRAWL_DELAY_S = 30
 
 interface Rule { allow: boolean; pattern: string; re: RegExp }
-type Robots = { rules: Rule[] } | { error: string }
+type Robots = { rules: Rule[]; delayMs: number } | { error: string }
 
 export class RobotsDisallowedError extends Error {}
 
@@ -29,9 +32,9 @@ function ruleRegExp(pattern: string): RegExp {
   return new RegExp(`^${body}${anchored ? '$' : ''}`)
 }
 
-/** Parse robots.txt and keep the rules that apply to us. */
-export function parseRobots(text: string): Rule[] {
-  interface Group { agents: string[]; rules: Rule[] }
+/** Parse robots.txt and keep the rules (and Crawl-delay, in seconds) that apply to us. */
+export function parseRobots(text: string): { rules: Rule[]; crawlDelay: number } {
+  interface Group { agents: string[]; rules: Rule[]; delay: number }
   const groups: Group[] = []
   let current: Group | null = null
   let lastWasAgent = false
@@ -43,13 +46,18 @@ export function parseRobots(text: string): Rule[] {
     const value = (m[2] ?? '').trim()
     if (key === 'user-agent') {
       if (!current || !lastWasAgent) {
-        current = { agents: [], rules: [] }
+        current = { agents: [], rules: [], delay: 0 }
         groups.push(current)
       }
       current.agents.push(value.toLowerCase())
       lastWasAgent = true
     } else {
       lastWasAgent = false
+      if (current && key === 'crawl-delay') {
+        const secs = Number(value)
+        if (Number.isFinite(secs) && secs > 0) current.delay = Math.max(current.delay, secs)
+        continue
+      }
       if (!current || (key !== 'allow' && key !== 'disallow')) continue
       if (value === '') continue // "Disallow:" with no path allows everything
       current.rules.push({ allow: key === 'allow', pattern: value, re: ruleRegExp(value) })
@@ -57,7 +65,10 @@ export function parseRobots(text: string): Rule[] {
   }
   const ours = groups.filter((g) => g.agents.includes(PRODUCT_TOKEN))
   const chosen = ours.length ? ours : groups.filter((g) => g.agents.includes('*'))
-  return chosen.flatMap((g) => g.rules)
+  return {
+    rules: chosen.flatMap((g) => g.rules),
+    crawlDelay: Math.min(MAX_CRAWL_DELAY_S, Math.max(0, ...chosen.map((g) => g.delay))),
+  }
 }
 
 /** Longest matching rule wins; Allow wins a tie; no match = allowed. */
@@ -78,6 +89,7 @@ function sleep(ms: number): Promise<void> {
 export class PoliteHttp {
   private robots = new Map<string, Promise<Robots>>()
   private lastRequest = new Map<string, number>()
+  private hostDelay = new Map<string, number>()
   private hostQueue = new Map<string, Promise<void>>()
   requests = 0
 
@@ -85,7 +97,8 @@ export class PoliteHttp {
   private async slot(host: string): Promise<void> {
     const prev = this.hostQueue.get(host) ?? Promise.resolve()
     const mine = prev.then(async () => {
-      const wait = (this.lastRequest.get(host) ?? 0) + MIN_DELAY_MS - Date.now()
+      const delay = Math.max(MIN_DELAY_MS, this.hostDelay.get(host) ?? 0)
+      const wait = (this.lastRequest.get(host) ?? 0) + delay - Date.now()
       if (wait > 0) await sleep(wait)
       this.lastRequest.set(host, Date.now())
     })
@@ -109,9 +122,12 @@ export class PoliteHttp {
       p = (async (): Promise<Robots> => {
         try {
           const res = await this.rawGet(new URL('/robots.txt', url.origin), 'follow')
-          if (res.status === 404 || res.status === 410) return { rules: [] }
+          if (res.status === 404 || res.status === 410) return { rules: [], delayMs: 0 }
           if (!res.ok) return { error: `robots.txt for ${url.host} returned HTTP ${res.status}; skipping host` }
-          return { rules: parseRobots(await res.text()) }
+          const parsed = parseRobots(await res.text())
+          const delayMs = parsed.crawlDelay * 1000
+          if (delayMs > 0) this.hostDelay.set(url.host, delayMs)
+          return { rules: parsed.rules, delayMs }
         } catch (e) {
           return { error: `robots.txt for ${url.host} failed (${(e as Error).message}); skipping host` }
         }

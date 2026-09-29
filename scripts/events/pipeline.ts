@@ -1,7 +1,8 @@
 // Pure post-processing shared by fresh and carried-over events: window,
 // series folding, ids/tags, cross-source dedup, `ongoing`, sorting.
 import type { Adapter, Event, RawEvent } from './types.ts'
-import { classify, sortTags } from './tags.ts'
+import type { CategoryId } from './tags.ts'
+import { classify, finishTags } from './tags.ts'
 import { DAY, addDays, dateToIso } from './time.ts'
 import { clip, htmlToBlocks, normalize, snippet, stableId } from './text.ts'
 
@@ -70,7 +71,7 @@ export function toEvents(adapter: Adapter, raws: RawEvent[], now: number, fetche
     seen.add(id)
     const description = clip(htmlToBlocks(r.description))
     const summary = snippet(htmlToBlocks(r.summary || description).replace(/\s+/g, ' '))
-    const { category, tags } = classify(r.categoryHint, adapter.defaultCategory, [r.title, summary, description, r.tagText])
+    const { category, tags } = classify(r.categoryHint, adapter.defaultCategory, { title: r.title, summary, description, tagText: r.tagText ?? null })
     events.push({
       id,
       title: r.title.replace(/\s+/g, ' ').trim(),
@@ -111,7 +112,10 @@ export function dedup(events: Event[]): Event[] {
     const prev = byKey.get(key)
     if (!prev) { byKey.set(key, e); continue }
     const [keep, drop] = richness(e) > richness(prev) ? [e, prev] : [prev, e]
-    const category = keep.category === 'other' ? drop.category : keep.category
+    const kids = keep.tags.includes('kids') || drop.tags.includes('kids')
+    const merged = [...keep.tags, ...drop.tags].filter((t) => t !== 'kids' && t !== 'other' && !(kids && t === 'creative')) as CategoryId[]
+    let category = keep.category === 'other' ? drop.category : keep.category
+    if (kids && category === 'creative') category = merged[0] ?? 'other'
     byKey.set(key, {
       ...keep,
       // Fill what the kept record lacks from the duplicate.
@@ -121,7 +125,7 @@ export function dedup(events: Event[]): Event[] {
       description: keep.description || drop.description,
       summary: keep.summary || drop.summary,
       category,
-      tags: sortTags([category, ...keep.tags, ...drop.tags].filter((t) => t !== 'other' || category === 'other')),
+      tags: finishTags(category, merged, kids),
       sources: [...new Set([...keep.sources, ...drop.sources])].sort(),
     })
   }
