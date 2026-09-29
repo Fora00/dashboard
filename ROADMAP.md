@@ -816,6 +816,58 @@ sync can come later).
       first modal: native `<dialog>`, bottom sheet on phones, centred from
       `sm:`, closes on Esc, backdrop or ✕, safe-area padded. Reuse it for any future modal.
       Verified in headless Chrome at 390 px.
+- [ ] **Coverage plan: rings around the owner** [orchestrator, decided
+      2026-09-29] — not "all of Italy" (no national source exists, and
+      the upkeep isn't worth it). The owner leaves from Trento or Rovereto, by train or car.
+      Three rings:
+      - **Full** (about an hour; every category): Trento, Rovereto, Riva/Arco,
+        Bolzano, Verona (all already covered), plus Lake Garda Veneto
+        (Malcesine, Bardolino, Lazise), Merano, Bressanone.
+      - **Interests only** (1–1.5 h; creative, theatre, boardgames, festivals, nerd):
+        Vicenza, Brescia, Bassano del Grappa, Mantova, Padova.
+      - **Spot** (big, specific events only; a hand-curated list is fine):
+        Bologna, Torino, Milano, Modena (Play), Lucca (Comics & Games).
+      **Progress 2026-09-29 (session stopped at the limit; resume here):**
+      - Step 3 DONE: `scripts/events/spot.json` + `adapters/spot.ts`. It has 8
+        hand-verified entries: Lucca C&G, Artissima, Portici di Carta, Combo
+        (Milano, first board-game fest), SPIEL Essen, Arte Fiera, Fa' la cosa
+        giusta, and Play (moved to **Bologna**, 23–25 Apr 2027). Milan Games Week and Miart
+        were left out because their sites bot-block us, so their dates are unverified.
+      - Step 1 DONE: census notes per town in **`docs/EVENTS_CENSUS.md`**
+        (endpoints, robots lines, counts, verdicts). Only the optional
+        board-game/nerd associations check was not done.
+      - Step 2 PARTLY DONE: `area` + `ring` on every event
+        (`scripts/events/areas.ts`), ring-2 interest filter in the pipeline,
+        and the Area section in FilterSheet with a Spot badge. Sources added and verified:
+        bolzano widened to Merano and Bressanone (ODH, 650 events), `gardaveneto` (71),
+        `padova` Comune JSON:API (near, 103), `tcvi` Teatro Comunale Vicenza
+        (near, 84).
+      - **TODO next** [opus]: finish `adapters/municipium.ts` (written, NOT
+        registered, unverified). It is a factory for Comune di Mantova (about 55–60), Comune di
+        Brescia (about 20) and later Garda/Peschiera. Then add from the census:
+        CTB Brescia (46 productions, 1 request), Teatro Grande Brescia (about 40),
+        Arteven (`myarteven.it` embedded JSON: Bassano + Vicenza-province
+        theatres, 202 events, 1 request, 3.7 MB; dedup with tcvi), Teatro Stabile
+        del Veneto (POST JSON API, keep Padova only, 38), and optionally Teatro Sociale
+        Mantova (19, no year in the cards). Deferred: Comune di Vicenza OpenCity
+        (21 MB per 30 days). Spot candidate: Operaestate Bassano (summer).
+        Then run a full crawl, review the page Area filter in the browser, and record
+        per-source notes here.
+      Next steps, in order:
+      1. [opus, research only, no code] Source census for the new ring-1 and
+         ring-2 towns: do they have an allowed structured calendar? Check
+         OpenPA/OpenCity (`/opendata/api/calendar` allowed?), iCal, WP
+         events plugins, regional open data (Veneto, Lombardia, Alto Adige
+         ODH already in use for Bolzano: widen its filter to Merano and
+         Bressanone?). Output: a table town → source → verdict.
+      2. [opus] `ring` field on events (or a region/area field), the page's "Area"
+         filter replacing the long city list, ring-2 sources filtered to
+         interest categories at crawl time.
+      3. [sonnet] Spot events: `scripts/events/spot.json`, hand-curated
+         (title, dates, city, url, tags), merged by the crawler.
+      4. Parked: first-visit onboarding / personas, `sources.json` +
+         "test this source" tool, national topic calendars (running,
+         conventions). Revisit only if the owner shares the page more widely.
 - [ ] Events tagging/source follow-ups [sonnet, each XS–S]: images for
       cultura-trentino (capped object reads, like bibcom); Trentino Spettacoli
       descriptions via detail-page JSON-LD for the next 30 days (the Ludimus

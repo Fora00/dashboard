@@ -10,6 +10,9 @@ import { EventCard } from './EventCard'
 import type { EventItem } from './types'
 import {
   CATEGORIES,
+  areaLabel,
+  areaOf,
+  areaRank,
   categoryLabel,
   fetchEventsFile,
   groupByDay,
@@ -36,6 +39,11 @@ function byStart(a: EventItem, b: EventItem): number {
   return Date.parse(a.start) - Date.parse(b.start) || a.title.localeCompare(b.title)
 }
 
+/** OR over the selected areas; none selected = every area. */
+function inAreas(e: EventItem, areas: string[]): boolean {
+  return areas.length === 0 || areas.includes(areaOf(e))
+}
+
 export function Events() {
   const cache = useLiveQuery(() => db.eventsCache.get('latest'), [], null)
   const marksRaw = useLiveQuery(() => db.eventMarks.toArray())
@@ -45,6 +53,7 @@ export function Events() {
   const [view, setView] = useState<View>('all')
   // null = "not touched": the favourites (if any) are the default filter.
   const [selectedCats, setSelectedCats] = useState<string[] | null>(null)
+  const [selectedAreas, setSelectedAreas] = useState<string[]>([])
   const [selectedCities, setSelectedCities] = useState<string[]>([])
   const [showHidden, setShowHidden] = useState(false)
   const [sheetOpen, setSheetOpen] = useState(false)
@@ -98,21 +107,30 @@ export function Events() {
     return list
   }, [view, events, marksRaw, marks, now, showHidden])
 
-  const cityCounts = useMemo(() => {
+  // Areas, nearest first; counts over the whole view (like cities used to be).
+  const areaCounts = useMemo(() => {
     const m = new Map<string, number>()
-    for (const e of base) m.set(e.city, (m.get(e.city) ?? 0) + 1)
-    return [...m.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    for (const e of base) m.set(areaOf(e), (m.get(areaOf(e)) ?? 0) + 1)
+    return [...m.entries()].sort((a, b) => areaRank(a[0]) - areaRank(b[0]) || a[0].localeCompare(b[0]))
   }, [base])
 
-  // Category counts respect the city filter but not the category filter.
+  // Only the cities of the selected areas (all when none is selected).
+  const cityCounts = useMemo(() => {
+    const m = new Map<string, number>()
+    for (const e of base) if (inAreas(e, selectedAreas)) m.set(e.city, (m.get(e.city) ?? 0) + 1)
+    return [...m.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+  }, [base, selectedAreas])
+
+  // Category counts respect the area and city filters but not the category filter.
   const catCounts = useMemo(() => {
     const m = new Map<string, number>()
     for (const e of base) {
+      if (!inAreas(e, selectedAreas)) continue
       if (selectedCities.length && !selectedCities.includes(e.city)) continue
       for (const c of CATEGORIES) if (inCategory(e, c.id)) m.set(c.id, (m.get(c.id) ?? 0) + 1)
     }
     return m
-  }, [base, selectedCities])
+  }, [base, selectedAreas, selectedCities])
 
   const catOrder = useMemo(() => {
     const ids = CATEGORIES.map((c) => c.id)
@@ -125,9 +143,10 @@ export function Events() {
       base.filter(
         (e) =>
           (activeCats.length === 0 || activeCats.some((c) => inCategory(e, c))) &&
+          inAreas(e, selectedAreas) &&
           (selectedCities.length === 0 || selectedCities.includes(e.city)),
       ),
-    [base, activeCats, selectedCities],
+    [base, activeCats, selectedAreas, selectedCities],
   )
 
   // Flat, ordered list of groups; then cut to `limit` cards in total.
@@ -174,6 +193,17 @@ export function Events() {
     resetLimit()
   }
 
+  function toggleArea(area: string) {
+    const next = selectedAreas.includes(area) ? selectedAreas.filter((a) => a !== area) : [...selectedAreas, area]
+    setSelectedAreas(next)
+    // A selected city outside the new areas would silently empty the list.
+    if (next.length) {
+      const keep = new Set(base.filter((e) => next.includes(areaOf(e))).map((e) => e.city))
+      setSelectedCities((cur) => cur.filter((c) => keep.has(c)))
+    }
+    resetLimit()
+  }
+
   function toggleCity(city: string) {
     setSelectedCities((cur) => (cur.includes(city) ? cur.filter((c) => c !== city) : [...cur, city]))
     resetLimit()
@@ -181,6 +211,7 @@ export function Events() {
 
   function clearAll() {
     setSelectedCats([])
+    setSelectedAreas([])
     setSelectedCities([])
     setShowHidden(false)
     resetLimit()
@@ -197,8 +228,8 @@ export function Events() {
   }
 
   const failed = file?.sources.filter((s) => !s.ok) ?? []
-  const filtering = activeCats.length > 0 || selectedCities.length > 0
-  const filterCount = activeCats.length + selectedCities.length
+  const filtering = activeCats.length > 0 || selectedAreas.length > 0 || selectedCities.length > 0
+  const filterCount = activeCats.length + selectedAreas.length + selectedCities.length
 
   const header = (
     <PageHeader
@@ -312,6 +343,17 @@ export function Events() {
           >
             Filters{filterCount ? ` · ${filterCount}` : ''}
           </button>
+          {selectedAreas.map((id) => (
+            <button
+              key={`a-${id}`}
+              type="button"
+              aria-label={`Remove filter ${areaLabel(id)}`}
+              onClick={() => toggleArea(id)}
+              className={`${CHIP_BASE} ${CHIP_OFF}`}
+            >
+              {areaLabel(id)} ✕
+            </button>
+          ))}
           {activeCats.map((id) => (
             <button
               key={`c-${id}`}
@@ -349,6 +391,9 @@ export function Events() {
         catCounts={catCounts}
         activeCats={activeCats}
         favourites={favourites}
+        areaCounts={areaCounts}
+        selectedAreas={selectedAreas}
+        onToggleArea={toggleArea}
         cityCounts={cityCounts}
         selectedCities={selectedCities}
         showHidden={showHidden}

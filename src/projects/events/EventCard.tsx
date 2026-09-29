@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { EventItem } from './types'
-import { buildThingsAddUrl, categoryLabel, categoryOf, formatRange, safeHttpUrl } from './model'
+import { buildThingsAddUrl, categoryLabel, categoryOf, formatRange, isSpot, safeHttpUrl } from './model'
 
 interface Props {
   event: EventItem
@@ -54,6 +54,11 @@ export function EventCard({ event: e, saved, hidden, onToggleSave, onToggleHide 
             <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] text-slate-600 dark:bg-slate-700/60 dark:text-slate-300">
               {categoryLabel(categoryOf(e))}
             </span>
+            {isSpot(e) && (
+              <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-800 dark:bg-amber-500/20 dark:text-amber-200">
+                Spot
+              </span>
+            )}
             {e.occurrences > 1 && (
               <span className="text-xs text-slate-500 dark:text-slate-400">{e.occurrences} dates</span>
             )}

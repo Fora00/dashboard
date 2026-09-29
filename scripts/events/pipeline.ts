@@ -3,6 +3,7 @@
 import type { Adapter, Event, RawEvent } from './types.ts'
 import type { CategoryId } from './tags.ts'
 import { classify, finishTags } from './tags.ts'
+import { areaFor, closerRing, keepForRing } from './areas.ts'
 import { DAY, addDays, dateToIso } from './time.ts'
 import { clip, htmlToBlocks, normalize, snippet, stableId } from './text.ts'
 
@@ -62,6 +63,7 @@ function foldSeries(raws: RawEvent[]): (RawEvent & { occurrences: number })[] {
 export function toEvents(adapter: Adapter, raws: RawEvent[], now: number, fetchedAt: string): Event[] {
   const seen = new Set<string>()
   const events: Event[] = []
+  const ring = adapter.ring ?? 'home'
   // Some sources publish an end before the start (seen on bibcom and mart):
   // drop that end rather than emit a backwards range.
   const sane = raws.map((r) => (r.end && Date.parse(r.end) < Date.parse(r.start) ? { ...r, end: null } : r))
@@ -72,6 +74,9 @@ export function toEvents(adapter: Adapter, raws: RawEvent[], now: number, fetche
     const description = clip(htmlToBlocks(r.description))
     const summary = snippet(htmlToBlocks(r.summary || description).replace(/\s+/g, ' '))
     const { category, tags } = classify(r.categoryHint, adapter.defaultCategory, { title: r.title, summary, description, tagText: r.tagText ?? null })
+    // Ring 2 sources: interests only (NEAR_INTERESTS), never kids.
+    if (!keepForRing(ring, tags)) continue
+    const city = r.city.trim() || 'Trentino'
     events.push({
       id,
       title: r.title.replace(/\s+/g, ' ').trim(),
@@ -80,7 +85,9 @@ export function toEvents(adapter: Adapter, raws: RawEvent[], now: number, fetche
       allDay: r.allDay,
       ongoing: isOngoing(r, now),
       venue: r.venue?.replace(/\s+/g, ' ').trim() || null,
-      city: r.city.trim() || 'Trentino',
+      city,
+      area: areaFor(city, adapter.area ?? 'trentino'),
+      ring,
       url: r.url,
       source: adapter.id,
       sources: [adapter.id],
@@ -105,6 +112,18 @@ function richness(e: Event): number {
 }
 
 /** Same normalised title + local start date + city = same event; keep the richer record. */
+/**
+ * Events carried over from an older events.json (before `area`/`ring`
+ * existed) get them from their adapter; a `near` source's old events are
+ * re-filtered by its interests.
+ */
+export function withPlace(adapter: Adapter, events: Event[]): Event[] {
+  const ring = adapter.ring ?? 'home'
+  return events
+    .filter((e) => keepForRing(ring, e.tags ?? []))
+    .map((e) => ({ ...e, area: e.area ?? areaFor(e.city ?? '', adapter.area ?? 'trentino'), ring: e.ring ?? ring }))
+}
+
 export function dedup(events: Event[]): Event[] {
   const byKey = new Map<string, Event>()
   for (const e of events) {
@@ -127,6 +146,7 @@ export function dedup(events: Event[]): Event[] {
       category,
       tags: finishTags(category, merged, kids),
       sources: [...new Set([...keep.sources, ...drop.sources])].sort(),
+      ring: closerRing(keep.ring, drop.ring),
     })
   }
   return [...byKey.values()]

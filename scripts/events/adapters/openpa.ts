@@ -20,6 +20,7 @@
 // `spettacolo` class with `main_datetime`): `extract` reads all known ones.
 import type { Adapter, AdapterContext, RawEvent } from '../types.ts'
 import type { CategoryId } from '../tags.ts'
+import type { AreaId, Ring } from '../areas.ts'
 import { addDays, localToIso, normalizeIso, romeDate } from '../time.ts'
 import { absUrl, cityFromAddress, firstNonEmpty, htmlToText } from '../text.ts'
 
@@ -39,6 +40,10 @@ export interface OpenPaConfig {
   defaultCategory?: CategoryId
   mayBeEmpty?: boolean
   maxRequests?: number
+  /** Area for towns areas.ts does not know (default 'trentino'). */
+  area?: AreaId
+  /** Coverage ring (default 'home'). */
+  ring?: Ring
   /**
    * Search mode only: date fields of the class (default from_time/to_time).
    * Without `to`, the event is a single moment at `from` (e.g. a show).
@@ -276,5 +281,7 @@ export function openpa(cfg: OpenPaConfig): Adapter {
   }
   if (cfg.mayBeEmpty) adapter.mayBeEmpty = true
   if (cfg.maxRequests) adapter.maxRequests = cfg.maxRequests
+  if (cfg.area) adapter.area = cfg.area
+  if (cfg.ring) adapter.ring = cfg.ring
   return adapter
 }

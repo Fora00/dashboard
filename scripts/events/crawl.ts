@@ -15,10 +15,10 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import type { Event, EventsFile, SourceStatus } from './types.ts'
+import type { Adapter, Event, EventsFile, SourceStatus } from './types.ts'
 import { ADAPTERS } from './adapters/index.ts'
 import { PoliteHttp } from './http.ts'
-import { HORIZON_DAYS, dedup, inWindow, isOngoing, sortEvents, toEvents } from './pipeline.ts'
+import { HORIZON_DAYS, dedup, inWindow, isOngoing, sortEvents, toEvents, withPlace } from './pipeline.ts'
 
 const DEFAULT_PREVIOUS = 'https://fora00.github.io/dashboard/events.json'
 const DEFAULT_MAX_REQUESTS = 60
@@ -52,11 +52,11 @@ async function loadPrevious(): Promise<EventsFile | null> {
   }
 }
 
-function carryOver(previous: EventsFile | null, sourceId: string, now: number): Event[] {
+function carryOver(previous: EventsFile | null, adapter: Adapter, now: number): Event[] {
   if (!previous) return []
-  return previous.events
-    .filter((e) => e && e.source === sourceId && typeof e.start === 'string' && inWindow(e, now))
-    .map((e) => ({ ...e, ongoing: isOngoing(e, now) }))
+  return withPlace(adapter, previous.events
+    .filter((e) => e && e.source === adapter.id && typeof e.start === 'string' && inWindow(e, now))
+    .map((e) => ({ ...e, ongoing: isOngoing(e, now) })))
 }
 
 function table(rows: SourceStatus[], ms: Map<string, number>): string {
@@ -87,7 +87,7 @@ async function main(): Promise<void> {
   for (const adapter of ADAPTERS) {
     const t0 = Date.now()
     const prev = prevStatus.get(adapter.id)
-    const previousEvents = carryOver(previous, adapter.id, now)
+    const previousEvents = carryOver(previous, adapter, now)
     const keepPrevious = (error: string) => {
       all.push(...previousEvents)
       statuses.push({ id: adapter.id, name: adapter.name, ok: false, count: previousEvents.length, error, lastSuccess: prev?.lastSuccess ?? null })
@@ -135,6 +135,12 @@ async function main(): Promise<void> {
   const byCat = new Map<string, number>()
   for (const e of events) byCat.set(e.category, (byCat.get(e.category) ?? 0) + 1)
   console.log(`\n${events.length} events after dedup (${all.length} before) · ${[...byCat].map(([k, v]) => `${k} ${v}`).join(', ')}`)
+  const tally = (k: 'area' | 'ring') => {
+    const m = new Map<string, number>()
+    for (const e of events) m.set(e[k], (m.get(e[k]) ?? 0) + 1)
+    return [...m].sort((a, b) => b[1] - a[1]).map(([id, n]) => `${id} ${n}`).join(', ')
+  }
+  console.log(`areas: ${tally('area')} · rings: ${tally('ring')}`)
   console.log(`${http.requests} HTTP requests · ${((Date.now() - started) / 1000).toFixed(0)}s · wrote ${out}`)
 }
 

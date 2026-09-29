@@ -51,6 +51,8 @@ unknown `category`/`tags` value like `other`. A breaking change bumps
 | `ongoing` | boolean | Already started and not yet over **at `generatedAt`**. Recompute on the client for accuracy (formula below). |
 | `venue` | string \| null | Place name as the source gives it. |
 | `city` | string | Town (`Trento`, `Rovereto`, `Bolzano`, `Verona`, `Arco`, …). `Online` for online events. |
+| `area` | string | Region-sized bucket (added 2026-09-29): `trentino`, `alto-adige`, `verona-garda`, `veneto`, `lombardia`, `emilia-romagna`, `piemonte`, `toscana`, `abroad`; more may be added. See "Areas and rings". Absent in files written before 2026-09-29: derive it from `city` (`Bolzano` → `alto-adige`, `Verona` → `verona-garda`, else `trentino`). |
+| `ring` | string | Distance ring (added 2026-09-29): `home`, `near` or `spot`. See "Areas and rings". Absent in older files: treat as `home`. |
 | `url` | string | The event's own page at the source (https). Never just a homepage when the source has a per-event page. |
 | `source` | string | Adapter id of the record that was kept. |
 | `sources` | string[] | Every adapter id that listed this event (see "Dedup"); includes `source`; sorted. |
@@ -135,6 +137,25 @@ per-event pages).
 When dedup merges two records, the kept record's id survives, so an id can
 disappear if a second source later publishes a richer copy. Rare, but
 clients keying local state by id should tolerate a vanished id.
+
+### Areas and rings
+
+Both are set by the crawler from `scripts/events/areas.ts` (one file: area
+ids and labels, a town → area map, the ring-2 interest list).
+
+- **`area`**: the town map wins when it knows `city`; otherwise the source's
+  own area applies (default `trentino`; `bolzano` is `alto-adige`, `verona`
+  `verona-garda`, `spot` falls back to `abroad`). Unknown area ids should be
+  shown by their id.
+- **`ring`** (from the ROADMAP coverage plan):
+  - `home` — ring 1, about an hour from Trento/Rovereto, every category.
+  - `near` — ring 2 (1–1.5 h): only events whose `category` or `tags`
+    include one of `creative`, `theatre`, `boardgames`, `festivals`, `nerd`,
+    `exhibitions`, `concerts` are published, and never a `kids` event. The
+    filter runs at crawl time, after tagging.
+  - `spot` — hand-curated big events in far cities (`spot.json`).
+- When dedup merges records from two sources, the closer ring wins
+  (`home` < `near` < `spot`); the kept record's `area` stays.
 
 ### Categories
 
@@ -297,8 +318,26 @@ It is type-checked by `npm run build` (`tsconfig.node.json`) and linted by
    `RawEvent`s — the orchestrator derives ids, tags, window, folding and
    dedup. Build times with `localToIso`/`dateToIso`/`normalizeIso` from
    `time.ts`. Give `seriesKey` to occurrences of one series.
-4. Add it to `ADAPTERS`, run `EVENTS_ONLY=<id> npm run events:crawl`, check
+4. Outside Trentino, give it an `area` (and `ring: 'near'` for a ring-2
+   town); all three forms (`openpa`, `ical`, a hand-written `Adapter`) take
+   both. Add its towns to `TOWNS` in `scripts/events/areas.ts` if they are
+   new.
+5. Add it to `ADAPTERS`, run `EVENTS_ONLY=<id> npm run events:crawl`, check
    the output, then document it in the table above.
+
+## Spot events
+
+Big, specific events in far cities (Lucca Comics, Artissima, Arte Fiera...)
+are curated by hand in `scripts/events/spot.json`, read by the `spot` adapter
+(no network). To add one, append to `events`: `id` (kebab-case with the year,
+never change it once published), `title`, `start`/`end` (local Rome
+`YYYY-MM-DD`, both inclusive), `city`, `url` (official page where you verified
+the dates), `summary`, and optionally `venue`, `tags` and `category`. Only
+add dates confirmed on the official site. Entries beyond the 180-day window
+stay in the file and appear when they come into range.
+Spot events get `ring: "spot"`; their `area` comes from the town map in
+`scripts/events/areas.ts`, so add a new town there (else it lands in
+`abroad`).
 
 ## Adding a category
 

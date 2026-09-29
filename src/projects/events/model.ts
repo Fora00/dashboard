@@ -44,6 +44,43 @@ export function inCategory(e: EventItem, id: string): boolean {
   return categoryOf(e) === id || (Array.isArray(e.tags) && e.tags.includes(id))
 }
 
+/** Mirrors AREAS in scripts/events/areas.ts (display order: nearest first). */
+export const AREAS: { id: string; label: string }[] = [
+  { id: 'trentino', label: 'Trentino' },
+  { id: 'alto-adige', label: 'Alto Adige' },
+  { id: 'verona-garda', label: 'Verona & Garda' },
+  { id: 'veneto', label: 'Veneto' },
+  { id: 'lombardia', label: 'Lombardia' },
+  { id: 'emilia-romagna', label: 'Emilia-Romagna' },
+  { id: 'piemonte', label: 'Piemonte' },
+  { id: 'toscana', label: 'Toscana' },
+  { id: 'abroad', label: 'Estero' },
+]
+const AREA_RANK = new Map(AREAS.map((a, i) => [a.id, i]))
+
+/** Files from before `area` existed only had these non-Trentino cities. */
+const LEGACY_CITY_AREA: Record<string, string> = { Bolzano: 'alto-adige', Verona: 'verona-garda' }
+
+/** The event's area; older files without `area` → derived from the city, else Trentino. */
+export function areaOf(e: EventItem): string {
+  return e.area || LEGACY_CITY_AREA[e.city] || 'trentino'
+}
+
+/** Unknown ids (a newer crawler) are shown as-is. */
+export function areaLabel(id: string): string {
+  return AREAS.find((a) => a.id === id)?.label ?? id
+}
+
+/** Sort key for area ids: known ones nearest first, unknown ones last. */
+export function areaRank(id: string): number {
+  return AREA_RANK.get(id) ?? AREAS.length
+}
+
+/** Hand-curated big event in a far city (spot.json). */
+export function isSpot(e: EventItem): boolean {
+  return e.ring === 'spot'
+}
+
 export function categoryLabel(id: string): string {
   return CATEGORIES.find((c) => c.id === id)?.label ?? 'Other'
 }

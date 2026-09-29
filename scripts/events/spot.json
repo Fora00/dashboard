@@ -1,0 +1,98 @@
+{
+  "_readme": "Hand-curated big events in far cities (the 'spot ring'). To add one: append an object to `events`. Required: id (kebab-case, stable, include the year: never change it once published, it keys saved/hidden state), title, start and end (YYYY-MM-DD, local Rome dates, BOTH INCLUSIVE; a one-day event has end = start), city, url (the OFFICIAL site page where you verified the dates), summary (one line). Optional: venue, tags (array of tag/category ids such as boardgames, nerd, exhibitions, festivals, talks; also matched as free text), category (primary category id, wins over the tag rules). Only add dates you have verified on the official site; never guess. Entries past the 180-day window are kept and appear automatically when they come into range; delete old editions when convenient.",
+  "events": [
+    {
+      "id": "lucca-comics-games-2026",
+      "title": "Lucca Comics & Games 2026",
+      "start": "2026-10-28",
+      "end": "2026-11-01",
+      "city": "Lucca",
+      "url": "https://www.luccacomicsandgames.com/",
+      "summary": "Il piu grande festival italiano di fumetto, giochi, videogiochi, animazione e cultura pop, nel centro storico di Lucca.",
+      "tags": ["nerd", "boardgames"],
+      "category": "nerd"
+    },
+    {
+      "id": "artissima-2026",
+      "title": "Artissima 2026",
+      "start": "2026-10-30",
+      "end": "2026-11-01",
+      "city": "Torino",
+      "url": "https://www.artissima.art/",
+      "summary": "Fiera internazionale d'arte contemporanea di Torino.",
+      "tags": ["exhibitions"],
+      "category": "exhibitions"
+    },
+    {
+      "id": "portici-di-carta-2026",
+      "title": "Portici di Carta 2026",
+      "start": "2026-10-10",
+      "end": "2026-10-11",
+      "city": "Torino",
+      "url": "https://www.salonelibro.it/",
+      "summary": "Due chilometri di libri sotto i portici del centro di Torino, con editori, librerie, ospiti ed eventi (Salone del Libro).",
+      "tags": ["talks"],
+      "category": "talks"
+    },
+    {
+      "id": "arte-fiera-2027",
+      "title": "Arte Fiera 2027",
+      "start": "2027-02-05",
+      "end": "2027-02-07",
+      "city": "Bologna",
+      "venue": "BolognaFiere",
+      "url": "https://www.artefiera.it/",
+      "summary": "Cinquantesima edizione della fiera d'arte moderna e contemporanea di Bologna, tema \"C'e tempo\".",
+      "tags": ["exhibitions"],
+      "category": "exhibitions"
+    },
+    {
+      "id": "fa-la-cosa-giusta-2027",
+      "title": "Fa' la cosa giusta! 2027",
+      "start": "2027-03-05",
+      "end": "2027-03-07",
+      "city": "Milano",
+      "venue": "Fiera Milano Rho",
+      "url": "https://www.falacosagiusta.org/",
+      "summary": "Fiera nazionale del consumo critico e degli stili di vita sostenibili.",
+      "tags": ["festivals"],
+      "category": "festivals"
+    },
+    {
+      "id": "play-festival-del-gioco-2027",
+      "title": "Play - Festival del Gioco 2027",
+      "start": "2027-04-23",
+      "end": "2027-04-25",
+      "city": "Bologna",
+      "venue": "BolognaFiere",
+      "url": "https://www.play-festival.it/",
+      "summary": "Festival del gioco: giochi da tavolo, di ruolo, di carte e di miniature (dal 2027 a BolognaFiere).",
+      "tags": ["boardgames", "nerd"],
+      "category": "boardgames"
+    },
+    {
+      "id": "combo-festival-2026",
+      "title": "COMBO Festival 2026",
+      "start": "2026-10-03",
+      "end": "2026-10-04",
+      "city": "Milano",
+      "venue": "Morel Milano",
+      "url": "https://www.ludolabo.com/combo/",
+      "summary": "Prima edizione del festival di pedine, dadi e carte dedicato al gioco da tavolo e di ruolo contemporaneo.",
+      "tags": ["boardgames"],
+      "category": "boardgames"
+    },
+    {
+      "id": "spiel-essen-2026",
+      "title": "SPIEL Essen 2026",
+      "start": "2026-10-22",
+      "end": "2026-10-25",
+      "city": "Essen (DE)",
+      "venue": "Messe Essen",
+      "url": "https://www.spiel-essen.de/en/",
+      "summary": "La piu grande fiera mondiale di giochi da tavolo: novita degli editori, demo e migliaia di giochi da provare.",
+      "tags": ["boardgames"],
+      "category": "boardgames"
+    }
+  ]
+}

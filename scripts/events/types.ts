@@ -2,6 +2,7 @@
 // documented field by field in docs/EVENTS.md — keep the two in sync, and only
 // make additive changes while schemaVersion is 1.
 import type { CategoryId, TagId } from './tags.ts'
+import type { AreaId, Ring } from './areas.ts'
 
 /** One event as published in events.json. */
 export interface Event {
@@ -17,6 +18,10 @@ export interface Event {
   ongoing: boolean
   venue: string | null
   city: string
+  /** Region-sized bucket (scripts/events/areas.ts): the city map, else the adapter's area. Added 2026-09-29. */
+  area: AreaId
+  /** Distance ring: home (every category), near (interests only), spot (hand-curated far events). Added 2026-09-29. */
+  ring: Ring
   url: string
   /** Adapter id of the record that was kept. */
   source: string
@@ -90,6 +95,10 @@ export interface Adapter {
   mayBeEmpty?: boolean
   /** Per-run cap on source requests (default 60). */
   maxRequests?: number
+  /** Area for towns the city map in areas.ts does not know (default 'trentino'). */
+  area?: AreaId
+  /** Coverage ring (default 'home'); 'near' keeps only NEAR_INTERESTS events. */
+  ring?: Ring
   run(ctx: AdapterContext): Promise<RawEvent[]>
 }
 

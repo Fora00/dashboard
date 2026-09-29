@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Sheet } from '../../components/Sheet'
 import { Button } from '../../components/Button'
-import { categoryLabel } from './model'
+import { areaLabel, categoryLabel } from './model'
 
 const ROW_ON =
   'border-indigo-700 bg-indigo-600 text-white dark:border-indigo-300 dark:bg-indigo-500'
@@ -16,6 +16,11 @@ interface Props {
   catCounts: Map<string, number>
   activeCats: string[]
   favourites: string[]
+  /** [area id, count], nearest first. */
+  areaCounts: [string, number][]
+  selectedAreas: string[]
+  onToggleArea: (id: string) => void
+  /** Cities of the selected areas only (all when none is selected). */
   cityCounts: [string, number][]
   selectedCities: string[]
   showHidden: boolean
@@ -52,6 +57,37 @@ export function FilterSheet(p: Props) {
         </div>
       }
     >
+      {p.areaCounts.length > 1 && (
+        <>
+          <h3 className="mb-2 text-xs font-semibold tracking-wide text-slate-500 uppercase dark:text-slate-400">
+            Area
+          </h3>
+          <ul className="mb-5 grid grid-cols-1 gap-2 min-[400px]:grid-cols-2">
+            {p.areaCounts.map(([id, n]) => {
+              const on = p.selectedAreas.includes(id)
+              return (
+                <li key={id}>
+                  <button
+                    type="button"
+                    aria-pressed={on}
+                    onClick={() => p.onToggleArea(id)}
+                    className={`flex min-h-10 w-full items-center justify-between gap-2 rounded-lg border-2 px-3 text-left text-sm ${
+                      on ? ROW_ON : ROW_OFF
+                    }`}
+                  >
+                    <span className="truncate">
+                      {on ? '✓ ' : ''}
+                      {areaLabel(id)}
+                    </span>
+                    <span className="text-xs opacity-70">{n}</span>
+                  </button>
+                </li>
+              )
+            })}
+          </ul>
+        </>
+      )}
+
       <h3 className="mb-2 text-xs font-semibold tracking-wide text-slate-500 uppercase dark:text-slate-400">
         Categories
       </h3>

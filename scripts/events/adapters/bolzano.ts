@@ -1,6 +1,7 @@
-// Bolzano via the Open Data Hub tourism API (public, CC0 event data;
-// robots.txt 404 = allowed). Filtered server-side to the Bolzano
-// municipality and the crawl window. Each item lists its dates in
+// Bolzano, Merano and Bressanone via the Open Data Hub tourism API (public,
+// CC0 event data; robots.txt 404 = allowed). Filtered server-side to those
+// municipalities (one shared, paged request) and the crawl window. The id
+// stays `bolzano` (it keys event ids) although it now covers three towns. Each item lists its dates in
 // `EventDate` (From/To dates + Begin/End local times); every date inside the
 // window becomes one occurrence. Items with hundreds of dates (museum
 // tickets, courses) are folded into one span by the orchestrator.
@@ -9,7 +10,12 @@ import { addDays, localToIso, dateToIso, romeDate } from '../time.ts'
 import { absUrl, firstNonEmpty } from '../text.ts'
 
 const API = 'https://tourism.api.opendatahub.com/v1/Event'
-const BOLZANO_MUNICIPALITY = '50FCFD4334A04DB087C1FD10ED864018'
+// Ring-1 Alto Adige towns (ids from /v1/Municipality, checked 2026-09-29).
+const MUNICIPALITIES = [
+  '50FCFD4334A04DB087C1FD10ED864018', // Bolzano/Bozen
+  '418E5CC913764648802DD2BE30AD91AC', // Merano/Meran
+  '2B2B22E275734BB990DE4A3FC98C6A18', // Bressanone/Brixen
+]
 const PAGE_SIZE = 200
 
 interface Detail { Title?: string; BaseText?: string; IntroText?: string }
@@ -38,7 +44,7 @@ async function run(ctx: AdapterContext): Promise<RawEvent[]> {
   const out: RawEvent[] = []
   for (let page = 1; page <= 10; page++) {
     const url = `${API}?pagesize=${PAGE_SIZE}&pagenumber=${page}&begindate=${today}&enddate=${until}` +
-      `&locfilter=mun${BOLZANO_MUNICIPALITY}&active=true&removenullvalues=true`
+      `&locfilter=${MUNICIPALITIES.map((m) => `mun${m}`).join(',')}&active=true&removenullvalues=true`
     const res = await ctx.fetchJson<OdhPage>(url)
     for (const ev of res.Items ?? []) {
       const title = firstNonEmpty(ev.Detail?.it?.Title, ev.Detail?.de?.Title, ev.Detail?.en?.Title, ev.Shortname).trim()
@@ -90,7 +96,8 @@ async function run(ctx: AdapterContext): Promise<RawEvent[]> {
 
 export const bolzano: Adapter = {
   id: 'bolzano',
-  name: 'Bolzano (Open Data Hub)',
+  name: 'Bolzano, Merano, Bressanone (Open Data Hub)',
   defaultCategory: 'other',
+  area: 'alto-adige',
   run,
 }

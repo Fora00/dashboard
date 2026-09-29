@@ -9,6 +9,10 @@ import { bolzano } from './bolzano.ts'
 import { ical } from './ical.ts'
 import { trentinospettacoli } from './trentinospettacoli.ts'
 import { tebe } from './tebe.ts'
+import { spot } from './spot.ts'
+import { gardaveneto } from './gardaveneto.ts'
+import { padova } from './padova.ts'
+import { tcvi } from './tcvi.ts'
 
 export const ADAPTERS: Adapter[] = [
   // Batch A — board games
@@ -27,7 +31,7 @@ export const ADAPTERS: Adapter[] = [
   openpa({ id: 'comune-trento', name: 'Comune di Trento', host: 'www.comune.trento.it', mode: 'calendar', classes: '[event_link]', city: 'Trento' }),
   mart,
   bolzano,
-  openpa({ id: 'verona', name: 'Comune di Verona', host: 'www.comune.verona.it', mode: 'calendar', classes: '[event]', city: 'Verona' }),
+  openpa({ id: 'verona', name: 'Comune di Verona', host: 'www.comune.verona.it', mode: 'calendar', classes: '[event]', city: 'Verona', area: 'verona-garda' }),
   // Batch C — culture, theatre and creative (added 2026-09-29)
   // Provincial culture portal: every town in Trentino. robots.txt asks for
   // Crawl-delay 10 (honoured by http.ts), so its ~5 pages take ~50 s.
@@ -47,4 +51,12 @@ export const ADAPTERS: Adapter[] = [
   }),
   trentinospettacoli,
   tebe,
+  // Ring 1 outside Trentino (added 2026-09-29; Merano and Bressanone come
+  // through `bolzano` above)
+  gardaveneto,
+  // Ring 2: interests only (NEAR_INTERESTS, filtered in the pipeline)
+  padova,
+  tcvi,
+  // Spot (hand-curated)
+  spot,
 ]

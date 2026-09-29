@@ -19,6 +19,10 @@ export interface EventItem {
   ongoing: boolean
   venue: string | null
   city: string
+  /** Area id (added 2026-09-29). Missing in older files: see areaOf() in model.ts. */
+  area?: string
+  /** 'home' | 'near' | 'spot' (added 2026-09-29). Missing in older files = 'home'. */
+  ring?: string
   url: string
   source: string
   sources: string[]

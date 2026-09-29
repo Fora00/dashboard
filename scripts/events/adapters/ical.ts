@@ -4,6 +4,7 @@
 // calendar); anything else that is not iCalendar is an error.
 import type { Adapter, AdapterContext, RawEvent } from '../types.ts'
 import type { CategoryId } from '../tags.ts'
+import type { AreaId, Ring } from '../areas.ts'
 import { icalDate, parseIcal, unescapeText } from '../ical.ts'
 import { addDays, dateToIso } from '../time.ts'
 import { absUrl } from '../text.ts'
@@ -18,6 +19,11 @@ export interface IcalConfig {
   home: string
   defaultCategory?: CategoryId
   mayBeEmpty?: boolean
+  maxRequests?: number
+  /** Area for towns areas.ts does not know (default 'trentino'). */
+  area?: AreaId
+  /** Coverage ring (default 'home'). */
+  ring?: Ring
 }
 
 const REGION = /^(trentino|alto adige|s[üu]dtirol|veneto|italy|italia|tn|bz|vr)$|trentino-alto adige/i
@@ -73,5 +79,8 @@ export function ical(cfg: IcalConfig): Adapter {
   }
   const adapter: Adapter = { id: cfg.id, name: cfg.name, defaultCategory: cfg.defaultCategory ?? 'other', run }
   if (cfg.mayBeEmpty) adapter.mayBeEmpty = true
+  if (cfg.maxRequests) adapter.maxRequests = cfg.maxRequests
+  if (cfg.area) adapter.area = cfg.area
+  if (cfg.ring) adapter.ring = cfg.ring
   return adapter
 }
