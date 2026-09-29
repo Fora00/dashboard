@@ -574,6 +574,32 @@ data, routes and sync are untouched, and a hidden project's URL still opens.
               check-in list with done/note and overdue highlight; sent
               tasks tappable (`things:///search`); a "Sent N at HH:MM"
               confirmation; the iOS "◀ Dashboard" hint.
+  - [x] **Life simplification pass**, done 2026-09-29 (owner-requested).
+        Browser-verified in headless Chromium at 375px with a faked clock.
+        - Trackers are shown as **Habits**: one tap toggles "done today".
+          The day strip, energy and per-entry edit sit behind a ▸, and
+          energy is no longer prompted on log. Past days of the week can be
+          toggled from the strip. On Monday a dashed cell marks last
+          Sunday, written to last week's entries (tracker matched by id,
+          else by label). UI only, same entries.
+        - Check-ins use the same row as Focus/Habits: the whole row toggles
+          done, the note is behind ✎, and overdue only tints the date.
+        - Sunday check is compact: a "This week" recap (focus, check-ins,
+          Things sent, habit counts), the answers on one line, and the form
+          behind Answer/Edit answers.
+        - A Sunday question can link to a tracker (`tracker`,
+          number/boolean only) and is then answered from the log (count /
+          target reached), never typed. The editor has an "Auto from…"
+          picker. The export marks these "(from tracker)".
+        - Tasks can carry `listId`, the Things area/project id, which
+          `scripts/life-things-lists.ts` resolves on the Mac (read-only,
+          loose name match like `~/life/_sync/things-add.sh`). Send uses
+          `list-id`, so it survives renames. Checked against real Things
+          read-only.
+        - Plan fields only, no migration: the server doesn't validate the
+          plan's inner shape.
+        - [ ] **Owner:** on the next send, confirm `list-id` lands to-dos
+              in the right area (untested; it would create real to-dos).
   - [ ] **Owner, on the iPhone:** tap "Send to Things" from the installed
         PWA and confirm Things opens with the to-dos. That's the last
         unverified piece.

@@ -22,6 +22,7 @@ import {
   toggleFocus,
 } from '../../lib/lifeSync'
 import {
+  addDays,
   buildExportMarkdown,
   buildThingsUrl,
   canReturnFromThings,
@@ -32,6 +33,7 @@ import {
   parseDayKey,
   summarizeWeek,
   validateAnswer,
+  weekDays,
   weekKey,
   type CheckinStatus,
   type TrackerSummary,
@@ -216,7 +218,7 @@ export function Life() {
   }
 
   const header = (
-    <PageHeader emoji="🧭" title="Life" subtitle="This week: focus, trackers, Sunday check. Owner only.">
+    <PageHeader emoji="🧭" title="Life" subtitle="This week: focus, habits, Sunday check. Owner only.">
       <div className="flex flex-wrap gap-2">
         <Link to="/life/import">
           <Button variant="ghost">Import</Button>
@@ -358,6 +360,39 @@ function WeekBody({ week, plan, entries, readOnly }: WeekBodyProps) {
   const [energyPromptId, setEnergyPromptId] = useState<string | null>(null)
   const [selectedTaskIds, setSelectedTaskIds] = useState<Set<string>>(new Set())
   const [exportState, setExportState] = useState<{ text: string; copied: boolean } | null>(null)
+  const [sundayEditing, setSundayEditing] = useState(false)
+  // Questions linked to a habit answer themselves; only the rest need typing.
+  const manualQuestions = plan.sundayCheck.filter((q) => !summary.autoAnswered.has(q.id)).length
+  const manualAnswered = [...summary.answers.keys()].filter((id) => !summary.autoAnswered.has(id)).length
+
+  // On Monday, yesterday belongs to last week: habits can still mark last
+  // Sunday, written to last week's entries under last week's tracker (same
+  // id, e.g. via "Copy last week", else same label).
+  const isMonday = !readOnly && dayKey(new Date()) === week
+  const prevWeek = addDays(week, -7)
+  const prev = useLiveQuery(async () => {
+    if (!isMonday) return null
+    const [row, prevEntries] = await Promise.all([
+      db.lifeWeeks.get(prevWeek),
+      db.lifeEntries.where('[week+kind]').equals([prevWeek, 'tracker']).toArray(),
+    ])
+    return row ? { plan: row.plan, entries: prevEntries as LifeTrackerEntry[] } : null
+  }, [isMonday, prevWeek])
+
+  function lastSundayFor(trackerId: string, label: string): LastSunday | null {
+    if (!prev) return null
+    const match =
+      prev.plan.trackers.find((t) => t.id === trackerId) ??
+      prev.plan.trackers.find((t) => t.label.trim().toLowerCase() === label.trim().toLowerCase())
+    if (!match) return null
+    const day = addDays(week, -1)
+    return {
+      week: prevWeek,
+      trackerId: match.id,
+      day,
+      entries: prev.entries.filter((e) => e.ref === match.id && e.day === day),
+    }
+  }
 
   // Read-only history never persists or reads localStorage — see the module
   // comment above CollapsibleSection.
@@ -498,8 +533,8 @@ function WeekBody({ week, plan, entries, readOnly }: WeekBodyProps) {
 
       {plan.trackers.length > 0 && (
         <CollapsibleSection
-          title="Trackers"
-          summary={`Trackers · ${trackersSummary(summary.trackers)}`}
+          title="Habits"
+          summary={`Habits · ${trackersSummary(summary.trackers)}`}
           open={sections.trackers}
           onToggle={() => toggleSection('trackers')}
           readOnly={readOnly}
@@ -513,8 +548,9 @@ function WeekBody({ week, plan, entries, readOnly }: WeekBodyProps) {
                 readOnly={readOnly}
                 energyPromptId={energyPromptId}
                 setEnergyPromptId={setEnergyPromptId}
+                lastSunday={lastSundayFor(ts.tracker.id, ts.tracker.label)}
                 onLogged={(entry) =>
-                  trigger(`+1 ${ts.tracker.label}`, () => removeTrackerEntry(entry.id))
+                  trigger(`✓ ${ts.tracker.label}`, () => removeTrackerEntry(entry.id))
                 }
                 onRemove={(entry) => {
                   if (energyPromptId === entry.id) setEnergyPromptId(null)
@@ -567,9 +603,12 @@ function WeekBody({ week, plan, entries, readOnly }: WeekBodyProps) {
           onToggle={toggleSunday}
           readOnly={readOnly}
         >
-          <p className="mb-3 text-sm text-slate-500 dark:text-slate-400">
-            A 10-minute look back at the week, on Sunday. Answers go into the export for your notes.
-          </p>
+          <WeekRecap
+            focus={[summary.focusDone.size, plan.focus.length]}
+            trackers={summary.trackers}
+            checkins={[summary.checkins.filter((c) => c.done).length, summary.checkins.length]}
+            tasks={[sent.length, plan.tasks.length]}
+          />
           {readOnly ? (
             <Card className="space-y-2 text-sm">
               {plan.sundayCheck.map((q) => (
@@ -581,11 +620,39 @@ function WeekBody({ week, plan, entries, readOnly }: WeekBodyProps) {
                 </div>
               ))}
             </Card>
+          ) : sundayEditing ? (
+            <Card>
+              <div className="divide-y divide-slate-200 dark:divide-slate-800">
+                {plan.sundayCheck.map((q) => (
+                  <div key={q.id} className="py-3 first:pt-0">
+                    {summary.autoAnswered.has(q.id) ? (
+                      <AutoAnswer question={q} value={summary.answers.get(q.id) ?? null} trackers={summary.trackers} />
+                    ) : (
+                      <SundayQuestion week={week} question={q} value={summary.answers.get(q.id) ?? null} />
+                    )}
+                  </div>
+                ))}
+              </div>
+              <div className="flex justify-end border-t border-slate-200 pt-3 dark:border-slate-800">
+                <Button onClick={() => setSundayEditing(false)}>Done</Button>
+              </div>
+            </Card>
           ) : (
-            <Card className="space-y-4">
-              {plan.sundayCheck.map((q) => (
-                <SundayQuestion key={q.id} week={week} question={q} value={summary.answers.get(q.id) ?? null} />
-              ))}
+            // Compact by default: just the answers on one line, form on demand.
+            <Card className="space-y-3">
+              <p className="text-sm text-slate-600 dark:text-slate-300">
+                {plan.sundayCheck.map((q, i) => (
+                  <span key={q.id}>
+                    {i > 0 && <span className="text-slate-300 dark:text-slate-600"> · </span>}
+                    <span title={q.label}>{shortAnswer(q, summary.answers.get(q.id) ?? null)}</span>
+                  </span>
+                ))}
+              </p>
+              {manualQuestions > 0 && (
+                <Button variant={manualAnswered === 0 ? 'primary' : 'ghost'} onClick={() => setSundayEditing(true)}>
+                  {manualAnswered === 0 ? 'Answer' : 'Edit answers'}
+                </Button>
+              )}
             </Card>
           )}
         </CollapsibleSection>
@@ -774,63 +841,62 @@ function CheckinRow({ week, status, readOnly }: { week: string; status: CheckinS
     await setCheckin(week, checkin.id, { done, note: trimmed })
   }
 
-  const dateClass = overdue ? 'font-medium text-amber-600 dark:text-amber-400' : 'text-slate-500 dark:text-slate-400'
-  const badgeClass = done
-    ? 'border-emerald-400 bg-emerald-400 text-slate-900'
-    : overdue
-      ? 'border-amber-500 text-amber-600 dark:text-amber-400'
-      : 'border-slate-400 dark:border-slate-500'
+  const dateClass = overdue && !done ? 'text-amber-600 dark:text-amber-400' : 'text-slate-400 dark:text-slate-500'
 
-  if (readOnly) {
-    return (
-      <li
-        className={`rounded-lg border px-3 py-2 ${overdue ? 'border-amber-400/60 bg-amber-400/10' : 'border-slate-200 dark:border-slate-800'}`}
-      >
-        <div className="flex items-center gap-2">
-          <span className={`flex size-7 shrink-0 items-center justify-center rounded-full border text-xs ${badgeClass}`}>
-            {done && '✓'}
-          </span>
-          <span className="min-w-0 flex-1 truncate text-sm">{checkin.label}</span>
-          <span className={`shrink-0 text-xs ${dateClass}`}>{relativeCheckinDate(daysLeft)}</span>
-        </div>
-        {note && <p className="mt-1 pl-9 text-xs text-slate-500 dark:text-slate-400">{note}</p>}
-      </li>
-    )
-  }
-
+  // Same shape as Focus/Habits rows: the whole row toggles done; the note
+  // sits behind the ✎ button on the right.
   return (
-    <li
-      className={`rounded-lg border px-3 py-2 ${overdue ? 'border-amber-400/60 bg-amber-400/10' : 'border-slate-200 dark:border-slate-800'}`}
-    >
+    <li>
       <div className="flex items-center gap-2">
         <button
           type="button"
+          disabled={readOnly}
           aria-pressed={done}
-          aria-label={done ? `Mark ${checkin.label} not done` : `Mark ${checkin.label} done`}
           onClick={() => void toggleDone()}
-          className={`flex size-10 shrink-0 items-center justify-center rounded-full border text-sm transition-colors ${badgeClass}`}
+          className={`flex min-h-14 min-w-0 flex-1 items-center gap-3 rounded-xl border px-4 py-2 text-left text-base font-medium transition-colors ${
+            readOnly ? '' : 'active:bg-slate-100 dark:active:bg-slate-800'
+          } ${
+            done
+              ? 'border-emerald-400/60 bg-emerald-400/10'
+              : 'border-slate-200 bg-white hover:border-slate-400 dark:border-slate-800 dark:bg-slate-800/50 dark:hover:border-slate-600'
+          }`}
         >
-          {done && '✓'}
-        </button>
-        <button
-          type="button"
-          onClick={() => setExpanded((v) => !v)}
-          aria-expanded={expanded}
-          className="flex min-h-10 min-w-0 flex-1 flex-col items-start justify-center text-left"
-        >
-          <span className={`truncate text-sm font-medium ${done ? 'text-slate-500 line-through' : ''}`}>
-            {checkin.label}
+          <span
+            className={`flex size-7 shrink-0 items-center justify-center rounded-full border text-sm ${
+              done ? 'border-emerald-400 bg-emerald-400 text-slate-900' : 'border-slate-400 dark:border-slate-500'
+            }`}
+          >
+            {done && '✓'}
           </span>
-          {!expanded && note && <span className="truncate text-xs text-slate-400 dark:text-slate-500">{note}</span>}
+          <span className="flex min-w-0 flex-1 flex-col">
+            <span className={`break-words ${done ? 'text-slate-500 line-through' : ''}`}>{checkin.label}</span>
+            {note && !expanded && (
+              <span className="truncate text-xs font-normal text-slate-400 dark:text-slate-500">{note}</span>
+            )}
+          </span>
+          <span className={`shrink-0 text-xs font-normal ${dateClass}`}>{relativeCheckinDate(daysLeft)}</span>
         </button>
-        <span className={`shrink-0 text-xs ${dateClass}`}>{relativeCheckinDate(daysLeft)}</span>
+        {!readOnly && (
+          <button
+            type="button"
+            onClick={() => setExpanded((v) => !v)}
+            aria-expanded={expanded}
+            aria-label={`${expanded ? 'Hide' : 'Edit'} note for ${checkin.label}`}
+            className={`flex size-10 shrink-0 items-center justify-center rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 ${
+              note ? 'text-slate-600 dark:text-slate-300' : 'text-slate-400'
+            }`}
+          >
+            ✎
+          </button>
+        )}
       </div>
-      {expanded && (
+      {expanded && !readOnly && (
         <textarea
           defaultValue={note ?? ''}
           rows={2}
           maxLength={LIFE_CAPS.checkinNote}
           placeholder="Note (optional)"
+          autoFocus
           onBlur={(e) => void saveNote(e.target.value)}
           className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm focus:border-indigo-400 focus:outline-none dark:border-slate-700 dark:bg-slate-800"
         />
@@ -847,6 +913,7 @@ function TrackerRow({
   readOnly,
   energyPromptId,
   setEnergyPromptId,
+  lastSunday,
   onLogged,
   onRemove,
 }: {
@@ -855,104 +922,182 @@ function TrackerRow({
   readOnly: boolean
   energyPromptId: string | null
   setEnergyPromptId: (id: string | null) => void
+  lastSunday: LastSunday | null
   onLogged: (entry: LifeTrackerEntry) => void
   onRemove: (entry: LifeTrackerEntry) => void
 }) {
   const { tracker, total, perDay, atMax, entries } = ts
-  const [showEntries, setShowEntries] = useState(false)
-  const goal = tracker.target !== null ? `${total} / ${tracker.target}` : tracker.max !== null ? `${total} / ${tracker.max}` : `${total}`
+  // The details (day strip, energy, per-entry edit) stay one tap away but are
+  // hidden by default: the row itself is a single "done today" toggle.
+  const [showDetails, setShowDetails] = useState(false)
+  const limit = tracker.target ?? tracker.max
+  const goal = limit !== null ? `${total}/${limit}` : total > 0 ? `${total}` : ''
   const activeEntry = energyPromptId ? entries.find((e) => e.id === energyPromptId) : undefined
+  const today = dayKey(new Date())
+  const doneToday = entries.some((e) => e.day === today)
+  const days = weekDays(week)
 
-  async function logOne() {
-    const entry = await logTracker(week, tracker.id, { day: dayKey(new Date()) })
+  // One tap per day: logs the day, or removes its latest entry (with undo).
+  // The row toggles today; the hidden day strip toggles any past day this week.
+  async function toggleDay(day: string) {
+    const dayEntries = entries.filter((e) => e.day === day)
+    const last = dayEntries[dayEntries.length - 1]
+    if (last) {
+      onRemove(last)
+      return
+    }
+    const entry = await logTracker(week, tracker.id, { day })
     onLogged(entry)
-    if (tracker.energy) setEnergyPromptId(entry.id)
+  }
+
+  async function toggleLastSunday(ls: LastSunday) {
+    const last = ls.entries[ls.entries.length - 1]
+    if (last) {
+      onRemove(last)
+      return
+    }
+    const entry = await logTracker(ls.week, ls.trackerId, { day: ls.day })
+    onLogged(entry)
   }
 
   return (
     <li>
-      <Card className="space-y-2">
-        <div className="flex items-center gap-3">
-          <span className="text-xl" aria-hidden>
-            {tracker.emoji}
-          </span>
-          <span className="min-w-0 flex-1 truncate font-medium">{tracker.label}</span>
-          <span className="shrink-0 text-sm text-slate-500 dark:text-slate-400">{goal}</span>
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          disabled={readOnly}
+          aria-pressed={doneToday}
+          onClick={() => void toggleDay(today)}
+          className={`flex min-h-14 min-w-0 flex-1 items-center gap-3 rounded-xl border px-4 py-2 text-left text-base font-medium transition-colors ${
+            readOnly ? '' : 'active:bg-slate-100 dark:active:bg-slate-800'
+          } ${
+            doneToday
+              ? 'border-emerald-400/60 bg-emerald-400/10'
+              : 'border-slate-200 bg-white hover:border-slate-400 dark:border-slate-800 dark:bg-slate-800/50 dark:hover:border-slate-600'
+          }`}
+        >
           {!readOnly && (
-            <Button
-              variant="ghost"
-              onClick={() => void logOne()}
-              aria-label={`+1 ${tracker.label}`}
-              className="min-w-10 shrink-0 px-0"
+            <span
+              className={`flex size-7 shrink-0 items-center justify-center rounded-full border text-sm ${
+                doneToday ? 'border-emerald-400 bg-emerald-400 text-slate-900' : 'border-slate-400 dark:border-slate-500'
+              }`}
             >
-              +1
-            </Button>
+              {doneToday && '✓'}
+            </span>
           )}
-        </div>
-        <div className="flex gap-1.5">
-          {DAY_LABELS.map((label, i) => {
-            const count = perDay[i] ?? 0
-            return (
-              <span
-                key={i}
-                className={`flex h-7 flex-1 items-center justify-center rounded text-[11px] font-medium ${
-                  count > 0
-                    ? 'bg-emerald-400/20 text-emerald-700 dark:text-emerald-300'
-                    : 'bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-600'
+          {tracker.emoji && (
+            <span className="text-xl" aria-hidden>
+              {tracker.emoji}
+            </span>
+          )}
+          <span className="min-w-0 flex-1 truncate">{tracker.label}</span>
+          {goal && (
+            <span
+              className={`shrink-0 text-xs font-normal ${atMax ? 'text-amber-600 dark:text-amber-400' : 'text-slate-400 dark:text-slate-500'}`}
+            >
+              {goal}
+            </span>
+          )}
+        </button>
+        <button
+          type="button"
+          onClick={() => setShowDetails((v) => !v)}
+          aria-expanded={showDetails}
+          aria-label={`${showDetails ? 'Hide' : 'Show'} ${tracker.label} details`}
+          className="flex size-10 shrink-0 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-300"
+        >
+          {showDetails ? '▾' : '▸'}
+        </button>
+      </div>
+      {showDetails && (
+        <div className="mt-2 space-y-2 pl-1">
+          <div className="flex gap-1.5">
+            {lastSunday && (
+              <button
+                type="button"
+                onClick={() => void toggleLastSunday(lastSunday)}
+                aria-pressed={lastSunday.entries.length > 0}
+                aria-label={`${tracker.label} last Sunday (${lastSunday.day})`}
+                className={`mr-1.5 flex h-10 flex-1 items-center justify-center rounded border border-dashed text-xs font-medium ${
+                  lastSunday.entries.length > 0
+                    ? 'border-emerald-400/60 bg-emerald-400/20 text-emerald-700 dark:text-emerald-300'
+                    : 'border-slate-300 text-slate-400 dark:border-slate-700 dark:text-slate-500'
                 }`}
               >
-                {count > 0 ? count : label}
-              </span>
-            )
-          })}
-        </div>
-        {atMax && <p className="text-xs text-amber-700 dark:text-amber-400">⚠️ Reached the max for this week</p>}
-        {!readOnly && activeEntry && <EnergyPicker entry={activeEntry} onDone={() => setEnergyPromptId(null)} />}
-        {/* Every logged entry stays editable: fix its energy or delete it
-            (with undo). The +1 undo alone only covered the last few seconds. */}
-        {!readOnly && entries.length > 0 && (
-          <div>
-            <button
-              type="button"
-              onClick={() => setShowEntries((v) => !v)}
-              aria-expanded={showEntries}
-              className="flex min-h-10 items-center text-xs text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
-            >
-              {showEntries ? '▾' : '▸'} {entries.length} logged · edit
-            </button>
-            {showEntries && (
-              <ul className="divide-y divide-slate-200 dark:divide-slate-800">
-                {entries.map((e) => (
-                  <li key={e.id} className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => tracker.energy && setEnergyPromptId(energyPromptId === e.id ? null : e.id)}
-                      disabled={!tracker.energy}
-                      aria-pressed={tracker.energy ? energyPromptId === e.id : undefined}
-                      className="flex min-h-10 min-w-0 flex-1 items-center gap-2 text-left text-sm"
-                    >
-                      <span className="w-10 shrink-0 font-medium capitalize">{weekdayShort(e.day)}</span>
-                      <span className="truncate text-slate-500 dark:text-slate-400">
-                        {tracker.energy ? describeEnergy(e) : 'logged'}
-                      </span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => onRemove(e)}
-                      aria-label={`Delete ${tracker.label} on ${e.day}`}
-                      className="flex size-10 shrink-0 items-center justify-center rounded-lg text-slate-400 hover:bg-rose-500/10 hover:text-rose-600 dark:hover:text-rose-400"
-                    >
-                      ✕
-                    </button>
-                  </li>
-                ))}
-              </ul>
+                {lastSunday.entries.length > 0 ? lastSunday.entries.length : 'S'}
+              </button>
             )}
+            {DAY_LABELS.map((label, i) => {
+              const count = perDay[i] ?? 0
+              const day = days[i] ?? ''
+              const future = day > today
+              return (
+                <button
+                  key={i}
+                  type="button"
+                  disabled={readOnly || future}
+                  onClick={() => void toggleDay(day)}
+                  aria-pressed={count > 0}
+                  aria-label={`${tracker.label} on ${day}`}
+                  className={`flex h-10 flex-1 items-center justify-center rounded text-xs font-medium ${
+                    count > 0
+                      ? 'bg-emerald-400/20 text-emerald-700 dark:text-emerald-300'
+                      : 'bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-600'
+                  } ${future ? 'opacity-40' : ''} ${day === today ? 'ring-1 ring-slate-300 dark:ring-slate-600' : ''}`}
+                >
+                  {count > 0 ? count : label}
+                </button>
+              )
+            })}
           </div>
-        )}
-      </Card>
+          {!readOnly && (
+            <p className="text-xs text-slate-400 dark:text-slate-500">
+              Tap a day to mark or unmark it.{lastSunday && ' The dashed one is last Sunday.'}
+            </p>
+          )}
+          {atMax && <p className="text-xs text-amber-700 dark:text-amber-400">⚠️ Reached the max for this week</p>}
+          {!readOnly && activeEntry && <EnergyPicker entry={activeEntry} onDone={() => setEnergyPromptId(null)} />}
+          {/* Every logged entry stays editable: fix its energy or delete it
+              (with undo). Past days are fixed here, not from the row. */}
+          {!readOnly && entries.length > 0 && (
+            <ul className="divide-y divide-slate-200 dark:divide-slate-800">
+              {entries.map((e) => (
+                <li key={e.id} className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => tracker.energy && setEnergyPromptId(energyPromptId === e.id ? null : e.id)}
+                    disabled={!tracker.energy}
+                    aria-pressed={tracker.energy ? energyPromptId === e.id : undefined}
+                    className="flex min-h-10 min-w-0 flex-1 items-center gap-2 text-left text-sm"
+                  >
+                    <span className="w-10 shrink-0 font-medium capitalize">{weekdayShort(e.day)}</span>
+                    <span className="truncate text-slate-500 dark:text-slate-400">
+                      {tracker.energy ? describeEnergy(e) : 'logged'}
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onRemove(e)}
+                    aria-label={`Delete ${tracker.label} on ${e.day}`}
+                    className="flex size-10 shrink-0 items-center justify-center rounded-lg text-slate-400 hover:bg-rose-500/10 hover:text-rose-600 dark:hover:text-rose-400"
+                  >
+                    ✕
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
     </li>
   )
+}
+
+interface LastSunday {
+  week: string
+  trackerId: string
+  day: string
+  entries: LifeTrackerEntry[]
 }
 
 function weekdayShort(day: string): string {
@@ -1027,6 +1172,105 @@ function describeAnswer(question: LifeQuestion, answer: LifeAnswer): string {
   if (typeof answer === 'boolean') return answer ? 'Yes' : 'No'
   if (question.type === 'scale5') return `${answer}/5`
   return String(answer)
+}
+
+/** What the week actually held, shown above the Sunday questions so the
+ * answers can lean on it. Empty parts of the plan are left out. */
+function WeekRecap({
+  focus,
+  trackers,
+  checkins,
+  tasks,
+}: {
+  focus: [number, number]
+  trackers: TrackerSummary[]
+  checkins: [number, number]
+  tasks: [number, number]
+}) {
+  const parts: { label: string; value: string; full: boolean }[] = []
+  if (focus[1] > 0) parts.push({ label: 'Focus', value: `${focus[0]}/${focus[1]}`, full: focus[0] >= focus[1] })
+  if (checkins[1] > 0)
+    parts.push({ label: 'Check-ins', value: `${checkins[0]}/${checkins[1]}`, full: checkins[0] >= checkins[1] })
+  if (tasks[1] > 0) parts.push({ label: 'Things sent', value: `${tasks[0]}/${tasks[1]}`, full: tasks[0] >= tasks[1] })
+  if (parts.length === 0 && trackers.length === 0) return null
+
+  return (
+    <div className="mb-3 space-y-2 rounded-xl bg-slate-100 px-4 py-3 text-sm dark:bg-slate-800/60">
+      <p className="text-xs font-medium text-slate-500 dark:text-slate-400">This week</p>
+      {parts.length > 0 && (
+        <div className="flex flex-wrap gap-x-4 gap-y-1">
+          {parts.map((p) => (
+            <span key={p.label} className="text-slate-600 dark:text-slate-300">
+              {p.label}{' '}
+              <span className={`font-medium ${p.full ? 'text-emerald-700 dark:text-emerald-300' : 'text-slate-800 dark:text-slate-100'}`}>
+                {p.value}
+              </span>
+            </span>
+          ))}
+        </div>
+      )}
+      {trackers.length > 0 && (
+        <ul className="space-y-0.5">
+          {trackers.map(({ tracker, total, reachedTarget, atMax }) => {
+            const limit = tracker.target ?? tracker.max
+            return (
+              <li key={tracker.id} className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
+                <span aria-hidden>{tracker.emoji}</span>
+                <span className="min-w-0 flex-1 truncate">{tracker.label}</span>
+                <span
+                  className={`shrink-0 font-medium ${
+                    atMax
+                      ? 'text-amber-600 dark:text-amber-400'
+                      : reachedTarget
+                        ? 'text-emerald-700 dark:text-emerald-300'
+                        : 'text-slate-800 dark:text-slate-100'
+                  }`}
+                >
+                  {limit !== null ? `${total}/${limit}` : total}
+                  {reachedTarget && ' ✓'}
+                </span>
+              </li>
+            )
+          })}
+        </ul>
+      )}
+    </div>
+  )
+}
+
+/** A Sunday question answered from its linked habit: shown, never typed. */
+function AutoAnswer({
+  question,
+  value,
+  trackers,
+}: {
+  question: LifeQuestion
+  value: LifeAnswer
+  trackers: TrackerSummary[]
+}) {
+  const t = trackers.find((x) => x.tracker.id === question.tracker)?.tracker
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <div className="min-w-0">
+        <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{question.label}</p>
+        {t && (
+          <p className="text-xs text-slate-400 dark:text-slate-500">
+            Auto, from {t.emoji ? `${t.emoji} ` : ''}
+            {t.label}
+          </p>
+        )}
+      </div>
+      <span className="shrink-0 text-sm font-medium text-slate-800 dark:text-slate-100">
+        {describeAnswer(question, value)}
+      </span>
+    </div>
+  )
+}
+
+/** One-line form for the compact summary: text answers are clipped. */
+function shortAnswer(question: LifeQuestion, answer: LifeAnswer): string {
+  const full = describeAnswer(question, answer)
+  return full.length > 24 ? `${full.slice(0, 23)}…` : full
 }
 
 function SundayQuestion({ week, question, value }: { week: string; question: LifeQuestion; value: LifeAnswer }) {

@@ -4,6 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
   db,
   type LifePlan,
+  type LifeQuestion,
   type LifeQuestionType,
   type LifeTask,
   type LifeTracker,
@@ -11,6 +12,7 @@ import {
 import { importWeek } from '../../lib/lifeSync'
 import { useAuth } from '../../lib/useAuth'
 import {
+  AUTO_QUESTION_TYPES,
   LIFE_CAPS,
   THINGS_WHEN_KEYWORDS,
   addDays,
@@ -58,6 +60,8 @@ interface TaskRow {
   deadline: string
   area: string
   project: string
+  /** Things id resolved by /settimana ('' = none); dropped on a manual edit. */
+  listId: string
   tags: string
   notes: string
 }
@@ -73,6 +77,8 @@ interface QuestionRow {
   id: string
   label: string
   type: LifeQuestionType
+  /** Linked tracker id ('' = answered by hand). */
+  tracker: string
 }
 interface CheckinRow {
   // The check-in's stable id (entries link to it); also the React key.
@@ -99,6 +105,7 @@ function taskToRow(t: LifeTask): TaskRow {
     deadline: t.deadline ?? '',
     area: t.area ?? '',
     project: t.project ?? '',
+    listId: t.listId ?? '',
     tags: t.tags.join(', '),
     notes: t.notes,
   }
@@ -108,6 +115,10 @@ function trackerToRow(t: LifeTracker): TrackerRow {
   const capMode: CapMode = t.max !== null ? 'max' : 'target'
   const capValue = t.max !== null ? String(t.max) : t.target !== null ? String(t.target) : ''
   return { id: t.id, emoji: t.emoji, label: t.label, capMode, capValue, energy: t.energy }
+}
+
+function questionToRow(q: LifeQuestion): QuestionRow {
+  return { id: q.id, label: q.label, type: q.type, tracker: q.tracker ?? '' }
 }
 
 function updateAt<T>(list: T[], i: number, patch: Partial<T>): T[] {
@@ -177,7 +188,7 @@ export function LifeEditor() {
       setRules(plan.rules.map((r) => ({ key: newKey(), text: r })))
       setTasks(plan.tasks.map(taskToRow))
       setTrackers(plan.trackers.map(trackerToRow))
-      setSundayCheck(plan.sundayCheck.map((q) => ({ id: q.id, label: q.label, type: q.type })))
+      setSundayCheck(plan.sundayCheck.map(questionToRow))
       setCheckins(withCheckinIds(plan).checkins.map((c) => ({ id: c.id, date: c.date, label: c.label })))
       setInitialized(true)
       return
@@ -193,7 +204,7 @@ export function LifeEditor() {
     const plan = previous.plan
     setTrackers(plan.trackers.map(trackerToRow))
     setRules(plan.rules.map((r) => ({ key: newKey(), text: r })))
-    setSundayCheck(plan.sundayCheck.map((q) => ({ id: q.id, label: q.label, type: q.type })))
+    setSundayCheck(plan.sundayCheck.map(questionToRow))
     const today = dayKey(new Date())
     setCheckins(
       withCheckinIds(plan)
@@ -215,6 +226,7 @@ export function LifeEditor() {
         deadline: t.deadline || null,
         area: t.area.trim() || null,
         project: t.project.trim() || null,
+        ...(t.listId ? { listId: t.listId } : {}),
         tags: t.tags
           .split(',')
           .map((s) => s.trim())
@@ -232,7 +244,13 @@ export function LifeEditor() {
           energy: tr.energy,
         }
       }),
-      sundayCheck: sundayCheck.map((q) => ({ id: q.id, label: q.label, type: q.type })),
+      // A link survives only while its tracker is still in the plan and the
+      // type can be computed; otherwise the question goes back to typed.
+      sundayCheck: sundayCheck.map((q) =>
+        q.tracker && AUTO_QUESTION_TYPES.includes(q.type) && trackers.some((t) => t.id === q.tracker)
+          ? { id: q.id, label: q.label, type: q.type, tracker: q.tracker }
+          : { id: q.id, label: q.label, type: q.type },
+      ),
       checkins: checkins.map((c) => ({ id: c.id, date: c.date, label: c.label })),
     }
   }
@@ -337,7 +355,7 @@ export function LifeEditor() {
           <FocusSection focus={focus} setFocus={setFocus} />
           <TrackersSection trackers={trackers} setTrackers={setTrackers} />
           <RulesSection rules={rules} setRules={setRules} />
-          <SundaySection sundayCheck={sundayCheck} setSundayCheck={setSundayCheck} />
+          <SundaySection sundayCheck={sundayCheck} setSundayCheck={setSundayCheck} trackers={trackers} />
           <CheckinsSection checkins={checkins} setCheckins={setCheckins} />
           <TasksSection tasks={tasks} setTasks={setTasks} />
 
@@ -532,16 +550,19 @@ function TrackersSection({
 function SundaySection({
   sundayCheck,
   setSundayCheck,
+  trackers,
 }: {
   sundayCheck: QuestionRow[]
   setSundayCheck: (v: QuestionRow[]) => void
+  trackers: TrackerRow[]
 }) {
   return (
     <section className="mb-6">
       <h2 className="mb-2 text-sm font-medium text-slate-500 dark:text-slate-400">Sunday questions</h2>
-      <Card className="space-y-2">
+      <Card className="space-y-3">
         {sundayCheck.map((q, i) => (
-          <div key={q.id} className="flex items-center gap-2">
+          <div key={q.id} className="space-y-2">
+          <div className="flex items-center gap-2">
             <input
               value={q.label}
               onChange={(e) => setSundayCheck(updateAt(sundayCheck, i, { label: e.target.value }))}
@@ -571,11 +592,29 @@ function SundaySection({
               ✕
             </button>
           </div>
+          {AUTO_QUESTION_TYPES.includes(q.type) && trackers.length > 0 && (
+            <select
+              value={trackers.some((t) => t.id === q.tracker) ? q.tracker : ''}
+              onChange={(e) => setSundayCheck(updateAt(sundayCheck, i, { tracker: e.target.value }))}
+              aria-label="Answer source"
+              className={inputClass}
+            >
+              <option value="">Answered by hand</option>
+              {trackers.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {`Auto from ${t.emoji ? `${t.emoji} ` : ''}${t.label || 'unnamed habit'} ${
+                    q.type === 'number' ? '(count)' : '(goal reached)'
+                  }`}
+                </option>
+              ))}
+            </select>
+          )}
+          </div>
         ))}
         {sundayCheck.length < LIFE_CAPS.questions && (
           <Button
             variant="ghost"
-            onClick={() => setSundayCheck([...sundayCheck, { id: newId(), label: '', type: 'text' }])}
+            onClick={() => setSundayCheck([...sundayCheck, { id: newId(), label: '', type: 'text', tracker: '' }])}
           >
             + Add question
           </Button>
@@ -716,7 +755,7 @@ function TasksSection({ tasks, setTasks }: { tasks: TaskRow[]; setTasks: (v: Tas
             <div className="flex gap-2">
               <input
                 value={t.area}
-                onChange={(e) => setTasks(updateAt(tasks, i, { area: e.target.value }))}
+                onChange={(e) => setTasks(updateAt(tasks, i, { area: e.target.value, listId: '' }))}
                 maxLength={LIFE_CAPS.areaProject}
                 placeholder="Area…"
                 aria-label="Area"
@@ -724,13 +763,19 @@ function TasksSection({ tasks, setTasks }: { tasks: TaskRow[]; setTasks: (v: Tas
               />
               <input
                 value={t.project}
-                onChange={(e) => setTasks(updateAt(tasks, i, { project: e.target.value }))}
+                onChange={(e) => setTasks(updateAt(tasks, i, { project: e.target.value, listId: '' }))}
                 maxLength={LIFE_CAPS.areaProject}
                 placeholder="Project…"
                 aria-label="Project"
                 className={inputClass}
               />
             </div>
+
+            {t.listId && (
+              <p className="text-xs text-slate-400 dark:text-slate-500">
+                🔗 Linked to Things: stays in the right list even if you rename it there.
+              </p>
+            )}
 
             <input
               value={t.tags}
@@ -768,6 +813,7 @@ function TasksSection({ tasks, setTasks }: { tasks: TaskRow[]; setTasks: (v: Tas
                   deadline: '',
                   area: '',
                   project: '',
+                  listId: '',
                   tags: '',
                   notes: '',
                 },

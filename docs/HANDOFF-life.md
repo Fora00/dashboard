@@ -89,12 +89,24 @@ the installed PWA. The phone gets the week through sync.
   "sundayCheck": [                     // the Sunday form
     { "id": "q1", "label": "Question A", "type": "number" },
     { "id": "q2", "label": "Question B", "type": "boolean" },
+    { "id": "q5", "label": "Tracker A 3 times?", "type": "boolean", "tracker": "tr1" },
     { "id": "q3", "label": "Question C", "type": "text" },
     { "id": "q4", "label": "Question D", "type": "scale5" }
   ],
   "checkins": [{ "date": "2026-01-31", "label": "Monthly review" }]
 }
 ```
+
+`listId` on a task (optional) is the Things id of its area/project, set on
+the Mac by `scripts/life-things-lists.ts`. "Send to Things" passes it as
+`list-id`, which survives renames in Things; without it, `project ?? area`
+is matched by exact name (a miss lands in the Inbox).
+
+`tracker` on a Sunday question (optional, `number`/`boolean` only) links
+it to a tracker of the same plan: the answer is computed from the week's
+log — `number` = count, `boolean` = target reached (or done at least once
+without a target) — and never typed. Use it for every question a habit
+already answers.
 
 Validation: ids unique within each array; `week` must be a Monday; dates
 `YYYY-MM-DD`; `target`/`max` positive integers; text lengths capped (mirror

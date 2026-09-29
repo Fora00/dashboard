@@ -161,6 +161,10 @@ export interface LifeTask {
   deadline: string | null // 'YYYY-MM-DD'
   area: string | null
   project: string | null
+  // Things id of the area/project the to-do goes into, resolved on the Mac
+  // by /settimana (scripts/life-things-lists.ts). Sent as `list-id`, so it
+  // keeps working after the area is renamed. Absent = matched by name.
+  listId?: string
   tags: string[]
   notes: string
 }
@@ -180,6 +184,11 @@ export interface LifeQuestion {
   id: string
   label: string
   type: LifeQuestionType
+  // Optional link to a tracker of the same plan: the answer is then computed
+  // from the week's habit log, never typed (number → count, boolean →
+  // target reached, or done at least once without a target). Only for
+  // 'number' and 'boolean' questions. Absent on unlinked questions.
+  tracker?: string
 }
 
 export interface LifeCheckin {

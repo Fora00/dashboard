@@ -27,6 +27,8 @@ export { dayKey }
 // always accepted by the server.
 
 export const LIFE_CAPS = {
+  /** A Things area/project id (task.listId). */
+  thingsIdPattern: /^[A-Za-z0-9-]{1,64}$/,
   /** Plan item ids: 1–40 chars of [A-Za-z0-9_.-] (SQL: life_entries.ref). */
   idPattern: /^[A-Za-z0-9_.-]{1,40}$/,
   /** UTF-8 bytes of the normalized plan's JSON (SQL: pg_column_size ≤ 128 KiB). */
@@ -62,6 +64,8 @@ export const LIFE_CAPS = {
 export const THINGS_WHEN_KEYWORDS = ['today', 'tonight', 'evening', 'anytime', 'someday'] as const
 
 const QUESTION_TYPES: readonly LifeQuestionType[] = ['number', 'boolean', 'text', 'scale5']
+/** Question types that can be answered automatically from a tracker. */
+export const AUTO_QUESTION_TYPES: readonly LifeQuestionType[] = ['number', 'boolean']
 
 // --- Dates ------------------------------------------------------------------
 // Day keys are local-time 'YYYY-MM-DD' (Habits' dayKey); weeks run Monday to
@@ -179,7 +183,7 @@ export function validatePlan(value: unknown): ParseResult {
 
   const tasks = arrayField(value, 'tasks', LIFE_CAPS.tasks, err).map((raw, i): LifeTask => {
     const p = `tasks[${i}]`
-    const o = itemObj(raw, p, ['id', 'title', 'when', 'deadline', 'area', 'project', 'tags', 'notes'], err)
+    const o = itemObj(raw, p, ['id', 'title', 'when', 'deadline', 'area', 'project', 'listId', 'tags', 'notes'], err)
     const when = o.when ?? null
     if (
       when !== null &&
@@ -204,7 +208,7 @@ export function validatePlan(value: unknown): ParseResult {
         return t.trim()
       })
     }
-    return {
+    const task: LifeTask = {
       id: idField(o, p, err),
       title: textField(o, 'title', p, LIFE_CAPS.taskTitle, true, err),
       when: typeof when === 'string' ? when : null,
@@ -214,6 +218,15 @@ export function validatePlan(value: unknown): ParseResult {
       tags,
       notes: textField(o, 'notes', p, LIFE_CAPS.taskNotes, false, err),
     }
+    const listId = o.listId
+    if (listId !== undefined && listId !== null && listId !== '') {
+      if (typeof listId !== 'string' || !LIFE_CAPS.thingsIdPattern.test(listId)) {
+        err(`${p}.listId must be a Things id (letters, digits and "-")`)
+      } else {
+        task.listId = listId
+      }
+    }
+    return task
   })
   uniqueIds(tasks, 'tasks', err)
 
@@ -236,16 +249,27 @@ export function validatePlan(value: unknown): ParseResult {
   const sundayCheck = arrayField(value, 'sundayCheck', LIFE_CAPS.questions, err).map(
     (raw, i): LifeQuestion => {
       const p = `sundayCheck[${i}]`
-      const o = itemObj(raw, p, ['id', 'label', 'type'], err)
+      const o = itemObj(raw, p, ['id', 'label', 'type', 'tracker'], err)
       const type = o.type
       if (!(QUESTION_TYPES as readonly unknown[]).includes(type)) {
         err(`${p}.type must be one of ${QUESTION_TYPES.join(', ')}`)
       }
-      return {
+      const q: LifeQuestion = {
         id: idField(o, p, err),
         label: textField(o, 'label', p, LIFE_CAPS.questionLabel, true, err),
         type: (QUESTION_TYPES as readonly unknown[]).includes(type) ? (type as LifeQuestionType) : 'text',
       }
+      const link = o.tracker
+      if (link !== undefined && link !== null && link !== '') {
+        if (typeof link !== 'string' || !trackers.some((t) => t.id === link)) {
+          err(`${p}.tracker must be the id of one of this week's trackers`)
+        } else if (!(AUTO_QUESTION_TYPES as readonly string[]).includes(q.type)) {
+          err(`${p}.tracker only works with a number or boolean question`)
+        } else {
+          q.tracker = link
+        }
+      }
+      return q
     },
   )
   uniqueIds(sundayCheck, 'sundayCheck', err)
@@ -490,6 +514,8 @@ export interface WeekSummary {
   checkins: CheckinStatus[]
   trackers: TrackerSummary[]
   answers: Map<string, LifeAnswer>
+  /** Question ids whose answer was computed from a linked tracker. */
+  autoAnswered: Set<string>
   sentTaskIds: Set<string>
   /** Meaningful entries whose ref is no longer in the plan (kept, hidden). */
   removed: LifeEntry[]
@@ -572,7 +598,17 @@ export function summarizeWeek(
     }
   })
 
-  return { focusDone, checkins, trackers, answers, sentTaskIds, removed }
+  // Questions linked to a tracker are answered from the log, overriding any
+  // stored answer (so the Week screen, history and export all agree).
+  const autoAnswered = new Set<string>()
+  for (const q of plan.sundayCheck) {
+    const t = q.tracker ? trackers.find((x) => x.tracker.id === q.tracker) : undefined
+    if (!t) continue
+    answers.set(q.id, q.type === 'number' ? t.total : (t.reachedTarget ?? t.total > 0))
+    autoAnswered.add(q.id)
+  }
+
+  return { focusDone, checkins, trackers, answers, autoAnswered, sentTaskIds, removed }
 }
 
 function isMeaningful(e: LifeEntry): boolean {
@@ -701,6 +737,7 @@ export interface ThingsTodo {
     deadline?: string
     tags?: string[]
     list?: string
+    'list-id'?: string
   }
 }
 
@@ -715,7 +752,9 @@ export function thingsItems(tasks: readonly LifeTask[]): ThingsTodo[] {
     if (t.when) attributes.when = t.when
     if (t.deadline) attributes.deadline = t.deadline
     if (t.tags.length) attributes.tags = t.tags
-    if (list) attributes.list = list
+    // The id survives renames; the name is only the fallback.
+    if (t.listId) attributes['list-id'] = t.listId
+    else if (list) attributes.list = list
     return { type: 'to-do', attributes }
   })
 }
@@ -844,7 +883,8 @@ export function buildExportMarkdown(
   if (plan.sundayCheck.length) {
     out.push('## Sunday check', '')
     for (const q of plan.sundayCheck) {
-      out.push(`- ${q.label}: ${formatAnswer(q, s.answers.get(q.id) ?? null)}`)
+      const auto = s.autoAnswered.has(q.id) ? ' (from tracker)' : ''
+      out.push(`- ${q.label}: ${formatAnswer(q, s.answers.get(q.id) ?? null)}${auto}`)
     }
     out.push('')
   }
