@@ -1,5 +1,7 @@
 import Dexie, { type EntityTable } from 'dexie'
 
+import type { EventsFile, EventItem } from '../projects/events/types'
+
 // One shared local-first database for the whole dashboard.
 // Every project reads/writes here, so any project can use another project's data.
 
@@ -317,6 +319,25 @@ export interface OutboxEntry {
   dead?: 0 | 1
 }
 
+// Events (project 12): local-only. eventsCache holds the last events.json
+// (single row 'latest'); eventMarks the owner's saved/hidden events with a
+// snapshot so saved ones outlive the file; eventPrefs the favourite categories.
+export interface EventsCacheRow {
+  id: 'latest'
+  file: EventsFile
+  fetchedAt: number
+}
+export interface EventMark {
+  id: string
+  state: 'saved' | 'hidden'
+  event: EventItem
+  updatedAt: number
+}
+export interface EventPrefs {
+  id: 'prefs'
+  favouriteCategories: string[]
+}
+
 export const db = new Dexie('dashboard') as Dexie & {
   files: EntityTable<TransferFile, 'id'>
   shopItems: EntityTable<ShopItem, 'id'>
@@ -333,6 +354,9 @@ export const db = new Dexie('dashboard') as Dexie & {
   projectStats: EntityTable<ProjectStat, 'id'>
   lifeWeeks: EntityTable<LifeWeek, 'id'>
   lifeEntries: EntityTable<LifeEntry, 'id'>
+  eventsCache: EntityTable<EventsCacheRow, 'id'>
+  eventMarks: EntityTable<EventMark, 'id'>
+  eventPrefs: EntityTable<EventPrefs, 'id'>
 }
 
 db.version(1).stores({
@@ -510,6 +534,28 @@ db.version(11).stores({
   projectStats: 'id, starred, opens',
   lifeWeeks: 'id, importedAt',
   lifeEntries: 'id, week, [week+kind]',
+})
+
+// v12: events (project 12) — brand-new empty tables, no upgrade needed.
+db.version(12).stores({
+  files: 'id, name, createdAt, synced',
+  shopItems: 'id, done, createdAt, areaId',
+  shopAreas: 'id, createdAt',
+  outbox: '++seq, rowId',
+  climbSessions: 'id, date',
+  climbs: 'id, sessionId, date',
+  habits: 'id, createdAt',
+  habitChecks: 'id, habitId, day, [habitId+day]',
+  todos: 'id, done, createdAt',
+  bookIdeas: 'id, createdAt',
+  boardgameIdeas: 'id, createdAt',
+  links: 'id, read, createdAt, *tags',
+  projectStats: 'id, starred, opens',
+  lifeWeeks: 'id, importedAt',
+  lifeEntries: 'id, week, [week+kind]',
+  eventsCache: 'id',
+  eventMarks: 'id, state, updatedAt',
+  eventPrefs: 'id',
 })
 
 // Ask the browser not to evict our data under storage pressure (important on iOS).

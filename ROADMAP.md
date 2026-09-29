@@ -693,7 +693,8 @@ Everything below is committed and live unless noted. Pick up in this order:
 1. **Events, phase 1: crawler** — built and reviewed 2026-09-29 (see
    Project 12). Next: the owner decides on commit and push, then watch the
    first scheduled Actions run.
-2. **Events, phase 2: `/events` page** [sonnet], after phase 1.
+2. **Events, phase 2: `/events` page** — built 2026-09-29, awaiting
+   commit and push by the owner.
 3. **Owner on the iPhone:** "Send to Things" from the installed PWA
    (the last unverified Life piece), plus the new Life layout.
 4. **Canceled to-dos in Things** [opus, XS] — see the unchecked item
@@ -763,16 +764,26 @@ sync can come later).
 - [ ] **Watch the first scheduled Actions run** [orchestrator] — after
       push: check the crawl step's summary table in the log and that
       `https://fora00.github.io/dashboard/events.json` is served.
-- [ ] **Phase 2: `/events` page** [sonnet] — list with tag and city
-      filters, favourite tags first, save/hide (Dexie, local), offline via
-      the last cached copy. Each event shows its `image` (when present),
-      `summary`, and an expandable full `description`. A **"to Things"**
-      action per event (owner wants events actionable) builds the to-do
-      from `title`, `url`, `start`/`end`, `venue`, `city` (reuse the
-      Life "Send to Things" URL builder in `src/projects/life/model.ts`). Read `docs/EVENTS.md` first:
-      fetch `events.json` with `cache: 'no-store'`, recompute `ongoing`
-      with the device clock ("open now" filter for exhibitions), and
-      treat unknown categories as `other`.
+- [x] **Phase 2: `/events` page** [sonnet] — done 2026-09-29, local-only
+      (no sync). `src/projects/events/` (`Events.tsx`, `EventCard.tsx`,
+      pure `model.ts`, `types.ts` mirroring docs/EVENTS.md). Dexie v12:
+      `eventsCache` (last events.json, renders offline), `eventMarks`
+      (saved/hidden with an event snapshot, so saved events outlive the
+      file), `eventPrefs` (favourite categories, ☆ chip to edit, listed
+      first and used as the default filter). Views: All (with an "Open now"
+      group for events that started before today) · Open now · Saved; category + city
+      chips; show hidden; 60 cards, then "Show more". Card: image, range, venue ·
+      city, summary; tap for the full description, the event page, Save/Hide, and
+      "To Things" (`things:///add`, `when` = event day or today).
+      Scraped `url`/`image` are rendered only if http(s) (`safeHttpUrl`).
+      Verified in headless Chrome at 390 px: no horizontal overflow, no
+      console errors, filter → save → reload keeps the save.
+- [ ] Events page polish [sonnet, XS] — when there's time: folded
+      series (`occurrences > 1`, e.g. weekly game nights) show in "Open
+      now" next to real exhibitions; consider listing them per next date
+      instead. Full-width 16:9 images make the list long on iPhone, so
+      consider a thumbnail layout. `capitalize` on the day headings also
+      capitalizes month names ("Mer 30 Set").
 - [ ] Crawler follow-ups [sonnet, each XS–S]: images for bibcom,
       trentogiovani and Verona (capped extra object reads); fuzzier dedup
       (e.g. "Pietre di pane" on mart and comune-trento); more keywords

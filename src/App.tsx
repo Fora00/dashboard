@@ -15,6 +15,7 @@ import { BoardgameIdeas } from './projects/boardgame-ideas/BoardgameIdeas'
 import { BookIdeas } from './projects/book-ideas/BookIdeas'
 import { Climbing } from './projects/climbing/Climbing'
 import { Habits } from './projects/habits/Habits'
+import { Events } from './projects/events/Events'
 import { Home } from './projects/home/Home'
 import { Life } from './projects/life/Life'
 import { LifeEditor } from './projects/life/LifeEditor'
@@ -66,6 +67,7 @@ export default function App() {
           <Route path="/book-ideas" element={<BookIdeas />} />
           <Route path="/boardgame-ideas" element={<BoardgameIdeas />} />
           <Route path="/links" element={<Links />} />
+          <Route path="/events" element={<Events />} />
           <Route path="/life" element={<Life />} />
           <Route path="/life/import" element={<LifeImport />} />
           <Route path="/life/edit" element={<LifeEditor />} />

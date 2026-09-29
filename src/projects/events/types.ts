@@ -1,0 +1,39 @@
+// Mirrors the events.json schema (docs/EVENTS.md, schemaVersion 1). Kept
+// separate from scripts/events on purpose. Unknown fields are ignored.
+
+export interface EventSource {
+  id: string
+  name: string
+  ok: boolean
+  count: number
+  error?: string
+  lastSuccess: string | null
+}
+
+export interface EventItem {
+  id: string
+  title: string
+  start: string
+  end: string | null
+  allDay: boolean
+  ongoing: boolean
+  venue: string | null
+  city: string
+  url: string
+  source: string
+  sources: string[]
+  category: string
+  tags: string[]
+  description: string
+  summary: string
+  image: string | null
+  occurrences: number
+  fetchedAt: string
+}
+
+export interface EventsFile {
+  schemaVersion: 1
+  generatedAt: string
+  sources: EventSource[]
+  events: EventItem[]
+}

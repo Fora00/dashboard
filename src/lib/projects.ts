@@ -79,6 +79,14 @@ export const projects: ProjectMeta[] = [
     status: 'live',
   },
   {
+    id: 'events',
+    name: 'Events',
+    emoji: '📍',
+    description: 'Public events around Trentino, Bolzano and Verona, tagged by interest.',
+    path: '/events',
+    status: 'live',
+  },
+  {
     id: 'life',
     name: 'Life',
     emoji: '🧭',
