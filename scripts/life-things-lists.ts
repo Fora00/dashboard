@@ -2,7 +2,7 @@
 // (`listId`) and exact name (emoji included), reading Things read-only via
 // AppleScript. Used by the /settimana command before life-link.ts.
 //
-//   npx -y tsx scripts/life-things-lists.ts <week.json>     (or JSON on stdin)
+//   npm run life:things-lists -- <week.json>     (or JSON on stdin)
 //
 // Prints the updated JSON on stdout. Names match loosely, like
 // ~/life/_sync/things-add.sh: emoji, punctuation and case are ignored ("casa"

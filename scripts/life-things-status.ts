@@ -2,7 +2,7 @@
 // Read-only: asks Things (via AppleScript, macOS only) for to-dos created
 // around each recorded send time, then matches them to the week's tasks.
 //
-//   pbpaste | npx -y tsx scripts/life-things-status.ts      (a Life export)
+//   pbpaste | npm run --silent life:things-status      (a Life export)
 //
 // Matching survives renames in Things: a to-do's creation time never
 // changes, and every send is timestamped in the export (`sends`). Within a
