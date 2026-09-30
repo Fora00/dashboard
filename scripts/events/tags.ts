@@ -1,5 +1,5 @@
 // Categories and keyword rules — the ONE place that decides what an event is
-// about. Adding a category = adding one entry to CATEGORIES (and to the
+// about (and, in DROP RULES below, which events are not published at all). Adding a category = adding one entry to CATEGORIES (and to the
 // CategoryId union). Order is priority: the first category matching the
 // TITLE becomes the primary `category` (else the first matching the whole
 // text), unless the source already decided one.
@@ -28,6 +28,9 @@ export type CategoryId =
   | 'concerts'
   | 'cinema'
   | 'talks'
+  | 'food'
+  | 'tours'
+  | 'outdoor'
   | 'festivals'
   | 'other'
 
@@ -51,6 +54,14 @@ export interface Category {
    * long description (which name-drops "fantasy" pieces and "fumetti").
    */
   shortOnly?: boolean
+  /** Patterns tested on the raw title (punctuation intact); a hit counts like a keyword. */
+  titlePatterns?: RegExp[]
+  /**
+   * Source typology labels (a whole item of `tagText`, normalised) that count
+   * like a keyword from the typology tier on, although the same word is only
+   * weak in running text.
+   */
+  typologies?: string[]
 }
 
 export const CATEGORIES: Category[] = [
@@ -82,7 +93,7 @@ export const CATEGORIES: Category[] = [
     label: 'Creative',
     keywords: [
       'workshop creativ*', 'workshop fotografic*', 'tornio', 'raku',
-      'cucito', 'sartoria', 'lavoro a maglia', 'lavori a maglia', 'uncinetto', 'ricamo',
+      'cucito', 'lavoro a maglia', 'lavori a maglia', 'uncinetto', 'ricamo',
       'tessitura', 'scrittura creativa', 'calligrafi*', 'legatoria', 'origami',
       'riciclo creativo', 'fai da te', 'fatto da te', 'fablab', 'fab lab', 'maker faire',
       'laboratorio creativo', 'laboratori creativi', 'laboratorio artistico', 'laboratori artistici',
@@ -100,6 +111,8 @@ export const CATEGORIES: Category[] = [
       'incision*', 'serigrafi*', 'stampa d arte', 'xilografi*', 'linoleum', 'fotografi*',
       'collage', 'modellazione', 'scultura', 'falegnameria', 'maglia', 'keramik*', 'topfer*',
       'handwerk*', 'malen', 'zeichnen',
+      // A playbill credits "Costumi — La Sartoria": only with an activity word.
+      'sartoria',
     ],
     context: [
       'laborator*', 'corso', 'corsi', 'lezione', 'lezioni', 'workshop*', 'impara*',
@@ -122,7 +135,15 @@ export const CATEGORIES: Category[] = [
       ...['due', 'tre', 'quattro', 'cinque', '2', '3', '4', '5'].map((n) => `opera in ${n} atti`),
       'filodrammatic*', 'in scena', 'teatro ragazzi', 'teatro dialettale', 'teatro di prosa',
       'teatro danza', 'teatro comico', 'schauspiel*', 'kabarett*', 'theaterstuck*', 'tanztheater*',
+      'improtheater*', 'improvvisazione teatrale', 'personaggi e interpreti', 'carambolage',
+      // Magic and circus shows (not a bare "magia": "La magia del Natale").
+      'gala della magia', 'spettacolo di magia', 'spettacoli di magia', 'illusionist*', 'prestigiator*',
+      'circo', 'circense', 'circensi', 'zirkus*',
     ],
+    // "Teatro: La Tempesta", "Teatro - Lungs / Polmoni" (the raw title).
+    titlePatterns: [/^\s*(?:teatro|theater)\s*(?::|\s[-–—]\s)/i],
+    // A source typology that is exactly "Teatro" (Trentino Cultura) is a play.
+    typologies: ['teatro', 'teatri', 'theater', 'teatro e danza', 'prosa'],
     weak: ['teatro', 'teatri', 'theater*', 'tanz*'],
     context: [
       'spettacol*', 'regia', 'attor*', 'attric*', 'compagnia', 'sipario', 'palcoscenico',
@@ -144,6 +165,9 @@ export const CATEGORIES: Category[] = [
       'concert*', 'live', 'musica', 'musical*', 'dj set', 'jazz', 'orchestra', 'coro',
       'recital', 'konzert*', 'musik*', 'pianistic*', 'pianoforte', 'quartetto', 'violin*',
       'violoncell*', 'sinfoni*', 'cantautor*', 'band',
+      'jazz*', 'blues', 'symphon*', 'orchester*', 'candlelight', 'trio', 'quartet', 'quartett*',
+      'quintet', 'quintett*', 'sestetto', 'klezmer*', 'meranoklezmer', 'brass*', 'bigband*', 'big band',
+      'songs', 'canzoni', 'dj', 'music', 'organo',
     ],
   },
   {
@@ -163,11 +187,101 @@ export const CATEGORIES: Category[] = [
     ],
   },
   {
+    // Food and wine as the point of the event: tastings, cooking classes,
+    // wine and Speck walks, Törggelen, and the seasonal food festivals
+    // (sagre, chestnuts, pumpkins, apples…). Before `festivals`, so "Festa
+    // del marrone" is food with a `festivals` tag; a village "Festa di San
+    // Rocco" stays `festivals`. Before `tours`: "SpeckSafari – visita
+    // guidata per buongustai" is food.
+    id: 'food',
+    label: 'Cibo e vino',
+    keywords: [
+      'degustazion*', 'enogastronom*', 'wine tasting*', 'tasting', 'verkostung*', 'weinverkostung*',
+      'weinprobe*', 'sommelier*', 'abc del vino', 'abbici del vino', 'vino', 'vini', 'wine',
+      'wein*', 'winefestival', 'kellerei*', 'kellerfuhrung*', 'tenuta', 'vinothek', 'enoteca',
+      'cantine aperte', 'vigneto', 'vigneti', 'vendemmia', 'rebe', 'grappa',
+      'birra', 'birre', 'bier*', 'craft beer',
+      'scuola di cucina', 'corso di cucina', 'corsi di cucina', 'cooking*', 'showcooking',
+      'kochkurs*', 'kochen', 'gourmet', 'gastronomi*', 'culinari*', 'kulinari*', 'food', 'slow food',
+      'brunch', 'speck*', 'torggelen', 'sagra', 'sagre', 'castagnat*', 'caldarroste', 'keschtn*',
+      'kesten*',
+      // Apples only as the feast: "e-MTB sull'Altopiano delle mele" is a ride.
+      'festa della mela', 'festa delle mele', 'sagra della mela', 'giornata della mela', 'apfelfest*',
+      'apfeltag*', 'olio extravergine', 'olio evo',
+    ],
+    // Products, dishes and meals only with a food-event word: "Festa del
+    // marrone" is food, "Il Poliziotto del Formaggio" and "Una cena d'addio"
+    // are plays, "in questa cucina…" is a play's summary.
+    weak: [
+      'castagn*', 'marrone', 'marroni', 'zucca', 'zucche', 'polenta', 'funghi', 'formaggi*', 'formaggio',
+      'miele', 'tartufo', 'tartufi', 'asparag*', 'radicchio', 'cioccolat*', 'knodel*', 'canederli',
+      'cucina', 'sapori', 'cena', 'cene', 'cenone', 'apericena',
+    ],
+    context: [
+      'festa', 'feste', 'sagra', 'sagre', 'fest', 'festival*', 'fiera', 'fiere', 'mercat*', 'degustazion*',
+      'assaggi*', 'gusto', 'prodotti', 'prodotto', 'tipic*', 'menu', 'piatti', 'piatto', 'dop', 'igp',
+      'enogastronom*', 'gastronom*', 'chef', 'ricett*', 'cuoco', 'cuochi', 'kochen', 'genuss*',
+      'caldarroste', 'bancarelle', 'stand', 'vino', 'vini', 'wine', 'wein*', 'cucina', 'sapori',
+    ],
+    shortOnly: true,
+  },
+  {
+    // Guided tours, city walks, underground and heritage openings (FAI).
+    // A castle, church or tower counts only with a visit word next to it.
+    id: 'tours',
+    label: 'Visite',
+    keywords: [
+      'visita guidata', 'visite guidate', 'visita classica', 'visite classiche', 'visita serale',
+      'visite serali', 'visita notturna', 'visite notturne', 'visita al', 'visita alla', 'visita ai',
+      'visite al', 'visite alla', 'tour guidato', 'tour guidati', 'guided tour*', 'walking tour*',
+      'city tour', 'tour della citta', 'tour classico', 'tour serale', 'tour delle mura',
+      'percorso guidato', 'percorsi guidati', 'fuhrung', 'fuhrungen', 'stadtfuhrung*', 'burgfuhrung*',
+      'schlossfuhrung*', 'domfuhrung*', 'nachtfuhrung*', 'abendfuhrung*', 'themenfuhrung*',
+      'sonderfuhrung*', 'erlebnisfuhrung*', 'museumsfuhrung*', 'kirchenfuhrung*', 'besichtigung*',
+      'stadtrundgang*', 'apertura straordinaria', 'aperture straordinarie', 'giornate fai',
+      'giornata fai', 'fai autunno', 'fai d autunno', 'giornata del patrimonio',
+      'giornate del patrimonio', 'giornate europee del patrimonio', 'sotterranea', 'sotterranei',
+      'sotterraneo', 'underground tour*', 'trekking urbano', 'centro storico', 'passeggiat*', 'alla scoperta del',
+      'alla scoperta della', 'alla scoperta dei', 'alla scoperta delle', 'alla scoperta di',
+    ],
+    weak: [
+      'castello', 'castelli', 'castel', 'rocca', 'forte', 'forti', 'chiesa', 'chiese', 'abbazia',
+      'chiostro', 'monastero', 'convento', 'santuario', 'eremo', 'duomo', 'cattedrale', 'basilica',
+      'torre', 'mura', 'villa', 'palazzo', 'hofburg', 'schloss', 'burg', 'area archeologica',
+      'sito archeologico', 'scavi',
+    ],
+    context: [
+      'visit*', 'tour', 'apertura', 'aperture', 'scopri*', 'scoperta', 'raccont*', 'percorso',
+      'ingresso', 'guida', 'besichtigung*',
+    ],
+    shortOnly: true,
+  },
+  {
+    // Outdoor activities you take part in: hikes, e-MTB tours, via ferrata,
+    // walking groups, social runs, joinable sailing. Spectator sport (matches,
+    // championships, races) is dropped at crawl time, see DROP RULES.
+    id: 'outdoor',
+    label: 'Outdoor',
+    keywords: [
+      'escursion*', 'trekking', 'hike', 'hiking', 'hike fly', 'wanderung*', 'wandern', 'wandert',
+      'wandertag*', 'camminata', 'camminate', 'cammina', 'gruppo di cammino', 'gruppi di cammino',
+      'nordic walking', 'ciaspolat*', 'schneeschuh*', 'e mtb', 'emtb', 'mtb', 'mountain bike*',
+      'mountainbike*', 'e bike', 'ebike*', 'bike', 'bike tour*', 'biciclettat*', 'pedalat*',
+      'cicloturis*', 'gravel', 'city ride', 'via ferrata', 'vie ferrate', 'ferrata', 'klettersteig*',
+      'arrampicata', 'climbing', 'boulder*', 'kletter*', 'trail', 'trail run*', 'trailrunning',
+      'social run', 'corsa di gruppo', 'run club', 'running', 'corsa non competitiva', 'parapendio',
+      'paragliding', 'kayak', 'canoa', 'rafting', 'canyoning', 'veleggiata', 'regata aperta',
+      // Not a bare "ride" (Italian "ride e spaventa tutti") nor "sentieri" ("I sentieri della pioggia", an exhibition).
+      'bike ride', 'urban ride', 'urban life ride', 'taste ride', 'gravel ride', 'social park', 'muoviti',
+    ],
+    shortOnly: true,
+  },
+  {
     id: 'festivals',
     label: 'Festivals & food',
     keywords: [
       'sagra', 'sagre', 'festa', 'feste', 'festival*', 'mercato', 'mercati', 'mercatin*',
-      'fiera', 'fiere', 'degustazion*', 'enogastronom*', 'street food', 'fest', 'markt*',
+      'fiera', 'fiere', 'enogastronom*', 'street food', 'fest', 'markt*', 'market', 'lunapark',
     ],
   },
   { id: 'other', label: 'Other', keywords: [] },
@@ -187,6 +301,8 @@ function compile(keyword: string): RegExp {
 const RULES = CATEGORIES.map((c) => ({
   id: c.id,
   shortOnly: c.shortOnly ?? false,
+  titlePatterns: c.titlePatterns ?? [],
+  typologies: new Set((c.typologies ?? []).map(normalize)),
   patterns: c.keywords.map(compile),
   weak: (c.weak ?? []).map(compile),
   context: (c.context ?? []).map(compile),
@@ -201,9 +317,11 @@ function hayOf(texts: (string | null | undefined)[]): string {
  * summary, typologies): a long description mentions photos, drawings and
  * "iscrizione" far too often.
  */
-function matchHay(short: string, long: string, context = short): CategoryId[] {
+function matchHay(short: string, long: string, context = short, rawTitle = '', typos: string[] = []): CategoryId[] {
   return RULES.filter(
     (r) =>
+      r.titlePatterns.some((p) => p.test(rawTitle)) ||
+      typos.some((t) => r.typologies.has(t)) ||
       r.patterns.some((p) => p.test(r.shortOnly ? short : long)) ||
       (r.weak.some((p) => p.test(short)) && r.context.some((p) => p.test(context))),
   ).map((r) => r.id)
@@ -242,6 +360,8 @@ const KIDS_TITLE = [
   'la scuola va a teatro', 'scuole famiglie',
   'neonat*', 'kinder*', 'familienfuhrung*', 'familientag*', 'familiennachmittag*', 'fur familien',
   'centro estivo', 'centri estivi', 'doposcuola',
+  // Specific titles seen as children's programmes (2026-09-30).
+  'halloween al castello', 'vento delle favole',
 ]
 const KIDS_TEXT = [
   'per bambini', 'per i bambini', 'per le bambine', 'dedicato ai bambini', 'dedicata ai bambini',
@@ -386,6 +506,11 @@ const SOCIAL_GIRL_HEAD = [
   // Wine tastings and aperitivi.
   'degustazion*', 'wine tasting', 'tasting', 'wine', 'verkostung*', 'weinverkostung*', 'weinprobe*',
   'aperitivo', 'aperitivi', 'aperitif', 'happy hour', 'calici',
+  // Wine courses ("ABC del vino", "L'abbicì del vino").
+  'abc del vino', 'abbici del vino', 'corso di degustazione', 'corsi di degustazione',
+  'corso sommelier', 'corso per sommelier', 'weinseminar*', 'weinkurs*',
+  // Breath / art-perception practices ("Respirare l'arte").
+  'respirare*', 'respirazione', 'pratica di respiro', 'atemkurs*',
 ]
 /** A social format that is really a job or a lecture series is not social. */
 const SOCIAL_VETO = [
@@ -461,6 +586,103 @@ export function formatTags(
   return out
 }
 
+// --- Drop rules ---------------------------------------------------------------------
+//
+// Events nobody browses for, removed at crawl time (owner's decision,
+// 2026-09-30). Every drop is counted per rule in the crawl summary, so
+// nothing disappears silently. `head` phrases match the title + typologies;
+// `short` phrases also the summary (only unambiguous ones there). The long
+// description never drops an event.
+
+export type DropRule = 'no-title' | 'professional-training' | 'civic-notice' | 'spectator-sport'
+
+interface Drop {
+  id: DropRule
+  head: string[]
+  short?: string[]
+  /** Never drop when one of these is in the title/typologies/summary. */
+  unless?: string[]
+  /** Only for these primary categories (default: any). */
+  onlyIn?: CategoryId[]
+}
+
+const DROPS: Drop[] = [
+  {
+    // Work safety, refresher and trade courses, teacher previews: jobs, not outings.
+    id: 'professional-training',
+    head: [
+      'sicurezza sul lavoro', 'arbeitssicherheit', 'corso di aggiornamento', 'corsi di aggiornamento',
+      'seminario di aggiornamento', 'seminari di aggiornamento', 'aggiornamento professionale',
+      'formazione professionale', 'formazione obbligatoria', 'formazione continua', 'crediti formativi',
+      'ecm', 'haccp', 'per professionisti', 'cucine professionali', 'per i docenti', 'per docenti',
+      'per insegnanti', 'per gli insegnanti', 'riservata ai docenti', 'riservato ai docenti',
+      'diplom', 'diplomlehrgang*', 'lehrgang', 'fortbildung*', 'weiterbildung*', 'fuhrungskraft*',
+      'coordina efficacemente', 'gruppen effektiv',
+    ],
+    short: ['riservata ai docenti', 'riservato ai docenti', 'crediti ecm', 'corso di aggiornamento per'],
+  },
+  {
+    // Council sessions, traffic notices, monuments lit up for a cause. Parades stay.
+    id: 'civic-notice',
+    head: [
+      'convocazione', 'consiglio circoscrizione', 'consiglio di circoscrizione', 'consiglio circoscrizionale',
+      'consiglio comunale', 'seduta del consiglio', 'commissione consiliare', 'ordinanza',
+      'chiusura al traffico', 'modifiche alla viabilita', 'modifica alla viabilita', 'avviso pubblico',
+      'gemeinderat*',
+    ],
+    short: [
+      'convocazione consiglio', 'in seduta pubblica', 'illuminata di', 'illuminato di', 'illuminando di',
+      'illuminera', 'si illumina di', 'si tingera di', 'aderisce alla campagna', 'aderisce alla giornata',
+      'aderisce all iniziativa',
+    ],
+    unless: ['parade', 'parata', 'sfilata', 'corteo', 'umzug', 'pride'],
+  },
+  {
+    // Matches, championships, races and regattas to watch. Sport you take part
+    // in (hikes, rides, social runs, open regattas) stays, as `outdoor`.
+    id: 'spectator-sport',
+    head: [
+      'partite casalinghe', 'partita casalinga', 'calendario partite', 'heimspiel*', 'campionato',
+      'campionati', 'meisterschaft*', 'regata', 'regate', 'canottaggio', 'gran premio', 'grand prix',
+      'serie a', 'serie b', 'serie c', 'hockey', 'fc sudtirol', 'cup', 'coppa', 'trofeo', 'derby',
+      'gara', 'gare', 'rennen', 'radrennen', 'motocross', 'rally',
+    ],
+    unless: [
+      'non competitiv*', 'aperta a tutti', 'aperto a tutti', 'social run', 'volkslauf*', 'veleggiata',
+      'regata aperta', 'camminata',
+    ],
+    onlyIn: ['other', 'outdoor', 'festivals'],
+  },
+]
+
+const DROP_RULES = DROPS.map((d) => ({
+  ...d,
+  head: d.head.map(compile),
+  short: (d.short ?? []).map(compile),
+  unless: (d.unless ?? []).map(compile),
+}))
+
+/**
+ * Why this event is dropped at crawl time, or null to keep it. `category` is
+ * the primary category from `classify`. See DROP RULES above.
+ */
+export function dropRule(
+  text: { title: string; summary?: string | null; tagText?: string | null },
+  category: CategoryId,
+): DropRule | null {
+  // "..." (seen on Open Data Hub) normalises to nothing.
+  if (!hayOf([text.title])) return 'no-title'
+  const head = hayOf([text.title, text.tagText])
+  const short = hayOf([text.title, text.summary, text.tagText])
+  for (const d of DROP_RULES) {
+    if (d.onlyIn && !d.onlyIn.includes(category)) continue
+    if (!any(d.head, head) && !any(d.short, short)) continue
+    if (any(d.unless, short)) continue
+    return d.id
+  }
+  return null
+}
+
 /**
  * Primary category: the source's own hint, else the adapter default (unless
  * 'other'), else the first category matching the title, else the first
@@ -483,7 +705,15 @@ export function classify(
   // title + summary, then everything — a long description name-drops ballets,
   // readings and theatres in passing. A weak keyword's context may come from
   // the summary in every tier ("Storie di ceramica" + "un workshop…").
-  const tiers = [matchHay(title, title, short), matchHay(typed, typed, short), matchHay(short, short), matchHay(short, long)]
+  const raw = text.title
+  // Typology items: "Teatro", "Visita guidata · adulti", "Evento · Mostra".
+  const typos = (text.tagText ?? '').split(/\s*[·|;,/]\s*/).map(normalize).filter(Boolean)
+  const tiers = [
+    matchHay(title, title, short, raw),
+    matchHay(typed, typed, short, raw, typos),
+    matchHay(short, short, short, raw, typos),
+    matchHay(short, long, short, raw, typos),
+  ]
   const matches = (tiers[3] ?? []).filter(allowed)
   const own = hint ?? (sourceDefault !== 'other' ? sourceDefault : undefined)
   const category = (own && allowed(own) ? own : undefined) ?? tiers.map((t) => t.filter(allowed)[0]).find(Boolean) ?? 'other'

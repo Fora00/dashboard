@@ -18,6 +18,7 @@ import { fileURLToPath } from 'node:url'
 import type { Adapter, Event, EventsFile, SourceStatus } from './types.ts'
 import { ADAPTERS } from './adapters/index.ts'
 import { PoliteHttp } from './http.ts'
+import type { DropCounts } from './pipeline.ts'
 import { HORIZON_DAYS, dedup, inWindow, isOngoing, sortEvents, toEvents, withPlace } from './pipeline.ts'
 
 const DEFAULT_PREVIOUS = 'https://fora00.github.io/dashboard/events.json'
@@ -52,11 +53,11 @@ async function loadPrevious(): Promise<EventsFile | null> {
   }
 }
 
-function carryOver(previous: EventsFile | null, adapter: Adapter, now: number): Event[] {
+function carryOver(previous: EventsFile | null, adapter: Adapter, now: number, drops: DropCounts): Event[] {
   if (!previous) return []
   return withPlace(adapter, previous.events
     .filter((e) => e && e.source === adapter.id && typeof e.start === 'string' && inWindow(e, now))
-    .map((e) => ({ ...e, ongoing: isOngoing(e, now) })))
+    .map((e) => ({ ...e, ongoing: isOngoing(e, now) })), drops)
 }
 
 function table(rows: SourceStatus[], ms: Map<string, number>): string {
@@ -83,19 +84,32 @@ async function main(): Promise<void> {
   const statuses: SourceStatus[] = []
   const timings = new Map<string, number>()
   const all: Event[] = []
+  /** DROP RULES hits: rule → source → count. */
+  const drops = new Map<string, Map<string, number>>()
 
   for (const adapter of ADAPTERS) {
     const t0 = Date.now()
     const prev = prevStatus.get(adapter.id)
-    const previousEvents = carryOver(previous, adapter, now)
+    // Drops among carried-over events count only when they are published instead of fresh ones.
+    const carriedDrops: DropCounts = new Map()
+    const previousEvents = carryOver(previous, adapter, now, carriedDrops)
+    const addDrops = (from: DropCounts) => {
+      for (const [rule, n] of from) {
+        const bySource = drops.get(rule) ?? new Map<string, number>()
+        bySource.set(adapter.id, (bySource.get(adapter.id) ?? 0) + n)
+        drops.set(rule, bySource)
+      }
+    }
     const keepPrevious = (error: string) => {
       all.push(...previousEvents)
+      addDrops(carriedDrops)
       statuses.push({ id: adapter.id, name: adapter.name, ok: false, count: previousEvents.length, error, lastSuccess: prev?.lastSuccess ?? null })
     }
 
     if (only && !only.has(adapter.id)) {
       // Not run this time (development): keep the previous state as it was.
       all.push(...previousEvents)
+      addDrops(carriedDrops)
       statuses.push(prev
         ? { ...prev, name: adapter.name, count: previousEvents.length }
         : { id: adapter.id, name: adapter.name, ok: false, count: 0, error: 'not run (EVENTS_ONLY)', lastSuccess: null })
@@ -106,12 +120,14 @@ async function main(): Promise<void> {
       if (failing.has(adapter.id)) throw new Error('simulated failure (EVENTS_FAIL)')
       const ctx = http.context(adapter.id, adapter.maxRequests ?? DEFAULT_MAX_REQUESTS, now, HORIZON_DAYS)
       const raws = await adapter.run(ctx)
-      const events = toEvents(adapter, raws, now, generatedAt)
+      const freshDrops: DropCounts = new Map()
+      const events = toEvents(adapter, raws, now, generatedAt, freshDrops)
       const prevCount = prev?.count ?? previousEvents.length
       if (events.length === 0 && prevCount > 0 && !adapter.mayBeEmpty) {
         keepPrevious(`0 events (previous run had ${prevCount}); keeping previous`)
       } else {
         all.push(...events)
+        addDrops(freshDrops)
         statuses.push({ id: adapter.id, name: adapter.name, ok: true, count: events.length, lastSuccess: generatedAt })
       }
     } catch (e) {
@@ -141,6 +157,11 @@ async function main(): Promise<void> {
     return [...m].sort((a, b) => b[1] - a[1]).map(([id, n]) => `${id} ${n}`).join(', ')
   }
   console.log(`areas: ${tally('area')} · rings: ${tally('ring')}`)
+  const dropLines = [...drops].map(([rule, bySource]) => {
+    const total = [...bySource.values()].reduce((a, b) => a + b, 0)
+    return `  ${rule.padEnd(22)} ${String(total).padStart(4)}  (${[...bySource].map(([id, n]) => `${id} ${n}`).join(', ')})`
+  })
+  console.log(`dropped by rule (tags.ts DROP RULES):${dropLines.length ? `\n${dropLines.join('\n')}` : ' none'}`)
   console.log(`${http.requests} HTTP requests · ${((Date.now() - started) / 1000).toFixed(0)}s · wrote ${out}`)
 }
 

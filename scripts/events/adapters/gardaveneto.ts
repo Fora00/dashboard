@@ -37,6 +37,19 @@ function town(raw: string): string {
   return t === t.toUpperCase() ? t.toLowerCase().replace(/(^|[\s'-])\p{L}/gu, (c) => c.toUpperCase()).replace(/\b(Del|Di|Sul|Della)\b/g, (w) => w.toLowerCase()) : t
 }
 
+// Children's typologies ("manifestazioni per famiglie e bambini", "teatro
+// bambini", "animazioni per bambini") mark a children's event only when they
+// are all it has (besides catch-alls like "eventi diversi", "gite/escursioni
+// varie"): the chestnut fair or a band concert that also lists "per famiglie
+// e bambini" is for everyone.
+const KIDS_TYPE = /bambin|famigli/i
+const GENERIC_TYPE = /\b(?:vari|varie|diversi|diverse)$/i
+
+function familyTypes(categories: string[]): string[] {
+  const other = categories.filter((c) => !KIDS_TYPE.test(c) && !GENERIC_TYPE.test(c))
+  return other.length ? categories.filter((c) => !KIDS_TYPE.test(c)) : categories
+}
+
 function parseCard(card: string): RawEvent | null {
   const link = card.match(/href="(https:\/\/www\.lagodigardaveneto\.com\/it\/eventi\/[^"]+_(\d+))"/)
   if (!link) return null
@@ -78,7 +91,7 @@ function parseCard(card: string): RawEvent | null {
   const at = htmlToText(timeLi).match(/\b(\d{1,2}):(\d{2})\b/)
   const time = at && !(at[1] === '00' && at[2] === '00') ? `${at[1]?.padStart(2, '0')}:${at[2]}` : null
   const timed = Boolean(time) && first === last
-  const categories = (gtm.categories ?? []).map((c) => c.name?.replace(/\\\//g, '/').trim()).filter(Boolean)
+  const categories = familyTypes((gtm.categories ?? []).map((c) => c.name?.replace(/\\\//g, '/').trim()).filter((c): c is string => Boolean(c)))
   const img = card.match(/data-srcset="([^"\s]+)/)?.[1]
   const summary = [recurrence, time && !timed ? `ore ${time}` : ''].filter(Boolean).join(', ')
   return {

@@ -16,6 +16,9 @@ export const CATEGORIES: { id: string; label: string }[] = [
   { id: 'concerts', label: 'Concerts & music' },
   { id: 'cinema', label: 'Cinema' },
   { id: 'talks', label: 'Talks' },
+  { id: 'food', label: 'Cibo e vino' },
+  { id: 'tours', label: 'Visite' },
+  { id: 'outdoor', label: 'Outdoor' },
   { id: 'festivals', label: 'Festivals & food' },
   { id: 'other', label: 'Other' },
 ]

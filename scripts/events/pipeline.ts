@@ -1,8 +1,8 @@
 // Pure post-processing shared by fresh and carried-over events: window,
 // series folding, ids/tags, cross-source dedup, `ongoing`, sorting.
 import type { Adapter, Event, RawEvent } from './types.ts'
-import type { TagId } from './tags.ts'
-import { CATEGORIES, classify, finishTags } from './tags.ts'
+import type { DropRule, TagId } from './tags.ts'
+import { CATEGORIES, classify, dropRule, finishTags } from './tags.ts'
 import { areaFor, closerRing, keepForRing } from './areas.ts'
 import { DAY, addDays, dateToIso } from './time.ts'
 import { clip, htmlToBlocks, normalize, snippet, stableId } from './text.ts'
@@ -59,8 +59,21 @@ function foldSeries(raws: RawEvent[]): (RawEvent & { occurrences: number })[] {
   return out
 }
 
-/** Adapter output → published events (window applied, ids and tags derived). */
-export function toEvents(adapter: Adapter, raws: RawEvent[], now: number, fetchedAt: string): Event[] {
+/** Events dropped by DROP RULES (tags.ts), per rule: logged in the crawl summary. */
+export type DropCounts = Map<DropRule, number>
+
+function countDrop(drops: DropCounts | undefined, rule: DropRule): void {
+  drops?.set(rule, (drops.get(rule) ?? 0) + 1)
+}
+
+/** A folded series with at least this many dates may take the adapter's `longSeriesCategory`. */
+export const LONG_SERIES = 10
+
+/**
+ * Adapter output → published events (window applied, ids and tags derived,
+ * DROP RULES applied and counted in `drops`).
+ */
+export function toEvents(adapter: Adapter, raws: RawEvent[], now: number, fetchedAt: string, drops?: DropCounts): Event[] {
   const seen = new Set<string>()
   const events: Event[] = []
   const ring = adapter.ring ?? 'home'
@@ -73,7 +86,16 @@ export function toEvents(adapter: Adapter, raws: RawEvent[], now: number, fetche
     seen.add(id)
     const description = clip(htmlToBlocks(r.description))
     const summary = snippet(htmlToBlocks(r.summary || description).replace(/\s+/g, ' '))
-    const { category, tags } = classify(r.categoryHint, adapter.defaultCategory, { title: r.title, summary, description, tagText: r.tagText ?? null })
+    const text = { title: r.title, summary, description, tagText: r.tagText ?? null }
+    let { category, tags } = classify(r.categoryHint, adapter.defaultCategory, text)
+    const dropped = dropRule(text, category)
+    if (dropped) { countDrop(drops, dropped); continue }
+    // A long series nothing else classified (Open Data Hub: exhibitions sold
+    // as daily tickets) takes the adapter's fallback.
+    if (category === 'other' && adapter.longSeriesCategory && r.occurrences >= LONG_SERIES) {
+      category = adapter.longSeriesCategory
+      tags = finishTags(category, tags, tags.includes('kids'))
+    }
     // Ring 2 sources: interests only (NEAR_INTERESTS), never kids.
     if (!keepForRing(ring, tags)) continue
     const city = r.city.trim() || 'Trentino'
@@ -124,12 +146,18 @@ function naturalTitle(a: string, b: string): string {
 /**
  * Events carried over from an older events.json (before `area`/`ring`
  * existed) get them from their adapter; a `near` source's old events are
- * re-filtered by its interests.
+ * re-filtered by its interests and every carried event by DROP RULES.
  */
-export function withPlace(adapter: Adapter, events: Event[]): Event[] {
+export function withPlace(adapter: Adapter, events: Event[], drops?: DropCounts): Event[] {
   const ring = adapter.ring ?? 'home'
   return events
     .filter((e) => keepForRing(ring, e.tags ?? []))
+    .filter((e) => {
+      // Records from before a drop rule existed are dropped the same way.
+      const rule = dropRule({ title: e.title ?? '', summary: e.summary }, e.category)
+      if (rule) countDrop(drops, rule)
+      return !rule
+    })
     .map((e) => ({ ...e, area: e.area ?? areaFor(e.city ?? '', adapter.area ?? 'trentino'), ring: e.ring ?? ring }))
 }
 

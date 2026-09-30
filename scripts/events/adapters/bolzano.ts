@@ -34,6 +34,24 @@ interface OdhEvent {
 }
 interface OdhPage { TotalPages?: number; Items?: OdhEvent[] }
 
+/** Some items carry "..." as their Italian title; the German one (or Shortname) is real. */
+function realTitle(...titles: (string | undefined)[]): string {
+  return titles.find((t) => t && /[\p{L}\p{N}]/u.test(t))?.trim() ?? ''
+}
+
+// Performers with their origin, as the Südtirol Jazzfestival and the
+// Carambolage cabaret stage list them: "Pablo Held Trio (D)", "MAX BEIER (D):
+// „LOVE & ORDER"". No other field tells the two apart (no topics, no
+// venue): a German low quote after "(XX):" is a cabaret programme title,
+// anything else is a concert. Fed to the tag rules as typology text.
+const ORIGIN = /\((?:[A-Z]{1,3}\s*\/\s*)*[A-Z]{1,3}\)/
+const CABARET = /\((?:[A-Z]{1,3}\s*\/\s*)*[A-Z]{1,3}\)\s*:\s*„/
+
+function originHint(title: string): string | null {
+  if (CABARET.test(title)) return 'Kabarett'
+  return ORIGIN.test(title) ? 'Konzert' : null
+}
+
 function time(t: string | undefined): string | null {
   return t && /^\d{2}:\d{2}/.test(t) && !t.startsWith('00:00') ? t.slice(0, 5) : null
 }
@@ -47,7 +65,7 @@ async function run(ctx: AdapterContext): Promise<RawEvent[]> {
       `&locfilter=${MUNICIPALITIES.map((m) => `mun${m}`).join(',')}&active=true&removenullvalues=true`
     const res = await ctx.fetchJson<OdhPage>(url)
     for (const ev of res.Items ?? []) {
-      const title = firstNonEmpty(ev.Detail?.it?.Title, ev.Detail?.de?.Title, ev.Detail?.en?.Title, ev.Shortname).trim()
+      const title = realTitle(ev.Detail?.it?.Title, ev.Detail?.de?.Title, ev.Detail?.en?.Title, ev.Shortname)
       if (!title) continue
       // Italian first; many Bolzano items only have German text.
       const description = firstNonEmpty(ev.Detail?.it?.BaseText, ev.Detail?.de?.BaseText, ev.Detail?.en?.BaseText)
@@ -59,7 +77,7 @@ async function run(ctx: AdapterContext): Promise<RawEvent[]> {
         ev.EventAdditionalInfos?.it?.Location, ev.EventAdditionalInfos?.it?.Mplace, ev.ContactInfos?.it?.CompanyName,
       ).trim() || null
       const city = ev.LocationInfo?.MunicipalityInfo?.Name?.it ?? 'Bolzano'
-      const tagText = [ev.Detail?.de?.Title, ev.Detail?.en?.Title, ...(ev.Topics ?? []).map((t) => t.TopicInfo)]
+      const tagText = [ev.Detail?.de?.Title, ev.Detail?.en?.Title, originHint(title), ...(ev.Topics ?? []).map((t) => t.TopicInfo)]
         .filter(Boolean).join(' · ')
       for (const d of ev.EventDate ?? []) {
         if (d.IsCancelled || d.Cancelled === '1') continue
@@ -99,5 +117,7 @@ export const bolzano: Adapter = {
   name: 'Bolzano, Merano, Bressanone (Open Data Hub)',
   defaultCategory: 'other',
   area: 'alto-adige',
+  // Exhibitions come as daily tickets with no text: 10+ dates and no keyword → exhibitions.
+  longSeriesCategory: 'exhibitions',
   run,
 }

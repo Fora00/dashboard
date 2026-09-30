@@ -44,8 +44,9 @@ export const AREAS: { id: AreaId; label: string }[] = [
  * Ring 2 (`near`) sources keep only events whose category or tags include
  * one of these; `kids` events are dropped there as well.
  */
+// `food` split off "Festivals & food" on 2026-09-30, so it stays an interest.
 export const NEAR_INTERESTS: readonly TagId[] = [
-  'creative', 'theatre', 'boardgames', 'festivals', 'nerd', 'exhibitions', 'concerts',
+  'creative', 'theatre', 'boardgames', 'festivals', 'food', 'nerd', 'exhibitions', 'concerts',
 ]
 
 const TOWNS: Record<AreaId, string[]> = {

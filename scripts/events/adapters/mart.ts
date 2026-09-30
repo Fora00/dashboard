@@ -46,6 +46,20 @@ const TYPE_CATEGORY: Record<string, CategoryId> = {
   Musica: 'concerts',
 }
 
+/**
+ * The education department's workshops state their ages at the end of the
+ * long text ("Dai 5 ai 12 anni."), past the summary the kids rule reads: a
+ * "Workshop/Laboratorio" with a children's age range is marked for children.
+ * Adult workshops ("Respirare l'arte") give no ages.
+ */
+function kidsLab(tipologia: string | undefined, text: string | undefined): string | null {
+  if (!tipologia || !/laborator|workshop/i.test(tipologia)) return null
+  for (const m of htmlToText(text ?? '').matchAll(/\bdai?\s+(\d{1,2})\s+(?:ai|agli|a)\s+(\d{1,2})\s+anni\b/gi)) {
+    if (Number(m[2]) <= 14) return 'per bambini'
+  }
+  return null
+}
+
 /** "15.00 - 16.30", "17.30", "11.15- 12.15" → start/end; anything else → null. */
 function parseOrario(orario: string | undefined): { start: string; end: string | null } | null {
   const m = orario?.trim().match(/^(\d{1,2})[.:](\d{2})(?:\s*[-–]\s*(\d{1,2})[.:](\d{2}))?$/)
@@ -79,7 +93,7 @@ async function run(ctx: AdapterContext): Promise<RawEvent[]> {
         summary: htmlToText(it.descrizioneRidotta),
         image: absUrl(it.immagini?.[0]?.url?.full, MEDIA),
         ...(it.tipologia && TYPE_CATEGORY[it.tipologia] ? { categoryHint: TYPE_CATEGORY[it.tipologia] } : {}),
-        tagText: it.tipologia ?? '',
+        tagText: [it.tipologia, kidsLab(it.tipologia, it.descrizioneEstesa || it.descrizioneRidotta)].filter(Boolean).join(' · '),
       })
     }
     const total = page.pagination?.total ?? 0

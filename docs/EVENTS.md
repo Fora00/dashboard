@@ -167,8 +167,9 @@ ids and labels, a town → area map, the ring-2 interest list).
 - **`ring`** (from the ROADMAP coverage plan):
   - `home` — ring 1, about an hour from Trento/Rovereto, every category.
   - `near` — ring 2 (1–1.5 h): only events whose `category` or `tags`
-    include one of `creative`, `theatre`, `boardgames`, `festivals`, `nerd`,
-    `exhibitions`, `concerts` are published, and never a `kids` event. The
+    include one of `creative`, `theatre`, `boardgames`, `festivals`, `food`
+    (split off "Festivals & food" on 2026-09-30), `nerd`, `exhibitions`,
+    `concerts` are published, and never a `kids` event. The
     filter runs at crawl time, after tagging.
   - `spot` — hand-curated big events in far cities (`spot.json`).
 - When dedup merges records from two sources, the closer ring wins
@@ -186,6 +187,9 @@ ids and labels, a town → area map, the ring-2 interest list).
 | `concerts` | Concerts & music |
 | `cinema` | Cinema |
 | `talks` | Talks |
+| `food` | Cibo e vino (added 2026-09-30) |
+| `tours` | Visite (added 2026-09-30) |
+| `outdoor` | Outdoor (added 2026-09-30) |
 | `festivals` | Festivals & food |
 | `other` | Other |
 
@@ -217,6 +221,62 @@ whole words.
 - **`nerd`**: keywords count only in the title, summary and typologies,
   never in the long description (it name-drops "Fantasy" chamber pieces and
   "fumetti" stalls at flea markets). 2026-09-30.
+- **`food`** (2026-09-30): food and wine as the point of the event — wine
+  and food tastings (degustazione, Verkostung), cooking schools and classes,
+  wine and Speck walks, Törggelen, wine festivals, sagre and the seasonal
+  food feasts (chestnuts/Keschtn, castagnate, marroni, pumpkins, polenta,
+  apple feasts, honey, cheese…). Before `festivals`, so "Festa del marrone"
+  is `food` with a `festivals` tag while a village "Festa di San Rocco"
+  stays `festivals`. A product, dish or meal word ("formaggio", "cena",
+  "cucina", "sapori") counts only with a food-event word next to it (festa,
+  sagra, degustazione, prodotti tipici, menu…), so "Il Poliziotto del
+  Formaggio" stays a play. Title, summary and typologies only.
+- **`tours`** (2026-09-30): guided tours (visita guidata, Führung, tour
+  guidato), city walks and "passeggiate", underground tours, FAI and
+  heritage days, extraordinary openings; a castle, fort, church, tower,
+  villa or palace only together with a visit word (visita, tour, apertura,
+  scopri…). A guided tour of an exhibition stays `exhibitions` (earlier in
+  the order) with a `tours` tag unless the source types it "Visita guidata".
+  Title, summary and typologies only.
+- **`outdoor`** (2026-09-30): outdoor activities you take part in — hikes
+  and trekking, e-MTB and bike tours, via ferrata, climbing, walking groups
+  ("gruppo di cammino"), social runs, Hike & Fly, kayak, open regattas,
+  Bolzano's Social Park. Spectator sport is not here: it is dropped (see
+  "Dropped at crawl time"). Title, summary and typologies only.
+- **Typology and raw-title rules** (2026-09-30): a source typology that is
+  exactly "Teatro" makes a play `theatre` even when its summary talks about
+  a kitchen; a title starting "Teatro:" / "Teatro - " is `theatre`.
+- **Long series** (2026-09-30): an Open Data Hub (`bolzano`) item folded
+  from 10 or more dates that no keyword classifies is `exhibitions` (museum
+  and exhibition tickets are sold as daily dates without any text).
+- **Open Data Hub performers** (2026-09-30): titles with an origin tag
+  ("Pablo Held Trio (D)", "Delfeayo Marsalis Quintet (USA/CH/I)") are
+  concerts; with a German low quote after the tag ("MAX BEIER (D): „LOVE &
+  ORDER"") they are Carambolage cabaret (`theatre`). No other field tells
+  them apart.
+
+### Dropped at crawl time
+
+Added 2026-09-30 (owner's decision). Some events are not published at all;
+the rules live in `scripts/events/tags.ts` (DROP RULES) and match the title
+and the source's typologies, plus a few unambiguous phrases in the summary
+(never the long description). The crawl summary prints a count per rule and
+source, so nothing disappears silently:
+
+```
+dropped by rule (tags.ts DROP RULES):
+  professional-training    26  (mart 2, bolzano 8, verona 7, cultura-trentino 9)
+```
+
+| rule | what | examples |
+|---|---|---|
+| `no-title` | the title has no letter or digit ("...") | — (Open Data Hub "..." items now use their German title instead) |
+| `professional-training` | work safety, refresher and trade courses, teacher-only previews, job-centre sessions | "Sicurezza sul lavoro: corso di aggiornamento", "Diplom Bier-Expert", "Visita guidata per i docenti…", typology "Formazione professionale" |
+| `civic-notice` | council sessions, traffic notices, monuments lit up for a cause, "the Comune adheres to…" campaigns. Parades stay (parade, parata, sfilata, corteo, Umzug, pride) | "Consiglio Circoscrizione 4^ - Convocazione…", "Fontana del Nettuno illuminata di arancione…", "Lilt for Women" |
+| `spectator-sport` | matches, championships, cups, trophies, races and regattas to watch — only when the event is `other`, `outdoor` or `festivals`, and never with a participation marker (non competitiva, aperta a tutti, social run, veleggiata, camminata) | "HCB Südtirol Alperia - partite casalinghe", "Calendario partite FC Südtirol", "Regata regionale di canottaggio", "International Finn Cup" |
+
+Records carried over from a previous file (a failing source) go through
+the same rules.
 
 ### The `kids` tag
 
@@ -248,7 +308,10 @@ describes its content). The long description can only veto.
   bachata, tango/milonga, balfolk, contact jam, Tanzabend), yoga and
   body-mind practice, art and creative workshops (every `creative` event),
   book clubs, language cafés and conversation groups, wine tastings and
-  aperitivi. The last two groups count in the title/typology only.
+  aperitivi, wine courses ("ABC del vino", "L'abbicì del vino") and
+  breath / art-perception practices ("Respirare l'arte", respirazione;
+  2026-09-30). Body-mind practice, tastings, aperitivi, wine courses and
+  breath practices count in the title/typology only.
 - **`solo-ok`** ("fine to go alone"): primary category `talks`,
   `exhibitions`, `cinema`, `concerts`, `creative` or `boardgames`, any event
   with a social tag, and guided tours, readings, stand-up and open mics —
@@ -271,8 +334,8 @@ them (the dashboard's category chips match only category ids).
 | `volkan` | volkantdg.it | The Events Calendar site-wide iCal `/events/?ical=1` | often stale: an empty feed is ok with 0 events (`mayBeEmpty`) |
 | `rovereto` | eventi.comune.rovereto.tn.it | OpenPA `/opendata/api/content/search/` | `/api/` disallowed, `/opendata/api/content` allowed; the ~1,900-event archive is never paginated |
 | `comune-trento` | www.comune.trento.it | OpenPA calendar (class `event_link`, OpenAgenda) | same robots situation as trentogiovani |
-| `mart` | Mart / Casa Depero / Galleria Civica | Umbraco JSON on media.mart.tn.it (the API behind `/mostre-eventi`) | robots.txt 404 = allowed |
-| `bolzano` | Open Data Hub tourism API | `/v1/Event`, `locfilter=mun<Bolzano>`, date window server-side | CC0; texts, venues and images are rarely filled for Bolzano |
+| `mart` | Mart / Casa Depero / Galleria Civica | Umbraco JSON on media.mart.tn.it (the API behind `/mostre-eventi`) | robots.txt 404 = allowed. A "Workshop/Laboratorio" whose text gives a children's age range ("Dai 5 ai 12 anni") → `kids` |
+| `bolzano` | Open Data Hub tourism API | `/v1/Event`, `locfilter=mun<Bolzano>`, date window server-side | CC0; texts, venues and images are rarely filled for Bolzano. A "..." Italian title falls back to the German title / Shortname. Origin-tagged performer titles get a concert/cabaret hint; 10+-date series nothing classifies → `exhibitions` (`longSeriesCategory`) |
 | `verona` | www.comune.verona.it | OpenPA calendar | robots disallows `/api/` and `/content/search`, explicitly Allows `/opendata/api/calendar` |
 | `cultura-trentino` | www.cultura.trentino.it (Provincia, "Trentino Cultura") | OpenPA `/opendata/api/content/search/`, class `event` | whole province; town from the `comune` relation; date-only events get a time from `orario_svolgimento` when it names exactly one ("ore 20.30"); robots `Crawl-delay: 10` (honoured); images are relations only (null) |
 | `rovereto-comune` | www.comune.rovereto.tn.it (ViviRovereto agenda) | OpenPA calendar, class `event` | robots Allows only `/opendata/api/calendar`; the municipal highlights (RAM film festival, season preludes) — `rovereto` above is the library's agenda |
@@ -281,7 +344,7 @@ them (the dashboard's category chips match only category ids).
 | `buonconsiglio` | www.buonconsiglio.it (Buonconsiglio, Thun, Beseno, Stenico, Caldes) | Events Manager `/events.ics` | its CATEGORIES ("Adulti", "Famiglie e bambini", "Scuole") feed the `kids` tag |
 | `trentinospettacoli` | www.trentinospettacoli.it (Coordinamento Teatrale Trentino box office) | schema.org Event microdata on `/eventi/` + WP REST `eventi` categories | one listing page + 2–3 REST calls; "Teatro ragazzi" → `kids`, "Cinema" → `cinema`, other "Spettacoli" without a keyword → `theatre`; no descriptions |
 | `tebe` | www.apstebe.org (Tebe APS, Teatro comunale di Bedollo) | static HTML cards (Next.js page, no feed) | one request; no per-event pages, links to `#eventi`; `mayBeEmpty` |
-| `garda-veneto` | www.lagodigardaveneto.com (ring 1, `verona-garda`) | HTML listing `?page=N` with per-card `data-gtm-el` JSON | ~11 pages; ranges become all-day spans |
+| `garda-veneto` | www.lagodigardaveneto.com (ring 1, `verona-garda`) | HTML listing `?page=N` with per-card `data-gtm-el` JSON | ~11 pages; ranges become all-day spans. Children's typologies ("manifestazioni per famiglie e bambini") count only when they are the event's only specific ones: "Festa del marrone D.O.P" also lists music, markets and tastings, so it is not `kids` |
 | `padova` | www.comune.padova.it (ring 2) | Drupal JSON:API `/api/events` | date filters in unix seconds; 2 pages |
 | `stabileveneto` | Teatro Stabile del Veneto (ring 2): Teatro Verdi, Ridotto, Foyer, Teatro Maddalene | **POST** JSON `api.teatrostabileveneto.it/api/Public/eventslist` (`ctx.postJson`) | 1 request; Padova only (Treviso/Venezia dropped); one all-day range per production (no nightly times); genre "Concertistica" → `concerts`, anything else → `theatre` |
 | `tcvi` | www.tcvi.it (ring 2): Teatro Comunale Vicenza, Olimpico | one static HTML page, one card per performance | 1 request; school and family-show types dropped |
@@ -349,7 +412,7 @@ the workflow step is `continue-on-error`, so the deploy never blocks on it.
 ## Running locally
 
 ```sh
-npm run events:crawl                     # all sources, ~1.5 min, writes public/events.json
+npm run events:crawl                     # all sources, ~4 min, writes public/events.json
 EVENTS_ONLY=mart,verona npm run events:crawl   # only these (others keep previous events)
 ```
 
@@ -422,6 +485,8 @@ Spot events get `ring: "spot"`; their `area` comes from the town map in
 
 Add one entry to `CATEGORIES` in `scripts/events/tags.ts` (id, label,
 keywords) at the priority position you want, and add the id to the
-`CategoryId` union. Keywords are written lowercase without accents; `word*`
+`CategoryId` union. For the dashboard page to offer it as a chip, add the
+same id and label, in the same order, to `CATEGORIES` in
+`src/projects/events/model.ts`. Keywords are written lowercase without accents; `word*`
 matches a prefix. That is all — consumers treat unknown ids as `other` until
 they learn the new one.

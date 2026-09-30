@@ -101,6 +101,11 @@ export interface Adapter {
   area?: AreaId
   /** Coverage ring (default 'home'); 'near' keeps only NEAR_INTERESTS events. */
   ring?: Ring
+  /**
+   * Category for a folded series of LONG_SERIES (10)+ dates that the keywords
+   * leave `other` (Open Data Hub sells exhibitions as daily tickets).
+   */
+  longSeriesCategory?: CategoryId
   run(ctx: AdapterContext): Promise<RawEvent[]>
 }
 
