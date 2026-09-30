@@ -140,6 +140,34 @@ export async function removeTag(link: LinkItem, tag: string): Promise<void> {
   })
 }
 
+/**
+ * Rename a tag on every link that carries it. If a link already has the target
+ * tag this is a merge for that link (it just loses `from`). Read + writes run
+ * in one transaction and go through the engine's upsertMany, so every changed
+ * link gets its outbox entry and a fresh updatedAt. A rename swaps one tag for
+ * one tag, so the per-link cap can't be exceeded. Returns links changed.
+ */
+export async function renameTag(rawFrom: string, rawTo: string): Promise<number> {
+  const from = normalizeTag(rawFrom)
+  const to = normalizeTag(rawTo)
+  if (!from || !to || from === to) return 0
+  return db.transaction('rw', db.links, db.outbox, async () => {
+    const affected = await db.links.where('tags').equals(from).toArray()
+    if (affected.length === 0) return 0
+    const now = Date.now()
+    const updated = affected.map((link) => {
+      const tags: string[] = []
+      for (const t of link.tags ?? []) {
+        const next = t === from ? to : t
+        if (!tags.includes(next)) tags.push(next)
+      }
+      return { ...link, tags, updatedAt: now }
+    })
+    await engine.upsertMany('links', updated)
+    return updated.length
+  })
+}
+
 export async function toggleRead(link: LinkItem): Promise<void> {
   await engine.upsert('links', { ...link, read: link.read === 0 ? 1 : 0, updatedAt: Date.now() })
 }

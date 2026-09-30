@@ -8,6 +8,7 @@ import {
   normalizeTag,
   normalizeUrl,
   removeTag,
+  renameTag,
   sync,
   toggleRead,
   updateLink,
@@ -22,6 +23,7 @@ import { SyncCard } from '../../components/SyncCard'
 import { Snackbar } from '../../components/Snackbar'
 import { SwipeableRow } from '../../components/SwipeableRow'
 import { SkeletonList } from '../../components/Skeleton'
+import { ManageTagsSheet } from './ManageTagsSheet'
 
 // Mirrors MAX_TAGS in linksSync.ts / the links_tags_max_count SQL constraint —
 // the UI stops at the same wall the mutation and the server enforce.
@@ -54,6 +56,7 @@ export function Links() {
   // the createdAt-desc order the query already produced.
   const links = raw ? [...raw].sort((a, b) => a.read - b.read) : raw
   const { pending, trigger, confirmUndo } = useUndoSnackbar()
+  const [manageOpen, setManageOpen] = useState(false)
 
   const canAdd = normalizeUrl(text) !== null
 
@@ -66,6 +69,7 @@ export function Links() {
   const allTags = [...tagCounts.entries()]
     .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
     .map(([tag]) => tag)
+  const tagEntries = allTags.map((tag): [string, number] => [tag, tagCounts.get(tag) ?? 0])
 
   // AND semantics: a link shows only if it carries EVERY selected tag.
   const filtering = selectedTags.length > 0
@@ -79,6 +83,30 @@ export function Links() {
 
   function clearFilters() {
     setSelectedTags([])
+  }
+
+  // Snapshot the affected links first; Undo re-upserts them through the engine
+  // (fresh updatedAt so the restore wins over the rename on other devices).
+  async function handleRename(from: string, to: string) {
+    const snapshot = await db.links.where('tags').equals(from).toArray()
+    const changed = await renameTag(from, to)
+    if (changed === 0) return
+    const swapped = selectedTags.includes(from)
+    if (swapped) {
+      setSelectedTags((cur) => [...new Set(cur.map((t) => (t === from ? to : t)))])
+    }
+    trigger(
+      `"${from}" → "${to}" on ${changed} ${changed === 1 ? 'link' : 'links'} · Undo`,
+      async () => {
+        await sync.upsertMany(
+          'links',
+          snapshot.map((l) => ({ ...l, updatedAt: Date.now() })),
+        )
+        if (swapped) {
+          setSelectedTags((cur) => [...new Set(cur.map((t) => (t === to ? from : t)))])
+        }
+      },
+    )
   }
 
   async function handleAdd(e: FormEvent) {
@@ -360,9 +388,26 @@ export function Links() {
                 </button>
               )
             })}
+            {allTags.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setManageOpen(true)}
+                className="min-h-10 shrink-0 rounded-full px-3 text-xs whitespace-nowrap text-slate-500 underline-offset-2 hover:underline dark:text-slate-400"
+              >
+                Manage tags
+              </button>
+            )}
           </div>
         </div>
       )}
+
+      <ManageTagsSheet
+        open={manageOpen}
+        onClose={() => setManageOpen(false)}
+        tags={tagEntries}
+        optionsId={TAG_OPTIONS_ID}
+        onRename={handleRename}
+      />
 
       {links === undefined || visible === undefined ? (
         <SkeletonList rows={4} rowClassName="h-12" />
