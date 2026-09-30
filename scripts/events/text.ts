@@ -114,3 +114,34 @@ export function firstNonEmpty(...values: (string | null | undefined)[]): string 
   for (const v of values) if (v && v.trim()) return v
   return ''
 }
+
+// Lowercase inside a title (Italian articles, prepositions, conjunctions;
+// a few English ones for English titles).
+const SMALL = new Set([
+  'a', 'ad', 'ai', 'agli', 'al', 'alla', 'alle', 'allo', 'che', 'col', 'con', 'd', 'da', 'dal', 'dalla', 'dalle',
+  'de', 'degli', 'dei', 'del', 'della', 'delle', 'dello', 'di', 'e', 'ed', 'gli', 'i', 'il', 'in', 'l', 'la', 'le',
+  'lo', 'nei', 'nel', 'nella', 'nelle', 'o', 'per', 'si', 'su', 'sui', 'sul', 'sulla', 'sulle', 'tra', 'un', 'una',
+  'è', 'and', 'of', 'the',
+])
+
+const ELIDED = new Set(['l', 'd', 'dell', 'dall', 'nell', 'sull', 'all', 'un', 'quell', 'quest'])
+
+/**
+ * For sources that write names in capitals (Arteven, some Stabile del Veneto
+ * titles). "TEATRO COMUNALE (SALA MAGGIORE)" →
+ * "Teatro Comunale (Sala Maggiore)", "MADRE COURAGE E I SUOI FIGLI" →
+ * "Madre Courage e i Suoi Figli". Words after ". : ! ? / -" and single-letter
+ * initials ("A. VIVALDI") are capitalised.
+ */
+export function titleCase(s: string): string {
+  return s.toLowerCase().replace(/\p{L}+/gu, (w, i: number, all: string) => {
+    const before = all.slice(0, i)
+    const starts = !/\p{L}/u.test(before) || /[.:!?/–-]\s*$/.test(before) || /["“«(]$/.test(before)
+    const initial = w.length === 1 && all[i + 1] === '.'
+    // After an apostrophe: capitalised after an elided article ("L'Attrice",
+    // "Dell'Arte"), lowercase otherwise ("Cos'è", "Com'è").
+    const elided = before.match(/(\p{L}+)['’]$/u)?.[1]
+    if (elided) return ELIDED.has(elided) ? (w[0] ?? '').toUpperCase() + w.slice(1) : w
+    return SMALL.has(w) && !starts && !initial ? w : (w[0] ?? '').toUpperCase() + w.slice(1)
+  })
+}

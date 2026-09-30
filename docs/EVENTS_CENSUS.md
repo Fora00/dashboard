@@ -2,6 +2,47 @@
 
 Raw per-town research notes from the source census (research agent, stopped before its final summary; all towns were done). Verdicts: ADD / SKIP with reasons, endpoints and query details for implementers. See ROADMAP.md Project 12 for what is implemented.
 
+## Implemented ring-2 sources (2026-09-30)
+
+First full crawl with all of them: every source ok, 2,187 events after dedup,
+125 HTTP requests, 213 s. Counts are events published this run (window 180
+days, after the ring-2 interest filter); requests exclude one robots.txt per
+host.
+
+| adapter id | census row | raw → published | requests | notes |
+|---|---|---|---|---|
+| `mantova` | Comune di Mantova (Municipium) | 57 → 19 | 5 (4 pages + the empty 5th) | census ~55–60 ✓. Titles carry their date ("Laura Pausini - 1 ottobre", "Pax Tibi ? - dal 3 ottobre al 6 gennaio"): stripped, and a range sets the end (the pretitle only has the first day). Most of the 57 are monthly reading groups, guided tours and walks: dropped by the interest filter. |
+| `brescia` | Comune di Brescia (Municipium) | 19 → 14 | 3 (2 pages + empty) | census ~20 ✓. Range cards "Da … a …". "Stagione Teatro Grande 2026" duplicates a `teatrogrande` night under another title (not merged). |
+| `ctb` | CTB Brescia | 44 → 29 | 1 | census 46 productions: 46 cards, minus 2 school-only productions (morning-only times: "Se dicessimo la verità", "Pigmalione", both also on `/spettacoli/spettacoli-per-le-scuole`), 7 of the rest are June 2026 (past) and the rest beyond 180 days drop by the window. One all-day range per production. `/spettacoli/spettacoli-per-le-scuole` and `ctb-per-la-scuola-serali` are never fetched. |
+| `teatrogrande` | Teatro Grande Brescia | 30 → 29 | 1 | Census "~40 rows" included 23 café rows ("Aperto", "Chiusura anticipata": opening hours, dropped); 27 shows + 3 "Aperitivo in Jazz" kept. Every row has `data-date="YYYY-MM-DD"`, so the month heading is not needed for the year. "Il Grande per i Piccoli" → `kids` (dropped). www redirects to the bare host; the bare host is requested. |
+| `arteven` | Arteven (myarteven.it) | 106 → 81 | 1 (3.7 MB) | 232 performances in the JSON; kept only `(VI)` theatres + Padova city (110): Mestre, Portogruaro, Rovigo, Jesolo, Legnago, Albignasego, Fontaniva (PD) dropped; then 4 weekday-morning school matinées dropped (106). Children's rassegne (Schio "Civico da favola", Thiene "Domenica teatro") → `kids`. 21 of its 23 Vicenza shows merge with `tcvi` (the other 2 are not on tcvi). The event page URL built from the site's template was checked once (200). |
+| `stabileveneto` | Teatro Stabile del Veneto | 38 → 33 | 1 POST | census 38 Padova productions ✓ (Verdi 20 + Ridotto 8 + Foyer 1 + Maddalene 9); filter on `locationCity.it === 'Padova'`. Public page `www.teatrostabileveneto.it/spettacolo/<hsUrl>` (the site's own links use it); image `media.teatrostabileveneto.it/uploadedmedia/<blobLinkIds>` (the site's `_mediaUrl`, not fetched by us). No overlap with `padova`. Needed `ctx.postJson` (new in `http.ts`). |
+| `teatrosociale-mantova` | Teatro Sociale Mantova | 15 → 15 | 1 | census 19; the band now lists 17 shows, 2 marked "- SPOSTATO" (moved) dropped. No year on the band: the year whose date matches the card's weekday (unambiguous within two years); the month calendar's "sab 17 ott 2026" cross-checks the current month. Abstracts only for the current month. "Monet - Una vita a colori" merges with `mantova`. |
+
+Not done: Garda/Peschiera Municipium lines (lake-wide `garda-veneto` covers
+them), Comune di Vicenza OpenCity (21 MB per 30 days), bresciamusei.com,
+Operaestate Bassano (summer, spot candidate).
+
+---
+
+# Rovereto: Teatro Zandonai + Filarmonica di Rovereto (ring 1) — done 2026-09-30
+
+| site | endpoint | robots | finding | verdict |
+|---|---|---|---|---|
+| www.teatro-zandonai.it (Teatro Riccardo Zandonai, Comune di Rovereto; OpenPA) | `/opendata/api/content/search/classes [spettacolo] …` (existing `zandonai` source) | `Disallow: /api/ /content/search /content/advancedsearch …` — `/opendata/api/content/search` is not covered, so allowed | **Not misconfigured.** 648 `spettacolo` objects in total; the site's own home and `/Programmazione` show exactly the one upcoming show the API returns ("Suora e Basta", 3 Oct). Last season (Oct 2025 – May 2026): 83 shows, 1 cancelled. The whole "STAGIONE TEATRALE" + "STAGIONE DANZA" was published on **2025-10-07** in one batch (leads of 15–169 days); concerts, festivals, schools and rentals are added ~2 weeks ahead (median lead 15 days). The 2026/27 season is not announced anywhere yet (search, trentinospettacoli venue page: only "Il segreto di Francesco", 4 Oct). | **KEEP**, improved: fixed venue, title case for capitals, cancelled shows dropped, "Festival dei piccoli" → kids. The season will arrive automatically when the theatre publishes it (expected early/mid October). |
+| www.filarmonicarovereto.it (Associazione Filarmonica di Rovereto; WordPress + Modern Events Calendar 6.5.5) | RSS `/events/feed/` (MEC namespace: `mec:startDate`, `startHour`, `endDate`, `endHour`, `location`, `category`); `wp-json/wp/v2/mec-events` (no dates except in titles); per-event iCal `/?method=ical&id=<post>`; event pages carry MEC JSON-LD `Event` with `location.name` | Yoast block, `User-agent: *` `Disallow:` (empty) = allow all | `wp-json/mec/v1/events` returns `[]`; `?mec-ical-feed=1` returns the home page (site-wide iCal off). RSS: 5 items now (the 4 "Preludio di Stagione" chamber concerts + "Risonanze", 3–4 Oct), `?paged=2` returns the same 5. The 2026/27 season (105th) is not posted yet; last year's ~45 posts were created on 2025-10-06 (16 season concerts at Zandonai / Auditorium Melotti, Musica in Biblioteca, family and school concerts). MEC categories: Stagione dei Concerti, Stagione Sinfonica, Preludio di Stagione, Musica in biblioteca, Concerti per le famiglie, Concerti per le scuole, Apprendista Musicista, Brentonico Classica, Mart Music, Eventi Speciali. | **ADD** `filarmonica-rovereto`: RSS + REST + per-event iCal fallback + JSON-LD venue names. 8 requests today (robots, RSS, REST, 5 venue pages); at season start up to ~50. |
+| Sala Filarmonica di Rovereto | — | — | The choir seminar there (Federazione Cori, Jan 2027) comes from cultura-trentino; it is a venue, not the association's programme. | — |
+
+Dedup checks (2026-09-30 crawl): "Camera 02" (3 Oct 20:00) merges across
+`filarmonica-rovereto`, `cultura-trentino` and `rovereto`; "Il segreto di
+Francesco" (4 Oct 20:30) merges `cultura-trentino` + `trentinospettacoli` +
+`rovereto-comune`'s subtitled copy (new second dedup pass). Last season's
+lists show Filarmonica season concerts at the Zandonai (e.g. "Un Americano a
+Parigi", 28 Oct 2025) in both `zandonai` (capitals) and `filarmonica-rovereto`
+with the same title and date, so they should merge and keep the natural-case
+title. This was not exercised end to end: neither source has such a concert
+in the window today.
+
 ---
 
 # Merano / Meran + Bressanone / Brixen (ring 1) — done 2026-09-29

@@ -220,7 +220,7 @@ export function matchCategories(...texts: (string | null | undefined)[]): Catego
 const KIDS_TITLE = [
   'bambin*', 'bimb*', 'per ragazzi', 'teatro ragazzi', 'teatro per ragazzi', 'famiglie', 'per famiglie',
   'in famiglia', 'family day', 'family friendly', 'for families', 'agrifamily', 'kids',
-  'per i piccoli', 'piccoli lettori', 'piccole mani',
+  'per i piccoli', 'piccoli lettori', 'piccole mani', 'festival dei piccoli',
   'genitori e figli', 'mamma e papa', 'letture animate', 'lettura animata', 'nati per leggere',
   'nati per la musica', 'fiaba', 'fiabe', 'burattin*', 'marionett*', 'scuola dell infanzia',
   'scuole dell infanzia', 'scuola primaria', 'scuole primarie', 'per le scuole', 'per la scuola',

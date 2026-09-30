@@ -842,17 +842,44 @@ sync can come later).
         bolzano widened to Merano and Bressanone (ODH, 650 events), `gardaveneto` (71),
         `padova` Comune JSON:API (near, 103), `tcvi` Teatro Comunale Vicenza
         (near, 84).
-      - **TODO next** [opus]: finish `adapters/municipium.ts` (written, NOT
-        registered, unverified). It is a factory for Comune di Mantova (about 55–60), Comune di
-        Brescia (about 20) and later Garda/Peschiera. Then add from the census:
-        CTB Brescia (46 productions, 1 request), Teatro Grande Brescia (about 40),
-        Arteven (`myarteven.it` embedded JSON: Bassano + Vicenza-province
-        theatres, 202 events, 1 request, 3.7 MB; dedup with tcvi), Teatro Stabile
-        del Veneto (POST JSON API, keep Padova only, 38), and optionally Teatro Sociale
-        Mantova (19, no year in the cards). Deferred: Comune di Vicenza OpenCity
-        (21 MB per 30 days). Spot candidate: Operaestate Bassano (summer).
-        Then run a full crawl, review the page Area filter in the browser, and record
-        per-source notes here.
+      - [x] Ring-2 sources, done 2026-09-30 [opus], not yet committed.
+        Municipium factory registered and verified; new adapters `ctb.ts`,
+        `teatrogrande.ts`, `arteven.ts`, `stabileveneto.ts`, `teatrosociale.ts`.
+        Full crawl: 26 sources all ok, 2,187 events after dedup, 125 requests,
+        213 s. Published (after 180-day window + ring-2 interest filter):
+        mantova 19 (of 57), brescia 14 (of 19), teatrosociale-mantova 15,
+        ctb 29, teatrogrande 29, arteven 81 (21 merged with tcvi),
+        stabileveneto 33 (Padova). Crawler gained `ctx.postJson`, one retry on
+        dropped connections, shared `titleCase`. Area filter checked at 390px
+        (Veneto 270, Lombardia 106, Spot badge intact). Details in
+        docs/EVENTS.md and docs/EVENTS_CENSUS.md.
+        Unverified: Stabile del Veneto images, Teatro Grande kids rule on live
+        data; some family shows may slip past the keyword kids tag.
+        Follow-ups [sonnet]: per-night dates for CTB/Stabile from detail pages;
+        Garda/Peschiera as Municipium config lines only if garda-veneto
+        misses things; Operaestate in spot.json next summer. Deferred:
+        Comune di Vicenza OpenCity (21 MB per 30 days).
+      - [x] **Rovereto: Zandonai + Filarmonica** [opus], done 2026-09-30, not
+        committed. `zandonai` was never misconfigured: the theatre's own site
+        lists 1 show too. Last season's whole prose/dance programme went up in
+        one batch on 2025-10-07, so it arrives by itself in early/mid October.
+        Improved: venue set, caps title-cased, "ANNULLATO" dropped, kids tag
+        for "Festival dei piccoli". New source `filarmonica-rovereto`
+        (`adapters/filarmonica.ts`: RSS + WP REST + per-event iCal, max 40 iCal
+        + 8 venue pages per run; 5 events now). New dedup passes in
+        `pipeline.ts`: natural-case title wins, and subtitled copies merge
+        (same start + town, one title starts with the other). Full crawl:
+        27 sources ok, 2,201 events, 133 requests, 225 s.
+        Unverified: the fill-in path on a real season's volume; a Filarmonica
+        concert at the Zandonai merging with the `zandonai` record; the iCal
+        4 h end-time guess.
+      - [ ] **Watch after ~10 Oct 2026** [orchestrator]: the Zandonai season
+        (~40 shows) and the Filarmonica season arrive, and
+        `filarmonica-rovereto` stays under its 60-request cap.
+      - [ ] Tag follow-ups [sonnet, XS]: `fantasy` in `nerd` fires on music
+        (limit to title/summary); Zandonai opera ("Progetto Opera") lands in
+        `concerts`; `titleCase` should keep "ci/vi/ne" lowercase; check
+        "Apprendista Musicista" target age for the kids tag.
       Next steps, in order:
       1. [opus, research only, no code] Source census for the new ring-1 and
          ring-2 towns: do they have an allowed structured calendar? Check

@@ -106,14 +106,26 @@ export class PoliteHttp {
     await mine
   }
 
-  private async rawGet(url: URL, redirect: 'follow' | 'manual'): Promise<Response> {
+  private async rawGet(url: URL, redirect: 'follow' | 'manual', retried = false, body?: string): Promise<Response> {
     await this.slot(url.host)
     this.requests++
-    return fetch(url, {
-      redirect,
-      headers: { 'User-Agent': USER_AGENT, Accept: '*/*' },
-      signal: AbortSignal.timeout(TIMEOUT_MS),
-    })
+    try {
+      return await fetch(url, {
+        redirect,
+        headers: body === undefined
+          ? { 'User-Agent': USER_AGENT, Accept: '*/*' }
+          : { 'User-Agent': USER_AGENT, Accept: 'application/json', 'Content-Type': 'application/json' },
+        signal: AbortSignal.timeout(TIMEOUT_MS),
+        ...(body === undefined ? {} : { method: 'POST', body }),
+      })
+    } catch (e) {
+      // A server closing a reused keep-alive socket ("other side closed",
+      // seen on myarteven.it) is not an answer: retry once, after the usual
+      // per-host delay. Timeouts and DNS errors are not retried.
+      const code = (e as { cause?: { code?: string } }).cause?.code
+      if (!retried && (code === 'UND_ERR_SOCKET' || code === 'ECONNRESET')) return this.rawGet(url, redirect, true, body)
+      throw e
+    }
   }
 
   private robotsFor(url: URL): Promise<Robots> {
@@ -164,12 +176,36 @@ export class PoliteHttp {
     throw new Error(`too many redirects for ${href}`)
   }
 
+  /**
+   * POST a JSON body (APIs that only answer POST, e.g. Teatro Stabile del
+   * Veneto's list). Same robots check, delay and timeout as a GET; redirects
+   * are not followed (a POST API that redirects is an error).
+   */
+  async post(href: string, body: unknown): Promise<FetchResult> {
+    const url = new URL(href)
+    await this.assertAllowed(url)
+    const res = await this.rawGet(url, 'manual', false, JSON.stringify(body))
+    const text = await res.text()
+    if (!res.ok) throw new Error(`HTTP ${res.status} for POST ${url.href}`)
+    return { status: res.status, url: url.href, text }
+  }
+
   /** A per-source view with its own request budget. */
   context(sourceId: string, maxRequests: number, now: number, horizonDays: number): AdapterContext {
     let used = 0
-    const fetchText = async (url: string): Promise<FetchResult> => {
+    const budget = () => {
       if (used >= maxRequests) throw new Error(`${sourceId}: request cap (${maxRequests}) reached`)
       used++
+    }
+    const parse = <T>(res: FetchResult): T => {
+      try {
+        return JSON.parse(res.text) as T
+      } catch {
+        throw new Error(`invalid JSON from ${res.url}: ${res.text.slice(0, 120)}`)
+      }
+    }
+    const fetchText = async (url: string): Promise<FetchResult> => {
+      budget()
       return this.get(url)
     }
     return {
@@ -177,12 +213,11 @@ export class PoliteHttp {
       horizonDays,
       fetchText,
       async fetchJson<T>(url: string): Promise<T> {
-        const res = await fetchText(url)
-        try {
-          return JSON.parse(res.text) as T
-        } catch {
-          throw new Error(`invalid JSON from ${res.url}: ${res.text.slice(0, 120)}`)
-        }
+        return parse<T>(await fetchText(url))
+      },
+      postJson: async <T>(url: string, body: unknown): Promise<T> => {
+        budget()
+        return parse<T>(await this.post(url, body))
       },
     }
   }

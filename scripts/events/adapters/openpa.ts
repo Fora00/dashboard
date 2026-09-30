@@ -22,7 +22,7 @@ import type { Adapter, AdapterContext, RawEvent } from '../types.ts'
 import type { CategoryId } from '../tags.ts'
 import type { AreaId, Ring } from '../areas.ts'
 import { addDays, localToIso, normalizeIso, romeDate } from '../time.ts'
-import { absUrl, cityFromAddress, firstNonEmpty, htmlToText } from '../text.ts'
+import { absUrl, cityFromAddress, firstNonEmpty, htmlToText, titleCase } from '../text.ts'
 
 export interface OpenPaConfig {
   id: string
@@ -49,6 +49,12 @@ export interface OpenPaConfig {
    * Without `to`, the event is a single moment at `from` (e.g. a show).
    */
   timeFields?: { from: string; to?: string }
+  /** Venue when the object names none (a single-venue site, e.g. a theatre). */
+  venue?: string
+  /** Title-case titles written entirely in capitals ("IL LAGO DEI CIGNI"). */
+  fixCaps?: boolean
+  /** Drop objects whose title matches (e.g. "… - ANNULLATO"). */
+  skipTitle?: RegExp
 }
 
 const PAGE = 100
@@ -108,7 +114,7 @@ function imageUrl(d: Json, host: string): string | null {
 /** Venue, city, texts, image and tag text from an OpenPA data block (any class). */
 function extract(d: Json, cfg: OpenPaConfig) {
   const places = ['takes_place_in', 'virtual_takes_place_in', 'site', 'luogo', 'luogo_svolgimento', 'luogo_della_cultura']
-  const venue = places.flatMap((k) => names(d[k]))[0] ?? (typeof d.presso === 'string' ? d.presso : null) ?? null
+  const venue = places.flatMap((k) => names(d[k]))[0] ?? (typeof d.presso === 'string' ? d.presso : null) ?? cfg.venue ?? null
   const addr = [...places.flatMap((k) => addresses(d[k])), ...addresses(d.geo), ...addresses(d.gps)]
   const city = cfg.fixedCity
     ? cfg.city
@@ -133,8 +139,9 @@ function extract(d: Json, cfg: OpenPaConfig) {
 }
 
 function cleanTitle(title: string, cfg: OpenPaConfig): string {
-  const t = title.replace(/''/g, '"').replace(/\s+/g, ' ').trim()
-  return cfg.titlePrefix ? t.replace(cfg.titlePrefix, '').trim() || t : t
+  let t = title.replace(/''/g, '"').replace(/\s+/g, ' ').trim()
+  if (cfg.titlePrefix) t = t.replace(cfg.titlePrefix, '').trim() || t
+  return cfg.fixCaps && /\p{Lu}{2}/u.test(t) && !/\p{Ll}/u.test(t) ? titleCase(t) : t
 }
 
 /** A legacy event whose times are both local midnight is treated as all-day. */
@@ -186,6 +193,7 @@ async function runSearch(cfg: OpenPaConfig, ctx: AdapterContext): Promise<RawEve
         allDay = false
       }
       const title = cleanTitle(firstNonEmpty(d.titolo as string, loc(meta.name) as string), cfg)
+      if (cfg.skipTitle?.test(title)) continue
       const x = extract(d, cfg)
       out.push({
         nativeId: String(meta.id),
@@ -252,10 +260,12 @@ async function runCalendar(cfg: OpenPaConfig, ctx: AdapterContext): Promise<RawE
       const extradata = asObj(asObj(content.extradata)?.['ita-IT']) ?? {}
       const path = item.extendedProps?.location ?? (extradata.urlAlias as string | undefined)
       const x = extract(d, cfg)
+      const title = cleanTitle(item.title ?? firstNonEmpty(d.event_title as string), cfg)
+      if (cfg.skipTitle?.test(title)) continue
       byKey.set(key, {
         nativeId: key,
         seriesKey: String(item.id),
-        title: cleanTitle(item.title ?? firstNonEmpty(d.event_title as string), cfg),
+        title,
         start: startIso,
         end: endIso,
         allDay,

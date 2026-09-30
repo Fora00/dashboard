@@ -111,7 +111,16 @@ function richness(e: Event): number {
   return (e.end ? 1 : 0) + (e.venue ? 1 : 0) + (e.image ? 1 : 0) + (e.allDay ? 0 : 1) + Math.min(e.description.length, 600) / 200
 }
 
-/** Same normalised title + local start date + city = same event; keep the richer record. */
+/**
+ * Of two titles that normalise alike, the one in natural case: it has
+ * lowercase letters and fewer capitals ("Il segreto di Francesco" over
+ * "Il Segreto di Francesco" over "IL SEGRETO DI FRANCESCO"). Ties keep `a`.
+ */
+function naturalTitle(a: string, b: string): string {
+  const score = (t: string) => (/\p{Ll}/u.test(t) ? (t.match(/\p{Lu}/gu)?.length ?? 0) : Infinity)
+  return score(b) < score(a) ? b : a
+}
+
 /**
  * Events carried over from an older events.json (before `area`/`ring`
  * existed) get them from their adapter; a `near` source's old events are
@@ -124,32 +133,70 @@ export function withPlace(adapter: Adapter, events: Event[]): Event[] {
     .map((e) => ({ ...e, area: e.area ?? areaFor(e.city ?? '', adapter.area ?? 'trentino'), ring: e.ring ?? ring }))
 }
 
+/** Same normalised title + local start date + city = same event; keep the richer record. */
+/** Two records of one event → the richer one, its gaps filled from the other. */
+function merge(a: Event, b: Event): Event {
+  const [keep, drop] = richness(b) > richness(a) ? [b, a] : [a, b]
+  const kids = keep.tags.includes('kids') || drop.tags.includes('kids')
+  const merged = [...keep.tags, ...drop.tags].filter((t) => t !== 'kids' && t !== 'other' && !(kids && t === 'creative')) as CategoryId[]
+  let category = keep.category === 'other' ? drop.category : keep.category
+  if (kids && category === 'creative') category = merged[0] ?? 'other'
+  return {
+    ...keep,
+    title: normalize(keep.title) === normalize(drop.title) ? naturalTitle(keep.title, drop.title) : keep.title,
+    // Fill what the kept record lacks from the duplicate.
+    end: keep.end ?? (keep.allDay === drop.allDay ? drop.end : null),
+    venue: keep.venue ?? drop.venue,
+    image: keep.image ?? drop.image,
+    description: keep.description || drop.description,
+    summary: keep.summary || drop.summary,
+    category,
+    tags: finishTags(category, merged, kids),
+    sources: [...new Set([...keep.sources, ...drop.sources])].sort(),
+    ring: closerRing(keep.ring, drop.ring),
+  }
+}
+
+/**
+ * Second, narrow pass: timed events at the SAME instant in the same city,
+ * from different sources, where one normalised title (3+ words) is a word
+ * prefix of the other — "Il segreto di Francesco" (Trentino Cultura) and
+ * "Il segreto di Francesco. Lo spirito del Santo di Assisi, oggi" (Rovereto).
+ */
+function mergeSubtitled(events: Event[]): Event[] {
+  const groups = new Map<string, Event[]>()
+  const out: Event[] = []
+  for (const e of events) {
+    if (e.allDay) { out.push(e); continue }
+    const key = `${Date.parse(e.start)}|${normalize(e.city)}`
+    groups.set(key, [...(groups.get(key) ?? []), e])
+  }
+  for (const group of groups.values()) {
+    // Shortest title first, so each longer one folds into its prefix.
+    const rest = group.sort((a, b) => normalize(a.title).length - normalize(b.title).length)
+    const kept: Event[] = []
+    for (const e of rest) {
+      const t = normalize(e.title)
+      const i = kept.findIndex((k) => {
+        const p = normalize(k.title)
+        return p.split(' ').length >= 3 && t.startsWith(`${p} `) && !k.sources.some((s) => e.sources.includes(s))
+      })
+      if (i < 0) kept.push(e)
+      else kept[i] = merge(kept[i] as Event, e)
+    }
+    out.push(...kept)
+  }
+  return out
+}
+
 export function dedup(events: Event[]): Event[] {
   const byKey = new Map<string, Event>()
   for (const e of events) {
     const key = dedupKey(e)
     const prev = byKey.get(key)
-    if (!prev) { byKey.set(key, e); continue }
-    const [keep, drop] = richness(e) > richness(prev) ? [e, prev] : [prev, e]
-    const kids = keep.tags.includes('kids') || drop.tags.includes('kids')
-    const merged = [...keep.tags, ...drop.tags].filter((t) => t !== 'kids' && t !== 'other' && !(kids && t === 'creative')) as CategoryId[]
-    let category = keep.category === 'other' ? drop.category : keep.category
-    if (kids && category === 'creative') category = merged[0] ?? 'other'
-    byKey.set(key, {
-      ...keep,
-      // Fill what the kept record lacks from the duplicate.
-      end: keep.end ?? (keep.allDay === drop.allDay ? drop.end : null),
-      venue: keep.venue ?? drop.venue,
-      image: keep.image ?? drop.image,
-      description: keep.description || drop.description,
-      summary: keep.summary || drop.summary,
-      category,
-      tags: finishTags(category, merged, kids),
-      sources: [...new Set([...keep.sources, ...drop.sources])].sort(),
-      ring: closerRing(keep.ring, drop.ring),
-    })
+    byKey.set(key, prev ? merge(prev, e) : e)
   }
-  return [...byKey.values()]
+  return mergeSubtitled([...byKey.values()])
 }
 
 export function sortEvents(events: Event[]): Event[] {

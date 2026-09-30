@@ -81,6 +81,8 @@ export interface AdapterContext {
   /** Polite GET: robots.txt, per-host delay, timeout, per-source request cap. Throws on non-2xx. */
   fetchText(url: string): Promise<FetchResult>
   fetchJson<T = unknown>(url: string): Promise<T>
+  /** Polite POST of a JSON body, JSON answer (same robots/delay/cap rules). For POST-only APIs. */
+  postJson<T = unknown>(url: string, body: unknown): Promise<T>
   /** Crawl time (ms since epoch) and the window adapters should ask their source for. */
   now: number
   horizonDays: number

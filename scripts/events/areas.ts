@@ -73,6 +73,8 @@ const TOWNS: Record<AreaId, string[]> = {
   veneto: [
     'Vicenza', 'Padova', 'Bassano del Grappa', 'Venezia', 'Treviso', 'Belluno', 'Rovigo',
     'Schio', 'Thiene', 'Marostica', 'Asiago', 'Castelfranco Veneto',
+    // Arteven's Vicenza-province theatres
+    'Cassola', 'Rosà', 'Valdagno', 'Noventa Vicentina', 'Fontaniva',
   ],
   lombardia: [
     'Brescia', 'Mantova', 'Milano', 'Bergamo', 'Cremona', 'Sirmione', 'Desenzano del Garda',

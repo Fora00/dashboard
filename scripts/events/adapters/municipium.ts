@@ -11,6 +11,12 @@
 // title + link in `a[data-element=event-link]`; `.card-text` short text;
 // topic chips; a protocol-relative image. No times on the listing: events
 // are all-day.
+//
+// Mantova appends the date to its titles ("Laura Pausini - 1 ottobre",
+// "Pax Tibi - dal 3 ottobre al 6 gennaio") and gives only the FIRST day in
+// the pretitle even for an exhibition: that suffix is stripped from the
+// title (so dedup and the page see the plain name) and a range in it sets
+// the last day. Repeated titles (monthly reading groups) share a seriesKey.
 import type { Adapter, AdapterContext, RawEvent } from '../types.ts'
 import type { CategoryId } from '../tags.ts'
 import type { AreaId, Ring } from '../areas.ts'
@@ -40,6 +46,33 @@ const TYPE_HINT: [RegExp, CategoryId][] = [
   [/^festival|^fiera|^sagra/, 'festivals'],
 ]
 
+const MONTH_RE = MONTHS.join('|')
+/** Trailing " - 3 ottobre", " - Dal 16 al 18 ottobre", ". dal 10 ottobre al 10 gennaio 2027". */
+const TITLE_DATE = new RegExp(
+  `\\s*[-–.]\\s*(?:dal?\\s+)?(\\d{1,2})(?:\\s+(${MONTH_RE}))?(?:\\s+(\\d{4}))?` +
+  `(?:\\s+al?\\s+(\\d{1,2})\\s+(${MONTH_RE})(?:\\s+(\\d{4}))?)?\\s*$`,
+  'i',
+)
+
+/**
+ * Split a date suffix off a title. `last` is the range end, when there is
+ * one: its year is explicit, else the first year after `first` that puts it
+ * on or after `first` ("dal 3 ottobre al 6 gennaio" crosses New Year).
+ */
+export function splitTitleDate(title: string, first: string): { title: string; last: string | null } {
+  const m = title.match(TITLE_DATE)
+  // A bare number without a month is not a date ("Festa - 2").
+  if (!m || (!m[2] && !m[5])) return { title, last: null }
+  const rest = title.slice(0, m.index).trim()
+  if (!rest) return { title, last: null }
+  if (!m[4]) return { title: rest, last: null }
+  const month = MONTHS.indexOf((m[5] ?? '').toLowerCase()) + 1
+  let year = m[6] ? Number(m[6]) : Number(first.slice(0, 4))
+  const ymd = (y: number) => `${y}-${String(month).padStart(2, '0')}-${(m[4] ?? '').padStart(2, '0')}`
+  if (!m[6] && ymd(year) < first) year++
+  return { title: rest, last: ymd(year) }
+}
+
 function parseDate(text: string): string | null {
   const m = normalize(text).match(/(\d{1,2}) ([a-z]+) (\d{4})/)
   const month = m ? MONTHS.indexOf(m[2] ?? '') : -1
@@ -60,12 +93,13 @@ export function municipium(cfg: MunicipiumConfig): Adapter {
         const pre = card.match(/card-pretitle">([\s\S]*?)<\/span>/)?.[1] ?? ''
         if (!link) continue
         const url = absUrl(decodeEntities(link[1] ?? ''), base)
-        const title = htmlToText(link[2] ?? '')
-        if (!url || !title || out.has(url)) continue
+        const fullTitle = htmlToText(link[2] ?? '')
+        if (!url || !fullTitle || out.has(url)) continue
         const [fromText = '', toText = ''] = pre.split(/<br\s*\/?>/i)
         const first = parseDate(fromText)
         if (!first) continue
-        const last = (toText && parseDate(toText)) || first
+        const { title, last: titleLast } = splitTitleDate(fullTitle, first)
+        const last = (toText && parseDate(toText)) || titleLast || first
         const type = htmlToText(card.match(/<div class="category[^"]*">([\s\S]*?)<\/div>/)?.[1] ?? '')
         const topics = [...card.matchAll(/chip-label">([^<]*)</g)].map((m) => htmlToText(m[1] ?? ''))
         const summary = htmlToText(card.match(/<p class="card-text">([\s\S]*?)<\/p>/)?.[1] ?? '')
@@ -73,6 +107,7 @@ export function municipium(cfg: MunicipiumConfig): Adapter {
         const hint = TYPE_HINT.find(([re]) => re.test(normalize(type)))?.[1]
         out.set(url, {
           nativeId: url,
+          seriesKey: `${cfg.id}:${normalize(title)}`,
           title,
           start: dateToIso(first),
           end: dateToIso(last < first ? first : last),

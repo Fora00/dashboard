@@ -124,8 +124,25 @@ Across sources, two events are the same when **normalised title** (lowercase,
 accents stripped, punctuation/whitespace collapsed) + **local start date** +
 **normalised city** match. The richer record is kept (end time, venue, image,
 timed rather than all-day, longer description), its missing fields are filled
-from the other, `tags` are unioned and `sources` lists both. Within one
+from the other, `tags` are unioned and `sources` lists both. The title
+comparison ignores case, so Arteven's capitals merge with TCVI's mixed case
+(21 Vicenza performances on 2026-09-30); a subtitle difference ("Frida Opera
+Musical" / "Frida - Opera Musical") still matches because punctuation is
+collapsed, but different wording does not (Comune di Brescia's "Stagione
+Teatro Grande 2026" vs Teatro Grande's "Sonoma"). Within one
 source, duplicate ids are dropped.
+
+The merged record takes the title in **natural case** among the matching
+ones: the one with lowercase letters and the fewest capitals (Trentino
+Cultura's "Il segreto di Francesco" over the Zandonai's title-cased "Il
+Segreto di Francesco"). Added 2026-09-30.
+
+A second, narrow pass (added 2026-09-30) merges **subtitled copies**:
+timed events at the same instant in the same city, from different sources,
+where one normalised title of 3+ words is a word prefix of the other ("Il
+segreto di Francesco" / "Il segreto di Francesco. Lo spirito del Santo di
+Assisi, oggi"). On the 2026-09-30 data it merged exactly two pairs, both
+right. Here the kept (richer) record's title stays.
 
 ### Ids
 
@@ -219,10 +236,22 @@ hide these events (the dashboard page does). A `kids` event never has
 | `verona` | www.comune.verona.it | OpenPA calendar | robots disallows `/api/` and `/content/search`, explicitly Allows `/opendata/api/calendar` |
 | `cultura-trentino` | www.cultura.trentino.it (Provincia, "Trentino Cultura") | OpenPA `/opendata/api/content/search/`, class `event` | whole province; town from the `comune` relation; date-only events get a time from `orario_svolgimento` when it names exactly one ("ore 20.30"); robots `Crawl-delay: 10` (honoured); images are relations only (null) |
 | `rovereto-comune` | www.comune.rovereto.tn.it (ViviRovereto agenda) | OpenPA calendar, class `event` | robots Allows only `/opendata/api/calendar`; the municipal highlights (RAM film festival, season preludes) — `rovereto` above is the library's agenda |
-| `zandonai` | www.teatro-zandonai.it (official) | OpenPA search, class `spettacolo`, `main_datetime` | same install as Rovereto; one request; often empty between seasons (`mayBeEmpty`). teatrozandonai.it (no hyphen) is an unofficial, stale fan site |
+| `zandonai` | www.teatro-zandonai.it (official) | OpenPA search, class `spettacolo`, `main_datetime` | same install as Rovereto; one request. Correctly configured and complete: it is the theatre's own programme (83 objects in 2025/26). The prose + dance season is published in **one batch in early October** (2025-10-07, up to 5 months ahead); other shows ~2 weeks ahead, so it is nearly empty in September (`mayBeEmpty`). Fixed venue "Teatro Zandonai"; all-caps titles title-cased (`fixCaps`); "… - ANNULLATO" dropped (`skipTitle`); the series ("STAGIONE TEATRALE", "FESTIVAL DEI PICCOLI" → `kids`) is the subtitle, in tagText. teatrozandonai.it (no hyphen) is an unofficial, stale fan site |
+| `filarmonica-rovereto` | www.filarmonicarovereto.it (Associazione Filarmonica di Rovereto; not the Trento one) | WordPress + Modern Events Calendar: RSS `/events/feed/` (`mec:startDate`/`startHour`/`location`/`category`), then `wp/v2/mec-events` + per-event iCal `/?method=ical&id=<post>` for upcoming posts the RSS left out | robots allows all. RSS ignores `?paged=` and is probably capped at WP's posts-per-feed, so a freshly published season (~45 posts, created in one batch in early October) is completed from REST (dates only in titles "… \| 03.10.2026") + iCal (≤ 40/run). Venue names from the MEC JSON-LD `Place` of one event page per distinct address (≤ 8). "Preludio di Stagione – " prefix and the "\| date" suffix stripped from titles (so "Camera 02" merges with Trentino Cultura). "Concerti per le scuole" dropped; "Concerti per le famiglie" → `kids`. iCal ends > 4 h after the start (MEC defaults) dropped. `mayBeEmpty` (quiet in summer) |
 | `buonconsiglio` | www.buonconsiglio.it (Buonconsiglio, Thun, Beseno, Stenico, Caldes) | Events Manager `/events.ics` | its CATEGORIES ("Adulti", "Famiglie e bambini", "Scuole") feed the `kids` tag |
 | `trentinospettacoli` | www.trentinospettacoli.it (Coordinamento Teatrale Trentino box office) | schema.org Event microdata on `/eventi/` + WP REST `eventi` categories | one listing page + 2–3 REST calls; "Teatro ragazzi" → `kids`, "Cinema" → `cinema`, other "Spettacoli" without a keyword → `theatre`; no descriptions |
 | `tebe` | www.apstebe.org (Tebe APS, Teatro comunale di Bedollo) | static HTML cards (Next.js page, no feed) | one request; no per-event pages, links to `#eventi`; `mayBeEmpty` |
+| `garda-veneto` | www.lagodigardaveneto.com (ring 1, `verona-garda`) | HTML listing `?page=N` with per-card `data-gtm-el` JSON | ~11 pages; ranges become all-day spans |
+| `padova` | www.comune.padova.it (ring 2) | Drupal JSON:API `/api/events` | date filters in unix seconds; 2 pages |
+| `stabileveneto` | Teatro Stabile del Veneto (ring 2): Teatro Verdi, Ridotto, Foyer, Teatro Maddalene | **POST** JSON `api.teatrostabileveneto.it/api/Public/eventslist` (`ctx.postJson`) | 1 request; Padova only (Treviso/Venezia dropped); one all-day range per production (no nightly times); genre "Concertistica" → `concerts`, anything else → `theatre` |
+| `tcvi` | www.tcvi.it (ring 2): Teatro Comunale Vicenza, Olimpico | one static HTML page, one card per performance | 1 request; school and family-show types dropped |
+| `arteven` | www.myarteven.it (ring 2): Arteven circuit — Bassano (Teatro Remondini), Vicenza, Thiene, Schio… | JSON array `rappresentazionitotal` inlined in the home page | 1 request, ~3.7 MB; only `(VI)` theatres + Padova; capitals title-cased; weekday-morning shows (school matinées) dropped; children's rassegne → `kids`; Vicenza shows merge with `tcvi` in dedup |
+| `mantova` | www.comune.mantova.it (ring 2) | Municipium HTML listing `/it/eventi?page=N` (`municipium()` factory) | ~5 requests; the date suffix of titles ("- dal 3 ottobre al 6 gennaio") is stripped and sets the range end |
+| `teatrosociale-mantova` | www.teatrosocialemantova.it (ring 2) | HTML "calendar band" on `/it-it/spettacoli.aspx` | 1 request; no year on the cards: the year (this or next) whose date falls on the card's weekday; "spostato/annullato" rows dropped; `mayBeEmpty` |
+| `brescia` | www.comune.brescia.it (ring 2) | Municipium HTML listing (same factory) | ~3 requests; range cards ("Da … a …") |
+| `ctb` | www.centroteatralebresciano.it (ring 2): CTB, Teatro Sociale + Mina Mezzadri | static HTML listing `/spettacoli/` | 1 request; one all-day range per production (first night's time in the summary); morning-only productions (school matinées) dropped; no descriptions or venues |
+| `teatrogrande` | teatrogrande.it (ring 2): Teatro Grande Brescia | static HTML calendar `/it/calendario`, `data-date` per row | 1 request; café opening-hours rows dropped except "Aperitivo in Jazz"; "under 11"/"Educational" rows → `kids` |
+| `spot` | `scripts/events/spot.json` (hand-curated) | no network | see "Spot events" |
 
 Not included (checked 2026-09-29):
 
@@ -260,6 +289,9 @@ Not included (checked 2026-09-29):
   404/410 = allow all; any other failure = the host is skipped with an error.
 - A disallowed URL is never requested. Redirects are followed by hand and
   every hop is checked against its host's robots.txt.
+- A request whose socket the server closes before answering (a stale
+  keep-alive, seen on myarteven.it) is retried once, after the usual delay.
+  POST (only `stabileveneto`) goes through the same robots check and delay.
 - At least 1.5 s between requests to the same host — more when robots.txt
   sets a `Crawl-delay` (our group or `*`, capped at 30 s); 20 s timeout; at
   most 60 requests per source per run. Sources run one after another. Daily.
@@ -303,18 +335,25 @@ It is type-checked by `npm run build` (`tsconfig.node.json`) and linted by
    `__NEXT_DATA__`/CMS API) over rendered markup.
 2. An OpenPA site is one entry in `scripts/events/adapters/index.ts`:
    `openpa({ id, name, host, mode: 'search' | 'calendar', classes, city })`.
+   A Municipium (Maggioli) comune site is one
+   `municipium({ id, name, host, city, area, ring })` entry
+   (`adapters/municipium.ts`; Garda and Peschiera would be further lines).
    Use `calendar` where robots only allows `/opendata/api/calendar`, `search`
    where `/opendata/api/content/search` is allowed and the calendar is not
    configured ("Environment 'calendar' bad configuration").
    A class with other date fields (e.g. `spettacolo` with a single
    `main_datetime`) takes `timeFields: { from: 'main_datetime' }`.
+   A single-venue site takes `venue` (used when an object names none);
+   `fixCaps` title-cases titles written in capitals; `skipTitle` drops
+   objects by title (cancellations).
    An iCal feed (The Events Calendar `?ical=1`, Events Manager
    `/events.ics`) is one `ical({ id, name, feed, home, city })` entry
    (`adapters/ical.ts`).
 3. Anything else: a new `scripts/events/adapters/<id>.ts` exporting an
    `Adapter` (`id`, `name`, `defaultCategory`, optional `mayBeEmpty` /
    `maxRequests`, `run(ctx)`), using only `ctx.fetchText`/`ctx.fetchJson`
-   (they enforce robots, delay, timeout and the request cap). Return
+   (they enforce robots, delay, timeout and the request cap; a POST-only
+   JSON API uses `ctx.postJson(url, body)`, same rules). Return
    `RawEvent`s — the orchestrator derives ids, tags, window, folding and
    dedup. Build times with `localToIso`/`dateToIso`/`normalizeIso` from
    `time.ts`. Give `seriesKey` to occurrences of one series.
