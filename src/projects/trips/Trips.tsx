@@ -17,6 +17,9 @@ import { useAuth } from '../../lib/useAuth'
 import { useOwner } from '../../lib/useOwner'
 import { useUndoSnackbar } from '../../lib/useUndoSnackbar'
 import { Button } from '../../components/Button'
+import { Chip } from '../../components/Chip'
+import { FOCUS_RING_INSET } from '../../components/focus'
+import { ListRow } from '../../components/ListRow'
 import { PageHeader } from '../../components/PageHeader'
 import { EmptyState } from '../../components/EmptyState'
 import { SyncCard } from '../../components/SyncCard'
@@ -36,9 +39,6 @@ const FILTER_LABELS: [Filter, string][] = [
   ['solo', 'Solo'],
   ['group', 'With others'],
 ]
-
-const ROW_BTN =
-  'rounded-lg border border-slate-200 bg-white transition-colors hover:border-slate-400 active:bg-slate-100 dark:border-slate-800 dark:bg-slate-800/50 dark:hover:border-slate-600 dark:active:bg-slate-800'
 
 function Badge({ idea, byId }: { idea: TripIdea; byId: Map<string, TripCompanion> }) {
   const base = 'shrink-0 rounded bg-slate-100 px-1.5 py-0.5 text-[10px] text-slate-600 dark:bg-slate-700/60 dark:text-slate-300'
@@ -98,17 +98,17 @@ function IdeaEditor({
         defaultValue={idea.title}
         onBlur={(e) => void saveTitle(e.target)}
         maxLength={MAX_TITLE_LENGTH}
-        placeholder="Title…"
-        className="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none dark:border-slate-700 dark:bg-slate-800"
+        aria-label={`Title of ${idea.title}`} placeholder="Title…"
+        className="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-indigo-300 dark:border-slate-700 dark:bg-slate-800"
       />
       <textarea
         key={`notes-${idea.id}`}
         defaultValue={idea.notes}
         onBlur={(e) => void saveNotes(e.target.value)}
-        placeholder="Notes…"
+        aria-label={`Notes for ${idea.title}`} placeholder="Notes…"
         rows={3}
         maxLength={MAX_NOTES_LENGTH}
-        className="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none dark:border-slate-700 dark:bg-slate-800"
+        className="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-indigo-300 dark:border-slate-700 dark:bg-slate-800"
       />
       <PeoplePicker
         idPrefix={`edit-${idea.id}`}
@@ -212,19 +212,17 @@ export function Trips() {
       <li key={idea.id}>
         <SwipeableRow onSwipeRight={() => void toggleDone(idea)} onSwipeLeft={() => void remove(idea)}>
           <div className="flex items-stretch gap-2">
-            <button
-              type="button"
+            <ListRow
               onClick={() => void toggleDone(idea)}
               aria-label={done ? 'Mark as not been there' : 'Mark as been there'}
-              className={`flex min-h-12 w-10 shrink-0 items-center justify-center text-lg ${ROW_BTN}`}
+              className="flex min-h-12 w-10 shrink-0 items-center justify-center text-lg"
             >
               {done ? '●' : '○'}
-            </button>
-            <button
-              type="button"
+            </ListRow>
+            <ListRow
               onClick={() => setExpandedId((cur) => (cur === idea.id ? null : idea.id))}
               aria-expanded={expanded}
-              className={`flex min-h-12 w-full min-w-0 flex-1 flex-col items-start justify-center gap-0.5 px-4 py-2 text-left ${ROW_BTN}`}
+              className="flex min-h-12 w-full min-w-0 flex-1 flex-col items-start justify-center gap-0.5 px-4 py-2 text-left"
             >
               <span className={`w-full min-w-0 truncate ${done ? 'text-slate-500 line-through' : ''}`}>
                 {idea.title}
@@ -232,7 +230,7 @@ export function Trips() {
               <span className="flex w-full min-w-0 text-xs text-slate-500 dark:text-slate-400">
                 <Badge idea={idea} byId={byId} />
               </span>
-            </button>
+            </ListRow>
           </div>
         </SwipeableRow>
         {expanded && (
@@ -261,8 +259,8 @@ export function Trips() {
             autoComplete="off"
             enterKeyHint="done"
             maxLength={MAX_TITLE_LENGTH}
-            placeholder="Where to?"
-            className="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none dark:border-slate-700 dark:bg-slate-800"
+            aria-label="Trip destination" placeholder="Where to?"
+            className="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-indigo-300 dark:border-slate-700 dark:bg-slate-800"
           />
           <Button type="submit" disabled={!canAdd}>
             Add
@@ -289,56 +287,30 @@ export function Trips() {
       <div className="-mx-4 mb-4 overflow-x-auto px-4 pb-1">
         <div className="flex w-max items-center gap-2">
           {peopleFiltering && (
-            <button
-              type="button"
-              onClick={() => setSelectedPeople([])}
-              className="min-h-10 shrink-0 rounded-full border-2 border-slate-300 bg-white px-3.5 text-xs font-medium whitespace-nowrap text-slate-700 transition-colors hover:bg-slate-100 active:bg-slate-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
-            >
+            <Chip toggle={false} active={false} onClick={() => setSelectedPeople([])}>
               ✕ Clear
-            </button>
+            </Chip>
           )}
-          {FILTER_LABELS.map(([key, label]) => {
-            const on = filter === key
-            return (
-              <button
-                key={key}
-                type="button"
-                onClick={() => changeFilter(key)}
-                aria-pressed={on}
-                className={`min-h-10 shrink-0 rounded-full border-2 px-3.5 text-xs font-medium whitespace-nowrap transition-colors ${
-                  on
-                    ? 'border-indigo-700 bg-indigo-600 text-white dark:border-indigo-300 dark:bg-indigo-500 dark:text-white'
-                    : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-100 active:bg-slate-200 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-300 dark:hover:bg-slate-800'
-                }`}
-              >
-                {on ? `✓ ${label}` : label}
-              </button>
-            )
-          })}
+          {FILTER_LABELS.map(([key, label]) => (
+            <Chip key={key} active={filter === key} onClick={() => changeFilter(key)}>
+              {label}
+            </Chip>
+          ))}
           {filter === 'group' &&
-            companions.map((c) => {
-              const on = selectedPeople.includes(c.id)
-              return (
-                <button
-                  key={c.id}
-                  type="button"
-                  onClick={() => togglePerson(c.id)}
-                  aria-pressed={on}
-                  className={`min-h-10 max-w-48 shrink-0 truncate rounded-full border-2 px-3.5 text-xs font-medium whitespace-nowrap transition-colors ${
-                    on
-                      ? 'border-indigo-700 bg-indigo-600 text-white dark:border-indigo-300 dark:bg-indigo-500 dark:text-white'
-                      : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-100 active:bg-slate-200 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-300 dark:hover:bg-slate-800'
-                  }`}
-                >
-                  {on ? '✓ ' : ''}
-                  {c.emoji} {c.name}
-                </button>
-              )
-            })}
+            companions.map((c) => (
+              <Chip
+                key={c.id}
+                active={selectedPeople.includes(c.id)}
+                onClick={() => togglePerson(c.id)}
+                className="max-w-48 truncate"
+              >
+                {c.emoji} {c.name}
+              </Chip>
+            ))}
           <button
             type="button"
             onClick={() => setPeopleOpen(true)}
-            className="min-h-10 shrink-0 rounded-full px-3 text-xs whitespace-nowrap text-slate-500 underline-offset-2 hover:underline dark:text-slate-400"
+            className={`min-h-10 shrink-0 rounded-full px-3 text-xs whitespace-nowrap text-slate-500 underline-offset-2 hover:underline dark:text-slate-400 ${FOCUS_RING_INSET}`}
           >
             People
           </button>

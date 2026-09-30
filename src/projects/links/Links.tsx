@@ -13,10 +13,14 @@ import {
   toggleRead,
   updateLink,
 } from '../../lib/linksSync'
+import { useFlash } from '../../lib/useFlash'
 import { useAuth } from '../../lib/useAuth'
 import { useOwner } from '../../lib/useOwner'
 import { useUndoSnackbar } from '../../lib/useUndoSnackbar'
 import { Button } from '../../components/Button'
+import { Chip } from '../../components/Chip'
+import { FOCUS_RING_INSET } from '../../components/focus'
+import { ListRow } from '../../components/ListRow'
 import { PageHeader } from '../../components/PageHeader'
 import { EmptyState } from '../../components/EmptyState'
 import { SyncCard } from '../../components/SyncCard'
@@ -48,7 +52,7 @@ export function Links() {
   const isGuestViewer = Boolean(session) && owner === false
   const [text, setText] = useState('')
   const [expandedId, setExpandedId] = useState<string | null>(null)
-  const [copiedId, setCopiedId] = useState<string | null>(null)
+  const [copiedId, flashCopied] = useFlash<string>(1500)
   // Filter selection is deliberately component state — never persisted.
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const raw = useLiveQuery(() => db.links.orderBy('createdAt').reverse().toArray())
@@ -169,8 +173,7 @@ export function Links() {
     } catch {
       return
     }
-    setCopiedId(link.id)
-    setTimeout(() => setCopiedId((current) => (current === link.id ? null : current)), 1500)
+    flashCopied(link.id)
   }
 
   // Delete executes immediately (same call as always); the snapshot lets
@@ -192,18 +195,17 @@ export function Links() {
       <li key={link.id}>
         <SwipeableRow onSwipeRight={() => void toggle(link)} onSwipeLeft={() => void remove(link)}>
           <div className="flex items-stretch gap-2">
-            <button
-              type="button"
+            <ListRow
               onClick={() => void toggle(link)}
               aria-label={read ? 'Mark as unread' : 'Mark as read'}
-              className="flex min-h-12 w-10 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white text-lg transition-colors hover:border-slate-400 active:bg-slate-100 dark:border-slate-800 dark:bg-slate-800/50 dark:hover:border-slate-600 dark:active:bg-slate-800"
+              className="flex min-h-12 w-10 shrink-0 items-center justify-center text-lg"
             >
               {read ? '●' : '○'}
-            </button>
-            <button
-              type="button"
+            </ListRow>
+            <ListRow
               onClick={() => toggleExpand(link.id)}
-              className="flex min-h-12 w-full min-w-0 flex-1 flex-col items-start justify-center gap-0.5 rounded-lg border border-slate-200 bg-white px-4 py-2 text-left transition-colors hover:border-slate-400 active:bg-slate-100 dark:border-slate-800 dark:bg-slate-800/50 dark:hover:border-slate-600 dark:active:bg-slate-800"
+              aria-expanded={expanded}
+              className="flex min-h-12 w-full min-w-0 flex-1 flex-col items-start justify-center gap-0.5 px-4 py-2 text-left"
             >
               <span className={`w-full min-w-0 truncate ${read ? 'text-slate-500 line-through' : ''}`}>
                 {link.title}
@@ -227,16 +229,17 @@ export function Links() {
                   </span>
                 )}
               </span>
-            </button>
-            <a
+            </ListRow>
+            <ListRow
+              as="a"
               href={link.url}
               target="_blank"
               rel="noopener noreferrer"
               aria-label={`Open ${link.title}`}
-              className="flex min-h-12 min-w-10 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-white px-2 text-lg transition-colors hover:border-slate-400 active:bg-slate-100 dark:border-slate-800 dark:bg-slate-800/50 dark:hover:border-slate-600 dark:active:bg-slate-800"
+              className="flex min-h-12 min-w-10 shrink-0 items-center justify-center px-2 text-lg"
             >
               ↗
-            </a>
+            </ListRow>
           </div>
         </SwipeableRow>
         {expanded && (
@@ -246,17 +249,17 @@ export function Links() {
               defaultValue={link.title}
               onBlur={(e) => void saveTitle(link, e.target)}
               maxLength={300}
-              placeholder="Title…"
-              className="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none dark:border-slate-700 dark:bg-slate-800"
+              aria-label={`Title of ${link.title}`} placeholder="Title…"
+              className="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-indigo-300 dark:border-slate-700 dark:bg-slate-800"
             />
             <textarea
               key={`notes-${link.id}`}
               defaultValue={link.notes}
               onBlur={(e) => void saveNotes(link, e.target.value)}
-              placeholder="Notes…"
+              aria-label={`Notes for ${link.title}`} placeholder="Notes…"
               rows={3}
               maxLength={2000}
-              className="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none dark:border-slate-700 dark:bg-slate-800"
+              className="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-indigo-300 dark:border-slate-700 dark:bg-slate-800"
             />
             {/* Tag editor: current tags as removable chips + an add field. */}
             <div className="flex flex-wrap items-center gap-1.5">
@@ -297,7 +300,7 @@ export function Links() {
                   spellCheck={false}
                   enterKeyHint="done"
                   aria-label={`Add a tag to ${link.title}`}
-                  className="min-h-10 w-32 rounded-full border border-slate-300 bg-white px-3.5 text-xs placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none dark:border-slate-700 dark:bg-slate-800"
+                  className="min-h-10 w-32 rounded-full border border-slate-300 bg-white px-3.5 text-xs placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-indigo-300 dark:border-slate-700 dark:bg-slate-800"
                 />
               )}
             </div>
@@ -338,8 +341,8 @@ export function Links() {
           spellCheck={false}
           enterKeyHint="done"
           maxLength={2000}
-          placeholder="Paste a URL…"
-          className="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none dark:border-slate-700 dark:bg-slate-800"
+          aria-label="Link URL" placeholder="Paste a URL…"
+          className="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-indigo-300 dark:border-slate-700 dark:bg-slate-800"
         />
         <Button type="submit" disabled={!canAdd}>
           Add
@@ -362,37 +365,25 @@ export function Links() {
         <div className="-mx-4 mb-4 overflow-x-auto px-4 pb-1">
           <div className="flex w-max items-center gap-2">
             {filtering && (
-              <button
-                type="button"
-                onClick={clearFilters}
-                className="min-h-10 shrink-0 rounded-full border-2 border-slate-300 bg-white px-3.5 text-xs font-medium whitespace-nowrap text-slate-700 transition-colors hover:bg-slate-100 active:bg-slate-200 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
-              >
+              <Chip toggle={false} active={false} onClick={clearFilters}>
                 ✕ Clear
-              </button>
+              </Chip>
             )}
-            {allTags.map((tag) => {
-              const on = selectedTags.includes(tag)
-              return (
-                <button
-                  key={tag}
-                  type="button"
-                  onClick={() => toggleTagFilter(tag)}
-                  aria-pressed={on}
-                  className={`min-h-10 max-w-48 shrink-0 truncate rounded-full border-2 px-3.5 text-xs font-medium whitespace-nowrap transition-colors ${
-                    on
-                      ? 'border-indigo-700 bg-indigo-600 text-white dark:border-indigo-300 dark:bg-indigo-500 dark:text-white'
-                      : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-100 active:bg-slate-200 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-300 dark:hover:bg-slate-800'
-                  }`}
-                >
-                  {on ? `✓ ${tag}` : tag}
-                </button>
-              )
-            })}
+            {allTags.map((tag) => (
+              <Chip
+                key={tag}
+                active={selectedTags.includes(tag)}
+                onClick={() => toggleTagFilter(tag)}
+                className="max-w-48 truncate"
+              >
+                {tag}
+              </Chip>
+            ))}
             {allTags.length > 0 && (
               <button
                 type="button"
                 onClick={() => setManageOpen(true)}
-                className="min-h-10 shrink-0 rounded-full px-3 text-xs whitespace-nowrap text-slate-500 underline-offset-2 hover:underline dark:text-slate-400"
+                className={`min-h-10 shrink-0 rounded-full px-3 text-xs whitespace-nowrap text-slate-500 underline-offset-2 hover:underline dark:text-slate-400 ${FOCUS_RING_INSET}`}
               >
                 Manage tags
               </button>

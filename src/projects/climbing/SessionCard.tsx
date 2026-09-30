@@ -3,11 +3,12 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db, type Climb, type ClimbSession } from '../../lib/db'
 import { Button } from '../../components/Button'
 import { Card } from '../../components/Card'
+import { FOCUS_RING_INSET } from '../../components/focus'
 import { addClimb, deleteClimb, deleteSession, toggleClimbSent } from '../../lib/climbSync'
 import { DISCIPLINE_LABEL, GRADES } from './grades'
 
 const inputClass =
-  'min-h-10 rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none dark:border-slate-700 dark:bg-slate-800'
+  'min-h-10 rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-indigo-300 dark:border-slate-700 dark:bg-slate-800'
 
 function formatDate(date: string): string {
   return new Date(`${date}T00:00:00`).toLocaleDateString(undefined, {
@@ -42,7 +43,8 @@ export function SessionCard({ session }: { session: ClimbSession }) {
         type="button"
         onClick={() => void toggleClimbSent(climb)}
         title="Tap to toggle sent / attempted"
-        className={`flex min-h-10 items-center gap-1.5 rounded-l-lg border py-1.5 pr-2 pl-3 text-sm transition-colors ${
+        aria-pressed={climb.sent === 1}
+        className={`flex min-h-10 items-center gap-1.5 rounded-l-lg border py-1.5 pr-2 pl-3 text-sm transition-colors ${FOCUS_RING_INSET} ${
           climb.sent === 1
             ? 'border-emerald-400/40 bg-emerald-400/10 text-emerald-600 dark:text-emerald-300'
             : 'border-slate-300 bg-white text-slate-500 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-400'
@@ -55,7 +57,7 @@ export function SessionCard({ session }: { session: ClimbSession }) {
         type="button"
         onClick={() => void deleteClimb(climb.id)}
         aria-label={`Remove ${climb.grade}`}
-        className="flex min-h-10 min-w-8 items-center justify-center rounded-r-lg border border-slate-200 bg-slate-50 text-xs text-slate-500 transition-colors hover:text-rose-600 dark:border-slate-800 dark:bg-slate-800/30 dark:hover:text-rose-400"
+        className={`flex min-h-10 min-w-10 items-center justify-center rounded-r-lg border border-slate-200 bg-slate-50 text-xs text-slate-500 transition-colors hover:text-rose-600 dark:border-slate-800 dark:bg-slate-800/30 dark:hover:text-rose-400 ${FOCUS_RING_INSET}`}
       >
         ✕
       </button>
@@ -112,7 +114,8 @@ export function SessionCard({ session }: { session: ClimbSession }) {
               key={String(isSent)}
               type="button"
               onClick={() => setSent(isSent)}
-              className={`min-h-10 px-3 text-sm transition-colors ${
+              aria-pressed={sent === isSent}
+              className={`min-h-10 px-3 text-sm transition-colors ${FOCUS_RING_INSET} ${
                 sent === isSent
                   ? isSent
                     ? 'bg-emerald-400/20 text-emerald-600 dark:text-emerald-300'
@@ -120,6 +123,7 @@ export function SessionCard({ session }: { session: ClimbSession }) {
                   : 'bg-slate-100 text-slate-500 dark:bg-slate-800'
               }`}
             >
+              {sent === isSent ? '✓ ' : ''}
               {isSent ? 'Sent' : 'Attempt'}
             </button>
           ))}
@@ -143,7 +147,7 @@ export function SessionCard({ session }: { session: ClimbSession }) {
           <button
             type="button"
             onClick={() => setConfirmDelete(true)}
-            className="min-h-10 px-2 text-xs text-slate-500 transition-colors hover:text-rose-600 dark:hover:text-rose-400"
+            className={`min-h-10 px-2 text-xs text-slate-500 transition-colors hover:text-rose-600 dark:hover:text-rose-400 ${FOCUS_RING_INSET}`}
           >
             Delete…
           </button>

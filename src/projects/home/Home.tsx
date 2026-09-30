@@ -1,12 +1,14 @@
-import { useState, type ChangeEvent } from 'react'
+import type { ChangeEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, type ProjectStat } from '../../lib/db'
 import { projects, type ProjectMeta } from '../../lib/projects'
 import { formatBytes } from '../../lib/format'
 import { useOwner } from '../../lib/useOwner'
+import { usePersistedState, type Codec } from '../../lib/safeStorage'
 import { isHidden, toggleStar, useApplyHiddenDefaults } from '../../lib/projectStats'
 import { Card } from '../../components/Card'
+import { FOCUS_RING_INSET } from '../../components/focus'
 import { InstallHint } from '../../components/InstallHint'
 
 // Local calendar-day key, matching the Habits project's own day boundary
@@ -29,25 +31,12 @@ function isHomeOrder(value: string | null): value is HomeOrder {
   return value === 'used' || value === 'recent' || value === 'name' || value === 'default'
 }
 
-// Safari private mode / "block all cookies" makes localStorage access THROW
-// rather than return null, and this runs on the app's entry point — an
+// Guarded storage (see safeStorage.ts): this runs on the app's entry point, an
 // unguarded read here would white-screen the whole dashboard. A garbage or
 // missing stored value falls back to 'used' (today's default behaviour).
-function readStoredOrder(): HomeOrder {
-  try {
-    const stored = localStorage.getItem(HOME_ORDER_KEY)
-    return isHomeOrder(stored) ? stored : 'used'
-  } catch {
-    return 'used'
-  }
-}
-
-function storeOrder(order: HomeOrder): void {
-  try {
-    localStorage.setItem(HOME_ORDER_KEY, order)
-  } catch {
-    // Storage blocked — the choice just won't survive a reload this session.
-  }
+const orderCodec: Codec<HomeOrder> = {
+  parse: (raw) => (isHomeOrder(raw) ? raw : 'used'),
+  serialize: (order) => order,
 }
 
 // Whether the selected mode runs backwards. A separate boolean rather than
@@ -61,21 +50,9 @@ function isReversedValue(value: string | null): value is 'true' | 'false' {
   return value === 'true' || value === 'false'
 }
 
-function readStoredReversed(): boolean {
-  try {
-    const stored = localStorage.getItem(HOME_REVERSED_KEY)
-    return isReversedValue(stored) ? stored === 'true' : false
-  } catch {
-    return false
-  }
-}
-
-function storeReversed(reversed: boolean): void {
-  try {
-    localStorage.setItem(HOME_REVERSED_KEY, reversed ? 'true' : 'false')
-  } catch {
-    // Storage blocked — the choice just won't survive a reload this session.
-  }
+const reversedCodec: Codec<boolean> = {
+  parse: (raw) => (isReversedValue(raw) ? raw === 'true' : false),
+  serialize: (reversed) => (reversed ? 'true' : 'false'),
 }
 
 // The dashboard home is itself the first "project": the entry point that
@@ -91,20 +68,18 @@ export function Home() {
   const permitted = projects.filter((p) => !p.ownerOnly || owner)
   const visible = permitted.filter((p) => !isHidden(p.id, statsById.get(p.id), applyDefaults))
   const hiddenCount = permitted.length - visible.length
-  const [order, setOrder] = useState<HomeOrder>(() => readStoredOrder())
-  const [reversed, setReversed] = useState<boolean>(() => readStoredReversed())
+  const [order, setOrder] = usePersistedState<HomeOrder>(HOME_ORDER_KEY, 'used', undefined, orderCodec)
+  const [reversed, setReversed] = usePersistedState<boolean>(HOME_REVERSED_KEY, false, undefined, reversedCodec)
 
   function handleOrderChange(e: ChangeEvent<HTMLSelectElement>) {
     const next = e.target.value
     if (!isHomeOrder(next)) return
     setOrder(next)
-    storeOrder(next)
   }
 
   function handleReversedToggle() {
     const next = !reversed
     setReversed(next)
-    storeReversed(next)
   }
 
   // Within-group comparator for the selected mode. Deliberately excludes the
@@ -215,7 +190,7 @@ export function Home() {
             value={order}
             onChange={handleOrderChange}
             aria-label="Sort projects by"
-            className="min-h-10 rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 focus:border-indigo-400 focus:outline-none dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+            className="min-h-10 rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 focus:border-indigo-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-indigo-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
           >
             <option value="used">Most used</option>
             <option value="recent">Recently opened</option>
@@ -227,7 +202,7 @@ export function Home() {
             onClick={handleReversedToggle}
             aria-pressed={reversed}
             aria-label={reversed ? 'Restore normal order' : 'Reverse order'}
-            className="flex min-h-10 min-w-10 items-center justify-center rounded-lg border border-slate-300 bg-white text-base text-slate-700 transition-colors hover:bg-slate-100 active:bg-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+            className={`flex min-h-10 min-w-10 items-center justify-center rounded-lg border border-slate-300 bg-white text-base text-slate-700 transition-colors hover:bg-slate-100 active:bg-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 ${FOCUS_RING_INSET}`}
           >
             {reversed ? '↑' : '↓'}
           </button>
@@ -248,7 +223,7 @@ export function Home() {
                 onClick={() => void toggleStar(p.id)}
                 aria-pressed={starred}
                 aria-label={starred ? `Unstar ${p.name}` : `Star ${p.name}`}
-                className="absolute right-1 top-1 z-10 flex h-10 w-10 items-center justify-center rounded-full text-xl text-slate-400 hover:bg-slate-200/60 active:bg-slate-300/60 dark:text-slate-500 dark:hover:bg-slate-700/60 dark:active:bg-slate-600/60"
+                className={`absolute right-1 top-1 z-10 flex h-10 w-10 items-center justify-center rounded-full text-xl text-slate-400 hover:bg-slate-200/60 active:bg-slate-300/60 dark:text-slate-500 dark:hover:bg-slate-700/60 dark:active:bg-slate-600/60 ${FOCUS_RING_INSET}`}
               >
                 {starred ? <span className="text-amber-500 dark:text-amber-400">★</span> : '☆'}
               </button>

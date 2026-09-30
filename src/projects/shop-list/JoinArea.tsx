@@ -42,7 +42,7 @@ export function JoinArea() {
           return
         }
         await syncNow()
-        navigate('/shop-list', { replace: true })
+        void navigate('/shop-list', { replace: true })
       })
   }, [session, areaName, token, navigate])
 
@@ -125,10 +125,10 @@ export function JoinArea() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
+                  aria-label="Your email" placeholder="you@example.com"
                   autoComplete="email"
                   required
-                  className="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none dark:border-slate-700 dark:bg-slate-800"
+                  className="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-indigo-300 dark:border-slate-700 dark:bg-slate-800"
                 />
                 <Button type="submit" disabled={busy || !email.trim()}>
                   {busy ? '…' : 'Continue'}
@@ -147,10 +147,10 @@ export function JoinArea() {
                   inputMode="numeric"
                   value={code}
                   onChange={(e) => setCode(e.target.value)}
-                  placeholder="6-digit code"
+                  aria-label="6-digit code" placeholder="6-digit code"
                   autoComplete="one-time-code"
                   required
-                  className="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none dark:border-slate-700 dark:bg-slate-800"
+                  className="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-indigo-300 dark:border-slate-700 dark:bg-slate-800"
                 />
                 <Button type="submit" disabled={busy || code.trim().length < 6}>
                   {busy ? '…' : 'Join'}

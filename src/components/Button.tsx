@@ -1,4 +1,5 @@
 import type { ButtonHTMLAttributes } from 'react'
+import { FOCUS_RING } from './focus'
 
 type Variant = 'primary' | 'ghost' | 'danger'
 
@@ -18,7 +19,7 @@ interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
 export function Button({ variant = 'primary', className = '', ...rest }: Props) {
   return (
     <button
-      className={`inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg px-3.5 text-sm font-medium transition-colors disabled:cursor-not-allowed ${styles[variant]} ${className}`}
+      className={`inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg px-3.5 text-sm font-medium transition-colors disabled:cursor-not-allowed ${FOCUS_RING} ${styles[variant]} ${className}`}
       {...rest}
     />
   )

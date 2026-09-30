@@ -2,6 +2,8 @@ import { useState } from 'react'
 import type { TripCompanion } from '../../lib/db'
 import { addCompanion, MAX_COMPANIONS_PER_IDEA, MAX_NAME_LENGTH } from '../../lib/tripsSync'
 import { Button } from '../../components/Button'
+import { Chip } from '../../components/Chip'
+import { FOCUS_RING_INSET } from '../../components/focus'
 
 interface Props {
   /** 'solo' hides the people chips; 'group' shows them. */
@@ -14,8 +16,7 @@ interface Props {
   idPrefix: string
 }
 
-const SEGMENT =
-  'min-h-10 flex-1 border-2 px-3 text-sm font-medium transition-colors first:rounded-l-lg last:rounded-r-lg'
+const SEGMENT = `min-h-10 flex-1 border-2 px-3 text-sm font-medium transition-colors first:rounded-l-lg last:rounded-r-lg ${FOCUS_RING_INSET}`
 const SEGMENT_ON =
   'border-indigo-700 bg-indigo-600 text-white dark:border-indigo-300 dark:bg-indigo-500'
 const SEGMENT_OFF =
@@ -76,30 +77,21 @@ export function PeoplePicker({
       {mode === 'group' && (
         <>
           <div className="flex flex-wrap items-center gap-2">
-            {companions.map((c) => {
-              const on = selected.includes(c.id)
-              return (
-                <button
-                  key={c.id}
-                  type="button"
-                  onClick={() => toggle(c.id)}
-                  aria-pressed={on}
-                  className={`min-h-10 max-w-48 truncate rounded-full border-2 px-3.5 text-xs font-medium whitespace-nowrap transition-colors ${
-                    on
-                      ? 'border-indigo-700 bg-indigo-600 text-white dark:border-indigo-300 dark:bg-indigo-500 dark:text-white'
-                      : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-100 active:bg-slate-200 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-300 dark:hover:bg-slate-800'
-                  }`}
-                >
-                  {on ? '✓ ' : ''}
-                  {c.emoji} {c.name}
-                </button>
-              )
-            })}
+            {companions.map((c) => (
+              <Chip
+                key={c.id}
+                active={selected.includes(c.id)}
+                onClick={() => toggle(c.id)}
+                className="max-w-48 truncate"
+              >
+                {c.emoji} {c.name}
+              </Chip>
+            ))}
             {!adding && (
               <button
                 type="button"
                 onClick={() => setAdding(true)}
-                className="min-h-10 shrink-0 rounded-full border-2 border-dashed border-slate-300 px-3.5 text-xs font-medium whitespace-nowrap text-slate-600 hover:bg-slate-100 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
+                className={`min-h-10 shrink-0 rounded-full border-2 border-dashed border-slate-300 px-3.5 text-xs font-medium whitespace-nowrap text-slate-600 hover:bg-slate-100 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800 ${FOCUS_RING_INSET}`}
               >
                 + Person
               </button>
@@ -128,7 +120,7 @@ export function PeoplePicker({
                   enterKeyHint="done"
                   aria-label="New person's name"
                   id={`${idPrefix}-new-person`}
-                  className="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none dark:border-slate-700 dark:bg-slate-800"
+                  className="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-indigo-300 dark:border-slate-700 dark:bg-slate-800"
                 />
                 <Button type="button" onClick={() => void createPerson()}>
                   Add

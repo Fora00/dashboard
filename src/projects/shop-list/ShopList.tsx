@@ -9,10 +9,13 @@ import {
   sync,
   toggleShopItem,
 } from '../../lib/shopSync'
+import { readString, writeString } from '../../lib/safeStorage'
 import { useAuth } from '../../lib/useAuth'
 import { useOwner } from '../../lib/useOwner'
 import { useUndoSnackbar } from '../../lib/useUndoSnackbar'
 import { Button } from '../../components/Button'
+import { FOCUS_RING_INSET } from '../../components/focus'
+import { ListRow } from '../../components/ListRow'
 import { PageHeader } from '../../components/PageHeader'
 import { EmptyState } from '../../components/EmptyState'
 import { SyncCard } from '../../components/SyncCard'
@@ -27,9 +30,7 @@ export function ShopList() {
   const session = useAuth()
   const owner = useOwner()
   const [text, setText] = useState('')
-  const [selectedId, setSelectedId] = useState<string | null>(
-    () => localStorage.getItem(AREA_KEY),
-  )
+  const [selectedId, setSelectedId] = useState<string | null>(() => readString(AREA_KEY))
   const [addingArea, setAddingArea] = useState(false)
   const [areaName, setAreaName] = useState('')
   const { pending, trigger, confirmUndo } = useUndoSnackbar()
@@ -46,7 +47,7 @@ export function ShopList() {
   const area = areas?.find((a) => a.id === selectedId) ?? areas?.[0]
 
   useEffect(() => {
-    if (area) localStorage.setItem(AREA_KEY, area.id)
+    if (area) writeString(AREA_KEY, area.id)
   }, [area])
 
   const items = useLiveQuery(
@@ -106,10 +107,9 @@ export function ShopList() {
   const renderItem = (item: ShopItem) => (
     <li key={item.id}>
       <SwipeableRow onSwipeRight={() => void toggleShopItem(item)} onSwipeLeft={() => void removeItem(item)}>
-        <button
-          type="button"
+        <ListRow
           onClick={() => void toggleShopItem(item)}
-          className="flex min-h-12 w-full items-center gap-3 rounded-lg border border-slate-200 bg-white px-4 text-left transition-colors hover:border-slate-400 active:bg-slate-100 dark:border-slate-800 dark:bg-slate-800/50 dark:hover:border-slate-600 dark:active:bg-slate-800"
+          className="flex min-h-12 w-full items-center gap-3 px-4 text-left"
         >
           <span
             className={`flex size-5 shrink-0 items-center justify-center rounded-full border text-xs ${
@@ -123,7 +123,7 @@ export function ShopList() {
           <span className={item.done === 1 ? 'text-slate-500 line-through' : ''}>
             {item.text}
           </span>
-        </button>
+        </ListRow>
       </SwipeableRow>
     </li>
   )
@@ -149,8 +149,9 @@ export function ShopList() {
             <button
               key={a.id}
               type="button"
+              aria-pressed={a.id === area?.id}
               onClick={() => setSelectedId(a.id)}
-              className={`min-h-10 rounded-full border px-3.5 text-sm transition-colors ${
+              className={`min-h-10 rounded-full border px-3.5 text-sm transition-colors ${FOCUS_RING_INSET} ${
                 a.id === area?.id
                   ? 'border-indigo-400 bg-indigo-500/20 text-indigo-600 dark:text-indigo-300'
                   : 'border-slate-300 text-slate-500 dark:border-slate-700 dark:text-slate-400'
@@ -176,9 +177,9 @@ export function ShopList() {
           <input
             value={areaName}
             onChange={(e) => setAreaName(e.target.value)}
-            placeholder="Area name, e.g. Pharmacy"
+            aria-label="Area name" placeholder="Area name, e.g. Pharmacy"
             autoFocus
-            className="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none dark:border-slate-700 dark:bg-slate-800"
+            className="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-indigo-300 dark:border-slate-700 dark:bg-slate-800"
           />
           <Button type="submit" disabled={!areaName.trim()}>
             Create
@@ -211,10 +212,10 @@ export function ShopList() {
             <input
               value={text}
               onChange={(e) => setText(e.target.value)}
-              placeholder={`Add to ${area.name}…`}
+              aria-label={`Add to ${area.name}`} placeholder={`Add to ${area.name}…`}
               autoComplete="off"
               enterKeyHint="done"
-              className="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none dark:border-slate-700 dark:bg-slate-800"
+              className="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-indigo-300 dark:border-slate-700 dark:bg-slate-800"
             />
             <Button type="submit" disabled={!text.trim()}>
               Add

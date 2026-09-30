@@ -1,6 +1,8 @@
-import { useState } from 'react'
+import { memo, useState } from 'react'
+import { useFlash } from '../../lib/useFlash'
 import type { EventItem } from './types'
 import { addToCalendar } from './ics'
+import { FOCUS_RING, FOCUS_RING_INSET } from '../../components/focus'
 import { buildThingsAddUrl, categoryLabel, categoryOf, formatRange, isSparseSeries, isSpot, listingDay, safeHttpUrl, shortDay } from './model'
 
 interface Props {
@@ -8,19 +10,19 @@ interface Props {
   saved: boolean
   hidden: boolean
   now: number
-  onToggleSave: () => void
-  onToggleHide: () => void
+  /** Receive the event so the parent can pass one stable callback to every card (memo). */
+  onToggleSave: (e: EventItem) => void
+  onToggleHide: (e: EventItem) => void
 }
 
-const ACTION =
-  'inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg px-3.5 text-sm font-medium transition-colors'
+const ACTION = `inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg px-3.5 text-sm font-medium transition-colors ${FOCUS_RING}`
 const GHOST =
   'bg-slate-100 text-slate-800 hover:bg-slate-200 active:bg-slate-300 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 dark:active:bg-slate-600'
 
-export function EventCard({ event: e, saved, hidden, now, onToggleSave, onToggleHide }: Props) {
+export const EventCard = memo(function EventCard({ event: e, saved, hidden, now, onToggleSave, onToggleHide }: Props) {
   const [open, setOpen] = useState(false)
   const [imgOk, setImgOk] = useState(true)
-  const [copied, setCopied] = useState(false)
+  const [copied, flashCopied] = useFlash(2000)
   const place = [e.venue, e.city].filter(Boolean).join(' · ')
   const url = safeHttpUrl(e.url)
   const image = safeHttpUrl(e.image)
@@ -36,8 +38,7 @@ export function EventCard({ event: e, saved, hidden, now, onToggleSave, onToggle
         return
       }
       await navigator.clipboard.writeText(url ? `${text}\n${url}` : text)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
+      flashCopied()
     } catch {
       // Share sheet dismissed or clipboard blocked: nothing to recover.
     }
@@ -53,7 +54,7 @@ export function EventCard({ event: e, saved, hidden, now, onToggleSave, onToggle
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        className="block min-h-10 w-full text-left transition-colors active:bg-slate-100 dark:active:bg-slate-800"
+        className={`block min-h-10 w-full text-left transition-colors active:bg-slate-100 dark:active:bg-slate-800 ${FOCUS_RING_INSET}`}
       >
         <div className="flex items-start gap-3 px-3 py-3">
           {showImage && (
@@ -98,10 +99,10 @@ export function EventCard({ event: e, saved, hidden, now, onToggleSave, onToggle
         </div>
       </button>
       <div className="flex flex-wrap gap-2 px-3 pb-3">
-        <button type="button" onClick={onToggleSave} className={`${ACTION} ${GHOST}`}>
+        <button type="button" onClick={() => onToggleSave(e)} className={`${ACTION} ${GHOST}`}>
           {saved ? '★ Saved' : '☆ Save'}
         </button>
-        <button type="button" onClick={onToggleHide} className={`${ACTION} ${GHOST}`}>
+        <button type="button" onClick={() => onToggleHide(e)} className={`${ACTION} ${GHOST}`}>
           {hidden ? 'Unhide' : '✕ Hide'}
         </button>
         <button type="button" onClick={() => void share()} className={`${ACTION} ${GHOST}`}>
@@ -128,7 +129,7 @@ export function EventCard({ event: e, saved, hidden, now, onToggleSave, onToggle
               href={url}
               target="_blank"
               rel="noopener"
-              className="inline-flex min-h-10 items-center text-sm text-indigo-600 underline dark:text-indigo-400"
+              className={`inline-flex min-h-10 items-center text-sm text-indigo-600 underline dark:text-indigo-400 ${FOCUS_RING}`}
             >
               Open event page ↗
             </a>
@@ -145,4 +146,4 @@ export function EventCard({ event: e, saved, hidden, now, onToggleSave, onToggle
       )}
     </li>
   )
-}
+})

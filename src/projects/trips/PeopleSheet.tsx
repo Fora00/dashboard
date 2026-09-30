@@ -68,7 +68,7 @@ export function PeopleSheet({ open, onClose, companions, counts, onDelete }: Pro
                     onBlur={(e) => void saveEmoji(c, e.target)}
                     maxLength={MAX_EMOJI_LENGTH}
                     aria-label={`Emoji for ${c.name}`}
-                    className="min-h-10 w-12 shrink-0 rounded-lg border border-slate-300 bg-white text-center text-base focus:border-indigo-400 focus:outline-none dark:border-slate-700 dark:bg-slate-800"
+                    className="min-h-10 w-12 shrink-0 rounded-lg border border-slate-300 bg-white text-center text-base focus:border-indigo-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-indigo-300 dark:border-slate-700 dark:bg-slate-800"
                   />
                   <input
                     key={`name-${c.id}-${c.name}`}
@@ -81,7 +81,7 @@ export function PeopleSheet({ open, onClose, companions, counts, onDelete }: Pro
                     autoComplete="off"
                     enterKeyHint="done"
                     aria-label={`Name for ${c.name}`}
-                    className="min-h-10 min-w-0 flex-1 rounded-lg border border-slate-300 bg-white px-3.5 text-sm focus:border-indigo-400 focus:outline-none dark:border-slate-700 dark:bg-slate-800"
+                    className="min-h-10 min-w-0 flex-1 rounded-lg border border-slate-300 bg-white px-3.5 text-sm focus:border-indigo-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-indigo-300 dark:border-slate-700 dark:bg-slate-800"
                   />
                   <Button
                     variant="danger"

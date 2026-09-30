@@ -1,5 +1,6 @@
 import type { EventItem } from './types'
 import { cleanFormats } from './format'
+import { readJSON, writeJSON } from '../../lib/safeStorage'
 import { listingDay, localDay, romeDate, isSparseSeries } from './model'
 
 // Pure helpers for the events quick filters (date chips, text search) and the
@@ -98,31 +99,24 @@ function strings(v: unknown): string[] {
   return Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : []
 }
 
-/** Never throws: storage may be blocked, or the value malformed. */
-export function loadFilters(): StoredFilters {
-  try {
-    const raw = localStorage.getItem(KEY)
-    if (!raw) return EMPTY_FILTERS
-    const v: unknown = JSON.parse(raw)
-    if (!v || typeof v !== 'object') return EMPTY_FILTERS
-    const o = v as Record<string, unknown>
-    return {
-      cats: Array.isArray(o.cats) ? strings(o.cats) : null,
-      areas: strings(o.areas),
-      cities: strings(o.cities),
-      chip: DATE_CHIPS.some((c) => c.id === o.chip) ? (o.chip as DateChip) : null,
-      formats: cleanFormats(strings(o.formats)),
-      showHidden: o.showHidden === true,
-    }
-  } catch {
-    return EMPTY_FILTERS
+function sanitizeFilters(v: unknown): StoredFilters {
+  if (!v || typeof v !== 'object') return EMPTY_FILTERS
+  const o = v as Record<string, unknown>
+  return {
+    cats: Array.isArray(o.cats) ? strings(o.cats) : null,
+    areas: strings(o.areas),
+    cities: strings(o.cities),
+    chip: DATE_CHIPS.some((c) => c.id === o.chip) ? (o.chip as DateChip) : null,
+    formats: cleanFormats(strings(o.formats)),
+    showHidden: o.showHidden === true,
   }
 }
 
+/** Never throws: storage may be blocked, or the value malformed. */
+export function loadFilters(): StoredFilters {
+  return readJSON(KEY, sanitizeFilters, EMPTY_FILTERS)
+}
+
 export function saveFilters(f: StoredFilters): void {
-  try {
-    localStorage.setItem(KEY, JSON.stringify(f))
-  } catch {
-    // Storage blocked or full: the selection just isn't remembered.
-  }
+  writeJSON(KEY, f)
 }

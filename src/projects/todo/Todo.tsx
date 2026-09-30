@@ -6,6 +6,7 @@ import { useAuth } from '../../lib/useAuth'
 import { useOwner } from '../../lib/useOwner'
 import { useUndoSnackbar } from '../../lib/useUndoSnackbar'
 import { Button } from '../../components/Button'
+import { ListRow } from '../../components/ListRow'
 import { PageHeader } from '../../components/PageHeader'
 import { EmptyState } from '../../components/EmptyState'
 import { SyncCard } from '../../components/SyncCard'
@@ -58,10 +59,10 @@ export function Todo() {
     <li key={t.id}>
       <SwipeableRow onSwipeRight={() => void toggle(t)} onSwipeLeft={() => void remove(t)}>
         <div className="flex items-stretch gap-2">
-          <button
-            type="button"
+          <ListRow
             onClick={() => void toggle(t)}
-            className="flex min-h-12 w-full min-w-0 flex-1 items-center gap-3 rounded-lg border border-slate-200 bg-white px-4 text-left transition-colors hover:border-slate-400 active:bg-slate-100 dark:border-slate-800 dark:bg-slate-800/50 dark:hover:border-slate-600 dark:active:bg-slate-800"
+            aria-pressed={t.done === 1}
+            className="flex min-h-12 w-full min-w-0 flex-1 items-center gap-3 px-4 text-left"
           >
             <span
               className={`flex size-5 shrink-0 items-center justify-center rounded-full border text-xs ${
@@ -75,7 +76,7 @@ export function Todo() {
             <span className={`min-w-0 flex-1 truncate ${t.done === 1 ? 'text-slate-500 line-through' : ''}`}>
               {t.text}
             </span>
-          </button>
+          </ListRow>
           <Button
             variant="danger"
             onClick={() => void remove(t)}
@@ -103,10 +104,10 @@ export function Todo() {
         <input
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="Add something to do…"
+          aria-label="Add a todo" placeholder="Add something to do…"
           autoComplete="off"
           enterKeyHint="done"
-          className="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none dark:border-slate-700 dark:bg-slate-800"
+          className="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-indigo-300 dark:border-slate-700 dark:bg-slate-800"
         />
         <Button type="submit" disabled={!text.trim()}>
           Add

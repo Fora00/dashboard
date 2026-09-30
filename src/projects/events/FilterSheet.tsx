@@ -1,14 +1,12 @@
 import { useState, type ReactNode } from 'react'
 import { Sheet } from '../../components/Sheet'
 import { Button } from '../../components/Button'
+import { Chip } from '../../components/Chip'
+import { rowTone } from '../../components/chipTone'
+import { FOCUS_RING_INSET } from '../../components/focus'
 import { areaLabel, categoryLabel } from './model'
 import { normalizeText } from './filters'
 import { FORMAT_CHIPS, formatLabel } from './format'
-
-const ROW_ON =
-  'border-indigo-700 bg-indigo-600 text-white dark:border-indigo-300 dark:bg-indigo-500'
-const ROW_OFF =
-  'border-slate-200 bg-white text-slate-700 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-200'
 
 interface Props {
   open: boolean
@@ -68,7 +66,7 @@ function Section({
         type="button"
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
-        className="flex min-h-10 w-full items-center justify-between gap-2 text-left"
+        className={`flex min-h-10 w-full items-center justify-between gap-2 text-left ${FOCUS_RING_INSET}`}
       >
         <span className="min-w-0 truncate text-xs font-semibold tracking-wide text-slate-500 uppercase dark:text-slate-400">
           {title}
@@ -101,21 +99,16 @@ function OptionGrid({
         const disabled = count === 0 && !on
         return (
           <li key={id}>
-            <button
-              type="button"
-              aria-pressed={on}
+            <Chip
+              shape="row"
+              active={on}
+              count={count}
               disabled={disabled}
               onClick={() => onToggle(id)}
-              className={`flex min-h-10 w-full items-center justify-between gap-2 rounded-lg border-2 px-3 text-left text-sm disabled:cursor-not-allowed ${
-                on ? ROW_ON : ROW_OFF
-              } ${count === 0 ? 'opacity-60' : ''}`}
+              className={count === 0 ? 'opacity-60' : ''}
             >
-              <span className="truncate">
-                {on ? '✓ ' : ''}
-                {label}
-              </span>
-              <span className="text-xs opacity-70">{count}</span>
-            </button>
+              {label}
+            </Chip>
           </li>
         )
       })}
@@ -211,7 +204,7 @@ export function FilterSheet(p: Props) {
             <button
               type="button"
               onClick={p.onClearAll}
-              className={`min-h-10 px-2 text-sm font-medium text-indigo-600 underline dark:text-indigo-400 ${
+              className={`min-h-10 px-2 text-sm font-medium text-indigo-600 underline dark:text-indigo-400 ${FOCUS_RING_INSET} ${
                 p.canReset ? '' : 'invisible'
               }`}
               tabIndex={p.canReset ? 0 : -1}
@@ -247,7 +240,7 @@ export function FilterSheet(p: Props) {
                 return (
                   <li
                     key={id}
-                    className={`flex min-h-10 items-stretch overflow-hidden rounded-lg border-2 ${on ? ROW_ON : ROW_OFF} ${
+                    className={`flex min-h-10 items-stretch overflow-hidden rounded-lg border-2 ${rowTone(on)} ${
                       count === 0 ? 'opacity-60' : ''
                     }`}
                   >
@@ -256,7 +249,7 @@ export function FilterSheet(p: Props) {
                       disabled={disabled}
                       aria-pressed={on}
                       onClick={() => p.onToggleCat(id)}
-                      className="flex min-h-10 min-w-0 flex-1 items-center justify-between gap-2 px-3 text-left text-sm disabled:cursor-not-allowed"
+                      className={`flex min-h-10 min-w-0 flex-1 items-center justify-between gap-2 px-3 text-left text-sm disabled:cursor-not-allowed ${FOCUS_RING_INSET}`}
                     >
                       <span className="truncate">
                         {on ? '✓ ' : ''}
@@ -269,7 +262,7 @@ export function FilterSheet(p: Props) {
                       aria-pressed={fav}
                       aria-label={`${fav ? 'Remove' : 'Add'} ${categoryLabel(id)} ${fav ? 'from' : 'to'} favourites`}
                       onClick={() => p.onToggleFavourite(id)}
-                      className="flex size-10 shrink-0 items-center justify-center text-base"
+                      className={`flex size-10 shrink-0 items-center justify-center text-base ${FOCUS_RING_INSET}`}
                     >
                       {fav ? '★' : '☆'}
                     </button>
