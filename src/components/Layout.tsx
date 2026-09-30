@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { Link, Outlet, useLocation } from 'react-router-dom'
+import { ErrorBoundary } from './ErrorBoundary'
 import { OnlineBadge } from './OnlineBadge'
 import { OfflineBanner } from './OfflineBanner'
 import { UpdateToast } from './UpdateToast'
@@ -34,7 +35,9 @@ export function Layout() {
       </header>
       <OfflineBanner />
       <main className="mx-auto max-w-3xl px-4 py-6 pb-16">
-        <Outlet />
+        <ErrorBoundary resetKey={location.pathname}>
+          <Outlet />
+        </ErrorBoundary>
       </main>
       <UpdateToast />
     </div>
