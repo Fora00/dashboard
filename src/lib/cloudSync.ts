@@ -264,7 +264,10 @@ export function createCloudSync(config: SyncConfig): CloudSync {
   async function refreshCounts(): Promise<void> {
     let pending = 0
     let dead = 0
-    for (const e of await db.outbox.toArray()) {
+    // Badge count is best-effort: a closed db mid-flight must not reject.
+    const rows = await db.outbox.toArray().catch(() => null)
+    if (!rows) return
+    for (const e of rows) {
       if (!remotes.has(e.table)) continue
       if (e.dead) dead++
       else pending++
