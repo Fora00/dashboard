@@ -425,7 +425,7 @@ export function Events() {
         <div className="space-y-5">
           {visibleGroups.map((g) => (
             <section key={g.key}>
-              <h2 className="mb-2 text-sm font-semibold text-slate-500 capitalize dark:text-slate-400">
+              <h2 className="mb-2 text-sm font-semibold text-slate-500 dark:text-slate-400">
                 {g.label}
               </h2>
               <ul className="space-y-2">
@@ -435,6 +435,7 @@ export function Events() {
                     event={e}
                     saved={marks.get(e.id)?.state === 'saved'}
                     hidden={marks.get(e.id)?.state === 'hidden'}
+                    now={now}
                     onToggleSave={() => void setMark(e, 'saved')}
                     onToggleHide={() => void setMark(e, 'hidden')}
                   />

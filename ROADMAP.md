@@ -902,7 +902,7 @@ sync can come later).
       pattern); creative recall is limited by the sources, so check Spazio
       Piera and Hortus Artieri for feeds; "Halloween al Castello"
       (a family Halloween at the castle, Bondone) is tagged creative but not kids, a known miss.
-- [ ] Events page polish [sonnet, XS] — when there's time: folded
+- [x] Events page polish [sonnet, XS] — done 2026-09-30: sparse folded series (occurrences/span < 0.5, threshold in `isSparseSeries`) leave "Open now" and are listed under an estimated next date ("N dates · next ≈ ven 2 ott"; events.json has no per-date data, exact dates would need a schema change); 80px thumbnail in the collapsed card, big image only when expanded; day headings capitalise only the first letter ("Mer 30 set"). Verified at 390px light+dark. Original: folded
       series (`occurrences > 1`, e.g. weekly game nights) show in "Open
       now" next to real exhibitions; consider listing them per next date
       instead. Full-width 16:9 images make the list long on iPhone, so
@@ -947,7 +947,7 @@ what's already shipped. Ranked by how cheap + how load-bearing.
       (`oxlint`) exists but nothing invokes it in CI, so lint regressions on
       `main` go unnoticed until someone runs it locally. Add a step (or fold
       into the existing build step) before `npm run build`. Effort XS.
-- [ ] **No top-level React error boundary** [sonnet] — no `ErrorBoundary`
+- [x] **No top-level React error boundary** [sonnet] — done 2026-09-30: `ErrorBoundary.tsx` around the `<Outlet />` in `Layout.tsx` (header stays), Reload + Back to home, resets on route change; browser-verified at 375px, dark mode not eyeballed. Original: — no `ErrorBoundary`
       exists in `src/components/`. An uncaught render error in any one
       subproject page currently white-screens the whole PWA with no
       recovery affordance, worse on an installed home-screen app than a

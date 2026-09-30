@@ -178,9 +178,41 @@ export function isOngoingNow(e: EventItem, now: number): boolean {
   return start <= now && now < end
 }
 
+function daysBetween(a: string, b: string): number {
+  return Math.round((Date.parse(`${b}T12:00:00Z`) - Date.parse(`${a}T12:00:00Z`)) / 86400000)
+}
+
+/**
+ * A folded, sparse series (weekly game night, monthly tasting): `occurrences`
+ * dates spread over its span, fewer than one date every two days. A folded
+ * record that is near-daily (a museum's opening days) is really a long
+ * exhibition and is not a series here.
+ */
+export function isSparseSeries(e: EventItem): boolean {
+  if (!(e.occurrences > 1)) return false
+  const span = daysBetween(localDay(e.start), lastDay(e)) + 1
+  return e.occurrences / span < 0.5
+}
+
+/**
+ * Best-guess next date (local day key) of a sparse series. events.json has
+ * no per-date data for folded series, only first/last date + count, so the
+ * cadence is estimated as span / (N-1) days from the first date. Exact for
+ * regular weekly/daily series, approximate otherwise.
+ */
+export function nextSeriesDay(e: EventItem, now: number): string {
+  const first = localDay(e.start)
+  const last = lastDay(e)
+  const today = romeDate(now)
+  if (first >= today) return first
+  const step = Math.max(1, Math.round(daysBetween(first, last) / Math.max(1, e.occurrences - 1)))
+  const next = addDays(first, Math.ceil(daysBetween(first, today) / step) * step)
+  return next > last ? last : next
+}
+
 /** Started before today and not over: goes in the "Open now" group. */
 export function isLongRunning(e: EventItem, now: number): boolean {
-  return localDay(e.start) < romeDate(now) && isOngoingNow(e, now)
+  return localDay(e.start) < romeDate(now) && isOngoingNow(e, now) && !isSparseSeries(e)
 }
 
 function fmt(iso: string, opts: Intl.DateTimeFormatOptions): string {
@@ -188,6 +220,11 @@ function fmt(iso: string, opts: Intl.DateTimeFormatOptions): string {
 }
 
 const DATE_SHORT: Intl.DateTimeFormatOptions = { weekday: 'short', day: 'numeric', month: 'short' }
+
+/** "gio 2 ott" -> "Gio 2 ott": only the weekday's first letter is capitalised. */
+function capFirst(text: string): string {
+  return text.charAt(0).toUpperCase() + text.slice(1)
+}
 const TIME: Intl.DateTimeFormatOptions = { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }
 
 /** "gio 2 ott" / "gio 2 ott, 20:30–23:00" / "16 mag – 18 ott" (all-day end inclusive). */
@@ -213,7 +250,7 @@ export function dayLabel(day: string, now: number): string {
   const today = romeDate(now)
   if (day === today) return 'Oggi'
   if (day === addDays(today, 1)) return 'Domani'
-  return fmt(`${day}T12:00:00Z`, DATE_SHORT)
+  return capFirst(fmt(`${day}T12:00:00Z`, DATE_SHORT))
 }
 
 export interface DayGroup {
@@ -222,11 +259,22 @@ export interface DayGroup {
   events: EventItem[]
 }
 
-/** Groups by local start day. Events are assumed already sorted by start. */
+/** The day an event is listed under: its start, or a series' next date. */
+export function listingDay(e: EventItem, now: number): string {
+  return isSparseSeries(e) && localDay(e.start) < romeDate(now) ? nextSeriesDay(e, now) : localDay(e.start)
+}
+
+/** "gio 2 ott" for a local day key (no Oggi/Domani), for the series hint. */
+export function shortDay(day: string): string {
+  return fmt(`${day}T12:00:00Z`, DATE_SHORT)
+}
+
+/** Groups by listing day (start, or next date for series); order within a day is kept. */
 export function groupByDay(events: EventItem[], now: number): DayGroup[] {
+  const keyed = events.map((e, i) => ({ e, i, day: listingDay(e, now) }))
+  keyed.sort((a, b) => (a.day < b.day ? -1 : a.day > b.day ? 1 : a.i - b.i))
   const groups: DayGroup[] = []
-  for (const e of events) {
-    const day = localDay(e.start)
+  for (const { e, day } of keyed) {
     const last = groups[groups.length - 1]
     if (last && last.key === day) last.events.push(e)
     else groups.push({ key: day, label: dayLabel(day, now), events: [e] })
