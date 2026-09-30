@@ -410,6 +410,10 @@ create policy "members full access" on public.${remoteTable}
 
 -- Realtime, so edits reach other devices live.
 alter publication supabase_realtime add table public.${remoteTable};
+
+-- Let /sharing hand out a per-project invite link (#/join/p/<token>).
+-- Remove for owner-only projects.
+insert into public.shareable_projects (id) values ('${id}') on conflict do nothing;
 `
 }
 

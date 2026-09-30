@@ -2,7 +2,8 @@ import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { supabase, syncEnabled } from '../../lib/sync'
 import { useAuth } from '../../lib/useAuth'
 import { useOwner } from '../../lib/useOwner'
-import { projects } from '../../lib/projects'
+import { isInvitable, projects, type ProjectMeta } from '../../lib/projects'
+import { APP_URL, projectInviteUrl, projectUrl, shareOrCopy } from '../../lib/projectInvites'
 import { Button } from '../../components/Button'
 import { Card } from '../../components/Card'
 import { PageHeader } from '../../components/PageHeader'
@@ -20,13 +21,18 @@ import { SyncCard } from '../../components/SyncCard'
 // project_members row alone would leave the guest unable to see/add/complete
 // items. We default-grant the "Groceries" area and expose per-area toggles.
 
-const APP_URL = 'https://fora00.github.io/dashboard/'
 // The fixed-id default area created by the shop_areas migration (matches the
 // id the client uses when migrating pre-area local data).
 const DEFAULT_AREA_ID = '00000000-0000-0000-0000-000000000001'
-// Generic project chips (project_members). Shop List is handled separately via
-// area membership below.
-const shareable = projects.filter((p) => !p.ownerOnly && p.id !== 'shop-list')
+// Generic project chips (project_members) and per-project invite links. Shop
+// List is handled separately via area membership below; public projects
+// (events) need no grant at all and get a plain link instead; settings is
+// device-only. isInvitable() mirrors public.shareable_projects in SQL.
+const shareable = projects.filter(isInvitable)
+const publicProjects = projects.filter((p) => p.public && p.status === 'live')
+// Card look without Card's padding, for divided row lists.
+const listBox =
+  'divide-y divide-slate-200 rounded-xl border border-slate-200 bg-white dark:divide-slate-800 dark:border-slate-800 dark:bg-slate-800/50'
 
 interface Area {
   id: string
@@ -52,6 +58,10 @@ export function Sharing() {
   const [shopOn, setShopOn] = useState(true)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // Per-project feedback after a share/copy ("Copied"), and the project whose
+  // "Reset" is armed (two taps: resetting kills links already sent out).
+  const [notice, setNotice] = useState<{ id: string; text: string } | null>(null)
+  const [armedReset, setArmedReset] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     if (!supabase) return
@@ -153,14 +163,12 @@ export function Sharing() {
   async function toggleMembership(guest: Guest, projectId: string) {
     await run(async () => {
       const has = guest.memberships.includes(projectId)
-      const q = has
-        ? supabase!
-            .from('project_members')
-            .delete()
-            .eq('project_id', projectId)
-            .eq('email', guest.email)
-        : supabase!.from('project_members').insert({ project_id: projectId, email: guest.email })
-      const { error: err } = await q
+      // Removal goes through revoke_project_guest: it also undoes an
+      // invite-created whitelist row when no access is left, and rotates the
+      // project's invite link so the old one can't re-add the guest.
+      const { error: err } = has
+        ? await supabase!.rpc('revoke_project_guest', { pid: projectId, guest_email: guest.email })
+        : await supabase!.from('project_members').insert({ project_id: projectId, email: guest.email })
       if (err) throw err
     })
   }
@@ -204,6 +212,23 @@ export function Sharing() {
 
   async function removeGuest(guest: Guest) {
     await run(async () => {
+      // Revoke through the RPCs first so every invite link that could re-add
+      // this guest (each project they're in, each shop area) is rotated.
+      for (const pid of guest.memberships) {
+        const { error: err } = await supabase!.rpc('revoke_project_guest', {
+          pid,
+          guest_email: guest.email,
+        })
+        if (err) throw err
+      }
+      for (const aid of guest.areas) {
+        const { error: err } = await supabase!.rpc('revoke_area_guest', {
+          aid,
+          guest_email: guest.email,
+        })
+        if (err) throw err
+      }
+      // Then drop whatever is left, including an owner-invited whitelist row.
       const { error: e0 } = await supabase!
         .from('shop_area_members')
         .delete()
@@ -224,11 +249,54 @@ export function Sharing() {
 
   async function shareAppLink() {
     const text = `You're invited to my dashboard — open it and sign in with your email: ${APP_URL}`
-    if (navigator.share) {
-      await navigator.share({ text }).catch(() => {})
-    } else {
-      await navigator.clipboard.writeText(text)
+    await shareOrCopy(text).catch(() => {})
+  }
+
+  // Share (or copy) a text and confirm it next to the project row.
+  async function shareFor(id: string, text: string) {
+    const outcome = await shareOrCopy(text)
+    if (outcome === 'copied') setNotice({ id, text: 'Link copied' })
+    else if (outcome === 'shared') setNotice({ id, text: 'Shared' })
+  }
+
+  async function shareInvite(p: ProjectMeta) {
+    setArmedReset(null)
+    await run(async () => {
+      const { data, error: err } = await supabase!.rpc('project_invite_token', { pid: p.id })
+      if (err) throw err
+      if (!data) throw new Error('Could not get the invite link.')
+      await shareFor(
+        p.id,
+        `Join my ${p.emoji} ${p.name} on my dashboard — open the link and sign in with your email: ${projectInviteUrl(data)}`,
+      )
+    })
+  }
+
+  // Rotate the project's token: every previously sent link dies (guests who
+  // already joined keep access), then share the fresh one.
+  async function resetInvite(p: ProjectMeta) {
+    if (armedReset !== p.id) {
+      setArmedReset(p.id)
+      setNotice(null)
+      return
     }
+    setArmedReset(null)
+    await run(async () => {
+      const { data, error: err } = await supabase!.rpc('rotate_project_invite', { pid: p.id })
+      if (err) throw err
+      if (!data) throw new Error('Could not reset the invite link.')
+      setNotice({ id: p.id, text: 'Old link reset' })
+      await shareFor(
+        p.id,
+        `Join my ${p.emoji} ${p.name} on my dashboard — open the link and sign in with your email: ${projectInviteUrl(data)}`,
+      )
+    })
+  }
+
+  async function sharePublic(p: ProjectMeta) {
+    await shareFor(p.id, `${p.emoji} ${p.name}: ${projectUrl(p.path)}`).catch((err) =>
+      setError(err instanceof Error ? err.message : String(err)),
+    )
   }
 
   const header = (
@@ -402,6 +470,76 @@ export function Sharing() {
             )
           })}
         </ul>
+      )}
+
+      <section className="mt-6">
+        <h2 className="mb-1 text-sm font-semibold">Invite links</h2>
+        <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
+          One link per project. Whoever opens it enters their email and gets that project only.
+          Removing a guest resets the link; Reset kills links you already sent. Shop areas have
+          their own links in the Shop List.
+        </p>
+        <div className={listBox}>
+          {shareable.map((p) => (
+            <div key={p.id} className="flex items-center gap-2 px-4 py-2">
+              <span className="min-w-0 flex-1 truncate text-sm">
+                {p.emoji} {p.name}
+                {notice?.id === p.id && (
+                  <span className="ml-2 text-xs text-emerald-600 dark:text-emerald-400">
+                    {notice.text}
+                  </span>
+                )}
+              </span>
+              <Button
+                variant="ghost"
+                disabled={busy}
+                onClick={() => void resetInvite(p)}
+                aria-label={`Reset ${p.name} invite link`}
+                className={armedReset === p.id ? 'text-rose-600 dark:text-rose-400' : ''}
+              >
+                {armedReset === p.id ? 'Reset?' : '♻️'}
+              </Button>
+              <Button
+                variant="ghost"
+                disabled={busy}
+                onClick={() => void shareInvite(p)}
+                aria-label={`Share ${p.name} invite link`}
+              >
+                🔗 Invite
+              </Button>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {publicProjects.length > 0 && (
+        <section className="mt-6">
+          <h2 className="mb-1 text-sm font-semibold">Public — no invite needed</h2>
+          <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
+            Anyone with the plain link can use these, no sign-in.
+          </p>
+          <div className={listBox}>
+            {publicProjects.map((p) => (
+              <div key={p.id} className="flex items-center gap-2 px-4 py-2">
+                <span className="min-w-0 flex-1 truncate text-sm">
+                  {p.emoji} {p.name}
+                  {notice?.id === p.id && (
+                    <span className="ml-2 text-xs text-emerald-600 dark:text-emerald-400">
+                      {notice.text}
+                    </span>
+                  )}
+                </span>
+                <Button
+                  variant="ghost"
+                  onClick={() => void sharePublic(p)}
+                  aria-label={`Share ${p.name} link`}
+                >
+                  🔗 Link
+                </Button>
+              </div>
+            ))}
+          </div>
+        </section>
       )}
 
       <Card className="mt-6 flex items-center justify-between gap-3 text-sm text-slate-500 dark:text-slate-400">

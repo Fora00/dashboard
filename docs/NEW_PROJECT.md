@@ -55,8 +55,14 @@ Add an object to the `projects` array. The home grid renders this list.
   path: '/<id>',
   status: 'live',
   // ownerOnly: true,   // only if the whole project is owner-only
+  // public: true,      // local-only public data: no login, no invite link
 },
 ```
+
+Every live project that isn't `ownerOnly`/`public` is offered on /sharing and
+gets a per-project invite link (`isInvitable()` in the same file). If the
+project has no cloud data at all (like `settings`), add its id to
+`NOT_INVITABLE` there.
 
 ## 2. Route — `src/App.tsx`
 
@@ -315,13 +321,19 @@ create policy "members full access" on public.<things>
 
 -- Realtime, so edits reach other devices live. One line per synced table.
 alter publication supabase_realtime add table public.<things>;
+
+-- Let /sharing hand out a per-project invite link (#/join/p/<token>).
+-- Omit for owner-only projects.
+insert into public.shareable_projects (id) values ('<id>') on conflict do nothing;
 ```
 
 Notes:
 - `projectId` in step 4, the registry `id` in step 1, and the string in
   `is_member('<id>')` here **must all be identical.**
 - A guest only gains access once the owner adds a `project_members` row for them
-  (the /sharing page). The owner bypasses `is_member` for every project.
+  (the /sharing page), or once they redeem the project's invite link. The owner
+  bypasses `is_member` for every project. The `shareable_projects` row is the
+  server-side allowlist for invite links and must match `isInvitable()`.
 - `id uuid primary key` matches the client's `crypto.randomUUID()`.
 - **Cap every free-text column** with `check (char_length(col) <= N)` (title
   300, notes 2000, as in `20260910120000_links.sql`). Without it a guest or a
@@ -393,7 +405,8 @@ existing one, so the build stays green until the owner pushes and regenerates.
 - [ ] 4. `src/lib/<id>Sync.ts` — `TableSync` config, engine, mutation helpers,
        `sync` / `useStatus` / `start<Name>Sync` exports
 - [ ] 5. `supabase/migrations/<datestamp>_<id>.sql` — table, RLS via
-       `is_member('<id>')` with `with check`, realtime publication
+       `is_member('<id>')` with `with check`, realtime publication,
+       `shareable_projects` row
 - [ ] 6. Page component reads Dexie via `useLiveQuery`, mounts `<SyncCard sync={sync} />`
 - [ ] 7. Owner runs `npx supabase db push`, then `npm run db:types` — in that
        order (workers never do either; they hand-write the types block instead)

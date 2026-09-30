@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { Link, Outlet, useLocation } from 'react-router-dom'
 import { ErrorBoundary } from './ErrorBoundary'
+import { InstallHint } from './InstallHint'
 import { OnlineBadge } from './OnlineBadge'
 import { OfflineBanner } from './OfflineBanner'
 import { UpdateToast } from './UpdateToast'
@@ -23,6 +24,12 @@ export function Layout() {
     if (p) void recordOpen(p.id)
   }, [location.pathname])
 
+  // A guest who just redeemed a project invite (JoinProject navigates here
+  // with state.joined) lands on the project with the PWA install tip on top.
+  // (Home mounts its own hint, so skip it there.)
+  const justJoined =
+    location.pathname !== '/' && (location.state as { joined?: boolean } | null)?.joined === true
+
   return (
     <div className="min-h-dvh bg-slate-50 text-slate-900 dark:bg-slate-900 dark:text-slate-100">
       <header className="sticky top-0 z-10 border-b border-slate-200 bg-white/90 backdrop-blur dark:border-slate-800 dark:bg-slate-900/90">
@@ -36,6 +43,7 @@ export function Layout() {
       <OfflineBanner />
       <main className="mx-auto max-w-3xl px-4 py-6 pb-16">
         <ErrorBoundary resetKey={location.pathname}>
+          {justJoined && <InstallHint />}
           <Outlet />
         </ErrorBoundary>
       </main>

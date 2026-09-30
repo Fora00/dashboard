@@ -18,6 +18,7 @@ import { Climbing } from './projects/climbing/Climbing'
 import { Habits } from './projects/habits/Habits'
 import { Events } from './projects/events/Events'
 import { Home } from './projects/home/Home'
+import { JoinProject } from './projects/join/JoinProject'
 import { Life } from './projects/life/Life'
 import { LifeEditor } from './projects/life/LifeEditor'
 import { LifeImport } from './projects/life/LifeImport'
@@ -78,6 +79,7 @@ export default function App() {
           <Route path="/settings" element={<Settings />} />
           <Route path="/sharing" element={<Sharing />} />
           <Route path="/join/:token" element={<JoinArea />} />
+          <Route path="/join/p/:token" element={<JoinProject />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>

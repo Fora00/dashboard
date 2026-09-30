@@ -373,6 +373,24 @@ export type Database = {
         }
         Relationships: []
       }
+      project_invites: {
+        Row: {
+          created_at: string
+          project_id: string
+          share_token: string
+        }
+        Insert: {
+          created_at?: string
+          project_id: string
+          share_token?: string
+        }
+        Update: {
+          created_at?: string
+          project_id?: string
+          share_token?: string
+        }
+        Relationships: []
+      }
       project_members: {
         Row: {
           created_at: string
@@ -388,6 +406,18 @@ export type Database = {
           created_at?: string
           email?: string
           project_id?: string
+        }
+        Relationships: []
+      }
+      shareable_projects: {
+        Row: {
+          id: string
+        }
+        Insert: {
+          id: string
+        }
+        Update: {
+          id?: string
         }
         Relationships: []
       }
@@ -505,21 +535,33 @@ export type Database = {
       area_share_token: { Args: { aid: string }; Returns: string }
       can_access_area: { Args: { aid: string }; Returns: boolean }
       get_invite: { Args: { token: string }; Returns: string }
+      get_project_invite: { Args: { token: string }; Returns: string | null }
       is_member: { Args: { pid: string }; Returns: boolean }
       is_owner: { Args: never; Returns: boolean }
       join_area: { Args: { token: string }; Returns: undefined }
+      join_project: { Args: { token: string }; Returns: string }
       jwt_email: { Args: never; Returns: string }
       links_tags_within_length: { Args: { tags: string[] }; Returns: boolean }
       trips_ids_within_length: { Args: { ids: string[] }; Returns: boolean }
+      project_invite_token: { Args: { pid: string }; Returns: string }
       redeem_invite: {
         Args: { guest_email: string; token: string }
         Returns: undefined
+      }
+      redeem_project_invite: {
+        Args: { guest_email: string; token: string }
+        Returns: string
       }
       revoke_area_guest: {
         Args: { aid: string; guest_email: string }
         Returns: string
       }
+      revoke_project_guest: {
+        Args: { guest_email: string; pid: string }
+        Returns: string | null
+      }
       rotate_area_token: { Args: { aid: string }; Returns: string }
+      rotate_project_invite: { Args: { pid: string }; Returns: string }
     }
     Enums: {
       [_ in never]: never
