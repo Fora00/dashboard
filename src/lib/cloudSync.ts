@@ -1,6 +1,12 @@
-import type { Table } from 'dexie'
+import Dexie, { type Table } from 'dexie'
 import type { RealtimeChannel } from '@supabase/supabase-js'
-import { db, type OutboxEntry, type OutboxPayload, type OutboxTable } from './db'
+import {
+  db,
+  type OutboxEntry,
+  type OutboxMap,
+  type OutboxPayload,
+  type OutboxTable,
+} from './db'
 import { supabase } from './sync'
 
 // Generic, table-config-driven local-first cloud sync.
@@ -17,17 +23,35 @@ import { supabase } from './sync'
 // The audited sync bugs are fixed here, once, for every project:
 //   * Guest sign-in never wipes local data — a permanently-rejected push is
 //     kept as a dead-lettered outbox tombstone that still shields its local row
-//     from pull() deletion, instead of being silently dropped.
-//   * Errors are classified explicitly (transient → retry, RLS/constraint →
-//     poison) with a per-entry retry cap, not a code-length heuristic.
+//     from pull() deletion, instead of being silently dropped. The user can
+//     Retry or Discard dead-letters explicitly (retryDead / discardDead).
+//   * Errors are classified explicitly (unreachable/auth → wait, RLS/constraint
+//     → poison, other server errors → counted retry). Only a refusal the SERVER
+//     actually answered counts towards the retry cap: offline edits are never
+//     dead-lettered, however many pile up.
+//   * Flush and pull are mutually exclusive (one lock per engine), so a row
+//     pushed mid-pull can never be deleted/clobbered by that pull's stale view.
 //   * Realtime is last-writer-wins by updated_at and skips rows with pending
 //     outbox entries.
-//   * The whole flush+pull cycle is guarded against reentrant/overlapping runs.
+//   * Malformed remote rows are skipped and counted, never crash a pull.
+
+/** Remote tables whose outbox payload is exactly L. Falls back to every table
+ *  for a row type not in OutboxMap yet (a freshly generated scaffold before its
+ *  db.ts edit — see docs/NEW_PROJECT.md), so scaffolds still compile. */
+type RemoteMatching<L> = {
+  [K in OutboxTable]: [L] extends [OutboxMap[K]]
+    ? [OutboxMap[K]] extends [L]
+      ? K
+      : never
+    : never
+}[OutboxTable]
+type RemoteFor<L> = [RemoteMatching<L>] extends [never] ? OutboxTable : RemoteMatching<L>
 
 /** One local table ↔ one remote table, with row mappers. */
 export interface TableSync<L extends { id: string } = { id: string }, R = unknown> {
-  /** Remote (Supabase) table name; also the outbox discriminator. */
-  remote: OutboxTable
+  /** Remote (Supabase) table name; also the outbox discriminator. Must be the
+   *  OutboxMap key whose row type is L. */
+  remote: RemoteFor<L>
   /** The local Dexie table. Lazily resolved so db is fully constructed first.
    *  (Insert type is erased — EntityTable's InsertType isn't otherwise
    *  assignable across the generic boundary.) */
@@ -70,7 +94,15 @@ export interface SyncStatus {
   lastError: string | null
   /** True while a flush is in progress. */
   syncing: boolean
+  /** Remote rows the last pull skipped because they were malformed. */
+  skipped: number
 }
+
+/** A local-only child delete that rides along a parent's cascade delete: every
+ *  row of `remote`'s local table whose `key` field equals the parent id. */
+export type CascadeChild = {
+  [C in OutboxTable]: { remote: C; key: keyof OutboxMap[C] & string }
+}[OutboxTable]
 
 export interface CloudSync {
   /** Push this project's queued mutations. No-op when signed out/offline. */
@@ -80,13 +112,24 @@ export interface CloudSync {
   /** Start syncing (call when a session exists). Returns a stop function. */
   start: () => () => void
   /** Write a local upsert + queue it, in one transaction. */
-  upsert: (remote: OutboxTable, row: OutboxPayload) => Promise<void>
+  upsert: <K extends OutboxTable>(remote: K, row: NoInfer<OutboxMap[K]>) => Promise<void>
   /** Write many local upserts + queue them, in one transaction. */
-  upsertMany: (remote: OutboxTable, rows: OutboxPayload[]) => Promise<void>
+  upsertMany: <K extends OutboxTable>(remote: K, rows: NoInfer<OutboxMap[K]>[]) => Promise<void>
   /** Delete a local row + queue the delete, in one transaction. */
   remove: (remote: OutboxTable, id: string) => Promise<void>
   /** Delete many local rows + queue their deletes, in one transaction. */
   removeMany: (remote: OutboxTable, ids: string[]) => Promise<void>
+  /** Delete a parent row whose server-side FK is `on delete cascade`: ONE
+   *  outbox tombstone for the parent, plus a local-only delete of its children
+   *  (the server removes those itself), all in one transaction. */
+  removeCascade: (remote: OutboxTable, id: string, children: CascadeChild[]) => Promise<void>
+  /** Requeue every dead-lettered entry of this project (user tapped Retry).
+   *  Each row is requeued ONCE, carrying its current local state. */
+  retryDead: () => Promise<void>
+  /** Drop every dead-lettered entry of this project (user tapped Discard):
+   *  the rows lose their shield, so the next pull replaces them with the
+   *  server's version (or removes them if the server has none). */
+  discardDead: () => Promise<void>
   /** Current status snapshot (stable identity until it changes). */
   getStatus: () => SyncStatus
   /** Subscribe to status changes. Returns an unsubscribe function.
@@ -94,39 +137,99 @@ export interface CloudSync {
   subscribe: (listener: () => void) => () => void
 }
 
-// After this many failed attempts a transient error is treated as poison and
-// dead-lettered, so a permanently-broken entry can never block the queue
-// forever (and its row stays shielded from pull deletion).
+// After this many SERVER-ANSWERED failures a retryable error is treated as
+// poison and dead-lettered, so a permanently-broken entry can never block the
+// queue forever (and its row stays shielded from pull deletion).
 const MAX_TRIES = 8
 
-/** Classify a push error: retry later, or poison (will never be accepted). */
-function classify(err: unknown): 'retry' | 'poison' {
-  const code = (err as { code?: unknown })?.code
-  // No code = network/transport failure (or a thrown non-PostgREST error).
-  if (typeof code !== 'string' || code === '') return 'retry'
-  // Auth/transient: expired or missing JWT — succeeds again after re-auth.
-  if (code === 'PGRST301') return 'retry'
+/** A push the server (or the transport) refused. `status` 0 = no response. */
+class PushError extends Error {
+  code: string
+  status: number
+  constructor(err: { message?: string; code?: string }, status: number) {
+    super(err.message ?? 'push failed')
+    this.code = typeof err.code === 'string' ? err.code : ''
+    this.status = status
+  }
+}
+
+type ErrorClass =
+  /** No server answer (offline, DNS, timeout): stop, don't count a try. */
+  | 'unreachable'
+  /** Missing/expired JWT: fixed by re-auth, never poison, don't count. */
+  | 'auth'
+  /** The server will never accept it: dead-letter now. */
+  | 'poison'
+  /** Anything else: count a try, dead-letter at MAX_TRIES. */
+  | 'retry'
+
+/** Classify a push error. Only errors the server actually answered (a
+ *  PostgREST code or an HTTP status) may ever count towards the cap. */
+function classify(err: unknown): ErrorClass {
+  // Not a PushError: a local exception (e.g. a mapper bug). Deterministic, so
+  // it counts — it must not block the queue forever.
+  if (!(err instanceof PushError)) return 'retry'
+  const { code, status } = err
+  // supabase-js maps every fetch failure to status 0 with an empty code.
+  if (status === 0 && code === '') return 'unreachable'
   // True denials that a retry can never fix:
   //   42501 = RLS / insufficient privilege (guest pushing data she can't write)
   //   23xxx = integrity constraint (unique, FK, not-null, check) violations
   if (code === '42501') return 'poison'
   if (code.startsWith('23')) return 'poison'
-  // Anything else: retry, but the MAX_TRIES cap will eventually dead-letter it
-  // rather than loop forever or silently drop it.
+  // PGRST30x = JWT missing/expired/invalid; 401 without a code is the same.
+  if (code.startsWith('PGRST30') || (status === 401 && code === '')) return 'auth'
   return 'retry'
+}
+
+/** navigator.onLine === false is a reliable "definitely offline" (true is not
+ *  a reliable "online" — that case is handled by 'unreachable' above). */
+function isOffline(): boolean {
+  return typeof navigator !== 'undefined' && navigator.onLine === false
+}
+
+/** Run side effects (count refresh, flush) OUTSIDE any Dexie transaction the
+ *  caller may be in — e.g. a wrapper that nests engine.upsert inside its own
+ *  db.transaction. Their reads then queue behind that transaction's commit
+ *  instead of reusing it after it has finished. */
+function detached(fn: () => void): void {
+  Dexie.ignoreTransaction(fn)
 }
 
 export function createCloudSync(config: SyncConfig): CloudSync {
   const byRemote = new Map<OutboxTable, AnyTableSync>(
-    config.tables.map((t) => [t.remote, t]),
+    config.tables.map((t) => [t.remote as OutboxTable, t]),
   )
-  const remotes = new Set<OutboxTable>(config.tables.map((t) => t.remote))
+  const remotes = new Set<OutboxTable>(byRemote.keys())
+
+  function tableFor(remote: OutboxTable): AnyTableSync {
+    const tc = byRemote.get(remote)
+    if (!tc) throw new Error(`cloudSync(${config.projectId}): unknown table ${remote}`)
+    return tc
+  }
 
   let channels: RealtimeChannel[] = []
-  let flushing = false
+  let running = false
+
+  // --- One lock per engine: flush passes and pulls never overlap ------------
+  // Why this makes pull() safe: pull reads its outbox shield inside the same
+  // lock that covers its remote select. So no outbox entry can be pushed AND
+  // deleted between the select and the shield read — every local change is
+  // either (a) already on the server before the select was issued (so the
+  // select sees it) or (b) still in the outbox when the shield is read (so the
+  // row is neither overwritten nor deleted). Mutations committed after the
+  // pull's Dexie transaction are serialized after it by IndexedDB and win.
+  let lock: Promise<unknown> = Promise.resolve()
+  function exclusive<T>(fn: () => Promise<T>): Promise<T> {
+    const run = lock.then(fn, fn)
+    lock = run.catch(() => {})
+    return run
+  }
+
+  let flushing = false // a flush holds the lock right now
+  let flushQueued: Promise<void> | null = null // a flush waits for the lock
   // Set when flush() is called while a flush runs; triggers one more pass.
   let rerun = false
-  let running = false
 
   // --- Observable status ----------------------------------------------------
   let status: SyncStatus = {
@@ -135,19 +238,14 @@ export function createCloudSync(config: SyncConfig): CloudSync {
     lastSyncedAt: null,
     lastError: null,
     syncing: false,
+    skipped: 0,
   }
   const listeners = new Set<() => void>()
 
   function setStatus(patch: Partial<SyncStatus>): void {
     const next = { ...status, ...patch }
     // Skip the emit when nothing actually changed (avoids render churn).
-    if (
-      next.pending === status.pending &&
-      next.dead === status.dead &&
-      next.lastSyncedAt === status.lastSyncedAt &&
-      next.lastError === status.lastError &&
-      next.syncing === status.syncing
-    ) {
+    if ((Object.keys(next) as (keyof SyncStatus)[]).every((k) => next[k] === status[k])) {
       return
     }
     status = next
@@ -161,8 +259,8 @@ export function createCloudSync(config: SyncConfig): CloudSync {
   }
 
   // Recount live/dead outbox entries for this project's tables and derive the
-  // error line from the dead-letter count (a dead-letter is permanent, so the
-  // error persists until the tombstone is gone — i.e. never, by design).
+  // error line from the dead-letter count: it persists exactly as long as a
+  // dead-letter exists (until the user retries or discards it).
   async function refreshCounts(): Promise<void> {
     let pending = 0
     let dead = 0
@@ -174,23 +272,32 @@ export function createCloudSync(config: SyncConfig): CloudSync {
     setStatus({ pending, dead, lastError: dead > 0 ? deadMessage(dead) : null })
   }
 
+  async function signedIn(): Promise<boolean> {
+    if (!supabase) return false
+    const { data } = await supabase.auth.getSession()
+    return !!data.session
+  }
+
   async function pushEntry(entry: OutboxEntry): Promise<void> {
     if (!supabase) return
     const tc = byRemote.get(entry.table)
     if (!tc) return
     if (entry.op === 'upsert' && entry.payload) {
-      const { error } = await supabase
+      const { error, status: http } = await supabase
         .from(entry.table)
-        .upsert(tc.toRow(entry.payload as { id: string }))
-      if (error) throw error
+        .upsert(tc.toRow(entry.payload))
+      if (error) throw new PushError(error, http)
     } else if (entry.op === 'delete') {
-      const { error } = await supabase.from(entry.table).delete().eq('id', entry.rowId)
-      if (error) throw error
+      const { error, status: http } = await supabase
+        .from(entry.table)
+        .delete()
+        .eq('id', entry.rowId)
+      if (error) throw new PushError(error, http)
     }
   }
 
   /** One ordered pass over the outbox. Returns false if it stopped on a
-   *  transient failure (so the caller must not immediately go again). */
+   *  failure that must wait for a trigger (so the caller must not spin). */
   async function flushPass(): Promise<boolean> {
     const entries = await db.outbox.orderBy('seq').toArray()
     for (const entry of entries) {
@@ -199,8 +306,13 @@ export function createCloudSync(config: SyncConfig): CloudSync {
       try {
         await pushEntry(entry)
       } catch (err) {
+        const kind = classify(err)
+        // No server answer / needs re-auth: stop WITHOUT counting a try, so
+        // any number of offline edits can queue up and none is ever falsely
+        // dead-lettered. Order is preserved; retried on the next trigger.
+        if (kind === 'unreachable' || kind === 'auth') return false
         const tries = (entry.tries ?? 0) + 1
-        if (classify(err) === 'poison' || tries >= MAX_TRIES) {
+        if (kind === 'poison' || tries >= MAX_TRIES) {
           // Dead-letter: keep the entry (never drop it) so its rowId still
           // shields the local row from pull() deletion. Local data survives.
           await db.outbox.update(entry.seq!, { dead: 1, tries })
@@ -208,8 +320,8 @@ export function createCloudSync(config: SyncConfig): CloudSync {
           await refreshCounts()
           continue
         }
-        // Transient (offline / expired JWT / 5xx): bump the counter and stop,
-        // preserving per-row order. Retried on the next reconnect/foreground.
+        // Server answered with a transient error (5xx, 429…): count it and
+        // stop, preserving per-row order.
         await db.outbox.update(entry.seq!, { tries })
         return false
       }
@@ -218,70 +330,109 @@ export function createCloudSync(config: SyncConfig): CloudSync {
     return true
   }
 
-  async function flush(): Promise<void> {
-    if (!supabase) return
+  function flush(): Promise<void> {
+    if (!supabase) return Promise.resolve()
     // Reflect a just-enqueued mutation even when signed out (pending count).
     void refreshCounts()
+    // Definitely offline: don't even try; 'online' triggers the next attempt.
+    if (isOffline()) return Promise.resolve()
     // A flush is already running: ask it for one more pass so entries queued
     // after it read the outbox go out now, not on the next online/visibility
     // trigger. Never run two passes concurrently — that pushes entries twice
     // and can land an upsert after its delete (resurrecting the row).
     if (flushing) {
       rerun = true
-      return
+      return Promise.resolve()
     }
-    // Take the lock BEFORE the first await, release it in finally (also when
-    // getSession() throws).
-    flushing = true
-    try {
-      const { data } = await supabase.auth.getSession()
-      if (!data.session) return
-      setStatus({ syncing: true })
-      do {
+    // One is already waiting for the lock: it reads the outbox when it runs,
+    // so it will include this entry too.
+    if (flushQueued) return flushQueued
+    const run = exclusive(async () => {
+      flushQueued = null
+      flushing = true
+      try {
+        if (!(await signedIn())) return
+        setStatus({ syncing: true })
+        do {
+          rerun = false
+          // Stopped on a failure that must wait: don't spin.
+          if (!(await flushPass())) break
+        } while (rerun)
+      } finally {
+        flushing = false
         rerun = false
-        // Stopped on a transient failure: don't spin, wait for a trigger.
-        if (!(await flushPass())) break
-      } while (rerun)
-    } finally {
-      flushing = false
-      rerun = false
-      setStatus({ syncing: false })
-      await refreshCounts()
+        setStatus({ syncing: false })
+        await refreshCounts()
+      }
+    })
+    flushQueued = run
+    return run
+  }
+
+  /** Map one remote row, or null if it's malformed (never throws). */
+  function mapRow(tc: AnyTableSync, raw: unknown): { id: string } | null {
+    if (!raw || typeof raw !== 'object') return null
+    if (typeof (raw as { id?: unknown }).id !== 'string') return null
+    try {
+      const row = tc.fromRow(raw) as { id?: unknown } | null
+      if (!row || typeof row !== 'object' || row.id !== (raw as { id: string }).id) return null
+      return row as { id: string }
+    } catch {
+      return null
     }
   }
 
-  async function pull(): Promise<boolean> {
-    if (!supabase) return false
-    const results = await Promise.all(
-      config.tables.map((tc) => supabase!.from(tc.remote).select(tc.columns)),
-    )
-    // If any table errored, abort the whole pull — never partial-delete based
-    // on an incomplete remote view.
-    if (results.some((r) => r.error || !r.data)) return false
-
-    const dexieTables = config.tables.map((t) => t.table())
-    await db.transaction('rw', [...dexieTables, db.outbox], async () => {
-      // Rows with any pending or dead-lettered outbox entry are "ours": remote
-      // must not overwrite or delete them.
-      const pending = new Set(
-        (await db.outbox.toArray())
-          .filter((e) => remotes.has(e.table))
-          .map((e) => e.rowId),
+  function pull(): Promise<boolean> {
+    return exclusive(async () => {
+      if (!supabase || isOffline()) return false
+      // Signed out, RLS answers every select with zero rows — treating that
+      // as "the server has nothing" would wipe local data. Never pull then.
+      if (!(await signedIn())) return false
+      const results = await Promise.all(
+        config.tables.map((tc) => supabase!.from(tc.remote).select(tc.columns)),
       )
-      for (let i = 0; i < config.tables.length; i++) {
-        const tc = config.tables[i]
-        const result = results[i]
-        if (!tc || !result) continue
-        const rows = (result.data as unknown[]).map((r) => tc.fromRow(r))
-        const remoteIds = new Set(rows.map((r) => r.id))
-        const localIds = (await tc.table().toCollection().primaryKeys()) as string[]
-        await tc.table().bulkPut(rows.filter((r) => !pending.has(r.id)))
-        await tc
-          .table()
-          .bulkDelete(localIds.filter((id) => !remoteIds.has(id) && !pending.has(id)))
+      // If any table errored, abort the whole pull — never partial-delete based
+      // on an incomplete remote view.
+      if (results.some((r) => r.error || !Array.isArray(r.data))) return false
+
+      let skipped = 0
+      const dexieTables = config.tables.map((t) => t.table())
+      await db.transaction('rw', [...dexieTables, db.outbox], async () => {
+        // Rows with any pending or dead-lettered outbox entry are "ours":
+        // remote must not overwrite or delete them.
+        const pending = new Set(
+          (await db.outbox.toArray())
+            .filter((e) => remotes.has(e.table))
+            .map((e) => e.rowId),
+        )
+        for (let i = 0; i < config.tables.length; i++) {
+          const tc = config.tables[i]
+          const result = results[i]
+          if (!tc || !result) continue
+          const rows: { id: string }[] = []
+          // Every id the server reported, malformed or not: a local row whose
+          // remote copy is merely unreadable must not be deleted.
+          const remoteIds = new Set<string>()
+          for (const raw of result.data as unknown[]) {
+            const rawId = (raw as { id?: unknown } | null)?.id
+            if (typeof rawId === 'string') remoteIds.add(rawId)
+            const row = mapRow(tc, raw)
+            if (row) rows.push(row)
+            else skipped++
+          }
+          const localIds = (await tc.table().toCollection().primaryKeys()) as string[]
+          await tc.table().bulkPut(rows.filter((r) => !pending.has(r.id)))
+          await tc
+            .table()
+            .bulkDelete(localIds.filter((id) => !remoteIds.has(id) && !pending.has(id)))
+        }
+      })
+      if (skipped > 0) {
+        console.warn(`cloudSync(${config.projectId}): skipped ${skipped} malformed remote row(s)`)
       }
+      setStatus({ skipped })
+      return true
     })
-    return true
   }
 
   async function syncNow(): Promise<void> {
@@ -303,9 +454,9 @@ export function createCloudSync(config: SyncConfig): CloudSync {
   ): Promise<void> {
     const id =
       payload.eventType === 'DELETE'
-        ? (payload.old as { id?: string }).id
-        : (payload.new as { id?: string }).id
-    if (!id) return
+        ? (payload.old as { id?: string } | null)?.id
+        : (payload.new as { id?: string } | null)?.id
+    if (typeof id !== 'string') return
     // A row we still have queued (or dead-lettered) is ours — ignore realtime
     // until it flushes, so an in-flight edit isn't clobbered and a locally
     // deleted-then-requeued row isn't resurrected.
@@ -315,7 +466,8 @@ export function createCloudSync(config: SyncConfig): CloudSync {
       await tc.table().delete(id)
       return
     }
-    const incoming = tc.fromRow(payload.new)
+    const incoming = mapRow(tc, payload.new)
+    if (!incoming) return // malformed: ignore; the next pull reconciles
     if (tc.updatedAt) {
       const existing = await tc.table().get(id)
       // Last-writer-wins: drop a stale event whose row we already have newer.
@@ -364,21 +516,26 @@ export function createCloudSync(config: SyncConfig): CloudSync {
     }
   }
 
-  async function upsert(remote: OutboxTable, row: OutboxPayload): Promise<void> {
-    const tc = byRemote.get(remote)
-    if (!tc) throw new Error(`cloudSync: unknown table ${remote}`)
+  /** After every local mutation: recount (UI badge) and try to push. */
+  function afterMutation(): void {
+    detached(() => {
+      void refreshCounts()
+      void flush()
+    })
+  }
+
+  async function upsert<K extends OutboxTable>(remote: K, row: OutboxMap[K]): Promise<void> {
+    const tc = tableFor(remote)
     await db.transaction('rw', tc.table(), db.outbox, async () => {
       await tc.table().put(row)
       await db.outbox.add({ table: remote, op: 'upsert', rowId: row.id, payload: row, ts: Date.now() })
     })
-    void refreshCounts()
-    void flush()
+    afterMutation()
   }
 
-  async function upsertMany(remote: OutboxTable, rows: OutboxPayload[]): Promise<void> {
+  async function upsertMany<K extends OutboxTable>(remote: K, rows: OutboxMap[K][]): Promise<void> {
     if (rows.length === 0) return
-    const tc = byRemote.get(remote)
-    if (!tc) throw new Error(`cloudSync: unknown table ${remote}`)
+    const tc = tableFor(remote)
     await db.transaction('rw', tc.table(), db.outbox, async () => {
       await tc.table().bulkPut(rows)
       const ts = Date.now()
@@ -386,33 +543,84 @@ export function createCloudSync(config: SyncConfig): CloudSync {
         rows.map((row) => ({ table: remote, op: 'upsert' as const, rowId: row.id, payload: row, ts })),
       )
     })
-    void refreshCounts()
-    void flush()
+    afterMutation()
   }
 
   async function remove(remote: OutboxTable, id: string): Promise<void> {
-    const tc = byRemote.get(remote)
-    if (!tc) throw new Error(`cloudSync: unknown table ${remote}`)
+    const tc = tableFor(remote)
     await db.transaction('rw', tc.table(), db.outbox, async () => {
       await tc.table().delete(id)
       await db.outbox.add({ table: remote, op: 'delete', rowId: id, ts: Date.now() })
     })
-    void refreshCounts()
-    void flush()
+    afterMutation()
   }
 
   async function removeMany(remote: OutboxTable, ids: string[]): Promise<void> {
     if (ids.length === 0) return
-    const tc = byRemote.get(remote)
-    if (!tc) throw new Error(`cloudSync: unknown table ${remote}`)
+    const tc = tableFor(remote)
     await db.transaction('rw', tc.table(), db.outbox, async () => {
       await tc.table().bulkDelete(ids)
+      const ts = Date.now()
       await db.outbox.bulkAdd(
-        ids.map((id) => ({ table: remote, op: 'delete' as const, rowId: id, ts: Date.now() })),
+        ids.map((id) => ({ table: remote, op: 'delete' as const, rowId: id, ts })),
       )
     })
-    void refreshCounts()
-    void flush()
+    afterMutation()
+  }
+
+  async function removeCascade(
+    remote: OutboxTable,
+    id: string,
+    children: CascadeChild[],
+  ): Promise<void> {
+    const tc = tableFor(remote)
+    const kids = children.map((c) => ({ tc: tableFor(c.remote), key: c.key }))
+    await db.transaction('rw', [tc.table(), ...kids.map((k) => k.tc.table()), db.outbox], async () => {
+      // Children first (local only — the server's FK cascade removes them),
+      // then the parent, then its single tombstone.
+      for (const k of kids) await k.tc.table().where(k.key).equals(id).delete()
+      await tc.table().delete(id)
+      await db.outbox.add({ table: remote, op: 'delete', rowId: id, ts: Date.now() })
+    })
+    afterMutation()
+  }
+
+  async function retryDead(): Promise<void> {
+    const tables = config.tables.map((t) => t.table())
+    await db.transaction('rw', [...tables, db.outbox], async () => {
+      const dead = (await db.outbox.orderBy('seq').toArray()).filter(
+        (e) => e.dead && remotes.has(e.table),
+      )
+      if (dead.length === 0) return
+      // A dead entry's payload may be stale: later edits of the same row may
+      // have been pushed since (the queue skips dead entries). Re-pushing the
+      // old payload would roll the server back. So requeue each row ONCE, at
+      // the end of the queue, as its CURRENT local state: present → upsert of
+      // the local row, absent → delete. Original relative order is kept, so a
+      // parent still goes before its children.
+      const latest = new Map<string, OutboxEntry>()
+      for (const e of dead) latest.set(`${e.table}\u0000${e.rowId}`, e)
+      await db.outbox.bulkDelete(dead.map((e) => e.seq!))
+      const ts = Date.now()
+      for (const e of latest.values()) {
+        const local = (await tableFor(e.table).table().get(e.rowId)) as OutboxPayload | undefined
+        await db.outbox.add(
+          local
+            ? { table: e.table, op: 'upsert', rowId: e.rowId, payload: local, ts, tries: 0, dead: 0 }
+            : { table: e.table, op: 'delete', rowId: e.rowId, ts, tries: 0, dead: 0 },
+        )
+      }
+    })
+    afterMutation()
+  }
+
+  async function discardDead(): Promise<void> {
+    const dead = (await db.outbox.toArray()).filter((e) => e.dead && remotes.has(e.table))
+    if (dead.length > 0) await db.outbox.bulkDelete(dead.map((e) => e.seq!))
+    await refreshCounts()
+    // Reconcile with the server right away when possible (no-op signed out:
+    // the rows then just wait, unshielded, for the next signed-in pull).
+    detached(() => void syncNow())
   }
 
   function getStatus(): SyncStatus {
@@ -429,5 +637,18 @@ export function createCloudSync(config: SyncConfig): CloudSync {
   // Seed the initial counts (fire-and-forget; UI updates when it resolves).
   void refreshCounts()
 
-  return { flush, syncNow, start, upsert, upsertMany, remove, removeMany, getStatus, subscribe }
+  return {
+    flush,
+    syncNow,
+    start,
+    upsert,
+    upsertMany,
+    remove,
+    removeMany,
+    removeCascade,
+    retryDead,
+    discardDead,
+    getStatus,
+    subscribe,
+  }
 }

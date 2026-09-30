@@ -78,12 +78,7 @@ export async function ensureDefaultArea(): Promise<void> {
 export async function deleteArea(areaId: string): Promise<void> {
   // Server cascades items on area delete, so one tombstone is enough — but
   // the local item rows must go too, in the same transaction.
-  await db.transaction('rw', db.shopAreas, db.shopItems, db.outbox, async () => {
-    await db.shopItems.where('areaId').equals(areaId).delete()
-    await db.shopAreas.delete(areaId)
-    await db.outbox.add({ table: 'shop_areas', op: 'delete', rowId: areaId, ts: Date.now() })
-  })
-  void engine.flush()
+  await engine.removeCascade('shop_areas', areaId, [{ remote: 'shop_items', key: 'areaId' }])
 }
 
 export async function addShopItem(text: string, areaId: string): Promise<void> {

@@ -293,40 +293,33 @@ export interface LifeCheckinEntry extends LifeEntryBase {
 // never deleted, only flipped, so last-writer-wins by updatedAt resolves them.
 export type LifeEntry = LifeTrackerEntry | LifeFocusEntry | LifeSundayEntry | LifeSentEntry | LifeCheckinEntry
 
-// Remote table names that the generic sync engine can push to. Each is also
-// the discriminator on an outbox entry. Mirrors the Supabase tables.
-export type OutboxTable =
-  | 'shop_items'
-  | 'shop_areas'
-  | 'todos'
-  | 'climb_sessions'
-  | 'climbs'
-  | 'habits'
-  | 'habit_checks'
-  | 'book_ideas'
-  | 'boardgame_ideas'
-  | 'links'
-  | 'life_weeks'
-  | 'life_entries'
-  | 'trip_ideas'
-  | 'trip_companions'
+// Remote (Supabase) table name → the LOCAL row shape that travels through the
+// outbox for it. The single source of truth for what the generic sync engine
+// can push: `engine.upsert('todos', row)` only accepts a Todo, so a payload
+// can't drift onto the wrong table. Add one line here per new synced table.
+export interface OutboxMap {
+  shop_items: ShopItem
+  shop_areas: ShopArea
+  todos: Todo
+  climb_sessions: ClimbSession
+  climbs: Climb
+  habits: Habit
+  habit_checks: HabitCheck
+  book_ideas: BookIdea
+  boardgame_ideas: BoardgameIdea
+  links: LinkItem
+  life_weeks: LifeWeek
+  life_entries: LifeEntry
+  trip_ideas: TripIdea
+  trip_companions: TripCompanion
+}
+
+// Remote table names the engine can push to — also the discriminator on an
+// outbox entry. Derived from OutboxMap, never listed by hand.
+export type OutboxTable = keyof OutboxMap
 
 // Local rows that may travel through the outbox (any synced project's shape).
-export type OutboxPayload =
-  | ShopItem
-  | ShopArea
-  | Todo
-  | ClimbSession
-  | Climb
-  | Habit
-  | HabitCheck
-  | BookIdea
-  | BoardgameIdea
-  | LinkItem
-  | LifeWeek
-  | LifeEntry
-  | TripIdea
-  | TripCompanion
+export type OutboxPayload = OutboxMap[OutboxTable]
 
 // Queue of local mutations not yet pushed to the cloud. Written alongside
 // every local write so changes made offline sync on reconnect (see cloudSync.ts).
@@ -337,12 +330,15 @@ export interface OutboxEntry {
   rowId: string
   payload?: OutboxPayload
   ts: number
-  // Number of push attempts so far — used to dead-letter a stuck entry.
+  // Push attempts the SERVER answered and refused — used to dead-letter a
+  // stuck entry. Network failures (offline, no response) never count.
   tries?: number
   // 1 once the entry is a permanent dead-letter (RLS/constraint denial or
-  // retry cap hit). Dead entries are NEVER re-pushed and NEVER deleted: they
-  // stay as a tombstone so pull() keeps shielding the local row from deletion.
-  // This is what prevents a guest sign-in from wiping local-only data.
+  // retry cap hit). Dead entries are never re-pushed automatically and never
+  // deleted automatically: they stay as a tombstone so pull() keeps shielding
+  // the local row from deletion. This is what prevents a guest sign-in from
+  // wiping local-only data. Only the user's explicit Retry / Discard
+  // (engine.retryDead / engine.discardDead, via SyncCard) clears them.
   dead?: 0 | 1
 }
 

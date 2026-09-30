@@ -11,8 +11,10 @@ import { Card } from './Card'
 //
 // Pass the project's sync engine (e.g. `import { sync } from '../../lib/todoSync'`)
 // as `sync` to show live sync state on the signed-in card: pending-changes
-// badge, last-synced time, and a visible error line when a push was rejected.
-// Without the prop the card behaves exactly as before.
+// badge, last-synced time, and a visible error line when a push was rejected,
+// with Retry (requeue the rejected changes) and Discard (drop them, take the
+// server's version — confirmed first). Without the prop the card behaves
+// exactly as before.
 
 interface SyncCardProps {
   sync?: CloudSync
@@ -38,6 +40,7 @@ export function SyncCard({ sync }: SyncCardProps) {
   const [stage, setStage] = useState<'email' | 'code'>('email')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [deadBusy, setDeadBusy] = useState(false)
   const codeInput = useRef<HTMLInputElement>(null)
 
   // Move focus to the code field the moment the code step appears so iOS can
@@ -95,9 +98,52 @@ export function SyncCard({ sync }: SyncCardProps) {
             <span>Synced {relativeTime(status.lastSyncedAt)}</span>
           )}
         </div>
-        {status.lastError && <p className="text-rose-600 dark:text-rose-400">⚠️ {status.lastError}</p>}
+        {status.lastError && (
+          <div className="space-y-2">
+            <p className="text-rose-600 dark:text-rose-400">⚠️ {status.lastError}</p>
+            {status.dead > 0 && (
+              <div className="flex flex-wrap gap-2">
+                <Button variant="ghost" disabled={deadBusy} onClick={() => void retryDead(sync)}>
+                  Retry
+                </Button>
+                <Button variant="danger" disabled={deadBusy} onClick={() => void discardDead(sync)}>
+                  Discard
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
+        {status.skipped > 0 && (
+          <p className="text-xs text-slate-500">
+            {status.skipped} unreadable row{status.skipped === 1 ? '' : 's'} from the server skipped
+          </p>
+        )}
       </Card>
     )
+  }
+
+  async function retryDead(engine: CloudSync) {
+    setDeadBusy(true)
+    try {
+      await engine.retryDead()
+    } finally {
+      setDeadBusy(false)
+    }
+  }
+
+  async function discardDead(engine: CloudSync) {
+    const n = status.dead
+    const ok = window.confirm(
+      `Discard ${n === 1 ? 'this rejected change' : `these ${n} rejected changes`}? ` +
+        "This device will take the server's version instead. This can't be undone.",
+    )
+    if (!ok) return
+    setDeadBusy(true)
+    try {
+      await engine.discardDead()
+    } finally {
+      setDeadBusy(false)
+    }
   }
 
   async function sendCode(e: FormEvent) {

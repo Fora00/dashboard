@@ -91,12 +91,7 @@ export async function setArchived(habit: Habit, archived: boolean): Promise<void
 // habit delete, so one tombstone is enough — but the local check rows must
 // go too, in the same transaction.
 export async function deleteHabit(habit: Habit): Promise<void> {
-  await db.transaction('rw', db.habits, db.habitChecks, db.outbox, async () => {
-    await db.habitChecks.where('habitId').equals(habit.id).delete()
-    await db.habits.delete(habit.id)
-    await db.outbox.add({ table: 'habits', op: 'delete', rowId: habit.id, ts: Date.now() })
-  })
-  void engine.flush()
+  await engine.removeCascade('habits', habit.id, [{ remote: 'habit_checks', key: 'habitId' }])
 }
 
 // Flip a habit's done state for one day (used for today's check-off).

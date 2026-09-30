@@ -104,12 +104,7 @@ export async function addSession(input: {
 export async function deleteSession(id: string): Promise<void> {
   // Server cascades climbs on session delete, so one tombstone is enough —
   // but the local climb rows must go too, in the same transaction.
-  await db.transaction('rw', db.climbSessions, db.climbs, db.outbox, async () => {
-    await db.climbs.where('sessionId').equals(id).delete()
-    await db.climbSessions.delete(id)
-    await db.outbox.add({ table: 'climb_sessions', op: 'delete', rowId: id, ts: Date.now() })
-  })
-  void engine.flush()
+  await engine.removeCascade('climb_sessions', id, [{ remote: 'climbs', key: 'sessionId' }])
 }
 
 export async function addClimb(
