@@ -8,6 +8,16 @@ import { Snackbar } from '../../components/Snackbar'
 import { useUndoSnackbar } from '../../lib/useUndoSnackbar'
 import { SkeletonList } from '../../components/Skeleton'
 import { FilterSheet } from './FilterSheet'
+import {
+  DATE_CHIPS,
+  chipRange,
+  loadFilters,
+  matchesQuery,
+  matchesRange,
+  normalizeText,
+  saveFilters,
+  type DateChip,
+} from './filters'
 import { EventCard } from './EventCard'
 import type { EventItem } from './types'
 import {
@@ -54,11 +64,15 @@ export function Events() {
 
   const [fetchState, setFetchState] = useState<'loading' | 'ok' | 'offline' | 'missing'>('loading')
   const [view, setView] = useState<View>('all')
+  // The last selection of this device (guarded localStorage); the search text is not kept.
+  const [initial] = useState(loadFilters)
   // null = "not touched": the favourites (if any) are the default filter.
-  const [selectedCats, setSelectedCats] = useState<string[] | null>(null)
-  const [selectedAreas, setSelectedAreas] = useState<string[]>([])
-  const [selectedCities, setSelectedCities] = useState<string[]>([])
-  const [showHidden, setShowHidden] = useState(false)
+  const [rawCats, setSelectedCats] = useState<string[] | null>(initial.cats)
+  const [rawAreas, setSelectedAreas] = useState<string[]>(initial.areas)
+  const [rawCities, setSelectedCities] = useState<string[]>(initial.cities)
+  const [dateChip, setDateChip] = useState<DateChip | null>(initial.chip)
+  const [showHidden, setShowHidden] = useState(initial.showHidden)
+  const [query, setQuery] = useState('')
   const [sheetOpen, setSheetOpen] = useState(false)
   const [showSources, setShowSources] = useState(false)
   const [limit, setLimit] = useState(PAGE)
@@ -85,12 +99,34 @@ export function Events() {
 
   const marks = useMemo(() => new Map<string, EventMark>((marksRaw ?? []).map((m) => [m.id, m])), [marksRaw])
   const favourites = useMemo(() => prefs?.favouriteCategories ?? [], [prefs])
-  const activeCats = selectedCats ?? favourites
 
   const file = cache?.file
   // Children's/family events are never shown (owner's choice); saved ones
   // still appear under Saved from their snapshot.
   const events = useMemo(() => (file?.events ?? []).filter((e) => !isKidsEvent(e)), [file])
+
+  // A remembered selection may name areas/categories/cities that no longer
+  // exist: only the ones still present in the file count.
+  const selectedCats = useMemo(
+    () => (rawCats === null ? null : rawCats.filter((id) => CATEGORIES.some((c) => c.id === id))),
+    [rawCats],
+  )
+  const selectedAreas = useMemo(() => {
+    const known = new Set(events.map(areaOf))
+    return rawAreas.filter((a) => known.has(a))
+  }, [rawAreas, events])
+  const selectedCities = useMemo(() => {
+    const known = new Set(events.map((e) => e.city))
+    return rawCities.filter((c) => known.has(c))
+  }, [rawCities, events])
+
+  useEffect(() => {
+    if (!file) return
+    saveFilters({ cats: selectedCats, areas: selectedAreas, cities: selectedCities, chip: dateChip, showHidden })
+  }, [file, selectedCats, selectedAreas, selectedCities, dateChip, showHidden])
+
+  const nq = useMemo(() => normalizeText(query), [query])
+  const activeCats = selectedCats ?? favourites
 
   // Base list of the current view, before category/city filters.
   const base = useMemo(() => {
@@ -101,39 +137,45 @@ export function Events() {
         .map((m) => live.get(m.id) ?? m.event)
         .sort(byStart)
     }
-    const list = events.filter((e) => {
+    return events.filter((e) => {
       if (isOver(e, now)) return false
       if (!showHidden && marks.get(e.id)?.state === 'hidden') return false
       if (view === 'open') return isOngoingNow(e, now)
       return true
     })
-    return list
   }, [view, events, marksRaw, marks, now, showHidden])
+
+  // Date chip and search narrow the whole list, so the sheet counts follow them.
+  const range = useMemo(() => (dateChip ? chipRange(dateChip, now) : null), [dateChip, now])
+  const scoped = useMemo(
+    () => base.filter((e) => (!range || matchesRange(e, range, now)) && matchesQuery(e, nq)),
+    [base, range, nq, now],
+  )
 
   // Areas, nearest first; counts over the whole view (like cities used to be).
   const areaCounts = useMemo(() => {
     const m = new Map<string, number>()
-    for (const e of base) m.set(areaOf(e), (m.get(areaOf(e)) ?? 0) + 1)
+    for (const e of scoped) m.set(areaOf(e), (m.get(areaOf(e)) ?? 0) + 1)
     return [...m.entries()].sort((a, b) => areaRank(a[0]) - areaRank(b[0]) || a[0].localeCompare(b[0]))
-  }, [base])
+  }, [scoped])
 
   // Only the cities of the selected areas (all when none is selected).
   const cityCounts = useMemo(() => {
     const m = new Map<string, number>()
-    for (const e of base) if (inAreas(e, selectedAreas)) m.set(e.city, (m.get(e.city) ?? 0) + 1)
+    for (const e of scoped) if (inAreas(e, selectedAreas)) m.set(e.city, (m.get(e.city) ?? 0) + 1)
     return [...m.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
-  }, [base, selectedAreas])
+  }, [scoped, selectedAreas])
 
   // Category counts respect the area and city filters but not the category filter.
   const catCounts = useMemo(() => {
     const m = new Map<string, number>()
-    for (const e of base) {
+    for (const e of scoped) {
       if (!inAreas(e, selectedAreas)) continue
       if (selectedCities.length && !selectedCities.includes(e.city)) continue
       for (const c of CATEGORIES) if (inCategory(e, c.id)) m.set(c.id, (m.get(c.id) ?? 0) + 1)
     }
     return m
-  }, [base, selectedAreas, selectedCities])
+  }, [scoped, selectedAreas, selectedCities])
 
   const catOrder = useMemo(() => {
     const ids = CATEGORIES.map((c) => c.id)
@@ -143,13 +185,13 @@ export function Events() {
 
   const filtered = useMemo(
     () =>
-      base.filter(
+      scoped.filter(
         (e) =>
           (activeCats.length === 0 || activeCats.some((c) => inCategory(e, c))) &&
           inAreas(e, selectedAreas) &&
           (selectedCities.length === 0 || selectedCities.includes(e.city)),
       ),
-    [base, activeCats, selectedAreas, selectedCities],
+    [scoped, activeCats, selectedAreas, selectedCities],
   )
 
   // Flat, ordered list of groups; then cut to `limit` cards in total.
@@ -345,6 +387,55 @@ export function Events() {
         ))}
       </div>
 
+      <div className="relative mb-2">
+        <input
+          type="text"
+          inputMode="search"
+          enterKeyHint="search"
+          autoComplete="off"
+          autoCorrect="off"
+          spellCheck={false}
+          aria-label="Search events"
+          placeholder="Search title, venue, city…"
+          value={query}
+          onChange={(e) => {
+            setQuery(e.target.value)
+            resetLimit()
+          }}
+          className="h-10 w-full rounded-lg border-2 border-slate-200 bg-white pr-10 pl-3 text-base text-slate-900 placeholder:text-slate-400 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-100"
+        />
+        <button
+          type="button"
+          aria-label="Clear search"
+          onClick={() => {
+            setQuery('')
+            resetLimit()
+          }}
+          className={`absolute top-0 right-0 flex size-10 items-center justify-center text-slate-500 dark:text-slate-400 ${
+            query ? '' : 'invisible'
+          }`}
+        >
+          ✕
+        </button>
+      </div>
+
+      <div className="mb-2 grid grid-cols-3 gap-2">
+        {DATE_CHIPS.map(({ id, label }) => (
+          <button
+            key={id}
+            type="button"
+            aria-pressed={dateChip === id}
+            onClick={() => {
+              setDateChip((cur) => (cur === id ? null : id))
+              resetLimit()
+            }}
+            className={`${CHIP_BASE} ${dateChip === id ? CHIP_ON : CHIP_OFF}`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
       <div className="-mx-4 mb-4 overflow-x-auto px-4 pb-1">
         <div className="flex w-max items-center gap-2">
           <button
@@ -409,6 +500,7 @@ export function Events() {
         selectedCities={selectedCities}
         showHidden={showHidden}
         canShowHidden={view !== 'saved'}
+        canReset={filtering || showHidden}
         total={total}
         onToggleCat={toggleCat}
         onToggleFavourite={(id) => void toggleFavourite(id)}
@@ -427,7 +519,7 @@ export function Events() {
           hint={
             view === 'saved'
               ? 'Open an event and tap Save to keep it here.'
-              : filtering
+              : filtering || dateChip || nq
                 ? 'Try clearing the filters.'
                 : 'Nothing to show right now.'
           }
