@@ -19,11 +19,28 @@ const GHOST =
 export function EventCard({ event: e, saved, hidden, now, onToggleSave, onToggleHide }: Props) {
   const [open, setOpen] = useState(false)
   const [imgOk, setImgOk] = useState(true)
+  const [copied, setCopied] = useState(false)
   const place = [e.venue, e.city].filter(Boolean).join(' · ')
   const url = safeHttpUrl(e.url)
   const image = safeHttpUrl(e.image)
   const showImage = image !== null && imgOk
   const series = isSparseSeries(e)
+
+  // Native share sheet where available (iOS/Android), else copy to clipboard.
+  async function share() {
+    const text = [e.title, formatRange(e), place].filter(Boolean).join('\n')
+    try {
+      if (typeof navigator.share === 'function') {
+        await navigator.share({ title: e.title, text, ...(url ? { url } : {}) })
+        return
+      }
+      await navigator.clipboard.writeText(url ? `${text}\n${url}` : text)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      // Share sheet dismissed or clipboard blocked: nothing to recover.
+    }
+  }
 
   return (
     <li
@@ -79,6 +96,17 @@ export function EventCard({ event: e, saved, hidden, now, onToggleSave, onToggle
           </div>
         </div>
       </button>
+      <div className="flex flex-wrap gap-2 px-3 pb-3">
+        <button type="button" onClick={onToggleSave} className={`${ACTION} ${GHOST}`}>
+          {saved ? '★ Saved' : '☆ Save'}
+        </button>
+        <button type="button" onClick={onToggleHide} className={`${ACTION} ${GHOST}`}>
+          {hidden ? 'Unhide' : '✕ Hide'}
+        </button>
+        <button type="button" onClick={() => void share()} className={`${ACTION} ${GHOST}`}>
+          {copied ? 'Copied ✓' : '↗ Share'}
+        </button>
+      </div>
       {open && (
         <div className="space-y-3 border-t border-slate-200 px-4 py-3 dark:border-slate-800">
           {showImage && (
@@ -105,12 +133,6 @@ export function EventCard({ event: e, saved, hidden, now, onToggleSave, onToggle
             </a>
           )}
           <div className="flex flex-wrap gap-2">
-            <button type="button" onClick={onToggleSave} className={`${ACTION} ${GHOST}`}>
-              {saved ? '★ Unsave' : '☆ Save'}
-            </button>
-            <button type="button" onClick={onToggleHide} className={`${ACTION} ${GHOST}`}>
-              {hidden ? 'Unhide' : 'Hide'}
-            </button>
             <a href={buildThingsAddUrl(e)} className={`${ACTION} ${GHOST}`}>
               ✓ To Things
             </a>

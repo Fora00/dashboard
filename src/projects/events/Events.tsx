@@ -4,6 +4,8 @@ import { db, type EventMark } from '../../lib/db'
 import { PageHeader } from '../../components/PageHeader'
 import { EmptyState } from '../../components/EmptyState'
 import { Button } from '../../components/Button'
+import { Snackbar } from '../../components/Snackbar'
+import { useUndoSnackbar } from '../../lib/useUndoSnackbar'
 import { SkeletonList } from '../../components/Skeleton'
 import { FilterSheet } from './FilterSheet'
 import { EventCard } from './EventCard'
@@ -45,6 +47,7 @@ function inAreas(e: EventItem, areas: string[]): boolean {
 }
 
 export function Events() {
+  const undo = useUndoSnackbar()
   const cache = useLiveQuery(() => db.eventsCache.get('latest'), [], null)
   const marksRaw = useLiveQuery(() => db.eventMarks.toArray())
   const prefs = useLiveQuery(() => db.eventPrefs.get('prefs'), [], null)
@@ -223,8 +226,16 @@ export function Events() {
   }
 
   async function setMark(e: EventItem, state: EventMark['state']) {
-    if (marks.get(e.id)?.state === state) await db.eventMarks.delete(e.id)
+    const prev = marks.get(e.id)
+    if (prev?.state === state) await db.eventMarks.delete(e.id)
     else await db.eventMarks.put({ id: e.id, state, event: e, updatedAt: Date.now() })
+    // Hiding makes the card vanish: offer Undo, restoring the previous mark.
+    if (state === 'hidden' && prev?.state !== 'hidden') {
+      undo.trigger('Event hidden', async () => {
+        if (prev) await db.eventMarks.put(prev)
+        else await db.eventMarks.delete(e.id)
+      })
+    }
   }
 
   const failed = file?.sources.filter((s) => !s.ok) ?? []
@@ -452,6 +463,7 @@ export function Events() {
           )}
         </div>
       )}
+      {undo.pending && <Snackbar label={undo.pending.label} onUndo={undo.confirmUndo} />}
     </div>
   )
 }
