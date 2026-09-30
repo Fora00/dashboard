@@ -611,14 +611,15 @@ data, routes and sync are untouched, and a hidden project's URL still opens.
           "Resend selected", Export (clipboard + share), History, SyncCard.
 
         Then test the Things link from the installed iOS PWA.
-- [ ] **Engine flush race** [opus] — in `cloudSync.ts`, `flush()` checks
-      `flushing` before `await supabase.auth.getSession()` and only sets it
-      after, so two flushes fired together can both push the same entries.
-      That can re-push an upsert after its delete and resurrect a row.
-      Entries queued mid-flush also wait for the next online/visibility
-      trigger. Fix: set `flushing = true` before the await (try/finally).
-      Pre-existing, found by the Life phase-1 builder. Effort XS, but it's
-      the shared engine: test it.
+- [x] **Engine flush race** [opus], done 2026-09-30. `flush()` in
+      `cloudSync.ts` now takes the lock before its first await (released in
+      `finally`), and a `rerun` flag makes a running flush do one more ordered
+      pass for entries queued mid-flush. Verified with a throwaway harness
+      (bundled real `db.ts` + `cloudSync.ts`, fake Supabase client,
+      fake-indexeddb): concurrent flushes, upsert-then-delete order,
+      mid-flush entry, getSession throw, transient stop, dead-letter — 3 of 6
+      failed before the fix, all pass after. Unverified: real Supabase and iOS
+      timing. Turning the harness into a real test needs a test runner.
 
 ### Pre-existing bug found while verifying the above (2026-09-10)
 
@@ -941,7 +942,7 @@ what's already shipped. Ranked by how cheap + how load-bearing.
       data bug this engine exists to prevent. Needs a test harness that can
       fake the Supabase client + Dexie (or run against a local Supabase);
       scope that decision to the brief. Effort M.
-- [ ] **CI never runs `npm run lint`** [sonnet] — `.github/workflows/*.yml`
+- [x] **CI never runs `npm run lint`** [sonnet] — done 2026-09-30 (step before build; the old warning in new-project.mjs does not fail it). Original: — `.github/workflows/*.yml`
       only runs `npm run build` (tsc + vite build); the `lint` script
       (`oxlint`) exists but nothing invokes it in CI, so lint regressions on
       `main` go unnoticed until someone runs it locally. Add a step (or fold
@@ -992,7 +993,7 @@ what's already shipped. Ranked by how cheap + how load-bearing.
       `npx supabase gen types typescript --linked > src/lib/database.types.ts`
       and reference it as an explicit step in `docs/NEW_PROJECT.md`. Effort
       XS.
-- [ ] **No automated dependency/security-update tooling** [sonnet] — no
+- [x] **No automated dependency/security-update tooling** [sonnet] — done 2026-09-30 (`.github/dependabot.yml`, weekly npm + github-actions, limit 3; no `npm audit` step). Original: — no
       Dependabot or Renovate config exists in the repo, and CI never runs
       `npm audit`. `npm audit` is clean today (0 vulnerabilities, checked
       2026-07-05), but nothing keeps that true — a future CVE in
@@ -1039,7 +1040,7 @@ Low-confidence — flagged for completeness, not verified as real problems:
 
 ## Infrastructure maintenance
 
-- [ ] **CI actions target the deprecated Node 20 runtime** [sonnet] — every
+- [x] **CI actions target the deprecated Node 20 runtime** [sonnet] — bumped 2026-09-30 to checkout@v7, setup-node@v7, configure-pages@v6, upload-pages-artifact@v5, deploy-pages@v5; confirm the first run is green and the warning is gone. Original: — every
       deploy since 2026-09-10 emits: "Node.js 20 is deprecated. The following
       actions target Node.js 20 but are being forced to run on Node.js 24:
       actions/checkout@v4, actions/configure-pages@v5, actions/deploy-pages@v4,

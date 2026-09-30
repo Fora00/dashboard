@@ -124,6 +124,8 @@ export function createCloudSync(config: SyncConfig): CloudSync {
 
   let channels: RealtimeChannel[] = []
   let flushing = false
+  // Set when flush() is called while a flush runs; triggers one more pass.
+  let rerun = false
   let running = false
 
   // --- Observable status ----------------------------------------------------
@@ -187,40 +189,62 @@ export function createCloudSync(config: SyncConfig): CloudSync {
     }
   }
 
+  /** One ordered pass over the outbox. Returns false if it stopped on a
+   *  transient failure (so the caller must not immediately go again). */
+  async function flushPass(): Promise<boolean> {
+    const entries = await db.outbox.orderBy('seq').toArray()
+    for (const entry of entries) {
+      // Only this project's live entries; dead-letters are tombstones.
+      if (!remotes.has(entry.table) || entry.dead) continue
+      try {
+        await pushEntry(entry)
+      } catch (err) {
+        const tries = (entry.tries ?? 0) + 1
+        if (classify(err) === 'poison' || tries >= MAX_TRIES) {
+          // Dead-letter: keep the entry (never drop it) so its rowId still
+          // shields the local row from pull() deletion. Local data survives.
+          await db.outbox.update(entry.seq!, { dead: 1, tries })
+          // Surface the rejection — otherwise the failure is invisible.
+          await refreshCounts()
+          continue
+        }
+        // Transient (offline / expired JWT / 5xx): bump the counter and stop,
+        // preserving per-row order. Retried on the next reconnect/foreground.
+        await db.outbox.update(entry.seq!, { tries })
+        return false
+      }
+      await db.outbox.delete(entry.seq!)
+    }
+    return true
+  }
+
   async function flush(): Promise<void> {
-    if (!supabase || flushing) return
+    if (!supabase) return
     // Reflect a just-enqueued mutation even when signed out (pending count).
     void refreshCounts()
-    const { data } = await supabase.auth.getSession()
-    if (!data.session) return
+    // A flush is already running: ask it for one more pass so entries queued
+    // after it read the outbox go out now, not on the next online/visibility
+    // trigger. Never run two passes concurrently — that pushes entries twice
+    // and can land an upsert after its delete (resurrecting the row).
+    if (flushing) {
+      rerun = true
+      return
+    }
+    // Take the lock BEFORE the first await, release it in finally (also when
+    // getSession() throws).
     flushing = true
-    setStatus({ syncing: true })
     try {
-      const entries = await db.outbox.orderBy('seq').toArray()
-      for (const entry of entries) {
-        // Only this project's live entries; dead-letters are tombstones.
-        if (!remotes.has(entry.table) || entry.dead) continue
-        try {
-          await pushEntry(entry)
-        } catch (err) {
-          const tries = (entry.tries ?? 0) + 1
-          if (classify(err) === 'poison' || tries >= MAX_TRIES) {
-            // Dead-letter: keep the entry (never drop it) so its rowId still
-            // shields the local row from pull() deletion. Local data survives.
-            await db.outbox.update(entry.seq!, { dead: 1, tries })
-            // Surface the rejection — otherwise the failure is invisible.
-            await refreshCounts()
-            continue
-          }
-          // Transient (offline / expired JWT / 5xx): bump the counter and stop,
-          // preserving per-row order. Retried on the next reconnect/foreground.
-          await db.outbox.update(entry.seq!, { tries })
-          return
-        }
-        await db.outbox.delete(entry.seq!)
-      }
+      const { data } = await supabase.auth.getSession()
+      if (!data.session) return
+      setStatus({ syncing: true })
+      do {
+        rerun = false
+        // Stopped on a transient failure: don't spin, wait for a trigger.
+        if (!(await flushPass())) break
+      } while (rerun)
     } finally {
       flushing = false
+      rerun = false
       setStatus({ syncing: false })
       await refreshCounts()
     }
