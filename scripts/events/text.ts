@@ -115,12 +115,13 @@ export function firstNonEmpty(...values: (string | null | undefined)[]): string 
   return ''
 }
 
-// Lowercase inside a title (Italian articles, prepositions, conjunctions;
-// a few English ones for English titles).
+// Lowercase inside a title (Italian articles, prepositions, conjunctions,
+// the clitics ci/vi/ne/si as in "Di un'Amicizia Sol ci Fu Legame"; a few
+// English ones for English titles).
 const SMALL = new Set([
-  'a', 'ad', 'ai', 'agli', 'al', 'alla', 'alle', 'allo', 'che', 'col', 'con', 'd', 'da', 'dal', 'dalla', 'dalle',
+  'a', 'ad', 'ai', 'agli', 'al', 'alla', 'alle', 'allo', 'che', 'ci', 'col', 'con', 'd', 'da', 'dal', 'dalla', 'dalle',
   'de', 'degli', 'dei', 'del', 'della', 'delle', 'dello', 'di', 'e', 'ed', 'gli', 'i', 'il', 'in', 'l', 'la', 'le',
-  'lo', 'nei', 'nel', 'nella', 'nelle', 'o', 'per', 'si', 'su', 'sui', 'sul', 'sulla', 'sulle', 'tra', 'un', 'una',
+  'lo', 'ne', 'nei', 'nel', 'nella', 'nelle', 'o', 'per', 'si', 'su', 'sui', 'sul', 'sulla', 'sulle', 'tra', 'un', 'una', 'vi',
   'è', 'and', 'of', 'the',
 ])
 

@@ -57,7 +57,7 @@ unknown `category`/`tags` value like `other`. A breaking change bumps
 | `source` | string | Adapter id of the record that was kept. |
 | `sources` | string[] | Every adapter id that listed this event (see "Dedup"); includes `source`; sorted. |
 | `category` | string | Primary category id (see "Categories"). |
-| `tags` | string[] | Every matching category id, in priority order; always includes `category`. May end with `kids` (see "The `kids` tag"). |
+| `tags` | string[] | Every matching category id, in priority order; always includes `category`. May then contain `kids` (see "The `kids` tag") and the format tags `social-friend`, `social-girl`, `solo-ok` (added 2026-09-30, see "Format tags"), in that order. |
 | `description` | string | Full plain text: HTML stripped, entities decoded, paragraphs separated by `"\n\n"` and line breaks by `"\n"`, at most ~2000 chars (cut on a word, ending with `…`). `""` when the source has none. |
 | `summary` | string | One line of plain text, at most ~300 chars: the source's own abstract/intro when it has one, else the start of `description`. Can equal `description` for sources with only short text. `""` when none. |
 | `image` | string \| null | Absolute https URL of the source's image for the event. Hot-linked from the source, never re-hosted; may disappear. |
@@ -209,7 +209,14 @@ whole words.
   Never set on a `kids` event.
 - **`theatre`**: prose, comedy, monologues, dance and ballet, **opera**
   (staged, part of the theatre seasons — not under `concerts`), cabaret,
-  stand-up, readings; German Theater/Schauspiel/Tanz.
+  stand-up, readings; German Theater/Schauspiel/Tanz. Opera has its own
+  words (lirica, melodramma, operetta, libretto, "opera in tre atti",
+  "stagione d'opera", "Progetto Opera"), so "Rigoletto — Opera in tre atti /
+  Musica di Giuseppe Verdi" is `theatre` with a `concerts` tag, not a
+  concert (2026-09-30).
+- **`nerd`**: keywords count only in the title, summary and typologies,
+  never in the long description (it name-drops "Fantasy" chamber pieces and
+  "fumetti" stalls at flea markets). 2026-09-30.
 
 ### The `kids` tag
 
@@ -220,6 +227,39 @@ tag, never a `category`. It is conservative: an event that also says it is
 for adults ("adulti e bambini", "per tutti") is not tagged. Consumers may
 hide these events (the dashboard page does). A `kids` event never has
 `creative` as category or tag.
+
+### Format tags
+
+Added 2026-09-30. Three tags that describe an event's **format** (what you
+do there), never its audience: they are a keyword proxy and make no claim
+about who attends. Never set on a `kids` event. Keywords match the title and
+typologies, and for most formats the summary; for theatre, cinema, concerts
+and exhibitions only the title and typologies count (a show's summary
+describes its content). The long description can only veto.
+
+- **`social-friend`** ("new friends"): formats where regulars form groups and
+  talk — open-table game nights (every `boardgames` event), tournaments,
+  quizzes, group hikes and rides, climbing and running meetups, jam
+  sessions and open mics, volunteering days and repair cafés, workshops and
+  courses ("corso di …", laboratorio, workshop, Kurs — title only), book
+  groups, and every `creative` event.
+- **`social-girl`** ("meeting people, conversation-friendly formats"):
+  speed dating and singles evenings, social dance (swing, lindy hop, salsa,
+  bachata, tango/milonga, balfolk, contact jam, Tanzabend), yoga and
+  body-mind practice, art and creative workshops (every `creative` event),
+  book clubs, language cafés and conversation groups, wine tastings and
+  aperitivi. The last two groups count in the title/typology only.
+- **`solo-ok`** ("fine to go alone"): primary category `talks`,
+  `exhibitions`, `cinema`, `concerts`, `creative` or `boardgames`, any event
+  with a social tag, and guided tours, readings, stand-up and open mics —
+  minus dinners and lunches, table bookings, couples and family formats,
+  group-only, members-only and private events. Theatre and
+  festivals/fairs are not in the base set. When dedup merges two records,
+  their format tags are unioned like the categories (one source often
+  types the event more narrowly, e.g. `other`).
+
+An event may carry several. Consumers that don't know these tags ignore
+them (the dashboard's category chips match only category ids).
 
 ## Sources
 

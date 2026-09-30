@@ -1,8 +1,8 @@
 // Pure post-processing shared by fresh and carried-over events: window,
 // series folding, ids/tags, cross-source dedup, `ongoing`, sorting.
 import type { Adapter, Event, RawEvent } from './types.ts'
-import type { CategoryId } from './tags.ts'
-import { classify, finishTags } from './tags.ts'
+import type { TagId } from './tags.ts'
+import { CATEGORIES, classify, finishTags } from './tags.ts'
 import { areaFor, closerRing, keepForRing } from './areas.ts'
 import { DAY, addDays, dateToIso } from './time.ts'
 import { clip, htmlToBlocks, normalize, snippet, stableId } from './text.ts'
@@ -138,9 +138,9 @@ export function withPlace(adapter: Adapter, events: Event[]): Event[] {
 function merge(a: Event, b: Event): Event {
   const [keep, drop] = richness(b) > richness(a) ? [b, a] : [a, b]
   const kids = keep.tags.includes('kids') || drop.tags.includes('kids')
-  const merged = [...keep.tags, ...drop.tags].filter((t) => t !== 'kids' && t !== 'other' && !(kids && t === 'creative')) as CategoryId[]
+  const merged: TagId[] = [...keep.tags, ...drop.tags].filter((t) => t !== 'kids' && t !== 'other' && !(kids && t === 'creative'))
   let category = keep.category === 'other' ? drop.category : keep.category
-  if (kids && category === 'creative') category = merged[0] ?? 'other'
+  if (kids && category === 'creative') category = CATEGORIES.find((c) => merged.includes(c.id))?.id ?? 'other'
   return {
     ...keep,
     title: normalize(keep.title) === normalize(drop.title) ? naturalTitle(keep.title, drop.title) : keep.title,
