@@ -283,10 +283,12 @@ guests can't write rows they can't read.
 ```sql
 -- <id>: <one-line description>. Columns mirror the Dexie shape in src/lib/db.ts;
 -- timestamps are epoch milliseconds (bigint) to match the client.
+-- Length caps: text 300 (notes-style columns: 2000). MUST match MAX_TEXT_LENGTH
+-- in src/projects/<id>/<Name>.tsx (the input's maxLength).
 
 create table public.<things> (
   id uuid primary key,
-  text text not null,
+  text text not null check (char_length(text) <= 300),
   done boolean not null default false,
   created_at bigint not null,
   updated_at bigint not null
@@ -321,6 +323,12 @@ Notes:
 - A guest only gains access once the owner adds a `project_members` row for them
   (the /sharing page). The owner bypasses `is_member` for every project.
 - `id uuid primary key` matches the client's `crypto.randomUUID()`.
+- **Cap every free-text column** with `check (char_length(col) <= N)` (title
+  300, notes 2000, as in `20260910120000_links.sql`). Without it a guest or a
+  buggy client can push unbounded text into the shared table. The client must
+  mirror each cap as a named constant (`MAX_TEXT_LENGTH`) used for the input's
+  `maxLength`, and the two numbers must match, or the input accepts text the
+  server then rejects (a stuck outbox entry). The generator stamps both.
 
 ## 6. Page component — mount `SyncCard`
 

@@ -99,7 +99,7 @@ function utcTimestamp() {
 
 // --- templates ----------------------------------------------------------------
 
-function pageTemplateLocal({ id, Name, emoji, thingsCamel }) {
+function pageTemplateLocal({ Name, emoji, thingsCamel }) {
   return `import { useState, type FormEvent } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../../lib/db'
@@ -120,6 +120,10 @@ interface ${Name}Item {
   createdAt: number
   updatedAt: number
 }
+
+// Length cap for the text input. Mirrors the \`check (char_length(text) <= 300)\`
+// constraint in the SQL migration — keep the two numbers identical.
+const MAX_TEXT_LENGTH = 300
 
 const table = () => db.table<${Name}Item, string>('${thingsCamel}')
 
@@ -154,6 +158,7 @@ export function ${Name}() {
           onChange={(e) => setText(e.target.value)}
           placeholder="Add something…"
           autoComplete="off"
+          maxLength={MAX_TEXT_LENGTH}
           enterKeyHint="done"
           className="min-h-10 w-full rounded-lg border border-slate-700 bg-slate-800 px-3.5 text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none"
         />
@@ -211,6 +216,10 @@ import { SyncCard } from '../../components/SyncCard'
 // it, move it into src/lib/db.ts as a real typed table (docs/NEW_PROJECT.md
 // step 3) and follow the printed TODOs to wire it up for real.
 
+// Length cap for the text input. Mirrors the \`check (char_length(text) <= 300)\`
+// constraint in the SQL migration — keep the two numbers identical.
+const MAX_TEXT_LENGTH = 300
+
 export function ${Name}() {
   const [text, setText] = useState('')
   const items = useLiveQuery(() => db.table<${Name}Item, string>('${thingsCamel}').orderBy('createdAt').toArray())
@@ -243,6 +252,7 @@ export function ${Name}() {
           onChange={(e) => setText(e.target.value)}
           placeholder="Add something…"
           autoComplete="off"
+          maxLength={MAX_TEXT_LENGTH}
           enterKeyHint="done"
           className="min-h-10 w-full rounded-lg border border-slate-700 bg-slate-800 px-3.5 text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none"
         />
@@ -379,10 +389,12 @@ function sqlTemplate({ id, remoteTable }) {
 -- in src/lib/db.ts (once you've moved the placeholder type there per
 -- docs/NEW_PROJECT.md step 3); timestamps are epoch milliseconds (bigint) to
 -- match the client.
+-- Length caps: text 300. MUST match MAX_TEXT_LENGTH in the page component
+-- (the input's maxLength); change both together.
 
 create table public.${remoteTable} (
   id uuid primary key,
-  text text not null,
+  text text not null check (char_length(text) <= 300),
   created_at bigint not null,
   updated_at bigint not null
 );
