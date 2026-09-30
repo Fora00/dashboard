@@ -359,7 +359,7 @@ helpers made a copy cleaner than a stamp-and-edit).
       wrinkle, accepted: a CHECK calling a user-defined function is a
       `pg_dump`/`pg_restore` ordering hazard if data is restored before the
       function exists — not a concern on Supabase's schema-then-data path.
-- [ ] **Tag rename/merge** [sonnet] — `normalizeTag` + the datalist prevent
+- [x] **Tag rename/merge** [sonnet] — done 2026-09-30: `renameTag` in `linksSync.ts` (one Dexie transaction, `upsertMany`, merge by dedupe), `ManageTagsSheet.tsx`, Undo, the selected filter follows the rename; 21 headless checks + browser at 390px. Original: — `normalizeTag` + the datalist prevent
       most drift, but there's no way to fix `readng` → `reading` once it's
       on several links. Effort S.
 
@@ -687,22 +687,42 @@ data, routes and sync are untouched, and a hidden project's URL still opens.
       `OfflineBanner.tsx` mounted once in Layout — amber "Offline — changes
       are saved on this device and sync when you're back."
 
-## ▶ Resume here (session paused 2026-09-28)
+## ▶ Resume here (session paused 2026-09-30, usage limit)
 
-Everything below is committed and live unless noted. Pick up in this order:
+State: everything up to the "Come" filter is committed; the last push to
+`main` was `229d77b` (error boundary, events polish). Commits after it are
+LOCAL until the owner pushes: quick actions on the card, template caps,
+`.ics`, links tag rename, filters/search, format tags, "Come" section.
+Then, in order:
 
-1. **Events, phase 1: crawler** — built and reviewed 2026-09-29 (see
-   Project 12). Next: the owner decides on commit and push, then watch the
-   first scheduled Actions run.
-2. **Events, phase 2: `/events` page** — built 2026-09-29, awaiting
-   commit and push by the owner.
-3. **Owner on the iPhone:** "Send to Things" from the installed PWA
-   (the last unverified Life piece), plus the new Life layout.
-4. **Canceled to-dos in Things** [opus, XS] — see the unchecked item
-   under Life. The owner parked it until the next `/settimana` run.
-5. **Engine flush race** [opus] — pre-existing, in `cloudSync.ts`.
-6. Unchanged backlog: Life sync of `starred`, link tag rename, the
-   engineering-quality audit items, Node 20 actions.
+1. **Finish the in-flight categories builder** [opus], if it did not
+   complete: new categories `food` / `tours` / `outdoor`, crawl-time drop
+   rules (professional training, civic notices except parades, spectator
+   sport, empty "..." ODH titles), keyword gaps in concerts/theatre
+   (~110 events), chestnut/sagre words in `food`, and the `kids` false
+   positive on "Festa del marrone D.O.P". Check `git status` for
+   half-applied edits in `scripts/events/`, `areas.ts`, `model.ts`; run
+   `npm run build`, then a full crawl, review, commit.
+2. **Push** (owner asked for one push at the end of the batch), then watch
+   the Deploy run go green.
+3. **Spot pass + visitrovereto** — queue item 10 in Project 12: Festa della
+   Castagna, Castione di Brentonico (Sun 18 Oct 2026, verified on
+   visitrovereto.it; Brentonico may need adding to the city map in
+   `areas.ts` so it is not badged Spot/abroad), other autumn festivals,
+   Bologna/Torino/Milano/Ferrara big events, Milan Games Week / Miart if
+   the dates can be verified, then a visitrovereto.it adapter only if the
+   markup is reliable.
+4. **After ~10 Oct 2026:** check the Zandonai and Filarmonica seasons
+   arrived (Project 12, "Watch after ~10 Oct").
+5. **Owner on the iPhone:** "Send to Things" from the installed PWA, the
+   `.ics` share sheet, the collapsed-card Save/Hide/Share, error boundary in
+   dark mode.
+6. Rest of the events queue (Project 12): "new since last visit" badge, group
+   repeats with the same title, sorting inside a day, travel time, owner-only
+   sync of saved/hidden, saved events in the Sunday Life plan.
+7. Unchanged backlog: canceled to-dos in Things, sync of `starred`, code
+   splitting, `cloudSync` tests, dead-letter recovery UI, IDN links,
+   accessibility pass.
 
 Session conventions worth keeping:
 - The owner works **one thing at a time**: ask one question per turn,
@@ -913,6 +933,45 @@ sync can come later).
       (e.g. "Pietre di pane" on mart and comune-trento); more keywords
       per category; shorter horizon for Verona if its roughly 30 MB per run is too heavy;
       a visitrovereto source if it ever exposes a feed.
+- [ ] **Events improvement queue** (owner, 2026-09-30, all wanted; do ONE at a
+      time, in this order). Save/Hide/Share on the collapsed card is done.
+      1. [x] DONE 2026-09-30 (tags `social-friend` 199, `social-girl` 164, `solo-ok` 1,108 of 2,081; Come section in the filter sheet, OR between the social chips, AND for solo-ok) — Tagging: cluster "other" (536 of 2,199) and pick
+         categories with the owner; new tags `social-friend` ("Nuovi amici"),
+         `social-girl` ("Conoscere ragazze", a format proxy, never a claim
+         about who attends) and `solo-ok` ("Da solo va bene", must exclude
+         family/couple/booking events); fix `fantasy`/opera/titleCase. Then a
+         "Come" section in FilterSheet [sonnet].
+      2. [x] DONE 2026-09-30 (date chips, search, collapsible sheet, city checklist, remembered filters in `dashboard:events-filters`; caveat: a remembered "Oggi" chip survives across days, consider not persisting the date chip) — Filter and search UX, one pass over `FilterSheet.tsx` /
+         `Events.tsx` (before the "Come" section, so that lands on the new
+         structure): quick date chips (Oggi / Domani / Weekend) and a text
+         search above the list; in the sheet a live "Show N events" button,
+         a Reset always visible, collapsible sections with a summary
+         ("Area · 2"), zero-count chips last, the last selection remembered
+         per device (guarded localStorage); the cities list becomes a
+         checklist with a search box (chips stay for Area/Category/Come:
+         native `<select multiple>` is worse on iPhone).
+      3. [sonnet] "New since last visit" badge (last-visit timestamp in
+         guarded localStorage or Dexie).
+      4. [sonnet] Group repeats with the same title across records into one
+         expandable row ("17 serate, next ≈ …"); optional venue filter.
+      5. [sonnet] Sorting inside a day: ring proximity, then favourite
+         categories; Saved view by date, past last.
+      6. [sonnet] Travel time from Trento/Rovereto per city (from rings).
+      7. [x] DONE 2026-09-30 (`ics.ts`, "📅 Calendar" in the expanded card, TZID Europe/Rome; iOS share-sheet path and a real Apple/Google Calendar import unverified) — Export an event as .ics.
+      8. [opus] Sync saved/hidden across devices, owner-only (migration by
+         the owner).
+      9. [sonnet] Saved/favourite events in the Sunday Life plan.
+      10. [opus] Spot pass (after the categories/food builder finishes; owner
+         OK'd 2026-09-30): hand-verified `spot.json` entries for Festa della
+         Castagna, Castione di Brentonico (18 Oct 2026, from visitrovereto.it)
+         and other autumn festivals around Rovereto/Vallagarina; more
+         interesting big events for Bologna, Torino, Milano, plus Ferrara
+         (spot ring, roughly 2.5-3 h, distance not verified); check whether
+         Milan Games Week / Miart dates can be verified. Then try a
+         visitrovereto.it adapter (WordPress, no feed; robots + structure
+         first, skip if only fragile markup is left).
+      Parked: map view (only events with a venue), price/free filter (needs a
+      crawler field per source), real `organizer` field.
 - [ ] Later: more categories, one at a time (SAT/hikes, climbing,
       art/ceramics, the owner's Sunday sources: ViviRovereto, Visit
       Rovereto, Roveretogiovani).
