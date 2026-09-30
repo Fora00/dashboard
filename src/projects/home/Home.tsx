@@ -7,7 +7,7 @@ import { formatBytes } from '../../lib/format'
 import { useOwner } from '../../lib/useOwner'
 import { isHidden, toggleStar, useApplyHiddenDefaults } from '../../lib/projectStats'
 import { Card } from '../../components/Card'
-import { IosInstallHint } from '../../components/IosInstallHint'
+import { InstallHint } from '../../components/InstallHint'
 
 // Local calendar-day key, matching the Habits project's own day boundary
 // ('YYYY-MM-DD' in device local time — see habits/habitStore.ts).
@@ -237,7 +237,7 @@ export function Home() {
         Everything lives on this device and works offline. Sign in to sync
         across devices.
       </p>
-      <IosInstallHint />
+      <InstallHint />
       <div className="grid gap-4 sm:grid-cols-2">
         {ordered.map((p) => {
           const starred = statsById.get(p.id)?.starred === 1
