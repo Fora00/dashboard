@@ -94,7 +94,7 @@ export function JoinProject() {
       }
       syncProjectAfterJoin(projectId)
       const path = projects.find((p) => p.id === projectId)?.path ?? '/'
-      navigate(path, { replace: true, state: { joined: true } })
+      void navigate(path, { replace: true, state: { joined: true } })
     })
   }, [session, projectId, token, navigate, attempt])
 

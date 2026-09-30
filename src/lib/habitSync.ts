@@ -9,6 +9,18 @@ import { useSyncStatus } from './useSyncStatus'
 //   3. export mutation helpers the UI calls instead of raw Dexie writes,
 //   4. export startHabitSync = engine.start and wire it in App.tsx.
 
+// Caps — MUST match the CHECK constraints in
+// supabase/migrations/20260930160100_text_caps.sql and the inputs' maxLength.
+export const MAX_NAME_LENGTH = 300
+export const MAX_EMOJI_LENGTH = 8
+
+/** Cap an emoji without leaving half a surrogate pair at the cut. */
+export function clipEmoji(raw: string): string {
+  return Array.from(raw.trim().slice(0, MAX_EMOJI_LENGTH))
+    .filter((c) => c.length === 2 || !/[\ud800-\udfff]/.test(c))
+    .join('')
+}
+
 interface HabitRow {
   id: string
   name: string
@@ -74,8 +86,8 @@ const engine = createCloudSync({
 export async function addHabit(name: string, emoji: string): Promise<Habit> {
   const habit: Habit = {
     id: crypto.randomUUID(),
-    name,
-    emoji: emoji || '✅',
+    name: name.trim().slice(0, MAX_NAME_LENGTH),
+    emoji: clipEmoji(emoji) || '✅',
     createdAt: Date.now(),
   }
   await engine.upsert('habits', habit)

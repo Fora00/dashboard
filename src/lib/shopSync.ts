@@ -6,6 +6,11 @@ import { useSyncStatus } from './useSyncStatus'
 // in cloudSync.ts. The UI only ever talks to Dexie via the mutation helpers
 // below; the engine handles outbox flush, guarded pull, and LWW realtime.
 
+// Caps — MUST match the CHECK constraints in
+// supabase/migrations/20260930160100_text_caps.sql and the inputs' maxLength.
+export const MAX_ITEM_LENGTH = 300
+export const MAX_AREA_NAME_LENGTH = 300
+
 interface ShopItemRow {
   id: string
   text: string
@@ -63,7 +68,10 @@ const engine = createCloudSync({
 // --- Local mutations (used by the UI; safe with or without sync) -----------
 
 export async function addArea(name: string): Promise<ShopArea> {
-  const area: ShopArea = { id: crypto.randomUUID(), name, createdAt: Date.now() }
+  const area: ShopArea = {
+    id: crypto.randomUUID(),
+    name: name.trim().slice(0, MAX_AREA_NAME_LENGTH),
+    createdAt: Date.now() }
   await engine.upsert('shop_areas', area)
   return area
 }
@@ -84,7 +92,7 @@ export async function deleteArea(areaId: string): Promise<void> {
 export async function addShopItem(text: string, areaId: string): Promise<void> {
   const item: ShopItem = {
     id: crypto.randomUUID(),
-    text,
+    text: text.trim().slice(0, MAX_ITEM_LENGTH),
     done: 0,
     areaId,
     createdAt: Date.now(),

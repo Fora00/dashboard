@@ -9,6 +9,13 @@ import { useSyncStatus } from './useSyncStatus'
 //   3. export mutation helpers the UI calls instead of raw Dexie writes,
 //   4. export startClimbSync = engine.start and wire it in App.tsx.
 
+// Caps — MUST match the CHECK constraints in
+// supabase/migrations/20260930160100_text_caps.sql and the inputs' maxLength.
+// The grade is picked from GRADES, so its cap is only a backstop.
+export const MAX_LOCATION_LENGTH = 300
+export const MAX_NOTES_LENGTH = 2000
+export const MAX_GRADE_LENGTH = 20
+
 interface ClimbSessionRow {
   id: string
   date: string
@@ -92,9 +99,9 @@ export async function addSession(input: {
   const session: ClimbSession = {
     id: crypto.randomUUID(),
     date: input.date,
-    location: input.location,
+    location: input.location.trim().slice(0, MAX_LOCATION_LENGTH),
     discipline: input.discipline,
-    notes: input.notes || undefined,
+    notes: input.notes?.slice(0, MAX_NOTES_LENGTH) || undefined,
     createdAt: Date.now(),
   }
   await engine.upsert('climb_sessions', session)
@@ -117,7 +124,7 @@ export async function addClimb(
     sessionId: session.id,
     date: session.date,
     discipline: session.discipline,
-    grade,
+    grade: grade.slice(0, MAX_GRADE_LENGTH),
     sent: sent ? 1 : 0,
     createdAt: Date.now(),
   }

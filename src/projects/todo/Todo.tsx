@@ -1,7 +1,14 @@
 import { useState, type FormEvent } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, type Todo as TodoItem } from '../../lib/db'
-import { addTodo as createTodo, clearDoneTodos, deleteTodo, sync, toggleTodo } from '../../lib/todoSync'
+import {
+  addTodo as createTodo,
+  clearDoneTodos,
+  deleteTodo,
+  MAX_TEXT_LENGTH,
+  sync,
+  toggleTodo,
+} from '../../lib/todoSync'
 import { useAuth } from '../../lib/useAuth'
 import { useOwner } from '../../lib/useOwner'
 import { useUndoSnackbar } from '../../lib/useUndoSnackbar'
@@ -105,6 +112,7 @@ export function Todo() {
           value={text}
           onChange={(e) => setText(e.target.value)}
           aria-label="Add a todo" placeholder="Add something to do…"
+          maxLength={MAX_TEXT_LENGTH}
           autoComplete="off"
           enterKeyHint="done"
           className="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-indigo-300 dark:border-slate-700 dark:bg-slate-800"

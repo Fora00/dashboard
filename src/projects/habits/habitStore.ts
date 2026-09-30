@@ -3,12 +3,10 @@
 // user actually saw (no UTC drift around midnight). Mutation helpers live in
 // src/lib/habitSync.ts (local-first, optionally cloud-synced).
 
-export function dayKey(date: Date): string {
-  const y = date.getFullYear()
-  const m = String(date.getMonth() + 1).padStart(2, '0')
-  const d = String(date.getDate()).padStart(2, '0')
-  return `${y}-${m}-${d}`
-}
+import { dayKey } from '../../lib/dates'
+// dayKey lives in src/lib/dates.ts (shared with Life); re-exported so Habits
+// imports are untouched.
+export { dayKey }
 
 function shiftDay(date: Date, days: number): Date {
   const copy = new Date(date)

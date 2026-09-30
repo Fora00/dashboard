@@ -8,7 +8,15 @@ import { PageHeader } from '../../components/PageHeader'
 import { EmptyState } from '../../components/EmptyState'
 import { SyncCard } from '../../components/SyncCard'
 import { SkeletonList } from '../../components/Skeleton'
-import { addHabit, deleteHabit, setArchived, sync, toggleCheck } from '../../lib/habitSync'
+import {
+  addHabit,
+  deleteHabit,
+  MAX_EMOJI_LENGTH,
+  MAX_NAME_LENGTH,
+  setArchived,
+  sync,
+  toggleCheck,
+} from '../../lib/habitSync'
 import { dayKey, lastDays, streak } from './habitStore'
 
 const DOT_DAYS = 14
@@ -129,6 +137,7 @@ export function Habits() {
           value={emoji}
           onChange={(e) => setEmoji(e.target.value)}
           placeholder="✅"
+          maxLength={MAX_EMOJI_LENGTH}
           autoComplete="off"
           aria-label="Habit emoji"
           className="min-h-10 w-14 shrink-0 rounded-lg border border-slate-300 bg-white text-center text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none dark:border-slate-700 dark:bg-slate-800"
@@ -137,6 +146,7 @@ export function Habits() {
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="New habit, e.g. Stretch"
+          maxLength={MAX_NAME_LENGTH}
           autoComplete="off"
           enterKeyHint="done"
           aria-label="Habit name"

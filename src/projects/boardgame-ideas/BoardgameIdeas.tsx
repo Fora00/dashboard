@@ -2,6 +2,8 @@ import { db, type BoardgameIdea } from '../../lib/db'
 import {
   addBoardgameIdea,
   deleteBoardgameIdea,
+  MAX_NOTES_LENGTH,
+  MAX_TEXT_LENGTH,
   sync,
   updateNotes,
 } from '../../lib/boardgameIdeasSync'
@@ -12,6 +14,8 @@ const config: IdeaListConfig<BoardgameIdea> = {
   title: 'Boardgame Ideas',
   subtitle: 'Board game design ideas — tap one to jot notes. Saved on this device.',
   addPlaceholder: 'Add a boardgame idea…',
+  maxTextLength: MAX_TEXT_LENGTH,
+  maxNotesLength: MAX_NOTES_LENGTH,
   emptyTitle: 'No boardgame ideas yet',
   query: () => db.boardgameIdeas.orderBy('createdAt').reverse().toArray(),
   add: addBoardgameIdea,

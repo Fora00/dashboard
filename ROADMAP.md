@@ -1181,6 +1181,17 @@ Second batch (brainstormed 2026-07-04, later the same day):
       paperwork deadlines (bollo, revisione, insurance) with next-due
       rollup — the subscriptions tracker idea, but for the car. Effort S–M.
 
+- [ ] **🔍 On-device data view in Settings** [sonnet] — *to evaluate
+      (2026-09-30)*. Owner asked how to see what's in the db; on Mac the
+      Supabase Table Editor and Chrome DevTools (IndexedDB → `dashboard`)
+      already cover it, so a generic row browser is NOT worth building. What
+      might be: on the phone, where DevTools is awkward, a Settings section
+      with the local row count per table, the pending outbox per project and
+      the dead-lettered entries. Overlaps the parked "Dead-letter outbox
+      entries have no recovery path" item (Engineering quality): do them
+      together, with per-entry Retry/Discard. Decide after the per-project
+      invite work lands. Effort S.
+
 Infrastructure ideas:
 
 - [ ] Export/import all local data as a backup file [sonnet]

@@ -6,6 +6,8 @@ import {
   addShopItem,
   clearBoughtItems,
   ensureDefaultArea,
+  MAX_AREA_NAME_LENGTH,
+  MAX_ITEM_LENGTH,
   sync,
   toggleShopItem,
 } from '../../lib/shopSync'
@@ -179,6 +181,7 @@ export function ShopList() {
             onChange={(e) => setAreaName(e.target.value)}
             aria-label="Area name" placeholder="Area name, e.g. Pharmacy"
             autoFocus
+            maxLength={MAX_AREA_NAME_LENGTH}
             className="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-indigo-300 dark:border-slate-700 dark:bg-slate-800"
           />
           <Button type="submit" disabled={!areaName.trim()}>
@@ -213,6 +216,7 @@ export function ShopList() {
               value={text}
               onChange={(e) => setText(e.target.value)}
               aria-label={`Add to ${area.name}`} placeholder={`Add to ${area.name}…`}
+              maxLength={MAX_ITEM_LENGTH}
               autoComplete="off"
               enterKeyHint="done"
               className="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-indigo-300 dark:border-slate-700 dark:bg-slate-800"

@@ -165,6 +165,11 @@ The filename is the **camelCase** id + `Sync.ts` — hyphenated ids flatten
 (`shop-list` → `shopSync.ts`, `book-ideas` → `bookIdeasSync.ts`); the generator
 does this for you.
 
+Idea-list style projects (a list of items with expandable notes) need no page
+component of their own: pass a config object to `<IdeaList>` (see
+`src/projects/book-ideas/BookIdeas.tsx`), including the `maxTextLength` /
+`maxNotesLength` caps imported from the project's `*Sync.ts`.
+
 One file. Define the remote row shape, one `TableSync` per table, create the
 engine, and export mutation helpers the UI calls **instead of raw Dexie
 writes**. This is `todoSync.ts` verbatim — the canonical single-table example:

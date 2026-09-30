@@ -8,7 +8,7 @@ import { FOCUS_RING_INSET } from '../../components/focus'
 import { Card } from '../../components/Card'
 import { PageHeader } from '../../components/PageHeader'
 import { EmptyState } from '../../components/EmptyState'
-import { addSession, sync } from '../../lib/climbSync'
+import { addSession, MAX_LOCATION_LENGTH, MAX_NOTES_LENGTH, sync } from '../../lib/climbSync'
 import { DISCIPLINES, DISCIPLINE_LABEL, gradeFraction, gradeIndex } from './grades'
 import { SessionCard } from './SessionCard'
 import { SyncCard } from '../../components/SyncCard'
@@ -137,6 +137,7 @@ export function Climbing() {
                 onChange={(e) => setLocation(e.target.value)}
                 aria-label="Session location" placeholder="Where? e.g. Vertical Gym"
                 autoFocus
+                maxLength={MAX_LOCATION_LENGTH}
                 className={`${inputClass} min-w-40 flex-1`}
               />
             </div>
@@ -144,6 +145,7 @@ export function Climbing() {
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               aria-label="Session notes" placeholder="Notes (optional)"
+              maxLength={MAX_NOTES_LENGTH}
               className={inputClass}
             />
             <div className="flex justify-end gap-2">

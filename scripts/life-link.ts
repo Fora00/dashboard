@@ -5,7 +5,7 @@
 //
 // Exit 1 with one error per line if the week is invalid — nothing to open.
 import { readFileSync } from 'node:fs'
-import { encodeImportLink, parseWeekJson } from '../src/projects/life/model.ts'
+import { encodeImportLink, parseWeekJson } from '../src/projects/life/model/index.ts'
 
 const file = process.argv[2]
 const text = readFileSync(file ?? 0, 'utf8')

@@ -54,7 +54,7 @@ export function LifeImport() {
     setSaveError(null)
     try {
       await importWeek(result.plan)
-      navigate('/life')
+      await navigate('/life')
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : String(err))
     } finally {

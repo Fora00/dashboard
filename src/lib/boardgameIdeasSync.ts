@@ -7,6 +7,12 @@ import { useSyncStatus } from './useSyncStatus'
 // itself copied from src/lib/todoSync.ts (THE reference integration) — see
 // docs/NEW_PROJECT.md.
 
+// Caps — MUST match the CHECK constraints in
+// supabase/migrations/20260930160100_text_caps.sql and the IdeaList inputs'
+// maxLength (passed through the page's IdeaListConfig).
+export const MAX_TEXT_LENGTH = 300
+export const MAX_NOTES_LENGTH = 2000
+
 interface BoardgameIdeaRow {
   id: string
   text: string
@@ -48,7 +54,7 @@ export async function addBoardgameIdea(text: string): Promise<void> {
   const now = Date.now()
   const idea: BoardgameIdea = {
     id: crypto.randomUUID(),
-    text,
+    text: text.trim().slice(0, MAX_TEXT_LENGTH),
     notes: '',
     createdAt: now,
     updatedAt: now,
@@ -59,7 +65,7 @@ export async function addBoardgameIdea(text: string): Promise<void> {
 /** Upsert a bumped-updatedAt copy with new notes. Call sites should skip this
  *  when the notes are unchanged (e.g. on blur with no edit made). */
 export async function updateNotes(idea: BoardgameIdea, notes: string): Promise<void> {
-  await engine.upsert('boardgame_ideas', { ...idea, notes, updatedAt: Date.now() })
+  await engine.upsert('boardgame_ideas', { ...idea, notes: notes.slice(0, MAX_NOTES_LENGTH), updatedAt: Date.now() })
 }
 
 export async function deleteBoardgameIdea(id: string): Promise<void> {

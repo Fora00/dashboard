@@ -30,6 +30,9 @@ export interface IdeaListConfig<T extends IdeaRow> {
   title: string
   subtitle: string
   addPlaceholder: string
+  /** Server caps (characters), mirrored as the inputs' maxLength. */
+  maxTextLength: number
+  maxNotesLength: number
   emptyTitle: string
   /** Newest first. */
   query: () => Promise<T[]>
@@ -115,6 +118,7 @@ export function IdeaList<T extends IdeaRow>({ config }: { config: IdeaListConfig
             placeholder="Notes…"
             aria-label={`Notes for ${idea.text}`}
             rows={4}
+            maxLength={config.maxNotesLength}
             className={`mt-2 w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none dark:border-slate-700 dark:bg-slate-800 ${FOCUS_RING_FIELD}`}
           />
         )}
@@ -134,6 +138,7 @@ export function IdeaList<T extends IdeaRow>({ config }: { config: IdeaListConfig
           onChange={(e) => setText(e.target.value)}
           placeholder={config.addPlaceholder}
           aria-label={config.addPlaceholder.replace(/…$/, '')}
+          maxLength={config.maxTextLength}
           autoComplete="off"
           enterKeyHint="done"
           className={`${INPUT} ${FOCUS_RING_FIELD}`}

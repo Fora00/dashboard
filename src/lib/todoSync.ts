@@ -10,6 +10,10 @@ import { useSyncStatus } from './useSyncStatus'
 //   3. export mutation helpers the UI calls instead of raw Dexie writes,
 //   4. export start<Project>Sync = engine.start and wire it in App.tsx.
 
+// Cap — MUST match todos_text_max_length in
+// supabase/migrations/20260930160100_text_caps.sql and the input's maxLength.
+export const MAX_TEXT_LENGTH = 300
+
 interface TodoRow {
   id: string
   text: string
@@ -48,10 +52,11 @@ const engine = createCloudSync({
 // --- Local mutations (used by the UI; safe with or without sync) -----------
 
 export async function addTodo(text: string): Promise<void> {
+  if (!text.trim()) return
   const now = Date.now()
   const todo: Todo = {
     id: crypto.randomUUID(),
-    text,
+    text: text.trim().slice(0, MAX_TEXT_LENGTH),
     done: 0,
     createdAt: now,
     updatedAt: now,
