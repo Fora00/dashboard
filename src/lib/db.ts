@@ -130,6 +130,29 @@ export interface LinkItem {
   updatedAt: number
 }
 
+// A travel idea. companionIds is the list of TripCompanion ids it is shared
+// with: an EMPTY array means Solo. Always an array (never undefined) and
+// indexed multi-entry (`*companionIds`). Cloud-syncable via the generic engine.
+export interface TripIdea {
+  id: string
+  title: string
+  notes: string
+  companionIds: string[]
+  done: 0 | 1          // been there; Dexie can't index booleans
+  createdAt: number
+  updatedAt: number
+}
+
+// A person one can travel with. Names are unique case-insensitively
+// (enforced by addCompanion/renameCompanion in tripsSync.ts).
+export interface TripCompanion {
+  id: string
+  name: string
+  emoji: string
+  createdAt: number
+  updatedAt: number
+}
+
 // Per-device usage stats for a dashboard project, keyed by ProjectMeta.id.
 // Drives the home grid's ordering. Deliberately local-only — open counts
 // are per-device, so this never syncs and has no remote table.
@@ -285,6 +308,8 @@ export type OutboxTable =
   | 'links'
   | 'life_weeks'
   | 'life_entries'
+  | 'trip_ideas'
+  | 'trip_companions'
 
 // Local rows that may travel through the outbox (any synced project's shape).
 export type OutboxPayload =
@@ -300,6 +325,8 @@ export type OutboxPayload =
   | LinkItem
   | LifeWeek
   | LifeEntry
+  | TripIdea
+  | TripCompanion
 
 // Queue of local mutations not yet pushed to the cloud. Written alongside
 // every local write so changes made offline sync on reconnect (see cloudSync.ts).
@@ -357,6 +384,8 @@ export const db = new Dexie('dashboard') as Dexie & {
   eventsCache: EntityTable<EventsCacheRow, 'id'>
   eventMarks: EntityTable<EventMark, 'id'>
   eventPrefs: EntityTable<EventPrefs, 'id'>
+  tripIdeas: EntityTable<TripIdea, 'id'>
+  tripCompanions: EntityTable<TripCompanion, 'id'>
 }
 
 db.version(1).stores({
@@ -556,6 +585,31 @@ db.version(12).stores({
   eventsCache: 'id',
   eventMarks: 'id, state, updatedAt',
   eventPrefs: 'id',
+})
+
+// v13: trips (travel ideas + companions) — two brand-new empty tables, so no
+// upgrade callback is needed. `*companionIds` is a multiEntry index.
+db.version(13).stores({
+  files: 'id, name, createdAt, synced',
+  shopItems: 'id, done, createdAt, areaId',
+  shopAreas: 'id, createdAt',
+  outbox: '++seq, rowId',
+  climbSessions: 'id, date',
+  climbs: 'id, sessionId, date',
+  habits: 'id, createdAt',
+  habitChecks: 'id, habitId, day, [habitId+day]',
+  todos: 'id, done, createdAt',
+  bookIdeas: 'id, createdAt',
+  boardgameIdeas: 'id, createdAt',
+  links: 'id, read, createdAt, *tags',
+  projectStats: 'id, starred, opens',
+  lifeWeeks: 'id, importedAt',
+  lifeEntries: 'id, week, [week+kind]',
+  eventsCache: 'id',
+  eventMarks: 'id, state, updatedAt',
+  eventPrefs: 'id',
+  tripIdeas: 'id, done, createdAt, *companionIds',
+  tripCompanions: 'id, createdAt',
 })
 
 // Ask the browser not to evict our data under storage pressure (important on iOS).

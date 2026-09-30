@@ -319,6 +319,60 @@ export type Database = {
         }
         Relationships: []
       }
+      trip_companions: {
+        Row: {
+          created_at: number
+          emoji: string
+          id: string
+          name: string
+          updated_at: number
+        }
+        Insert: {
+          created_at: number
+          emoji?: string
+          id: string
+          name: string
+          updated_at: number
+        }
+        Update: {
+          created_at?: number
+          emoji?: string
+          id?: string
+          name?: string
+          updated_at?: number
+        }
+        Relationships: []
+      }
+      trip_ideas: {
+        Row: {
+          companion_ids: string[]
+          created_at: number
+          done: boolean
+          id: string
+          notes: string
+          title: string
+          updated_at: number
+        }
+        Insert: {
+          companion_ids?: string[]
+          created_at: number
+          done?: boolean
+          id: string
+          notes?: string
+          title: string
+          updated_at: number
+        }
+        Update: {
+          companion_ids?: string[]
+          created_at?: number
+          done?: boolean
+          id?: string
+          notes?: string
+          title?: string
+          updated_at?: number
+        }
+        Relationships: []
+      }
       project_members: {
         Row: {
           created_at: string
@@ -456,6 +510,7 @@ export type Database = {
       join_area: { Args: { token: string }; Returns: undefined }
       jwt_email: { Args: never; Returns: string }
       links_tags_within_length: { Args: { tags: string[] }; Returns: boolean }
+      trips_ids_within_length: { Args: { ids: string[] }; Returns: boolean }
       redeem_invite: {
         Args: { guest_email: string; token: string }
         Returns: undefined

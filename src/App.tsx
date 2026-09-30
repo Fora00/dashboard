@@ -8,6 +8,7 @@ import { startHabitSync } from './lib/habitSync'
 import { startLifeSync } from './lib/lifeSync'
 import { startLinksSync } from './lib/linksSync'
 import { startShopSync } from './lib/shopSync'
+import { startTripsSync } from './lib/tripsSync'
 import { startTodoSync } from './lib/todoSync'
 import { startTransferSync } from './lib/transferSync'
 import { useAuth } from './lib/useAuth'
@@ -24,6 +25,7 @@ import { Links } from './projects/links/Links'
 import { LocalTransfer } from './projects/local-transfer/LocalTransfer'
 import { Settings } from './projects/settings/Settings'
 import { Todo } from './projects/todo/Todo'
+import { Trips } from './projects/trips/Trips'
 import { Sharing } from './projects/sharing/Sharing'
 import { JoinArea } from './projects/shop-list/JoinArea'
 import { ShopList } from './projects/shop-list/ShopList'
@@ -48,6 +50,7 @@ export default function App() {
       startBoardgameIdeasSync(),
       startLinksSync(),
       startLifeSync(),
+      startTripsSync(),
     ]
     return () => {
       for (const stop of stops) stop()
@@ -67,6 +70,7 @@ export default function App() {
           <Route path="/book-ideas" element={<BookIdeas />} />
           <Route path="/boardgame-ideas" element={<BoardgameIdeas />} />
           <Route path="/links" element={<Links />} />
+          <Route path="/trips" element={<Trips />} />
           <Route path="/events" element={<Events />} />
           <Route path="/life" element={<Life />} />
           <Route path="/life/import" element={<LifeImport />} />

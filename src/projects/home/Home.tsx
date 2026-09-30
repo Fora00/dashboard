@@ -182,6 +182,10 @@ export function Home() {
     const unread = await db.links.where('read').equals(0).count()
     return { unread }
   })
+  const tripsStats = useLiveQuery(async () => {
+    const open = await db.tripIdeas.where('done').equals(0).count()
+    return { open }
+  })
 
   const statFor = (id: string): string | null => {
     if (id === 'local-transfer' && fileStats) {
@@ -198,6 +202,7 @@ export function Home() {
     if (id === 'todo') return todoStats && todoStats.open > 0 ? todoStats.open : null
     if (id === 'habits') return habitStats && habitStats.remaining > 0 ? habitStats.remaining : null
     if (id === 'links') return linksStats && linksStats.unread > 0 ? linksStats.unread : null
+    if (id === 'trips') return tripsStats && tripsStats.open > 0 ? tripsStats.open : null
     return null
   }
 
