@@ -18,6 +18,7 @@ import {
   saveFilters,
   type DateChip,
 } from './filters'
+import { cleanFormats, formatLabel, matchesFormat, FORMAT_CHIPS } from './format'
 import { EventCard } from './EventCard'
 import type { EventItem } from './types'
 import {
@@ -71,6 +72,7 @@ export function Events() {
   const [rawAreas, setSelectedAreas] = useState<string[]>(initial.areas)
   const [rawCities, setSelectedCities] = useState<string[]>(initial.cities)
   const [dateChip, setDateChip] = useState<DateChip | null>(initial.chip)
+  const [rawFormats, setSelectedFormats] = useState<string[]>(initial.formats)
   const [showHidden, setShowHidden] = useState(initial.showHidden)
   const [query, setQuery] = useState('')
   const [sheetOpen, setSheetOpen] = useState(false)
@@ -120,10 +122,19 @@ export function Events() {
     return rawCities.filter((c) => known.has(c))
   }, [rawCities, events])
 
+  const selectedFormats = useMemo(() => cleanFormats(rawFormats), [rawFormats])
+
   useEffect(() => {
     if (!file) return
-    saveFilters({ cats: selectedCats, areas: selectedAreas, cities: selectedCities, chip: dateChip, showHidden })
-  }, [file, selectedCats, selectedAreas, selectedCities, dateChip, showHidden])
+    saveFilters({
+      cats: selectedCats,
+      areas: selectedAreas,
+      cities: selectedCities,
+      chip: dateChip,
+      formats: selectedFormats,
+      showHidden,
+    })
+  }, [file, selectedCats, selectedAreas, selectedCities, dateChip, selectedFormats, showHidden])
 
   const nq = useMemo(() => normalizeText(query), [query])
   const activeCats = selectedCats ?? favourites
@@ -172,10 +183,23 @@ export function Events() {
     for (const e of scoped) {
       if (!inAreas(e, selectedAreas)) continue
       if (selectedCities.length && !selectedCities.includes(e.city)) continue
+      if (!matchesFormat(e, selectedFormats)) continue
       for (const c of CATEGORIES) if (inCategory(e, c.id)) m.set(c.id, (m.get(c.id) ?? 0) + 1)
     }
     return m
-  }, [scoped, selectedAreas, selectedCities])
+  }, [scoped, selectedAreas, selectedCities, selectedFormats])
+
+  // Format counts respect every other filter (area, category, city) but not the format selection.
+  const formatCounts = useMemo(() => {
+    const m = new Map<string, number>()
+    for (const e of scoped) {
+      if (!inAreas(e, selectedAreas)) continue
+      if (selectedCities.length && !selectedCities.includes(e.city)) continue
+      if (activeCats.length && !activeCats.some((c) => inCategory(e, c))) continue
+      for (const c of FORMAT_CHIPS) if (e.tags.includes(c.id)) m.set(c.id, (m.get(c.id) ?? 0) + 1)
+    }
+    return m
+  }, [scoped, selectedAreas, selectedCities, activeCats])
 
   const catOrder = useMemo(() => {
     const ids = CATEGORIES.map((c) => c.id)
@@ -189,9 +213,10 @@ export function Events() {
         (e) =>
           (activeCats.length === 0 || activeCats.some((c) => inCategory(e, c))) &&
           inAreas(e, selectedAreas) &&
-          (selectedCities.length === 0 || selectedCities.includes(e.city)),
+          (selectedCities.length === 0 || selectedCities.includes(e.city)) &&
+          matchesFormat(e, selectedFormats),
       ),
-    [scoped, activeCats, selectedAreas, selectedCities],
+    [scoped, activeCats, selectedAreas, selectedCities, selectedFormats],
   )
 
   // Flat, ordered list of groups; then cut to `limit` cards in total.
@@ -254,7 +279,13 @@ export function Events() {
     resetLimit()
   }
 
+  function toggleFormat(id: string) {
+    setSelectedFormats((cur) => (cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]))
+    resetLimit()
+  }
+
   function clearAll() {
+    setSelectedFormats([])
     setSelectedCats([])
     setSelectedAreas([])
     setSelectedCities([])
@@ -281,8 +312,8 @@ export function Events() {
   }
 
   const failed = file?.sources.filter((s) => !s.ok) ?? []
-  const filtering = activeCats.length > 0 || selectedAreas.length > 0 || selectedCities.length > 0
-  const filterCount = activeCats.length + selectedAreas.length + selectedCities.length
+  const filtering = activeCats.length > 0 || selectedAreas.length > 0 || selectedCities.length > 0 || selectedFormats.length > 0
+  const filterCount = activeCats.length + selectedAreas.length + selectedCities.length + selectedFormats.length
 
   const header = (
     <PageHeader
@@ -478,6 +509,17 @@ export function Events() {
               {city} ✕
             </button>
           ))}
+          {selectedFormats.map((id) => (
+            <button
+              key={`f-${id}`}
+              type="button"
+              aria-label={`Remove filter ${formatLabel(id)}`}
+              onClick={() => toggleFormat(id)}
+              className={`${CHIP_BASE} ${CHIP_OFF}`}
+            >
+              {formatLabel(id)} ✕
+            </button>
+          ))}
           {(filtering || selectedCats !== null) && (
             <button type="button" onClick={clearAll} className={`${CHIP_BASE} ${CHIP_OFF} underline`}>
               Clear
@@ -505,6 +547,9 @@ export function Events() {
         onToggleCat={toggleCat}
         onToggleFavourite={(id) => void toggleFavourite(id)}
         onToggleCity={toggleCity}
+        formatCounts={formatCounts}
+        selectedFormats={selectedFormats}
+        onToggleFormat={toggleFormat}
         onShowHidden={(v) => {
           setShowHidden(v)
           resetLimit()

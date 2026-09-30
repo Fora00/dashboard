@@ -3,6 +3,7 @@ import { Sheet } from '../../components/Sheet'
 import { Button } from '../../components/Button'
 import { areaLabel, categoryLabel } from './model'
 import { normalizeText } from './filters'
+import { FORMAT_CHIPS, formatLabel } from './format'
 
 const ROW_ON =
   'border-indigo-700 bg-indigo-600 text-white dark:border-indigo-300 dark:bg-indigo-500'
@@ -23,6 +24,9 @@ interface Props {
   /** Cities of the selected areas only (all when none is selected). */
   cityCounts: [string, number][]
   selectedCities: string[]
+  formatCounts: Map<string, number>
+  selectedFormats: string[]
+  onToggleFormat: (id: string) => void
   showHidden: boolean
   canShowHidden: boolean
   /** Any filter of the sheet is active: the Reset at the top is shown. */
@@ -284,6 +288,18 @@ export function FilterSheet(p: Props) {
               <CityChecklist cityCounts={p.cityCounts} selected={p.selectedCities} onToggle={p.onToggleCity} />
             </Section>
           )}
+
+          <Section
+            title="Come"
+            summary={summarize(p.selectedFormats, formatLabel)}
+            defaultOpen={p.selectedFormats.length > 0}
+          >
+            <OptionGrid
+              items={FORMAT_CHIPS.map(({ id, label }) => ({ id, label, count: p.formatCounts.get(id) ?? 0 }))}
+              selected={p.selectedFormats}
+              onToggle={p.onToggleFormat}
+            />
+          </Section>
 
           {p.canShowHidden && (
             <label className="mt-2 flex min-h-10 items-center justify-between gap-2 text-sm text-slate-700 dark:text-slate-200">

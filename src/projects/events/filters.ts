@@ -1,4 +1,5 @@
 import type { EventItem } from './types'
+import { cleanFormats } from './format'
 import { listingDay, localDay, romeDate, isSparseSeries } from './model'
 
 // Pure helpers for the events quick filters (date chips, text search) and the
@@ -86,10 +87,12 @@ export interface StoredFilters {
   areas: string[]
   cities: string[]
   chip: DateChip | null
+  /** "Come" tags (format.ts); missing in older stored values = none. */
+  formats: string[]
   showHidden: boolean
 }
 
-export const EMPTY_FILTERS: StoredFilters = { cats: null, areas: [], cities: [], chip: null, showHidden: false }
+export const EMPTY_FILTERS: StoredFilters = { cats: null, areas: [], cities: [], chip: null, formats: [], showHidden: false }
 
 function strings(v: unknown): string[] {
   return Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : []
@@ -108,6 +111,7 @@ export function loadFilters(): StoredFilters {
       areas: strings(o.areas),
       cities: strings(o.cities),
       chip: DATE_CHIPS.some((c) => c.id === o.chip) ? (o.chip as DateChip) : null,
+      formats: cleanFormats(strings(o.formats)),
       showHidden: o.showHidden === true,
     }
   } catch {
