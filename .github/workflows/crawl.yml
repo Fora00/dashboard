@@ -1,0 +1,27 @@
+# Daily events crawl + deploy. Also runnable by hand (Actions tab > Run workflow).
+name: Crawl events and deploy
+
+on:
+  workflow_dispatch:
+  schedule:
+    # ~06:23 Rome; GitHub cron is UTC and may run late.
+    - cron: '23 4 * * *'
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Shared with deploy.yml, never cancelling: see the comment there. A crawl
+# queued behind a running deploy waits (seconds); a crawl that is running is
+# never cancelled by a push.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  site:
+    uses: ./.github/workflows/_site.yml
+    with:
+      events: crawl
+    secrets: inherit

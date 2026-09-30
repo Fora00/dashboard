@@ -6,13 +6,14 @@
 //   EVENTS_PREVIOUS_URL=…      previous events.json: http(s) URL, file:// URL or local path
 //                              (default: the deployed https://fora00.github.io/dashboard/events.json)
 //   EVENTS_OUT=path            output file (default public/events.json)
+//   GITHUB_STEP_SUMMARY=path   set by GitHub Actions: the per-source table is appended to it
 //
 // Sources run one after another (politeness), each in its own try/catch. A
 // failing source — it throws, or returns 0 events when the previous run had
 // some and it isn't flagged mayBeEmpty — keeps its previous events (re-
 // filtered by the window) and is reported ok:false. The script exits 0 unless
 // it cannot write the output file.
-import { mkdir, readFile, writeFile } from 'node:fs/promises'
+import { appendFile, mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import type { Adapter, Event, EventsFile, SourceStatus } from './types.ts'
@@ -69,6 +70,35 @@ function table(rows: SourceStatus[], ms: Map<string, number>): string {
     s.error ?? '',
   ].join('  '))
   return ['     source                count     time  error', ...lines].join('\n')
+}
+
+/** CI visibility: step summary table, ::warning:: per failed source, ::error:: (job still passes) if > 1/3 fail. */
+async function report(rows: SourceStatus[], ms: Map<string, number>, total: number, ran: number): Promise<void> {
+  // Sources skipped via EVENTS_ONLY keep their old status; only judge the ones that ran.
+  const bad = rows.filter((s) => !s.ok && ms.has(s.id))
+  const esc = (t: string) => t.replace(/%/g, '%25').replace(/\r/g, '%0D').replace(/\n/g, '%0A')
+  for (const s of bad) console.log(`::warning title=Events source failed::${esc(`${s.id}: ${s.error ?? 'failed'} (kept ${s.count} previous events)`)}`)
+  if (bad.length * 3 > ran) {
+    console.log(`::error title=Events crawl degraded::${bad.length} of ${ran} sources failed`)
+  }
+  const file = process.env.GITHUB_STEP_SUMMARY?.trim()
+  if (!file) return
+  const cell = (t: string) => t.replace(/\|/g, '\\|').replace(/\s+/g, ' ')
+  const md = [
+    '## Events crawl',
+    '',
+    `${total} events published · ${bad.length} of ${ran} sources that ran failed`,
+    '',
+    '| | source | events | time | error |',
+    '|---|---|---:|---:|---|',
+    ...rows.map((s) => `| ${s.ok ? 'ok' : 'ERR'} | ${s.id} | ${s.count} | ${((ms.get(s.id) ?? 0) / 1000).toFixed(1)}s | ${cell(s.error ?? '')} |`),
+    '',
+  ].join('\n')
+  try {
+    await appendFile(file, `${md}\n`)
+  } catch (e) {
+    console.log(`cannot write step summary: ${(e as Error).message}`)
+  }
 }
 
 async function main(): Promise<void> {
@@ -148,6 +178,7 @@ async function main(): Promise<void> {
   }
 
   console.log(table(statuses, timings))
+  await report(statuses, timings, events.length, timings.size)
   const byCat = new Map<string, number>()
   for (const e of events) byCat.set(e.category, (byCat.get(e.category) ?? 0) + 1)
   console.log(`\n${events.length} events after dedup (${all.length} before) · ${[...byCat].map(([k, v]) => `${k} ${v}`).join(', ')}`)
@@ -166,8 +197,8 @@ async function main(): Promise<void> {
 }
 
 main().catch((e: unknown) => {
-  // Only reachable on a bug outside the per-source try/catch; the deploy step
-  // is continue-on-error anyway.
+  // Only reachable on a bug outside the per-source try/catch. In CI this fails
+  // the crawl-deploy job (nothing is deployed; the live site keeps its events).
   console.error(e)
   process.exit(1)
 })

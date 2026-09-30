@@ -1,48 +1,29 @@
+# UI deploy on every push to main. Does NOT crawl: it reuses the published
+# events.json (see _site.yml), so it takes seconds. The daily crawl lives in
+# crawl.yml.
 name: Deploy to GitHub Pages
 
 on:
   push:
     branches: [main]
-  workflow_dispatch:
-  schedule:
-    # Daily events crawl (~06:23 Rome; GitHub cron is UTC and may run late).
-    - cron: '23 4 * * *'
 
 permissions:
   contents: read
   pages: write
   id-token: write
 
+# Same group as crawl.yml: only one Pages deploy at a time. NEVER cancel a
+# running deploy: a push must not be able to kill the daily crawl-deploy
+# mid-flight (and vice versa). With cancel-in-progress false GitHub keeps one
+# running + one pending run; a newer push replaces an older *pending* push,
+# which is what we want (the latest commit wins).
 concurrency:
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 22
-          cache: npm
-      - run: npm ci
-      - run: npm run lint
-      # Writes public/events.json (copied into dist by the build). A crawler
-      # crash must never block the deploy: failing sources keep the events
-      # of the currently deployed events.json.
-      - run: npm run events:crawl
-        continue-on-error: true
-      - run: npm run build
-        env:
-          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
-          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
-      - uses: actions/configure-pages@v6
-      - uses: actions/upload-pages-artifact@v5
-        with:
-          path: dist
-      - id: deployment
-        uses: actions/deploy-pages@v5
+  site:
+    uses: ./.github/workflows/_site.yml
+    with:
+      events: reuse
+    secrets: inherit

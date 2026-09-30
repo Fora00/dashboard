@@ -2,8 +2,9 @@
 
 Project 12, phase 1. A zero-dependency Node script (`scripts/events/`) crawls
 public event sources in Trentino, Bolzano and Verona and writes
-`public/events.json`. The deploy workflow runs it daily before the build, so
-the file ships with the site:
+`public/events.json`. The `crawl.yml` workflow runs it daily (and on manual
+dispatch) and deploys; push deploys (`deploy.yml`) do not crawl, they reuse the
+published file. See `docs/CI.md`. The file ships with the site:
 
 - deployed: `https://fora00.github.io/dashboard/events.json`
 - build output: `dist/events.json` (after `npm run events:crawl && npm run build`)
@@ -407,7 +408,8 @@ previous events (re-filtered by the window, `ongoing` recomputed,
 `fetchedAt` unchanged) from the previous `events.json` — by default the
 deployed one — and reports `ok: false` with the error and the carried-over
 `lastSuccess`. The script exits 0 unless it cannot write the output file, and
-the workflow step is `continue-on-error`, so the deploy never blocks on it.
+failed sources surface as `::warning::` annotations and a per-source table in
+the job summary (`::error::` if more than a third failed, job still green).
 
 ## Running locally
 
