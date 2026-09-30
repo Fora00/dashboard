@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { EventItem } from './types'
+import { addToCalendar } from './ics'
 import { buildThingsAddUrl, categoryLabel, categoryOf, formatRange, isSparseSeries, isSpot, listingDay, safeHttpUrl, shortDay } from './model'
 
 interface Props {
@@ -136,6 +137,9 @@ export function EventCard({ event: e, saved, hidden, now, onToggleSave, onToggle
             <a href={buildThingsAddUrl(e)} className={`${ACTION} ${GHOST}`}>
               ✓ To Things
             </a>
+            <button type="button" onClick={() => void addToCalendar(e)} className={`${ACTION} ${GHOST}`}>
+              📅 Calendar
+            </button>
           </div>
         </div>
       )}
