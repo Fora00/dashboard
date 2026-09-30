@@ -107,19 +107,17 @@ export interface <Thing> {
 }
 ```
 
-**b. Union types (only if the table syncs).** Add the remote table name to
-`OutboxTable` and the row type to `OutboxPayload`:
+**b. Outbox map (only if the table syncs).** Add ONE line to `OutboxMap`:
+remote table name → row type. `OutboxTable` and `OutboxPayload` are derived
+from it, and it's what makes `engine.upsert('<things>', row)` accept only a
+`<Thing>`:
 
 ```ts
-export type OutboxTable =
-  | 'shop_items'
+export interface OutboxMap {
+  shop_items: ShopItem
   // …existing…
-  | '<things>'          // add your remote table name
-
-export type OutboxPayload =
-  | ShopItem
-  // …existing…
-  | <Thing>             // add your row type
+  <things>: <Thing>     // remote table name → local row type
+}
 ```
 
 **c. Table declaration + a versioned upgrade.** Add the table to the typed `db`
@@ -253,25 +251,28 @@ export const startTodoSync = engine.start
 ```
 
 **Two-table projects (parent + child).** When a parent row's server-side
-`on delete cascade` also removes children, delete the parent with ONE outbox
-tombstone plus a local cascade in the same transaction — the engine can't know
-about the FK. Copy `deleteSession` from `climbSync.ts` / `deleteArea` from
-`shopSync.ts`:
+`on delete cascade` also removes children, delete the parent with
+`engine.removeCascade`: ONE outbox tombstone for the parent plus a local-only
+delete of its children (the server removes those itself), in one transaction —
+the engine can't know about the FK, so you name the child table and its
+parent-id field. Both tables must be in this engine's `tables`. Never hand-roll
+`db.outbox.add` — it skips the engine's pending-count refresh. Same as
+`deleteSession` in `climbSync.ts` / `deleteArea` in `shopSync.ts`:
 
 ```ts
 export async function delete<Parent>(id: string): Promise<void> {
-  await db.transaction('rw', db.<parents>, db.<children>, db.outbox, async () => {
-    await db.<children>.where('<parentId>').equals(id).delete()
-    await db.<parents>.delete(id)
-    await db.outbox.add({ table: '<parents>', op: 'delete', rowId: id, ts: Date.now() })
-  })
-  void engine.flush()
+  await engine.removeCascade('<parents>', id, [{ remote: '<children>', key: '<parentId>' }])
 }
 ```
 
+Wrappers MAY wrap several engine calls in their own
+`db.transaction('rw', …tables, db.outbox, …)` for atomic multi-row changes
+(see `deleteCompanion` in `tripsSync.ts`); the engine defers its flush until
+that transaction commits.
+
 `TableSync` options recap:
-- `remote` — Supabase table name; also the outbox discriminator. Must be in
-  `OutboxTable`.
+- `remote` — Supabase table name; also the outbox discriminator. Must be the
+  `OutboxMap` key whose row type is the table's row type.
 - `columns` — explicit select list. **Never `select('*')`** (it leaks capability
   columns like `share_token`).
 - `realtime: true` — subscribe to live changes for this table.
@@ -309,6 +310,12 @@ create policy "members full access" on public.<things>
   using (public.is_member('<id>'))
   with check (public.is_member('<id>'));
 
+-- Server-side last-writer-wins: an update carrying an OLDER updated_at than
+-- the stored row is silently ignored (a phone flushing a days-old outbox
+-- can't clobber newer edits). One per table that has an updated_at column.
+create trigger ignore_stale_update before update on public.<things>
+  for each row execute function public.ignore_stale_update();
+
 -- Child table with a cascade (two-table projects only):
 -- create table public.<children> (
 --   id uuid primary key,
@@ -341,6 +348,18 @@ Notes:
   mirror each cap as a named constant (`MAX_TEXT_LENGTH`) used for the input's
   `maxLength`, and the two numbers must match, or the input accepts text the
   server then rejects (a stuck outbox entry). The generator stamps both.
+- **LWW trigger.** Every table with an `updated_at` column gets the
+  `ignore_stale_update` trigger (`20260930160000_sync_hardening.sql`). The
+  client must bump `updatedAt` on every mutation (including Undo re-upserts of
+  an edit), or its write can lose to the row already stored. Insert/delete-only
+  tables without `updated_at` skip it.
+- **New SQL functions are authenticated-only by default.** Default privileges
+  revoke EXECUTE from `public`/`anon` for functions created in migrations. An
+  RPC that must work **signed out** (like `get_project_invite` /
+  `redeem_project_invite`) needs an explicit
+  `grant execute on function public.<fn>(<argtypes>) to anon;` in its
+  migration. Owner-only RPCs still check `is_owner()` in the body — the grant
+  is defence in depth, not a replacement.
 
 ## 6. Page component — mount `SyncCard`
 
@@ -399,14 +418,15 @@ existing one, so the build stays green until the owner pushes and regenerates.
 
 - [ ] 1. Registry entry in `src/lib/projects.ts`
 - [ ] 2. Route (+ `start<Name>Sync()` if synced) in `src/App.tsx`
-- [ ] 3. Row interface, `OutboxTable`/`OutboxPayload` union, table + bumped
+- [ ] 3. Row interface, one `OutboxMap` line, table + bumped
        `db.version(N)` (with a backfill `.upgrade()` if adding a field) in
        `src/lib/db.ts`
 - [ ] 4. `src/lib/<id>Sync.ts` — `TableSync` config, engine, mutation helpers,
        `sync` / `useStatus` / `start<Name>Sync` exports
 - [ ] 5. `supabase/migrations/<datestamp>_<id>.sql` — table, RLS via
-       `is_member('<id>')` with `with check`, realtime publication,
-       `shareable_projects` row
+       `is_member('<id>')` with `with check`, `ignore_stale_update` trigger
+       (tables with `updated_at`), realtime publication, `shareable_projects`
+       row
 - [ ] 6. Page component reads Dexie via `useLiveQuery`, mounts `<SyncCard sync={sync} />`
 - [ ] 7. Owner runs `npx supabase db push`, then `npm run db:types` — in that
        order (workers never do either; they hand-write the types block instead)

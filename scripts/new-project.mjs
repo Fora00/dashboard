@@ -302,13 +302,13 @@ import { useSyncStatus } from './useSyncStatus'
 // the ${id} project, built on the generic engine in cloudSync.ts.
 //
 // NOTE: until you complete docs/NEW_PROJECT.md step 3 (move ${Name}Item into
-// src/lib/db.ts as a real typed table, and add '${remoteTable}' /
-// ${Name}Item to the OutboxTable / OutboxPayload unions there), this file
+// src/lib/db.ts as a real typed table, and add the line
+// \`${remoteTable}: ${Name}\` to the OutboxMap interface there), this file
 // can't be *statically* known by the compiler to be one of the sync engine's
 // known tables/payloads. The two \`as unknown as\` casts below are scaffolding
 // for that gap — delete them once the db.ts edits land, at which point
-// '${remoteTable}' and ${Name}Item will satisfy OutboxTable/OutboxPayload for
-// real and \`db.table('${thingsCamel}')\` can become \`db.${thingsCamel}\`.
+// '${remoteTable}' and ${Name} will satisfy OutboxMap for real and
+// \`db.table('${thingsCamel}')\` can become \`db.${thingsCamel}\`.
 
 export interface ${Name}Item {
   id: string
@@ -408,6 +408,12 @@ create policy "members full access" on public.${remoteTable}
   using (public.is_member('${id}'))
   with check (public.is_member('${id}'));
 
+-- Server-side last-writer-wins: an update carrying an OLDER updated_at than
+-- the stored row is silently ignored (a phone flushing a days-old outbox
+-- can't clobber newer edits). Keep it while the table has updated_at.
+create trigger ignore_stale_update before update on public.${remoteTable}
+  for each row execute function public.ignore_stale_update();
+
 -- Realtime, so edits reach other devices live.
 alter publication supabase_realtime add table public.${remoteTable};
 
@@ -474,17 +480,13 @@ ${
 ${
   synced
     ? `
-   b. Add to the OutboxTable / OutboxPayload unions:
+   b. Add ONE line to the OutboxMap interface (remote table name -> row type;
+      OutboxTable and OutboxPayload are derived from it, don't touch them):
 
-  export type OutboxTable =
-    | 'shop_items'
+  export interface OutboxMap {
     // …existing…
-    | '${remoteTable}'
-
-  export type OutboxPayload =
-    | ShopItem
-    // …existing…
-    | ${Name}
+    ${remoteTable}: ${Name}
+  }
 `
     : ''
 }
