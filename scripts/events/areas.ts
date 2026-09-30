@@ -54,7 +54,7 @@ const TOWNS: Record<AreaId, string[]> = {
   // area's source may also mention need to be here.
   trentino: [
     'Trento', 'Rovereto', 'Riva del Garda', 'Arco', 'Nago-Torbole', 'Torbole', 'Ala', 'Avio',
-    'Pergine Valsugana', 'Levico Terme', 'Ledro', 'Tenno', 'Mori', 'Trentino',
+    'Pergine Valsugana', 'Levico Terme', 'Ledro', 'Tenno', 'Mori', 'Brentonico', 'Castione di Brentonico', 'Trentino',
   ],
   'alto-adige': [
     'Bolzano', 'Bozen', 'Merano', 'Meran', 'Bressanone', 'Brixen', 'Brunico', 'Bruneck',

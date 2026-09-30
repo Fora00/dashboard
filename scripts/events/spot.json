@@ -2,6 +2,18 @@
   "_readme": "Hand-curated big events in far cities (the 'spot ring'). To add one: append an object to `events`. Required: id (kebab-case, stable, include the year: never change it once published, it keys saved/hidden state), title, start and end (YYYY-MM-DD, local Rome dates, BOTH INCLUSIVE; a one-day event has end = start), city, url (the OFFICIAL site page where you verified the dates), summary (one line). Optional: venue, tags (array of tag/category ids such as boardgames, nerd, exhibitions, festivals, talks; also matched as free text), category (primary category id, wins over the tag rules). Only add dates you have verified on the official site; never guess. Entries past the 180-day window are kept and appear automatically when they come into range; delete old editions when convenient.",
   "events": [
     {
+      "id": "festa-castagna-castione-2026",
+      "title": "Festa della Castagna a Castione",
+      "start": "2026-10-18",
+      "end": "2026-10-18",
+      "city": "Castione di Brentonico",
+      "venue": "Castione, Altopiano di Brentonico",
+      "url": "https://www.visitrovereto.it/en/enjoy/events/festa-castagna-castione/",
+      "summary": "Festa d'autunno dei marroni del Monte Baldo: banchi con piatti tipici e castagne arrostite, prodotti locali nei cortili del paese, musica.",
+      "tags": ["festivals", "food"],
+      "category": "food"
+    },
+    {
       "id": "lucca-comics-games-2026",
       "title": "Lucca Comics & Games 2026",
       "start": "2026-10-28",

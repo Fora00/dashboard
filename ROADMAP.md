@@ -695,20 +695,22 @@ LOCAL until the owner pushes: quick actions on the card, template caps,
 `.ics`, links tag rename, filters/search, format tags, "Come" section.
 Then, in order:
 
-1. **Finish the in-flight categories builder** [opus], if it did not
-   complete: new categories `food` / `tours` / `outdoor`, crawl-time drop
-   rules (professional training, civic notices except parades, spectator
-   sport, empty "..." ODH titles), keyword gaps in concerts/theatre
-   (~110 events), chestnut/sagre words in `food`, and the `kids` false
-   positive on "Festa del marrone D.O.P". Check `git status` for
-   half-applied edits in `scripts/events/`, `areas.ts`, `model.ts`; run
-   `npm run build`, then a full crawl, review, commit.
-2. **Push** (owner asked for one push at the end of the batch), then watch
-   the Deploy run go green.
-3. **Spot pass + visitrovereto** — queue item 10 in Project 12: Festa della
-   Castagna, Castione di Brentonico (Sun 18 Oct 2026, verified on
-   visitrovereto.it; Brentonico may need adding to the city map in
-   `areas.ts` so it is not badged Spot/abroad), other autumn festivals,
+1. **Categories done 2026-09-30** [opus]: `food` (Cibo e vino, 196), `tours`
+   (Visite, 112), `outdoor` (47); `other` 537 -> 173; crawl-time drops
+   (professional training 26, civic notices 6, spectator sport 7, listed in
+   the crawl summary); concerts/theatre keyword gaps; the `kids` false
+   positive on garda-veneto typologies fixed. Follow-ups [sonnet]: rename
+   "Festivals & food" (now confusing next to "Cibo e vino"); pick one label
+   language (new labels Italian, old English); title-beats-typology for
+   concerts typed "Teatro" (Michielin); wellness/community courses in
+   `other` could get social tags; page not re-checked in a browser after the
+   category change.
+2. **Push** (owner asked for one push at the end of the batch) — done at the
+   end of 2026-09-30 if the next line says so; then watch the Deploy run.
+3. **Spot pass + visitrovereto** — queue item 10 in Project 12. Festa della
+   Castagna, Castione di Brentonico is DONE (Sun 18 Oct 2026, in spot.json,
+   area trentino, Spot badge; only one day verified). Still to do: other
+   autumn festivals,
    Bologna/Torino/Milano/Ferrara big events, Milan Games Week / Miart if
    the dates can be verified, then a visitrovereto.it adapter only if the
    markup is reliable.
