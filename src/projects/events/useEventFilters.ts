@@ -21,6 +21,7 @@ import {
   isLongRunning,
   isOngoingNow,
   isOver,
+  isSpot,
   type DayGroup,
 } from './model'
 
@@ -132,10 +133,16 @@ export function useEventFilters(
   const base = useMemo(() => {
     if (view === 'saved') {
       const live = new Map(events.map((e) => [e.id, e]))
-      return (marksRaw ?? [])
+      const saved = (marksRaw ?? [])
         .filter((m) => m.state === 'saved')
         .map((m) => live.get(m.id) ?? m.event)
-        .sort(byStart)
+      // Saved also holds everything the owner curates (hand-added + spot),
+      // unless it is over or hidden.
+      const ids = new Set(saved.map((e) => e.id))
+      const mine = events.filter(
+        (e) => (isManual(e) || isSpot(e)) && !ids.has(e.id) && !isOver(e, now) && marks.get(e.id)?.state !== 'hidden',
+      )
+      return [...saved, ...mine].sort(byStart)
     }
     return events.filter((e) => {
       if (isOver(e, now)) return false
@@ -199,18 +206,18 @@ export function useEventFilters(
     return ids.sort((a, b) => rank(a) - rank(b) || (catCounts.get(b) ?? 0) - (catCounts.get(a) ?? 0))
   }, [favourites, catCounts])
 
-  // The favourites are only a default: a hand-added event is never hidden by
-  // it (an explicit category choice still applies to it like to any event).
+  // The favourites are only a default: a hand-added event (and everything in
+  // spot ones in Saved) is never hidden by it (an explicit category choice still applies to it like to any event).
   const filtered = useMemo(
     () =>
       scoped.filter(
         (e) =>
-          (inCats(e, activeCats) || (selectedCats === null && isManual(e))) &&
+          (inCats(e, activeCats) || (selectedCats === null && (isManual(e) || (view === 'saved' && isSpot(e))))) &&
           inAreas(e, selectedAreas) &&
           inCities(e, selectedCities) &&
           matchesFormat(e, selectedFormats),
       ),
-    [scoped, activeCats, selectedCats, selectedAreas, selectedCities, selectedFormats],
+    [scoped, activeCats, selectedCats, selectedAreas, selectedCities, selectedFormats, view],
   )
 
   // Flat, ordered list of groups; then cut to `limit` cards in total.
