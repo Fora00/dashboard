@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { db, type EventMark, type EventPrefs } from '../../lib/db'
+import type { EventMark, EventPrefs } from '../../lib/db'
+import { setFavouriteCategories } from '../../lib/eventMarksSync'
 import {
   chipRange,
   loadFilters,
@@ -328,7 +329,7 @@ export function useEventFilters(
   }
 
   async function toggleFavourite(id: string) {
-    await db.eventPrefs.put({ id: 'prefs', favouriteCategories: toggleIn(favourites, id) })
+    await setFavouriteCategories(toggleIn(favourites, id))
   }
 
   return {

@@ -539,3 +539,7 @@ never appear in `events.json`.
 Hand-added events are deleted automatically 14 days after their last day
 (`pruneCustomEvents`, run when `/events` opens; the deletion syncs like any
 other). A saved mark keeps its own snapshot.
+
+## Saved & hidden sync
+
+Saved/hidden events (`eventMarks`, with an event snapshot) and favourite categories (`eventPrefs`) sync across the owner's devices (`src/lib/eventMarksSync.ts`, tables `event_marks` and `event_prefs`, migration `20261001130000_event_marks.sql`). Owner-only, like hand-added events; on other devices the marks stay local. Last write wins by `updatedAt`; first sync unions both devices' marks and favourites.

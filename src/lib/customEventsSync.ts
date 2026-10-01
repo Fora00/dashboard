@@ -2,6 +2,7 @@ import { db, type CustomEvent } from './db'
 import { createCloudSync, type TableSync } from './cloudSync'
 import { useSyncStatus } from './useSyncStatus'
 import { isExpiredCustomEvent, isSafeImageDataUrl } from '../projects/events/custom'
+import { removeEventMark, restoreEventMark } from './eventMarksSync'
 
 // Local-first sync for the owner's hand-added events (project 12, "Manual
 // events" in docs/EVENTS.md), built on the generic engine in cloudSync.ts.
@@ -98,20 +99,20 @@ export async function saveCustomEvent(row: CustomEvent): Promise<void> {
 }
 
 /**
- * Delete a hand-added event, plus its saved/hidden mark (local-only). Returns
- * an undo that restores both; the row goes back through the engine with a
- * fresh updatedAt, so the server's LWW trigger accepts it.
+ * Delete a hand-added event, plus its saved/hidden mark (both synced, each by
+ * its own engine). Returns an undo that restores both; they go back through
+ * the engines with a fresh updatedAt, so the server's LWW trigger accepts them.
  */
 export async function deleteCustomEvent(id: string): Promise<() => Promise<void>> {
   const row = await db.customEvents.get(id)
   const mark = await db.eventMarks.get(id)
   await db.transaction('rw', db.customEvents, db.eventMarks, db.outbox, async () => {
     await engine.remove('custom_events', id)
-    await db.eventMarks.delete(id)
+    await removeEventMark(id)
   })
   return async () => {
     if (row) await engine.upsert('custom_events', { ...row, updatedAt: Date.now() })
-    if (mark) await db.eventMarks.put(mark)
+    if (mark) await restoreEventMark(id, mark)
   }
 }
 

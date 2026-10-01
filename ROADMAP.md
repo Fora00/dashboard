@@ -960,8 +960,13 @@ sync can come later).
          categories; Saved view by date, past last.
       6. [sonnet] Travel time from Trento/Rovereto per city (from rings).
       7. [x] DONE 2026-09-30 (`ics.ts`, "📅 Calendar" in the expanded card, TZID Europe/Rome; iOS share-sheet path and a real Apple/Google Calendar import unverified) — Export an event as .ics.
-      8. [opus] Sync saved/hidden across devices, owner-only (migration by
-         the owner).
+      8. [x] DONE 2026-10-01, not committed: saved/hidden (`eventMarks`) and favourite
+         categories (`eventPrefs`) sync, owner-only. `src/lib/eventMarksSync.ts`,
+         `src/projects/events/marks.ts`, Dexie v15 (queues existing marks once).
+         **Owner must apply `supabase/migrations/20261001130000_event_marks.sql`
+         BEFORE shipping the client, then `npm run db:types`.** Known gap: an
+         un-save is a hard delete, so an offline device pushing an older save
+         later brings it back. /events SyncCard shows only the custom-events engine.
       9. [sonnet] Saved/favourite events in the Sunday Life plan.
       10. [opus] Spot pass (after the categories/food builder finishes; owner
          OK'd 2026-09-30): hand-verified `spot.json` entries for Festa della

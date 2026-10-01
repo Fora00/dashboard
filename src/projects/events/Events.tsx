@@ -3,6 +3,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { useSearchParams } from 'react-router-dom'
 import { db, type CustomEvent, type EventMark } from '../../lib/db'
 import { deleteCustomEvent, pruneCustomEvents, sync as customSync } from '../../lib/customEventsSync'
+import { restoreEventMark, toggleEventMark } from '../../lib/eventMarksSync'
 import { SyncCard } from '../../components/SyncCard'
 import { PageHeader } from '../../components/PageHeader'
 import { EmptyState } from '../../components/EmptyState'
@@ -14,7 +15,7 @@ import { useUndoSnackbar } from '../../lib/useUndoSnackbar'
 import { SkeletonList } from '../../components/Skeleton'
 import { FilterSheet } from './FilterSheet'
 import { CustomEventSheet } from './CustomEventSheet'
-import { PREFILL_KEYS, isManual, mergeEvents, parsePrefill, type CustomEventForm } from './custom'
+import { PREFILL_KEYS, mergeEvents, parsePrefill, type CustomEventForm } from './custom'
 import { DATE_CHIPS } from './filters'
 import { formatLabel } from './format'
 import { EventCard } from './EventCard'
@@ -94,16 +95,13 @@ export function Events() {
   // memoised EventCards only re-render when their own props change.
   const setMark = useCallback(
     async (e: EventItem, state: EventMark['state']) => {
-      const prev = await db.eventMarks.get(e.id)
-      if (prev?.state === state) await db.eventMarks.delete(e.id)
-      // A hand-added event's snapshot drops its inline image: the live row has it.
-      else await db.eventMarks.put({ id: e.id, state, event: isManual(e) ? { ...e, image: null } : e, updatedAt: Date.now() })
+      // Through the owner-only sync engine (eventMarksSync.ts). The snapshot
+      // is sanitised there: a hand-added event's inline image is dropped (the
+      // live row has it), scraped fields are capped.
+      const prev = await toggleEventMark(e, state)
       // Hiding makes the card vanish: offer Undo, restoring the previous mark.
       if (state === 'hidden' && prev?.state !== 'hidden') {
-        triggerUndo('Event hidden', async () => {
-          if (prev) await db.eventMarks.put(prev)
-          else await db.eventMarks.delete(e.id)
-        })
+        triggerUndo('Event hidden', () => restoreEventMark(e.id, prev))
       }
     },
     [triggerUndo],

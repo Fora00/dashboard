@@ -224,6 +224,45 @@ export type Database = {
         }
         Relationships: []
       }
+      event_marks: {
+        Row: {
+          event: Json
+          id: string
+          state: string
+          updated_at: number
+        }
+        Insert: {
+          event: Json
+          id: string
+          state: string
+          updated_at: number
+        }
+        Update: {
+          event?: Json
+          id?: string
+          state?: string
+          updated_at?: number
+        }
+        Relationships: []
+      }
+      event_prefs: {
+        Row: {
+          favourite_categories: string[]
+          id: string
+          updated_at: number
+        }
+        Insert: {
+          favourite_categories?: string[]
+          id?: string
+          updated_at: number
+        }
+        Update: {
+          favourite_categories?: string[]
+          id?: string
+          updated_at?: number
+        }
+        Relationships: []
+      }
       habit_checks: {
         Row: {
           created_at: number
@@ -590,6 +629,7 @@ export type Database = {
     Functions: {
       area_share_token: { Args: { aid: string }; Returns: string }
       can_access_area: { Args: { aid: string }; Returns: boolean }
+      event_categories_valid: { Args: { cats: string[] }; Returns: boolean }
       get_invite: { Args: { token: string }; Returns: string }
       get_project_invite: { Args: { token: string }; Returns: string }
       is_member: { Args: { pid: string }; Returns: boolean }

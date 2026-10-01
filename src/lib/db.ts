@@ -313,6 +313,8 @@ export interface OutboxMap {
   trip_ideas: TripIdea
   trip_companions: TripCompanion
   custom_events: CustomEvent
+  event_marks: EventMark
+  event_prefs: EventPrefs
 }
 
 // Remote table names the engine can push to — also the discriminator on an
@@ -343,9 +345,10 @@ export interface OutboxEntry {
   dead?: 0 | 1
 }
 
-// Events (project 12): local-only. eventsCache holds the last events.json
-// (single row 'latest'); eventMarks the owner's saved/hidden events with a
+// Events (project 12). eventsCache holds the last events.json (single row
+// 'latest', local-only); eventMarks the owner's saved/hidden events with a
 // snapshot so saved ones outlive the file; eventPrefs the favourite categories.
+// Marks and prefs sync owner-only (src/lib/eventMarksSync.ts) since v15.
 export interface EventsCacheRow {
   id: 'latest'
   file: EventsFile
@@ -360,6 +363,10 @@ export interface EventMark {
 export interface EventPrefs {
   id: 'prefs'
   favouriteCategories: string[]
+  // ms; 0 (or absent, on rows written before v15) = "never edited since sync
+  // existed": the server MERGES such a row into its own instead of letting it
+  // win or lose (see event_prefs_merge in the event_marks migration).
+  updatedAt?: number
 }
 
 // An event the owner added by hand (e.g. from a climbing gym's Instagram
@@ -655,6 +662,58 @@ db.version(14).stores({
   tripCompanions: 'id, createdAt',
   customEvents: 'id, start, updatedAt',
 })
+
+// v15: eventMarks + eventPrefs start syncing (owner-only, eventMarksSync.ts).
+// Same stores; the upgrade queues every mark and the prefs row that already
+// exist on this device into the outbox, ONCE. Without it the first signed-in
+// pull would treat them as deleted remotely (the engine's pull is source of
+// truth for rows with no outbox entry). Queued, they are pushed first and the
+// server merges: marks are a union by id with newer updated_at winning (the
+// ignore_stale_update trigger), prefs a union of the favourite lists
+// (updatedAt 0, see EventPrefs). On a device that never signs in as the owner
+// the entries just stay queued or dead-lettered, and the local rows stay.
+db.version(15)
+  .stores({
+    files: 'id, name, createdAt, synced',
+    shopItems: 'id, done, createdAt, areaId',
+    shopAreas: 'id, createdAt',
+    outbox: '++seq, rowId',
+    climbSessions: 'id, date',
+    climbs: 'id, sessionId, date',
+    habits: 'id, createdAt',
+    habitChecks: 'id, habitId, day, [habitId+day]',
+    todos: 'id, done, createdAt',
+    bookIdeas: 'id, createdAt',
+    boardgameIdeas: 'id, createdAt',
+    links: 'id, read, createdAt, *tags',
+    projectStats: 'id, starred, opens',
+    lifeWeeks: 'id, importedAt',
+    lifeEntries: 'id, week, [week+kind]',
+    eventsCache: 'id',
+    eventMarks: 'id, state, updatedAt',
+    eventPrefs: 'id',
+    tripIdeas: 'id, done, createdAt, *companionIds',
+    tripCompanions: 'id, createdAt',
+    customEvents: 'id, start, updatedAt',
+  })
+  .upgrade(async (tx) => {
+    const ts = Date.now()
+    const marks = (await tx.table('eventMarks').toArray()) as EventMark[]
+    const entries: OutboxEntry[] = marks.map((m) => ({
+      table: 'event_marks',
+      op: 'upsert',
+      rowId: m.id,
+      payload: m,
+      ts,
+    }))
+    const prefs = (await tx.table('eventPrefs').get('prefs')) as EventPrefs | undefined
+    if (prefs) {
+      const row: EventPrefs = { ...prefs, updatedAt: prefs.updatedAt ?? 0 }
+      await tx.table('eventPrefs').put(row)
+      entries.push({ table: 'event_prefs', op: 'upsert', rowId: row.id, payload: row, ts })
+    }
+    if (entries.length > 0) await tx.table('outbox').bulkAdd(entries)
+  })
 
 // Ask the browser not to evict our data under storage pressure (important on iOS).
 export async function requestPersistentStorage(): Promise<boolean> {
