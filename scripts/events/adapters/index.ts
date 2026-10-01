@@ -22,6 +22,7 @@ import { arteven } from './arteven.ts'
 import { stabileveneto } from './stabileveneto.ts'
 import { teatrosociale } from './teatrosociale.ts'
 import { filarmonica } from './filarmonica.ts'
+import { arcadia } from './arcadia.ts'
 
 export const ADAPTERS: Adapter[] = [
   // Batch A — board games
@@ -61,6 +62,16 @@ export const ADAPTERS: Adapter[] = [
   // Associazione Filarmonica di Rovereto: MEC RSS + per-event iCal. Its season
   // concerts at the Zandonai merge with `zandonai` in dedup.
   filarmonica,
+  // Towns around Trento/Rovereto on the same OpenPA install as Rovereto (their
+  // robots.txt allows /opendata/api/calendar). Added 2026-10-01; cultura-trentino
+  // overlaps a little, dedup merges. Ala is nearly empty: `mayBeEmpty`.
+  openpa({ id: 'riva-del-garda', name: 'Comune di Riva del Garda', host: 'www.comune.rivadelgarda.tn.it', mode: 'calendar', classes: '[event]', city: 'Riva del Garda' }),
+  openpa({ id: 'arco', name: 'Comune di Arco', host: 'www.comune.arco.tn.it', mode: 'calendar', classes: '[event]', city: 'Arco' }),
+  openpa({ id: 'mori', name: 'Comune di Mori', host: 'www.comune.mori.tn.it', mode: 'calendar', classes: '[event]', city: 'Mori' }),
+  openpa({ id: 'ala', name: 'Comune di Ala', host: 'www.comune.ala.tn.it', mode: 'calendar', classes: '[event]', city: 'Ala', mayBeEmpty: true }),
+  openpa({ id: 'pergine', name: 'Comune di Pergine Valsugana', host: 'www.comune.pergine.tn.it', mode: 'calendar', classes: '[event]', city: 'Pergine Valsugana' }),
+  // Libreria Arcadia Ubik: author evenings; schedule lives in the post title.
+  arcadia,
   ical({
     id: 'buonconsiglio', name: 'Castello del Buonconsiglio', feed: 'https://www.buonconsiglio.it/events.ics',
     home: 'https://www.buonconsiglio.it/agenda/', city: 'Trento',
