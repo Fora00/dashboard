@@ -966,7 +966,7 @@ sync can come later).
          **Owner must apply `supabase/migrations/20261001130000_event_marks.sql`
          BEFORE shipping the client, then `npm run db:types`.** Known gap: an
          un-save is a hard delete, so an offline device pushing an older save
-         later brings it back. /events SyncCard shows only the custom-events engine.
+         later brings it back. Marks of past events are auto-deleted (`pruneEventMarks`, local + server). /events SyncCard shows only the custom-events engine.
       9. [sonnet] Saved/favourite events in the Sunday Life plan.
       10. [opus] Spot pass (after the categories/food builder finishes; owner
          OK'd 2026-09-30): hand-verified `spot.json` entries for Festa della

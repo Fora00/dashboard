@@ -129,3 +129,15 @@ export function sanitizeFavourites(raw: unknown): string[] {
   }
   return out
 }
+
+/** Local calendar date (YYYY-MM-DD) of a timestamp. */
+const ymd = (ms: number): string => {
+  const d = new Date(ms)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+/** Is the event over, i.e. its last day (end, else start) before today? */
+export function isPastEvent(e: { start: string; end: string | null }, now: number): boolean {
+  const last = (e.end ?? e.start).slice(0, 10)
+  return /^\d{4}-\d{2}-\d{2}$/.test(last) && last < ymd(now)
+}

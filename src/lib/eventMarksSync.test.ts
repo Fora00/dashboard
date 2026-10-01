@@ -23,7 +23,7 @@ vi.mock('./sync', () => ({
   syncEnabled: true,
 }))
 
-const { eventMarksTable, restoreEventMark, setFavouriteCategories, sync, toggleEventMark } = await import('./eventMarksSync')
+const { eventMarksTable, pruneEventMarks, restoreEventMark, setFavouriteCategories, sync, toggleEventMark } = await import('./eventMarksSync')
 const { deleteCustomEvent, saveCustomEvent, sync: customSync } = await import('./customEventsSync')
 
 const ev = (over: Partial<EventItem> = {}): EventItem => ({
@@ -115,6 +115,19 @@ describe('event marks sync', () => {
     expect(await db.eventMarks.get(ev().id)).toBeUndefined()
     expect(fake.remote.event_marks).toHaveLength(0)
     expect(pushed().map((c) => c.op)).toEqual(['upsert', 'delete'])
+  })
+
+  it('prune deletes marks of events that are over, locally and remotely, and keeps the rest', async () => {
+    await toggleEventMark(ev({ id: 'aaaaaaaaaaaaaaaa', start: '2026-10-01T20:00:00+02:00' }), 'saved')
+    await toggleEventMark(ev({ id: 'bbbbbbbbbbbbbbbb', start: '2026-10-01T20:00:00+02:00' }), 'hidden')
+    await toggleEventMark(ev({ id: 'cccccccccccccccc', start: '2026-10-01T20:00:00+02:00', end: '2026-10-12T22:00:00+02:00' }), 'saved')
+    await toggleEventMark(ev({ id: 'dddddddddddddddd', start: '2026-10-10T20:00:00+02:00' }), 'saved')
+    await settle()
+    expect(fake.remote.event_marks).toHaveLength(4)
+    expect(await pruneEventMarks(new Date(2026, 9, 10, 12).getTime())).toBe(2)
+    await settle()
+    expect((await db.eventMarks.toArray()).map((m) => m.id).sort()).toEqual(['cccccccccccccccc', 'dddddddddddddddd'])
+    expect(fake.remote.event_marks).toHaveLength(2)
   })
 
   it('hide replaces save; undo restores the old mark with a newer stamp', async () => {

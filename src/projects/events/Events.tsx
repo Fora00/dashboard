@@ -3,7 +3,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { useSearchParams } from 'react-router-dom'
 import { db, type CustomEvent, type EventMark } from '../../lib/db'
 import { deleteCustomEvent, pruneCustomEvents, sync as customSync } from '../../lib/customEventsSync'
-import { restoreEventMark, toggleEventMark } from '../../lib/eventMarksSync'
+import { pruneEventMarks, restoreEventMark, toggleEventMark } from '../../lib/eventMarksSync'
 import { SyncCard } from '../../components/SyncCard'
 import { PageHeader } from '../../components/PageHeader'
 import { EmptyState } from '../../components/EmptyState'
@@ -34,9 +34,11 @@ export function Events() {
   const customRows = useLiveQuery(() => db.customEvents.toArray())
   const [editor, setEditor] = useState<Editor>({ open: false })
 
-  // Hand-added events disappear two weeks after their last day.
+  // Hand-added events disappear two weeks after their last day; saved/hidden
+  // marks the day after the event (locally and on the server).
   useEffect(() => {
     void pruneCustomEvents().catch(() => {})
+    void pruneEventMarks().catch(() => {})
   }, [])
   const [searchParams, setSearchParams] = useSearchParams()
 

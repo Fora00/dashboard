@@ -543,3 +543,5 @@ other). A saved mark keeps its own snapshot.
 ## Saved & hidden sync
 
 Saved/hidden events (`eventMarks`, with an event snapshot) and favourite categories (`eventPrefs`) sync across the owner's devices (`src/lib/eventMarksSync.ts`, tables `event_marks` and `event_prefs`, migration `20261001130000_event_marks.sql`). Owner-only, like hand-added events; on other devices the marks stay local. Last write wins by `updatedAt`; first sync unions both devices' marks and favourites.
+
+Marks are pruned once their event is over (last day before today): `pruneEventMarks` runs when /events opens and deletes the saved *and* hidden mark through the outbox, so the server row goes too.

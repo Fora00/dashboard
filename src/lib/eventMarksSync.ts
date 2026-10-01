@@ -1,7 +1,7 @@
 import { db, type EventMark, type EventPrefs } from './db'
 import { createCloudSync, type TableSync } from './cloudSync'
 import { useSyncStatus } from './useSyncStatus'
-import { sanitizeFavourites, sanitizeSnapshot } from '../projects/events/marks'
+import { isPastEvent, sanitizeFavourites, sanitizeSnapshot } from '../projects/events/marks'
 import type { EventItem } from '../projects/events/types'
 
 // Local-first sync for the owner's saved/hidden events (db.eventMarks) and
@@ -132,6 +132,17 @@ export async function restoreEventMark(id: string, prev: EventMark | undefined):
 /** Clear an event's mark (no-op, and nothing queued, when it has none). */
 export async function removeEventMark(id: string): Promise<void> {
   if (await db.eventMarks.get(id)) await engine.remove('event_marks', id)
+}
+
+/**
+ * Delete the marks (saved and hidden) of events that are over. Goes through
+ * the engine, so the deletion syncs and frees the server row; works signed
+ * out too. Every device runs it, deleting an already-deleted row is harmless.
+ */
+export async function pruneEventMarks(now = Date.now()): Promise<number> {
+  const old = (await db.eventMarks.toArray()).filter((m) => isPastEvent(m.event, now))
+  for (const m of old) await engine.remove('event_marks', m.id)
+  return old.length
 }
 
 /** Replace the favourite categories (sanitised, de-duplicated). */
