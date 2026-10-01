@@ -141,6 +141,18 @@
       "summary": "Mostra di Fondazione Ferrara Arte a Palazzo dei Diamanti, dall'Impressionismo alle avanguardie del Novecento.",
       "tags": ["exhibitions"],
       "category": "exhibitions"
+    },
+    {
+      "id": "gardacon-montichiari-2026-11",
+      "title": "Gardacon",
+      "start": "2026-11-07",
+      "end": "2026-11-08",
+      "city": "Montichiari",
+      "venue": "Centro Fiera del Garda",
+      "url": "https://www.gardacon.it/",
+      "summary": "Festival del fumetto, dei videogiochi e della cultura pop (sesta edizione): arcade, manga, cosplay, Lego, palchi con spettacoli. Sabato e domenica 10-19.",
+      "tags": ["nerd", "festivals"],
+      "category": "nerd"
     }
   ]
 }

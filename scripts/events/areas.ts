@@ -78,7 +78,7 @@ const TOWNS: Record<AreaId, string[]> = {
     'Cassola', 'Rosà', 'Valdagno', 'Noventa Vicentina', 'Fontaniva',
   ],
   lombardia: [
-    'Brescia', 'Mantova', 'Milano', 'Bergamo', 'Cremona', 'Sirmione', 'Desenzano del Garda',
+    'Brescia', 'Montichiari', 'Mantova', 'Milano', 'Bergamo', 'Cremona', 'Sirmione', 'Desenzano del Garda',
     'Salò', 'Limone sul Garda', 'Gardone Riviera', 'Rho', 'Monza',
   ],
   'emilia-romagna': ['Bologna', 'Modena', 'Parma', 'Reggio Emilia', 'Ferrara', 'Rimini', 'Ravenna'],
