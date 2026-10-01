@@ -106,7 +106,7 @@ export class PoliteHttp {
     await mine
   }
 
-  private async rawGet(url: URL, redirect: 'follow' | 'manual', retried = false, body?: string): Promise<Response> {
+  private async rawGet(url: URL, redirect: 'follow' | 'manual', retried = false, body?: string, contentType = 'application/json'): Promise<Response> {
     await this.slot(url.host)
     this.requests++
     try {
@@ -114,7 +114,7 @@ export class PoliteHttp {
         redirect,
         headers: body === undefined
           ? { 'User-Agent': USER_AGENT, Accept: '*/*' }
-          : { 'User-Agent': USER_AGENT, Accept: 'application/json', 'Content-Type': 'application/json' },
+          : { 'User-Agent': USER_AGENT, Accept: 'application/json', 'Content-Type': contentType },
         signal: AbortSignal.timeout(TIMEOUT_MS),
         ...(body === undefined ? {} : { method: 'POST', body }),
       })
@@ -123,7 +123,7 @@ export class PoliteHttp {
       // seen on myarteven.it) is not an answer: retry once, after the usual
       // per-host delay. Timeouts and DNS errors are not retried.
       const code = (e as { cause?: { code?: string } }).cause?.code
-      if (!retried && (code === 'UND_ERR_SOCKET' || code === 'ECONNRESET')) return this.rawGet(url, redirect, true, body)
+      if (!retried && (code === 'UND_ERR_SOCKET' || code === 'ECONNRESET')) return this.rawGet(url, redirect, true, body, contentType)
       throw e
     }
   }
@@ -181,10 +181,12 @@ export class PoliteHttp {
    * Veneto's list). Same robots check, delay and timeout as a GET; redirects
    * are not followed (a POST API that redirects is an error).
    */
-  async post(href: string, body: unknown): Promise<FetchResult> {
+  async post(href: string, body: unknown, form = false): Promise<FetchResult> {
     const url = new URL(href)
     await this.assertAllowed(url)
-    const res = await this.rawGet(url, 'manual', false, JSON.stringify(body))
+    const res = form
+      ? await this.rawGet(url, 'manual', false, new URLSearchParams(body as Record<string, string>).toString(), 'application/x-www-form-urlencoded')
+      : await this.rawGet(url, 'manual', false, JSON.stringify(body))
     const text = await res.text()
     if (!res.ok) throw new Error(`HTTP ${res.status} for POST ${url.href}`)
     return { status: res.status, url: url.href, text }
@@ -218,6 +220,10 @@ export class PoliteHttp {
       postJson: async <T>(url: string, body: unknown): Promise<T> => {
         budget()
         return parse<T>(await this.post(url, body))
+      },
+      postForm: async <T>(url: string, body: Record<string, string>): Promise<T> => {
+        budget()
+        return parse<T>(await this.post(url, body, true))
       },
     }
   }

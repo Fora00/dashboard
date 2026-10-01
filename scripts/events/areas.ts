@@ -53,7 +53,7 @@ const TOWNS: Record<AreaId, string[]> = {
   // Trentino towns are the default for most sources; only the ones another
   // area's source may also mention need to be here.
   trentino: [
-    'Trento', 'Rovereto', 'Riva del Garda', 'Arco', 'Nago-Torbole', 'Torbole', 'Ala', 'Avio',
+    'Trento', 'Rovereto', 'Mattarello', 'Riva del Garda', 'Arco', 'Nago-Torbole', 'Torbole', 'Ala', 'Avio',
     'Pergine Valsugana', 'Levico Terme', 'Ledro', 'Tenno', 'Mori', 'Brentonico', 'Castione di Brentonico', 'Trentino',
   ],
   'alto-adige': [

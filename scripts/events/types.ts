@@ -83,6 +83,8 @@ export interface AdapterContext {
   fetchJson<T = unknown>(url: string): Promise<T>
   /** Polite POST of a JSON body, JSON answer (same robots/delay/cap rules). For POST-only APIs. */
   postJson<T = unknown>(url: string, body: unknown): Promise<T>
+  /** Polite POST of a urlencoded form (jQuery `$.post` backends), JSON answer. */
+  postForm<T = unknown>(url: string, body: Record<string, string>): Promise<T>
   /** Crawl time (ms since epoch) and the window adapters should ask their source for. */
   now: number
   horizonDays: number

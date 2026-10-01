@@ -12,6 +12,8 @@ import { tebe } from './tebe.ts'
 import { spot } from './spot.ts'
 import { gardaveneto } from './gardaveneto.ts'
 import { padova } from './padova.ts'
+import { infinityboulder } from './infinityboulder.ts'
+import { santachiara } from './santachiara.ts'
 import { tcvi } from './tcvi.ts'
 import { municipium } from './municipium.ts'
 import { ctb } from './ctb.ts'
@@ -64,6 +66,8 @@ export const ADAPTERS: Adapter[] = [
     home: 'https://www.buonconsiglio.it/agenda/', city: 'Trento',
   }),
   trentinospettacoli,
+  infinityboulder,
+  santachiara,
   tebe,
   // Ring 1 outside Trentino (added 2026-09-29; Merano and Bressanone come
   // through `bolzano` above)

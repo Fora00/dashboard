@@ -2,6 +2,18 @@
   "_readme": "Hand-curated big events in far cities (the 'spot ring'). To add one: append an object to `events`. Required: id (kebab-case, stable, include the year: never change it once published, it keys saved/hidden state), title, start and end (YYYY-MM-DD, local Rome dates, BOTH INCLUSIVE; a one-day event has end = start), city, url (the OFFICIAL site page where you verified the dates), summary (one line). Optional: venue, tags (array of tag/category ids such as boardgames, nerd, exhibitions, festivals, talks; also matched as free text), category (primary category id, wins over the tag rules). Only add dates you have verified on the official site; never guess. Entries past the 180-day window are kept and appear automatically when they come into range; delete old editions when convenient.",
   "events": [
     {
+      "id": "blocktoberfest-block3-2026",
+      "title": "Blocktoberfest",
+      "start": "2026-10-10",
+      "end": "2026-10-10",
+      "city": "Rovereto",
+      "venue": "Block3",
+      "url": "https://prenota.block3.it",
+      "summary": "Serata di Block3, la palestra di arrampicata di Rovereto. Iscrizione su prenota.block3.it; orari e formato non pubblicati: info@block3.it, 388 9772120.",
+      "tags": ["outdoor"],
+      "category": "outdoor"
+    },
+    {
       "id": "festa-castagna-castione-2026",
       "title": "Festa della Castagna a Castione",
       "start": "2026-10-18",
