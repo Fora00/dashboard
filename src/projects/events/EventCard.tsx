@@ -3,6 +3,7 @@ import { useFlash } from '../../lib/useFlash'
 import type { EventItem } from './types'
 import { addToCalendar } from './ics'
 import { FOCUS_RING, FOCUS_RING_INSET } from '../../components/focus'
+import { isManual, isSafeImageDataUrl } from './custom'
 import { buildThingsAddUrl, categoryLabel, categoryOf, formatRange, isSparseSeries, isSpot, listingDay, safeHttpUrl, shortDay } from './model'
 
 interface Props {
@@ -13,19 +14,23 @@ interface Props {
   /** Receive the event so the parent can pass one stable callback to every card (memo). */
   onToggleSave: (e: EventItem) => void
   onToggleHide: (e: EventItem) => void
+  /** Hand-added events only: open the edit sheet. */
+  onEdit?: ((e: EventItem) => void) | undefined
 }
 
 const ACTION = `inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg px-3.5 text-sm font-medium transition-colors ${FOCUS_RING}`
 const GHOST =
   'bg-slate-100 text-slate-800 hover:bg-slate-200 active:bg-slate-300 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 dark:active:bg-slate-600'
 
-export const EventCard = memo(function EventCard({ event: e, saved, hidden, now, onToggleSave, onToggleHide }: Props) {
+export const EventCard = memo(function EventCard({ event: e, saved, hidden, now, onToggleSave, onToggleHide, onEdit }: Props) {
   const [open, setOpen] = useState(false)
   const [imgOk, setImgOk] = useState(true)
   const [copied, flashCopied] = useFlash(2000)
   const place = [e.venue, e.city].filter(Boolean).join(' · ')
   const url = safeHttpUrl(e.url)
-  const image = safeHttpUrl(e.image)
+  const manual = isManual(e)
+  // Scraped images must be http(s); a hand-added one is an inline JPEG data URL.
+  const image = manual && isSafeImageDataUrl(e.image) ? e.image : safeHttpUrl(e.image)
   const showImage = image !== null && imgOk
   const series = isSparseSeries(e)
 
@@ -80,6 +85,11 @@ export const EventCard = memo(function EventCard({ event: e, saved, hidden, now,
               <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] text-slate-600 dark:bg-slate-700/60 dark:text-slate-300">
                 {categoryLabel(categoryOf(e))}
               </span>
+              {manual && (
+                <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-medium text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-200">
+                  Added by you
+                </span>
+              )}
               {isSpot(e) && (
                 <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-800 dark:bg-amber-500/20 dark:text-amber-200">
                   Spot
@@ -108,6 +118,11 @@ export const EventCard = memo(function EventCard({ event: e, saved, hidden, now,
         <button type="button" onClick={() => void share()} className={`${ACTION} ${GHOST}`}>
           {copied ? 'Copied ✓' : '↗ Share'}
         </button>
+        {manual && onEdit && (
+          <button type="button" onClick={() => onEdit(e)} className={`${ACTION} ${GHOST}`}>
+            ✎ Edit
+          </button>
+        )}
       </div>
       {open && (
         <div className="space-y-3 border-t border-slate-200 px-4 py-3 dark:border-slate-800">

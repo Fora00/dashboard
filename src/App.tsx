@@ -4,6 +4,7 @@ import { Layout } from './components/Layout'
 import { startBoardgameIdeasSync } from './lib/boardgameIdeasSync'
 import { startBookIdeasSync } from './lib/bookIdeasSync'
 import { startClimbSync } from './lib/climbSync'
+import { startCustomEventsSync } from './lib/customEventsSync'
 import { startHabitSync } from './lib/habitSync'
 import { startLifeSync } from './lib/lifeSync'
 import { startLinksSync } from './lib/linksSync'
@@ -52,6 +53,7 @@ export default function App() {
       startLinksSync(),
       startLifeSync(),
       startTripsSync(),
+      startCustomEventsSync(),
     ]
     return () => {
       for (const stop of stops) stop()

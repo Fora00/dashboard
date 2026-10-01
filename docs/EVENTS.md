@@ -349,6 +349,8 @@ them (the dashboard's category chips match only category ids).
 | `padova` | www.comune.padova.it (ring 2) | Drupal JSON:API `/api/events` | date filters in unix seconds; 2 pages |
 | `stabileveneto` | Teatro Stabile del Veneto (ring 2): Teatro Verdi, Ridotto, Foyer, Teatro Maddalene | **POST** JSON `api.teatrostabileveneto.it/api/Public/eventslist` (`ctx.postJson`) | 1 request; Padova only (Treviso/Venezia dropped); one all-day range per production (no nightly times); genre "Concertistica" → `concerts`, anything else → `theatre` |
 | `tcvi` | www.tcvi.it (ring 2): Teatro Comunale Vicenza, Olimpico | one static HTML page, one card per performance | 1 request; school and family-show types dropped |
+| `infinityboulder` | infinityboulder.it: Infinity Boulder gym, Mattarello (Trento) | WP REST `wp/v2/evento` + one page per event (`Data evento: dd/mm/yyyy`) | all-day, no time of day; often 0 upcoming (`mayBeEmpty`). Block3 (Rovereto) has no public events source: its calendar is school courses, the rest is on Facebook. |
+| `santachiara` | www.centrosantachiara.it: Teatro Sociale, Auditorium, Cuminetti, SanbàPolis, Melotti Rovereto, Musicantica, Cinemart | form POST `/csc_shows` (`date-range=dd/mm/yyyy - dd/mm/yyyy`) → `{correct: html}`; `ctx.postForm` | 1 request for the whole window; Crawl-delay 10; no long descriptions (only a note such as "Ingresso libero") |
 | `arteven` | www.myarteven.it (ring 2): Arteven circuit — Bassano (Teatro Remondini), Vicenza, Thiene, Schio… | JSON array `rappresentazionitotal` inlined in the home page | 1 request, ~3.7 MB; only `(VI)` theatres + Padova; capitals title-cased; weekday-morning shows (school matinées) dropped; children's rassegne → `kids`; Vicenza shows merge with `tcvi` in dedup |
 | `mantova` | www.comune.mantova.it (ring 2) | Municipium HTML listing `/it/eventi?page=N` (`municipium()` factory) | ~5 requests; the date suffix of titles ("- dal 3 ottobre al 6 gennaio") is stripped and sets the range end |
 | `teatrosociale-mantova` | www.teatrosocialemantova.it (ring 2) | HTML "calendar band" on `/it-it/spettacoli.aspx` | 1 request; no year on the cards: the year (this or next) whose date falls on the card's weekday; "spostato/annullato" rows dropped; `mayBeEmpty` |
@@ -371,8 +373,8 @@ Not included (checked 2026-09-29):
 - **fondazionemcr.it** (Museo Civico Rovereto) and **ramfilmfestival.it** —
   JSP sites, no feed or structured data. RAM film festival comes in through
   `rovereto-comune`.
-- **centrosantachiara.it** — custom CMS, no feed or structured data;
-  `Crawl-delay: 10`. Its shows are largely on comune-trento / cultura.trentino.it.
+- **centrosantachiara.it** — added later as `santachiara` (see table): the
+  calendar's own POST endpoint, no feed needed.
 - **artesella.it** — WP, the `calendario` post type is not in the REST API,
   no JSON-LD, no iCal.
 - **museion.it** — custom site, no feed or JSON-LD on `/en/events`.
@@ -492,3 +494,45 @@ same id and label, in the same order, to `CATEGORIES` in
 `src/projects/events/model.ts`. Keywords are written lowercase without accents; `word*`
 matches a prefix. That is all — consumers treat unknown ids as `other` until
 they learn the new one.
+
+## Manual events
+
+The owner can add events by hand on `/events` (the "＋ Add" button), e.g.
+after a climbing gym's Instagram post. They never come from the crawler and
+never appear in `events.json`.
+
+- **Storage:** Dexie table `customEvents` (db v14) is the source of truth,
+  so adding, editing and deleting work offline and signed out. Signed in as
+  the owner, they sync through the generic engine
+  (`src/lib/customEventsSync.ts`) to the Supabase table `custom_events`
+  (`supabase/migrations/20261001120000_custom_events.sql`).
+- **Owner-only:** RLS is `is_owner()` for every operation, like `life`. The
+  page stays public; on anyone else's device the push is rejected and the
+  event just stays on that device.
+- **Fields:** `title`, `start`/`end` (same format as events.json: ISO with the
+  Europe/Rome offset, all-day end inclusive; the form builds them from a date,
+  an optional end date and optional times, no time = all day), `venue`,
+  `city` (default Trento), `url` (http(s) or empty), `note`, `category` (a
+  page category id, default `other`), `image`. Caps: title 300, venue 300,
+  city 100, url 2000, note 2000, image 210,000 chars, mirrored in SQL.
+- **Image:** downscaled in the browser to 800 px on the long side, JPEG 0.7,
+  lower quality/size until the data URL fits the cap (about 150 KB), and
+  stored inline in the row. No Storage bucket.
+- **In the list** (`src/projects/events/custom.ts`): each one becomes an
+  `Event` with `source`/`sources` = `manual`, `ring: home`, `area` from a
+  small town map (unknown town → `trentino`), `tags: [category]`,
+  `description` = the note and `summary` = its first line, `occurrences: 1`.
+  They are never dropped by the kids rule nor by the favourite-category
+  default (an explicit category, area or city choice still applies), work
+  with no `events.json` at all, and can be saved or hidden like any event.
+  The card shows an "Added by you" badge and an Edit button; delete is in
+  the edit sheet, with Undo.
+- **Prefill link** (for an iOS Shortcut or share sheet):
+  `#/events?add=1&title=…&url=…` opens the add sheet prefilled. Also read:
+  `date` (YYYY-MM-DD), `time` (HH:MM), `venue`, `city`, `category`, `note`
+  (or `text`; a link inside `text` fills `url` when `url` is missing). Every
+  value is validated and capped; the keys are removed from the URL after use.
+
+Hand-added events are deleted automatically 14 days after their last day
+(`pruneCustomEvents`, run when `/events` opens; the deletion syncs like any
+other). A saved mark keeps its own snapshot.

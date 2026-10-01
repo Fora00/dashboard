@@ -312,6 +312,7 @@ export interface OutboxMap {
   life_entries: LifeEntry
   trip_ideas: TripIdea
   trip_companions: TripCompanion
+  custom_events: CustomEvent
 }
 
 // Remote table names the engine can push to — also the discriminator on an
@@ -361,6 +362,26 @@ export interface EventPrefs {
   favouriteCategories: string[]
 }
 
+// An event the owner added by hand (e.g. from a climbing gym's Instagram
+// post). Owner-only synced table `custom_events`; merged into the events list
+// as source 'manual' by src/projects/events/custom.ts. Times follow
+// events.json: ISO with the Europe/Rome offset, all-day end inclusive.
+export interface CustomEvent {
+  id: string           // crypto.randomUUID()
+  title: string
+  start: string
+  end: string | null
+  allDay: boolean
+  venue: string | null
+  city: string
+  url: string          // http(s) or ''
+  note: string         // shown as description; first line = summary
+  category: string     // a CATEGORIES id from events/model.ts, default 'other'
+  image: string | null // compressed JPEG data URL (≤ MAX_IMAGE_LENGTH chars)
+  createdAt: number
+  updatedAt: number
+}
+
 export const db = new Dexie('dashboard') as Dexie & {
   files: EntityTable<TransferFile, 'id'>
   shopItems: EntityTable<ShopItem, 'id'>
@@ -382,6 +403,7 @@ export const db = new Dexie('dashboard') as Dexie & {
   eventPrefs: EntityTable<EventPrefs, 'id'>
   tripIdeas: EntityTable<TripIdea, 'id'>
   tripCompanions: EntityTable<TripCompanion, 'id'>
+  customEvents: EntityTable<CustomEvent, 'id'>
 }
 
 db.version(1).stores({
@@ -606,6 +628,32 @@ db.version(13).stores({
   eventPrefs: 'id',
   tripIdeas: 'id, done, createdAt, *companionIds',
   tripCompanions: 'id, createdAt',
+})
+
+// v14: events — customEvents (hand-added events, owner-only sync). A brand-new
+// empty table, so no upgrade callback is needed.
+db.version(14).stores({
+  files: 'id, name, createdAt, synced',
+  shopItems: 'id, done, createdAt, areaId',
+  shopAreas: 'id, createdAt',
+  outbox: '++seq, rowId',
+  climbSessions: 'id, date',
+  climbs: 'id, sessionId, date',
+  habits: 'id, createdAt',
+  habitChecks: 'id, habitId, day, [habitId+day]',
+  todos: 'id, done, createdAt',
+  bookIdeas: 'id, createdAt',
+  boardgameIdeas: 'id, createdAt',
+  links: 'id, read, createdAt, *tags',
+  projectStats: 'id, starred, opens',
+  lifeWeeks: 'id, importedAt',
+  lifeEntries: 'id, week, [week+kind]',
+  eventsCache: 'id',
+  eventMarks: 'id, state, updatedAt',
+  eventPrefs: 'id',
+  tripIdeas: 'id, done, createdAt, *companionIds',
+  tripCompanions: 'id, createdAt',
+  customEvents: 'id, start, updatedAt',
 })
 
 // Ask the browser not to evict our data under storage pressure (important on iOS).

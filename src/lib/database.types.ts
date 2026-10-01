@@ -176,6 +176,54 @@ export type Database = {
           },
         ]
       }
+      custom_events: {
+        Row: {
+          all_day: boolean
+          category: string
+          city: string
+          created_at: number
+          end_at: string | null
+          id: string
+          image: string | null
+          note: string
+          start_at: string
+          title: string
+          updated_at: number
+          url: string
+          venue: string | null
+        }
+        Insert: {
+          all_day?: boolean
+          category?: string
+          city?: string
+          created_at: number
+          end_at?: string | null
+          id: string
+          image?: string | null
+          note?: string
+          start_at: string
+          title: string
+          updated_at: number
+          url?: string
+          venue?: string | null
+        }
+        Update: {
+          all_day?: boolean
+          category?: string
+          city?: string
+          created_at?: number
+          end_at?: string | null
+          id?: string
+          image?: string | null
+          note?: string
+          start_at?: string
+          title?: string
+          updated_at?: number
+          url?: string
+          venue?: string | null
+        }
+        Relationships: []
+      }
       habit_checks: {
         Row: {
           created_at: number
@@ -319,60 +367,6 @@ export type Database = {
         }
         Relationships: []
       }
-      trip_companions: {
-        Row: {
-          created_at: number
-          emoji: string
-          id: string
-          name: string
-          updated_at: number
-        }
-        Insert: {
-          created_at: number
-          emoji?: string
-          id: string
-          name: string
-          updated_at: number
-        }
-        Update: {
-          created_at?: number
-          emoji?: string
-          id?: string
-          name?: string
-          updated_at?: number
-        }
-        Relationships: []
-      }
-      trip_ideas: {
-        Row: {
-          companion_ids: string[]
-          created_at: number
-          done: boolean
-          id: string
-          notes: string
-          title: string
-          updated_at: number
-        }
-        Insert: {
-          companion_ids?: string[]
-          created_at: number
-          done?: boolean
-          id: string
-          notes?: string
-          title: string
-          updated_at: number
-        }
-        Update: {
-          companion_ids?: string[]
-          created_at?: number
-          done?: boolean
-          id?: string
-          notes?: string
-          title?: string
-          updated_at?: number
-        }
-        Relationships: []
-      }
       project_invites: {
         Row: {
           created_at: string
@@ -389,7 +383,15 @@ export type Database = {
           project_id?: string
           share_token?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "project_invites_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: true
+            referencedRelation: "shareable_projects"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       project_members: {
         Row: {
@@ -527,6 +529,60 @@ export type Database = {
         }
         Relationships: []
       }
+      trip_companions: {
+        Row: {
+          created_at: number
+          emoji: string
+          id: string
+          name: string
+          updated_at: number
+        }
+        Insert: {
+          created_at: number
+          emoji?: string
+          id: string
+          name: string
+          updated_at: number
+        }
+        Update: {
+          created_at?: number
+          emoji?: string
+          id?: string
+          name?: string
+          updated_at?: number
+        }
+        Relationships: []
+      }
+      trip_ideas: {
+        Row: {
+          companion_ids: string[]
+          created_at: number
+          done: boolean
+          id: string
+          notes: string
+          title: string
+          updated_at: number
+        }
+        Insert: {
+          companion_ids?: string[]
+          created_at: number
+          done?: boolean
+          id: string
+          notes?: string
+          title: string
+          updated_at: number
+        }
+        Update: {
+          companion_ids?: string[]
+          created_at?: number
+          done?: boolean
+          id?: string
+          notes?: string
+          title?: string
+          updated_at?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -535,14 +591,13 @@ export type Database = {
       area_share_token: { Args: { aid: string }; Returns: string }
       can_access_area: { Args: { aid: string }; Returns: boolean }
       get_invite: { Args: { token: string }; Returns: string }
-      get_project_invite: { Args: { token: string }; Returns: string | null }
+      get_project_invite: { Args: { token: string }; Returns: string }
       is_member: { Args: { pid: string }; Returns: boolean }
       is_owner: { Args: never; Returns: boolean }
       join_area: { Args: { token: string }; Returns: undefined }
       join_project: { Args: { token: string }; Returns: string }
       jwt_email: { Args: never; Returns: string }
       links_tags_within_length: { Args: { tags: string[] }; Returns: boolean }
-      trips_ids_within_length: { Args: { ids: string[] }; Returns: boolean }
       project_invite_token: { Args: { pid: string }; Returns: string }
       redeem_invite: {
         Args: { guest_email: string; token: string }
@@ -558,10 +613,11 @@ export type Database = {
       }
       revoke_project_guest: {
         Args: { guest_email: string; pid: string }
-        Returns: string | null
+        Returns: string
       }
       rotate_area_token: { Args: { aid: string }; Returns: string }
       rotate_project_invite: { Args: { pid: string }; Returns: string }
+      trips_ids_within_length: { Args: { ids: string[] }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never

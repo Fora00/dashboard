@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { db, type EventMark } from '../../lib/db'
+import { useSearchParams } from 'react-router-dom'
+import { db, type CustomEvent, type EventMark } from '../../lib/db'
+import { deleteCustomEvent, pruneCustomEvents, sync as customSync } from '../../lib/customEventsSync'
+import { SyncCard } from '../../components/SyncCard'
 import { PageHeader } from '../../components/PageHeader'
 import { EmptyState } from '../../components/EmptyState'
 import { Button } from '../../components/Button'
@@ -10,6 +13,8 @@ import { Snackbar } from '../../components/Snackbar'
 import { useUndoSnackbar } from '../../lib/useUndoSnackbar'
 import { SkeletonList } from '../../components/Skeleton'
 import { FilterSheet } from './FilterSheet'
+import { CustomEventSheet } from './CustomEventSheet'
+import { PREFILL_KEYS, isManual, mergeEvents, parsePrefill, type CustomEventForm } from './custom'
 import { DATE_CHIPS } from './filters'
 import { formatLabel } from './format'
 import { EventCard } from './EventCard'
@@ -17,11 +22,34 @@ import { useEventFilters, type View } from './useEventFilters'
 import type { EventItem } from './types'
 import { areaLabel, categoryLabel, fetchEventsFile, isKidsEvent, relativeTime } from './model'
 
+/** The add/edit sheet: closed, adding (with an optional prefill) or editing a row. */
+type Editor = { open: false } | { open: true; editing: CustomEvent | null; prefill: Partial<CustomEventForm> | null }
+
 export function Events() {
   const { trigger: triggerUndo, pending: pendingUndo, confirmUndo } = useUndoSnackbar()
   const cache = useLiveQuery(() => db.eventsCache.get('latest'), [], null)
   const marksRaw = useLiveQuery(() => db.eventMarks.toArray())
   const prefs = useLiveQuery(() => db.eventPrefs.get('prefs'), [], null)
+  const customRows = useLiveQuery(() => db.customEvents.toArray())
+  const [editor, setEditor] = useState<Editor>({ open: false })
+
+  // Hand-added events disappear two weeks after their last day.
+  useEffect(() => {
+    void pruneCustomEvents().catch(() => {})
+  }, [])
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  // Deep link from a Shortcut / share sheet: #/events?add=1&url=…&title=…
+  // Opens the add sheet prefilled, then strips the keys so a reload or Back
+  // doesn't open it again.
+  useEffect(() => {
+    const prefill = parsePrefill(searchParams)
+    if (!PREFILL_KEYS.some((k) => searchParams.has(k))) return
+    if (prefill) setEditor({ open: true, editing: null, prefill })
+    const next = new URLSearchParams(searchParams)
+    for (const k of PREFILL_KEYS) next.delete(k)
+    setSearchParams(next, { replace: true })
+  }, [searchParams, setSearchParams])
 
   const [fetchState, setFetchState] = useState<'loading' | 'ok' | 'offline' | 'missing'>('loading')
   const [sheetOpen, setSheetOpen] = useState(false)
@@ -49,8 +77,11 @@ export function Events() {
 
   const file = cache?.file
   // Children's/family events are never shown (owner's choice); saved ones
-  // still appear under Saved from their snapshot.
-  const events = useMemo(() => (file?.events ?? []).filter((e) => !isKidsEvent(e)), [file])
+  // still appear under Saved from their snapshot. Hand-added events are merged
+  // in (custom.ts) and never dropped by that rule; they work with no file.
+  const events = useMemo(() => mergeEvents(file?.events ?? [], customRows ?? [], isKidsEvent), [file, customRows])
+  const hasCustom = (customRows?.length ?? 0) > 0
+  const cityNames = useMemo(() => [...new Set(events.map((e) => e.city))].sort((a, b) => a.localeCompare(b)), [events])
 
   const { filters, toggles, counts, groups, marks } = useEventFilters(events, marksRaw, prefs, {
     now,
@@ -65,7 +96,8 @@ export function Events() {
     async (e: EventItem, state: EventMark['state']) => {
       const prev = await db.eventMarks.get(e.id)
       if (prev?.state === state) await db.eventMarks.delete(e.id)
-      else await db.eventMarks.put({ id: e.id, state, event: e, updatedAt: Date.now() })
+      // A hand-added event's snapshot drops its inline image: the live row has it.
+      else await db.eventMarks.put({ id: e.id, state, event: isManual(e) ? { ...e, image: null } : e, updatedAt: Date.now() })
       // Hiding makes the card vanish: offer Undo, restoring the previous mark.
       if (state === 'hidden' && prev?.state !== 'hidden') {
         triggerUndo('Event hidden', async () => {
@@ -78,6 +110,17 @@ export function Events() {
   )
   const onToggleSave = useCallback((e: EventItem) => void setMark(e, 'saved'), [setMark])
   const onToggleHide = useCallback((e: EventItem) => void setMark(e, 'hidden'), [setMark])
+  const onEdit = useCallback((e: EventItem) => {
+    void db.customEvents.get(e.id).then((row) => {
+      if (row) setEditor({ open: true, editing: row, prefill: null })
+    })
+  }, [])
+  const openAdd = () => setEditor({ open: true, editing: null, prefill: null })
+  const closeEditor = () => setEditor({ open: false })
+  const onDeleteCustom = (row: CustomEvent) => {
+    closeEditor()
+    void deleteCustomEvent(row.id).then((undo) => triggerUndo('Event deleted', undo))
+  }
 
   const failed = file?.sources.filter((s) => !s.ok) ?? []
 
@@ -90,22 +133,40 @@ export function Events() {
           ? `${events.length} events · updated ${relativeTime(file.generatedAt, now)}`
           : 'Public events around Trentino, Bolzano and Verona.'
       }
+    >
+      <Button onClick={openAdd} aria-label="Add event">
+        ＋ Add
+      </Button>
+    </PageHeader>
+  )
+
+  const editorSheet = (
+    <CustomEventSheet
+      open={editor.open}
+      onClose={closeEditor}
+      editing={editor.open ? editor.editing : null}
+      prefill={editor.open ? editor.prefill : null}
+      cities={cityNames}
+      onDelete={onDeleteCustom}
+      onSaved={closeEditor}
     />
   )
 
-  if (cache === null || prefs === null || marksRaw === undefined) {
+  if (cache === null || prefs === null || marksRaw === undefined || customRows === undefined) {
     return (
       <div>
         {header}
         <SkeletonList rows={4} rowClassName="h-24" />
+        {editorSheet}
       </div>
     )
   }
 
-  if (!file) {
+  if (!file && !hasCustom) {
     return (
       <div>
         {header}
+        {editorSheet}
         {fetchState === 'loading' ? (
           <SkeletonList rows={4} rowClassName="h-24" />
         ) : fetchState === 'missing' ? (
@@ -118,9 +179,10 @@ export function Events() {
           <EmptyState
             emoji="📡"
             title="Events load when you are online"
-            hint="Nothing is saved on this device yet. Connect once and they will be kept for offline use."
+            hint="Nothing is saved on this device yet. Connect once and they will be kept for offline use. Your own events (＋ Add) work offline."
           />
         )}
+        {pendingUndo && <Snackbar label={pendingUndo.label} onUndo={confirmUndo} />}
       </div>
     )
   }
@@ -129,7 +191,8 @@ export function Events() {
     <div>
       {header}
 
-      {fetchState === 'offline' && (
+      {editorSheet}
+      {file && fetchState === 'offline' && (
         <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
           Offline — showing copy from {new Date(cache?.fetchedAt ?? 0).toLocaleDateString('it-IT')}
         </p>
@@ -328,6 +391,7 @@ export function Events() {
                     now={now}
                     onToggleSave={onToggleSave}
                     onToggleHide={onToggleHide}
+                    onEdit={onEdit}
                   />
                 ))}
               </ul>
@@ -340,6 +404,11 @@ export function Events() {
               </Button>
             </div>
           )}
+        </div>
+      )}
+      {hasCustom && (
+        <div className="mt-8">
+          <SyncCard sync={customSync} />
         </div>
       )}
       {pendingUndo && <Snackbar label={pendingUndo.label} onUndo={confirmUndo} />}

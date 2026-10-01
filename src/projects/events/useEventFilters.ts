@@ -11,6 +11,7 @@ import {
 } from './filters'
 import { cleanFormats, matchesFormat, FORMAT_CHIPS } from './format'
 import type { EventItem } from './types'
+import { isManual } from './custom'
 import {
   CATEGORIES,
   areaOf,
@@ -198,16 +199,18 @@ export function useEventFilters(
     return ids.sort((a, b) => rank(a) - rank(b) || (catCounts.get(b) ?? 0) - (catCounts.get(a) ?? 0))
   }, [favourites, catCounts])
 
+  // The favourites are only a default: a hand-added event is never hidden by
+  // it (an explicit category choice still applies to it like to any event).
   const filtered = useMemo(
     () =>
       scoped.filter(
         (e) =>
-          inCats(e, activeCats) &&
+          (inCats(e, activeCats) || (selectedCats === null && isManual(e))) &&
           inAreas(e, selectedAreas) &&
           inCities(e, selectedCities) &&
           matchesFormat(e, selectedFormats),
       ),
-    [scoped, activeCats, selectedAreas, selectedCities, selectedFormats],
+    [scoped, activeCats, selectedCats, selectedAreas, selectedCities, selectedFormats],
   )
 
   // Flat, ordered list of groups; then cut to `limit` cards in total.
