@@ -117,6 +117,30 @@
       "summary": "La piu grande fiera mondiale di giochi da tavolo: novita degli editori, demo e migliaia di giochi da provare.",
       "tags": ["boardgames"],
       "category": "boardgames"
+    },
+    {
+      "id": "inventare-la-natura-palazzo-te-2026",
+      "title": "Inventare la natura. Leonardo, Arcimboldo, Caravaggio",
+      "start": "2026-09-26",
+      "end": "2027-01-10",
+      "city": "Mantova",
+      "venue": "Palazzo Te",
+      "url": "https://www.centropalazzote.it/inventare-la-natura-leonardo-arcimboldo-caravaggio/",
+      "summary": "Mostra di Palazzo Te nelle sale monumentali, a compimento dell'anno del Cinquecentenario: Leonardo, Arcimboldo e Caravaggio e l'invenzione della natura.",
+      "tags": ["exhibitions"],
+      "category": "exhibitions"
+    },
+    {
+      "id": "da-monet-a-van-gogh-a-kandinsky-ferrara-2026",
+      "title": "Da Monet a Van Gogh a Kandinsky",
+      "start": "2026-09-19",
+      "end": "2027-01-10",
+      "city": "Ferrara",
+      "venue": "Palazzo dei Diamanti",
+      "url": "https://www.palazzodiamanti.it/mostre/da-monet-a-van-gogh-a-kandinsky/",
+      "summary": "Mostra di Fondazione Ferrara Arte a Palazzo dei Diamanti, dall'Impressionismo alle avanguardie del Novecento.",
+      "tags": ["exhibitions"],
+      "category": "exhibitions"
     }
   ]
 }
