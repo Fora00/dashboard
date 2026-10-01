@@ -121,9 +121,11 @@ export class PoliteHttp {
     } catch (e) {
       // A server closing a reused keep-alive socket ("other side closed",
       // seen on myarteven.it) is not an answer: retry once, after the usual
-      // per-host delay. Timeouts and DNS errors are not retried.
+      // per-host delay. A timeout is retried once too (Comune di Mantova is
+      // slow from GitHub's runners); DNS errors are not.
       const code = (e as { cause?: { code?: string } }).cause?.code
-      if (!retried && (code === 'UND_ERR_SOCKET' || code === 'ECONNRESET')) return this.rawGet(url, redirect, true, body, contentType)
+      const timedOut = (e as Error).name === 'TimeoutError'
+      if (!retried && (timedOut || code === 'UND_ERR_SOCKET' || code === 'ECONNRESET')) return this.rawGet(url, redirect, true, body, contentType)
       throw e
     }
   }
