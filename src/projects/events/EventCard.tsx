@@ -4,6 +4,7 @@ import type { EventItem } from './types'
 import { addToCalendar } from './ics'
 import { FOCUS_RING, FOCUS_RING_INSET } from '../../components/focus'
 import { CalendarPlusIcon, CheckIcon, EyeIcon, EyeOffIcon, PencilIcon, ShareIcon, StarIcon, ThingsIcon } from './icons'
+import { CategoryThumb } from './CategoryThumb'
 import { endingInDays } from './filters'
 import { cleanFormats, formatLabel } from './format'
 import { isManual, isSafeImageDataUrl } from './custom'
@@ -105,7 +106,7 @@ export const EventCard = memo(function EventCard({
               {selected ? '✓' : ''}
             </span>
           )}
-          {showImage && (
+          {showImage ? (
             <img
               src={image}
               alt=""
@@ -116,6 +117,8 @@ export const EventCard = memo(function EventCard({
               onError={() => setImgOk(false)}
               className="size-20 shrink-0 rounded-lg bg-slate-100 object-cover dark:bg-slate-700"
             />
+          ) : (
+            <CategoryThumb category={categoryOf(e)} className="size-20 rounded-lg" />
           )}
           <div className="min-w-0 flex-1 space-y-1">
             <div className="flex items-start justify-between gap-2">
