@@ -86,6 +86,8 @@ describe('window', () => {
     const beyond = { start: new Date(NOW + (HORIZON_DAYS + 1) * DAY).toISOString(), end: null, allDay: false }
     expect(inWindow(inside, NOW)).toBe(true)
     expect(inWindow(beyond, NOW)).toBe(false)
+    expect(HORIZON_DAYS).toBe(90)
+    expect(inWindow(beyond, NOW, 540)).toBe(true) // a hand-curated source's own horizon
   })
 
   it('isOngoing: started and not yet over', () => {

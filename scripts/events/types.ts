@@ -99,6 +99,8 @@ export interface Adapter {
   defaultCategory: CategoryId
   /** A run with 0 events is a success (e.g. a stale calendar), not a failure. */
   mayBeEmpty?: boolean
+  /** How far ahead to keep events (default HORIZON_DAYS, 90). Hand-curated sources set more. */
+  horizonDays?: number
   /** Per-run cap on source requests (default 60). */
   maxRequests?: number
   /** Area for towns the city map in areas.ts does not know (default 'trentino'). */

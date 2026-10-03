@@ -7,7 +7,8 @@ import { areaFor, closerRing, keepForRing } from './areas.ts'
 import { DAY, addDays, dateToIso } from './time.ts'
 import { clip, htmlToBlocks, normalize, snippet, stableId } from './text.ts'
 
-export const HORIZON_DAYS = 180
+/** How far ahead events are kept (owner: nothing beyond 3 months, 2026-10-03), unless the adapter says otherwise. */
+export const HORIZON_DAYS = 90
 const GRACE_MS = DAY
 /** A series with more dates than this inside the window becomes one span record. */
 export const MAX_OCCURRENCES = 8
@@ -21,8 +22,8 @@ export function effectiveEnd(e: Pick<Event, 'start' | 'end' | 'allDay'>): number
   return Date.parse(e.end ?? e.start)
 }
 
-export function inWindow(e: Pick<Event, 'start' | 'end' | 'allDay'>, now: number): boolean {
-  return effectiveEnd(e) >= now - GRACE_MS && Date.parse(e.start) <= now + HORIZON_DAYS * DAY
+export function inWindow(e: Pick<Event, 'start' | 'end' | 'allDay'>, now: number, horizonDays = HORIZON_DAYS): boolean {
+  return effectiveEnd(e) >= now - GRACE_MS && Date.parse(e.start) <= now + horizonDays * DAY
 }
 
 export function isOngoing(e: Pick<Event, 'start' | 'end' | 'allDay'>, now: number): boolean {
@@ -80,7 +81,7 @@ export function toEvents(adapter: Adapter, raws: RawEvent[], now: number, fetche
   // Some sources publish an end before the start (seen on bibcom and mart):
   // drop that end rather than emit a backwards range.
   const sane = raws.map((r) => (r.end && Date.parse(r.end) < Date.parse(r.start) ? { ...r, end: null } : r))
-  for (const r of foldSeries(sane.filter((r) => r.title && inWindow(r, now)))) {
+  for (const r of foldSeries(sane.filter((r) => r.title && inWindow(r, now, adapter.horizonDays)))) {
     const id = stableId(adapter.id, r.nativeId)
     if (seen.has(id)) continue
     seen.add(id)

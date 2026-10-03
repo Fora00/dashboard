@@ -25,6 +25,8 @@ export const spot: Adapter = {
   name: 'Spot (hand-curated)',
   defaultCategory: 'other',
   mayBeEmpty: true,
+  // Hand-picked big events are wanted however far ahead (Arte Fiera, Play...).
+  horizonDays: 540,
   // Area comes from the city map in areas.ts (add new towns there);
   // 'abroad' only for a town it does not know yet.
   area: 'abroad',

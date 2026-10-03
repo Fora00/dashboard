@@ -101,7 +101,7 @@ recompute it with its own clock since the file can be up to a day old.
 ### Window
 
 An event is published when `effectiveEnd >= crawl time − 1 day` and
-`start <= crawl time + 180 days`. Consumers should still hide events whose
+`start <= crawl time + 90 days` (`HORIZON_DAYS`, owner's choice: nothing beyond 3 months; an adapter can set its own `horizonDays`, the hand-curated `spot` one keeps 540 days). Adapters ask their source only for that window, so a shorter horizon also means fewer requests. Consumers should still hide events whose
 effective end has passed.
 
 ### Recurring events
@@ -484,8 +484,8 @@ never change it once published), `title`, `start`/`end` (local Rome
 `YYYY-MM-DD`, both inclusive), `city`, `url` (official page where you verified
 the dates), `summary`, and optionally `venue`, `tags`, `category` and `image` (the event page's
 `og:image`, picked by hand: skip logos and generic placeholders). Only
-add dates confirmed on the official site. Entries beyond the 180-day window
-stay in the file and appear when they come into range.
+add dates confirmed on the official site. Entries stay in the file and appear
+when they come into the spot horizon (540 days, not the 90 of the crawled sources).
 Spot events get `ring: "spot"`; their `area` comes from the town map in
 `scripts/events/areas.ts`, so add a new town there (else it lands in
 `abroad`).

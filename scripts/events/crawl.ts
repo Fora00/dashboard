@@ -58,7 +58,7 @@ async function loadPrevious(): Promise<EventsFile | null> {
 function carryOver(previous: EventsFile | null, adapter: Adapter, now: number, drops: DropCounts): Event[] {
   if (!previous) return []
   return withPlace(adapter, previous.events
-    .filter((e) => e && e.source === adapter.id && typeof e.start === 'string' && inWindow(e, now))
+    .filter((e) => e && e.source === adapter.id && typeof e.start === 'string' && inWindow(e, now, adapter.horizonDays))
     .map((e) => ({ ...e, ongoing: isOngoing(e, now) })), drops)
 }
 
@@ -149,7 +149,7 @@ async function main(): Promise<void> {
 
     try {
       if (failing.has(adapter.id)) throw new Error('simulated failure (EVENTS_FAIL)')
-      const ctx = http.context(adapter.id, adapter.maxRequests ?? DEFAULT_MAX_REQUESTS, now, HORIZON_DAYS)
+      const ctx = http.context(adapter.id, adapter.maxRequests ?? DEFAULT_MAX_REQUESTS, now, adapter.horizonDays ?? HORIZON_DAYS)
       const raws = await adapter.run(ctx)
       const freshDrops: DropCounts = new Map()
       const events = toEvents(adapter, raws, now, generatedAt, freshDrops)
