@@ -106,7 +106,7 @@ export class PoliteHttp {
     await mine
   }
 
-  private async rawGet(url: URL, redirect: 'follow' | 'manual', retried = false, body?: string, contentType = 'application/json'): Promise<Response> {
+  private async rawGet(url: URL, redirect: 'follow' | 'manual', attempt = 0, body?: string, contentType = 'application/json'): Promise<Response> {
     await this.slot(url.host)
     this.requests++
     try {
@@ -121,11 +121,14 @@ export class PoliteHttp {
     } catch (e) {
       // A server closing a reused keep-alive socket ("other side closed",
       // seen on myarteven.it) is not an answer: retry once, after the usual
-      // per-host delay. A timeout is retried once too (Comune di Mantova is
-      // slow from GitHub's runners); DNS errors are not.
+      // per-host delay. A timeout is retried (Comune di Mantova is
+      // slow from GitHub's runners, Filarmonica Rovereto answers fast from a
+      // laptop but sometimes times out in CI) twice; DNS errors are not.
       const code = (e as { cause?: { code?: string } }).cause?.code
       const timedOut = (e as Error).name === 'TimeoutError'
-      if (!retried && (timedOut || code === 'UND_ERR_SOCKET' || code === 'ECONNRESET')) return this.rawGet(url, redirect, true, body, contentType)
+      if ((timedOut && attempt < 2) || (attempt < 1 && (code === 'UND_ERR_SOCKET' || code === 'ECONNRESET'))) {
+        return this.rawGet(url, redirect, attempt + 1, body, contentType)
+      }
       throw e
     }
   }
@@ -187,8 +190,8 @@ export class PoliteHttp {
     const url = new URL(href)
     await this.assertAllowed(url)
     const res = form
-      ? await this.rawGet(url, 'manual', false, new URLSearchParams(body as Record<string, string>).toString(), 'application/x-www-form-urlencoded')
-      : await this.rawGet(url, 'manual', false, JSON.stringify(body))
+      ? await this.rawGet(url, 'manual', 0, new URLSearchParams(body as Record<string, string>).toString(), 'application/x-www-form-urlencoded')
+      : await this.rawGet(url, 'manual', 0, JSON.stringify(body))
     const text = await res.text()
     if (!res.ok) throw new Error(`HTTP ${res.status} for POST ${url.href}`)
     return { status: res.status, url: url.href, text }
