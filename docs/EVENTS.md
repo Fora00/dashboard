@@ -481,12 +481,28 @@ are curated by hand in `scripts/events/spot.json`, read by the `spot` adapter
 (no network). To add one, append to `events`: `id` (kebab-case with the year,
 never change it once published), `title`, `start`/`end` (local Rome
 `YYYY-MM-DD`, both inclusive), `city`, `url` (official page where you verified
-the dates), `summary`, and optionally `venue`, `tags` and `category`. Only
+the dates), `summary`, and optionally `venue`, `tags`, `category` and `image` (the event page's
+`og:image`, picked by hand: skip logos and generic placeholders). Only
 add dates confirmed on the official site. Entries beyond the 180-day window
 stay in the file and appear when they come into range.
 Spot events get `ring: "spot"`; their `area` comes from the town map in
 `scripts/events/areas.ts`, so add a new town there (else it lands in
 `abroad`).
+
+## Images (og:image)
+
+Most sources give an image URL directly. The OpenPA ones (Verona, Pergine,
+Riva, Arco, Mori, Ala, Rovereto-comune, Trentogiovani, Trentino Cultura) only
+give a relation (an object id) and their robots.txt forbids resolving it, so
+`scripts/events/ogimage.ts` reads `<meta og:image>` from the public event page
+after dedup (`OG_SOURCES`). Bounded per run: at most 150 pages and 8 minutes,
+sources in turns, soonest events first. Images found earlier are carried over
+from the previous `events.json` and never re-fetched; a page without a usable
+image (missing, or a logo/placeholder by name) is listed in the optional
+top-level `ogMisses` (event id → crawl time, additive) and retried after a
+week. A backlog is worked off over a few daily runs. Sources with no usable
+image at all (Bolzano's API has none, Padova's og:image is the site logo, the
+Trento library pages have none) get the page's category placeholder instead.
 
 ## Adding a category
 

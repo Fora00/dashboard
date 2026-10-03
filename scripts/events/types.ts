@@ -125,4 +125,6 @@ export interface EventsFile {
   generatedAt: string
   sources: SourceStatus[]
   events: Event[]
+  /** Event id → crawl time (ms) of a page with no usable og:image; not retried for a week (ogimage.ts). Optional, additive. */
+  ogMisses?: Record<string, number>
 }

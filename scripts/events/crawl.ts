@@ -19,6 +19,7 @@ import { fileURLToPath } from 'node:url'
 import type { Adapter, Event, EventsFile, SourceStatus } from './types.ts'
 import { ADAPTERS } from './adapters/index.ts'
 import { PoliteHttp } from './http.ts'
+import { OG_MAX_REQUESTS, enrichImages } from './ogimage.ts'
 import type { DropCounts } from './pipeline.ts'
 import { HORIZON_DAYS, dedup, inWindow, isOngoing, sortEvents, toEvents, withPlace } from './pipeline.ts'
 
@@ -167,7 +168,9 @@ async function main(): Promise<void> {
   }
 
   const events = sortEvents(dedup(all))
-  const file: EventsFile = { schemaVersion: 1, generatedAt, sources: statuses, events }
+  const og = await enrichImages(events, previous, http.context('og-image', OG_MAX_REQUESTS, now, HORIZON_DAYS), now)
+  console.log(`og:image: ${og.filled} filled (${og.fetched} pages fetched), ${Object.keys(og.misses).length} without a usable image`)
+  const file: EventsFile = { schemaVersion: 1, generatedAt, sources: statuses, events, ogMisses: og.misses }
   const out = resolve(ROOT, process.env.EVENTS_OUT?.trim() || 'public/events.json')
   try {
     await mkdir(dirname(out), { recursive: true })
