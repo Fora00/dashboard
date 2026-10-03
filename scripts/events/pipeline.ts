@@ -34,7 +34,7 @@ function foldSeries(raws: RawEvent[]): (RawEvent & { occurrences: number })[] {
   const groups = new Map<string, RawEvent[]>()
   const out: (RawEvent & { occurrences: number })[] = []
   for (const r of raws) {
-    if (!r.seriesKey) { out.push({ ...r, occurrences: 1 }); continue }
+    if (!r.seriesKey) { out.push({ ...r, occurrences: r.occurrences ?? 1 }); continue }
     const g = groups.get(r.seriesKey)
     if (g) g.push(r)
     else groups.set(r.seriesKey, [r])

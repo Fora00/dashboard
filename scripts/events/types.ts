@@ -68,6 +68,8 @@ export interface RawEvent {
   categoryHint?: CategoryId
   /** Extra text used only for tag matching (typologies, topics, German title…). */
   tagText?: string
+  /** An adapter that already folded several dates into this record (start = the next one). Default 1. */
+  occurrences?: number
 }
 
 export interface FetchResult {

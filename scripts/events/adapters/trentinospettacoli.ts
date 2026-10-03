@@ -10,7 +10,7 @@
 import type { Adapter, AdapterContext, RawEvent } from '../types.ts'
 import { matchCategories } from '../tags.ts'
 import { normalizeIso } from '../time.ts'
-import { absUrl, decodeEntities, htmlToText } from '../text.ts'
+import { absUrl, decodeEntities, htmlToText, normalize } from '../text.ts'
 
 const SITE = 'https://www.trentinospettacoli.it'
 const LISTING = `${SITE}/eventi/`
@@ -34,6 +34,44 @@ async function categoriesByLink(ctx: AdapterContext): Promise<Map<string, string
       if (it.link) out.set(it.link, (it.categorie_eventi ?? []).map((id) => name.get(id) ?? '').filter(Boolean))
     }
     if (items.length < 100) break
+  }
+  return out
+}
+
+const WHEN = new Intl.DateTimeFormat('it-IT', {
+  timeZone: 'Europe/Rome', weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
+})
+
+/**
+ * The same film is listed once per screening and per town ("Coyote vs. Acme"
+ * ×10, "The Invite" with and without its subtitle). One record per film and
+ * town instead: the next screening as start, all of them in the description,
+ * the count in `occurrences`. The daily crawl moves "next" along.
+ */
+export function foldScreenings(events: RawEvent[]): RawEvent[] {
+  const groups = new Map<string, RawEvent[]>()
+  const out: RawEvent[] = []
+  for (const e of events) {
+    if (e.categoryHint !== 'cinema') { out.push(e); continue }
+    // "The Invite – Il Piacere è tutto nostro" and "The Invite" are one film.
+    const film = normalize(e.title.split(/\s+[–-]\s+/)[0] ?? e.title)
+    const key = `${film}|${normalize(e.city)}`
+    const g = groups.get(key)
+    if (g) g.push(e)
+    else groups.set(key, [e])
+  }
+  for (const [key, g] of groups) {
+    g.sort((a, b) => Date.parse(a.start) - Date.parse(b.start))
+    const first = g[0] as RawEvent
+    // The longer title carries the subtitle ("Tony – Diario di un Giovane Cuoco").
+    const title = g.reduce((t, e) => (e.title.length > t.length ? e.title : t), first.title)
+    out.push({
+      ...first,
+      nativeId: `film:${key}`,
+      title,
+      description: g.length > 1 ? `Proiezioni: ${g.map((e) => WHEN.format(new Date(e.start))).join(' · ')}` : first.description,
+      occurrences: g.length,
+    })
   }
   return out
 }
@@ -76,7 +114,7 @@ async function run(ctx: AdapterContext): Promise<RawEvent[]> {
       ...(hint ? { categoryHint: hint } : {}),
     })
   }
-  return out
+  return foldScreenings(out)
 }
 
 export const trentinospettacoli: Adapter = {
