@@ -40,7 +40,8 @@ export type CategoryId =
  * event's format (see FORMAT TAGS below). Consumers that don't know them ignore them.
  */
 export type FormatTagId = 'social-friend' | 'social-girl' | 'solo-ok'
-export type TagId = CategoryId | 'kids' | FormatTagId
+/** Not a category: events about topics next to the owner's core interests (see ADJACENT). */
+export type TagId = CategoryId | 'kids' | FormatTagId | 'adjacent'
 
 export interface Category {
   id: CategoryId
@@ -73,6 +74,8 @@ export const CATEGORIES: Category[] = [
       'giochi di societa', 'boardgame*', 'board game*', 'tabletop', 'ludoteca', 'ludoteche',
       'gioco di ruolo', 'giochi di ruolo', 'serata giochi', 'serate giochi',
       'pomeriggio di giochi', 'wargame*', 'larp', 'brettspiel*', 'gesellschaftsspiel*',
+      // Game nights that are not board games proper but share the crowd.
+      'scacchi', 'burraco', 'pubquiz', 'pub quiz', 'quiz night', 'escape room',
     ],
   },
   {
@@ -168,6 +171,8 @@ export const CATEGORIES: Category[] = [
       'jazz*', 'blues', 'symphon*', 'orchester*', 'candlelight', 'trio', 'quartet', 'quartett*',
       'quintet', 'quintett*', 'sestetto', 'klezmer*', 'meranoklezmer', 'brass*', 'bigband*', 'big band',
       'songs', 'canzoni', 'dj', 'music', 'organo',
+      // Tour announcements and festival names whose title carries no music word.
+      'tour 2026', 'tour 2027', 'tour d addio', 'saxfest', 'alpen classica',
     ],
   },
   {
@@ -594,7 +599,7 @@ export function formatTags(
 // `short` phrases also the summary (only unambiguous ones there). The long
 // description never drops an event.
 
-export type DropRule = 'no-title' | 'professional-training' | 'civic-notice' | 'spectator-sport'
+export type DropRule = 'no-title' | 'professional-training' | 'civic-notice' | 'spectator-sport' | 'course-wellness'
 
 interface Drop {
   id: DropRule
@@ -654,6 +659,24 @@ const DROPS: Drop[] = [
     onlyIn: ['other', 'outdoor', 'festivals'],
   },
 ]
+
+// Appended here (not in the middle) so earlier rules keep their order.
+DROPS.push({
+  // Courses, wellness, therapy, language and senior groups that no category
+  // claimed (Open Data Hub and the OpenPA town sites are full of them; owner's
+  // decision 2026-10-03). A craft or music course is already `creative` /
+  // `concerts` and never gets here: only the 'other' leftovers drop.
+  id: 'course-wellness',
+  head: [
+    'corso', 'corsi', 'kurs', 'kurse', 'yoga', 'ginnastica', 'pilates', 'tai chi', 'sauna', 'meditazione',
+    'terapia', 'respirazione', 'campane tibetane', 'mandala', 'human design', 'doula', 'spiritualita',
+    'focalizzazione', 'benessere', 'wohlfuhl*', 'genussbotschafter*', 'coaching', 'conversazione',
+    'english club', 'sprachen cafe', 'parliamo in italiano', 'scuole d italiano', 'sportello',
+    'controlli parametri', 'invecchiare', 'comportamento problematico', 'campagna nastro',
+    'comitato di partecipazione',
+  ],
+  onlyIn: ['other'],
+})
 
 const DROP_RULES = DROPS.map((d) => ({
   ...d,
@@ -718,7 +741,8 @@ export function classify(
   const own = hint ?? (sourceDefault !== 'other' ? sourceDefault : undefined)
   const category = (own && allowed(own) ? own : undefined) ?? tiers.map((t) => t.filter(allowed)[0]).find(Boolean) ?? 'other'
   const formats = kids ? [] : formatTags(text, category, matches)
-  return { category, tags: finishTags(category, [...matches, ...formats], kids) }
+  const adjacent: TagId[] = !kids && isAdjacent(category, text) ? ['adjacent'] : []
+  return { category, tags: finishTags(category, [...matches, ...formats, ...adjacent], kids) }
 }
 
 const FORMAT_TAGS: readonly TagId[] = ['social-friend', 'social-girl', 'solo-ok']
@@ -728,6 +752,43 @@ const FORMAT_TAGS: readonly TagId[] = ['social-friend', 'social-girl', 'solo-ok'
  * `other` only when it is the primary. A kids event has neither `creative`
  * nor format tags.
  */
+// --- ADJACENT -----------------------------------------------------------------
+//
+// Topics next to the owner's core interests (comics & games, board games,
+// making): illustration and animation, sci-fi/fantasy/tech, photography,
+// design and architecture, nerd culture (owner's picks, 2026-10-03). Matched in
+// the title, summary and typologies only (a long description name-drops
+// everything), and only for events that are not already a core category. The
+// page shows the tag by default, so a photography exhibition or an AI talk
+// surfaces while the other exhibitions and talks stay hidden.
+const ADJACENT_WORDS = [
+  'illustrazion*', 'illustrator*', 'illustratric*', 'fumett*', 'graphic novel', 'animazione', 'cartoon*', 'disegnator*',
+  'manga', 'anime', 'pixar', 'ghibli',
+  'fantascienza', 'fantasy', 'tolkien', 'sci fi', 'science fiction', 'distopi*', 'supereroi', 'cyberpunk',
+  'steampunk', 'intelligenza artificiale', 'robot', 'robotica', 'videogioc*', 'videogame*', 'realta virtuale',
+  'realta aumentata', 'programmazione', 'coding', 'informatica', 'cybersicurezza', 'startup',
+  'fotografi*', 'fotograf*', 'design', 'designer*', 'architettur*', 'architett*',
+  'retrogaming', 'retro gaming', 'arcade', 'lego', 'minifigure*', 'dungeons', 'warhammer', 'star wars', 'star trek',
+  'harry potter', 'marvel', 'pokemon', 'trading card*', 'magic the gathering', 'modellismo', 'planetario',
+  'telescop*', 'osservatorio astronomico', 'astronomia',
+  // Books as objects: fairs and exhibitions of books (not every book presentation).
+  'fiera del libro', 'fiere del libro', 'salone del libro', 'festival del libro', 'mostra del libro', 'mostra di libri',
+  'mostre di libri', 'mostra mercato del libro', 'libri antichi', 'libro d artista', 'libri d artista', 'book fair',
+  'buchmesse', 'bookcity', 'editoria', 'bibliofil*', 'mostra libraria',
+].map(compile)
+
+const CORE: CategoryId[] = ['boardgames', 'nerd', 'creative']
+
+/** Does the event touch a topic adjacent to the core interests (and is not already one)? */
+export function isAdjacent(
+  category: CategoryId,
+  text: { title: string; summary?: string | null; tagText?: string | null },
+): boolean {
+  if (CORE.includes(category)) return false
+  const hay = hayOf([text.title, text.summary, text.tagText])
+  return any(ADJACENT_WORDS, hay)
+}
+
 export function finishTags(category: CategoryId, tags: TagId[], kids: boolean): TagId[] {
   const all = sortTags([category, ...tags, ...(kids ? (['kids'] as TagId[]) : [])])
   return all.filter((t) => (t !== 'other' || category === 'other') && !(kids && (t === 'creative' || FORMAT_TAGS.includes(t))))
@@ -735,7 +796,7 @@ export function finishTags(category: CategoryId, tags: TagId[], kids: boolean): 
 
 const ORDER = new Map<TagId, number>([
   ...CATEGORIES.map((c, i): [TagId, number] => [c.id, i]),
-  ...(['kids', ...FORMAT_TAGS] as TagId[]).map((t, i): [TagId, number] => [t, 100 + i]),
+  ...(['kids', ...FORMAT_TAGS, 'adjacent'] as TagId[]).map((t, i): [TagId, number] => [t, 100 + i]),
 ])
 
 export function sortTags(tags: TagId[]): TagId[] {

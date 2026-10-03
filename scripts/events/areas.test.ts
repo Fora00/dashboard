@@ -31,13 +31,14 @@ describe('keepForRing', () => {
     expect(keepForRing('spot', [])).toBe(true)
   })
   it('near keeps only interests', () => {
-    expect(keepForRing('near', ['theatre'])).toBe(true)
+    expect(keepForRing('near', ['boardgames'])).toBe(true)
+    expect(keepForRing('near', ['theatre'])).toBe(false) // a play is only worth ~1 h of driving
     expect(keepForRing('near', ['talks'])).toBe(false)
     expect(keepForRing('near', ['other'])).toBe(false)
     expect(keepForRing('near', [])).toBe(false)
   })
   it('near drops kids events even when they match an interest', () => {
-    expect(keepForRing('near', ['theatre', 'kids'])).toBe(false)
+    expect(keepForRing('near', ['festivals', 'kids'])).toBe(false)
   })
   it('food stays an interest after the festivals split', () => {
     expect(NEAR_INTERESTS).toContain('food')

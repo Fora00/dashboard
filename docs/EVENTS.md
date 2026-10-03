@@ -275,6 +275,7 @@ dropped by rule (tags.ts DROP RULES):
 | `professional-training` | work safety, refresher and trade courses, teacher-only previews, job-centre sessions | "Sicurezza sul lavoro: corso di aggiornamento", "Diplom Bier-Expert", "Visita guidata per i docenti…", typology "Formazione professionale" |
 | `civic-notice` | council sessions, traffic notices, monuments lit up for a cause, "the Comune adheres to…" campaigns. Parades stay (parade, parata, sfilata, corteo, Umzug, pride) | "Consiglio Circoscrizione 4^ - Convocazione…", "Fontana del Nettuno illuminata di arancione…", "Lilt for Women" |
 | `spectator-sport` | matches, championships, cups, trophies, races and regattas to watch — only when the event is `other`, `outdoor` or `festivals`, and never with a participation marker (non competitiva, aperta a tutti, social run, veleggiata, camminata) | "HCB Südtirol Alperia - partite casalinghe", "Calendario partite FC Südtirol", "Regata regionale di canottaggio", "International Finn Cup" |
+| `course-wellness` | courses, yoga, gym, sauna and therapy, language groups ("conversazione", "Sprachen Café"), senior and civic campaigns — only when no category claimed the event (`other`), so a ceramics or music course stays | "Corso di Yoga", "Serate a tema nella sauna", "English Club", "Scuole d'italiano per stranieri", "Campagna nastro rosa" |
 
 Records carried over from a previous file (a failing source) go through
 the same rules.
@@ -345,7 +346,7 @@ them (the dashboard's category chips match only category ids).
 | `arcadia` | www.libreriarcadia.com (Libreria Arcadia Ubik, Rovereto) | WP REST `/wp-json/wp/v2/posts?categories=4` (one request, 100 posts) | robots allows all. Posts have no event fields: the schedule is in the title ("VENERDÌ 2 OTTOBRE, ORE 19:00 NAME PRESENTA “BOOK”"), the year is not, and post publish dates are unreliable, so the year is the one in [today, horizon] whose weekday matches. Off-site evenings (Sala Kennedy / Urban Center, Museo Civico) set the venue. Category `talks`. `mayBeEmpty` |
 | `riva-del-garda`, `arco`, `mori`, `ala`, `pergine` | www.comune.<town>.tn.it | OpenPA calendar, class `event` (one `openpa({...})` line each) | added 2026-10-01; robots Allow `/opendata/api/calendar` (Riva, Mori, Ala, Pergine) or no rule (Arco). Riva carries the library's reading groups and "Oltre la pagina" author evenings. Ala is nearly empty (`mayBeEmpty`). Lavis and Borgo Valsugana answer HTML, not the API: skipped |
 | `buonconsiglio` | www.buonconsiglio.it (Buonconsiglio, Thun, Beseno, Stenico, Caldes) | Events Manager `/events.ics` | its CATEGORIES ("Adulti", "Famiglie e bambini", "Scuole") feed the `kids` tag |
-| `trentinospettacoli` | www.trentinospettacoli.it (Coordinamento Teatrale Trentino box office) | schema.org Event microdata on `/eventi/` + WP REST `eventi` categories | one listing page + 2–3 REST calls; "Teatro ragazzi" → `kids`, "Cinema" → `cinema`, other "Spettacoli" without a keyword → `theatre`; no descriptions |
+| `trentinospettacoli` | www.trentinospettacoli.it (Coordinamento Teatrale Trentino box office) | schema.org Event microdata on `/eventi/` + WP REST `eventi` categories | one listing page + 2–3 REST calls; "Teatro ragazzi" → `kids`, "Cinema" → `cinema`, other "Spettacoli" without a keyword → `theatre`; no descriptions. Film screenings are folded per film and town (`foldScreenings`: start = next screening, all of them listed in the description, `occurrences` = count; a subtitle after " – " is the same film), so one film is one card per town, not one per showing; ids changed with this on 2026-10-03 |
 | `tebe` | www.apstebe.org (Tebe APS, Teatro comunale di Bedollo) | static HTML cards (Next.js page, no feed) | one request; no per-event pages, links to `#eventi`; `mayBeEmpty` |
 | `garda-veneto` | www.lagodigardaveneto.com (ring 1, `verona-garda`) | HTML listing `?page=N` with per-card `data-gtm-el` JSON | ~11 pages; ranges become all-day spans. Children's typologies ("manifestazioni per famiglie e bambini") count only when they are the event's only specific ones: "Festa del marrone D.O.P" also lists music, markets and tastings, so it is not `kids` |
 | `padova` | www.comune.padova.it (ring 2) | Drupal JSON:API `/api/events` | date filters in unix seconds; 2 pages |
@@ -488,6 +489,16 @@ stay in the file and appear when they come into range.
 Spot events get `ring: "spot"`; their `area` comes from the town map in
 `scripts/events/areas.ts`, so add a new town there (else it lands in
 `abroad`).
+
+## Adjacent interests
+
+`adjacent` is a tag, not a category (it sits beside `kids` and the format
+tags): an event about illustration/comics/animation, sci-fi/fantasy/tech,
+photography/design/architecture, nerd culture (Lego, Star Wars, retro
+gaming...) or book fairs and book exhibitions ("Salone del libro", "mostra di libri antichi"; not every book presentation) that is not already boardgames, nerd or creative. Matched on the
+title, summary and typologies only (`ADJACENT_WORDS` in `tags.ts`). The page
+lists it as "Interessi adiacenti" and shows it by default, so those exhibitions
+and talks surface while the rest stay hidden. Owner's topics, 2026-10-03.
 
 ## Images (og:image)
 

@@ -376,9 +376,9 @@ describe('withPlace (events carried over from an old events.json)', () => {
     const out = withPlace(
       adapter({ ring: 'near' }),
       [
-        event({ id: 'keep', tags: ['theatre'], category: 'theatre' }),
+        event({ id: 'keep', tags: ['festivals'], category: 'festivals' }),
         event({ id: 'no-interest', tags: ['talks'], category: 'talks' }),
-        event({ id: 'civic', title: 'Convocazione consiglio comunale', tags: ['theatre'], category: 'theatre' }),
+        event({ id: 'civic', title: 'Convocazione consiglio comunale', tags: ['festivals'], category: 'festivals' }),
       ],
       drops,
     )

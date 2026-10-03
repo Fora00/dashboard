@@ -45,8 +45,10 @@ export const AREAS: { id: AreaId; label: string }[] = [
  * one of these; `kids` events are dropped there as well.
  */
 // `food` split off "Festivals & food" on 2026-09-30, so it stays an interest.
+// `theatre` left on 2026-10-03: a play is only worth about an hour of driving
+// (the page also hides theatre beyond 60 min, see distance.ts).
 export const NEAR_INTERESTS: readonly TagId[] = [
-  'creative', 'theatre', 'boardgames', 'festivals', 'food', 'nerd', 'exhibitions', 'concerts',
+  'creative', 'boardgames', 'festivals', 'food', 'nerd', 'exhibitions', 'concerts',
 ]
 
 const TOWNS: Record<AreaId, string[]> = {

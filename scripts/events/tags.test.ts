@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { classify, dropRule, finishTags, formatTags, isKids, matchCategories, sortTags } from './tags.ts'
+import { classify, dropRule, isAdjacent, finishTags, formatTags, isKids, matchCategories, sortTags } from './tags.ts'
 
 describe('matchCategories (keyword compilation: stems, accents, word boundaries)', () => {
   it('a trailing * matches word continuations', () => {
@@ -167,5 +167,37 @@ describe('finishTags / sortTags', () => {
 
   it('sortTags dedups and puts kids/format tags after categories', () => {
     expect(sortTags(['solo-ok', 'kids', 'theatre', 'theatre', 'boardgames'])).toEqual(['boardgames', 'theatre', 'kids', 'solo-ok'])
+  })
+})
+
+describe('course-wellness drop (other only)', () => {
+  it('drops courses, wellness and language groups nothing else claimed', () => {
+    for (const title of ['Corso di Yoga', 'Serate a tema nella sauna', 'Sprachen Café', 'Campane tibetane nella grotta salina']) {
+      expect(dropRule({ title }, 'other')).toBe('course-wellness')
+    }
+  })
+  it('keeps a craft course (creative) and ordinary events', () => {
+    expect(dropRule({ title: 'Corso di ceramica' }, 'creative')).toBeNull()
+    expect(dropRule({ title: 'Escape Room - La Lacrima dell’ultimo atto' }, 'other')).toBeNull()
+  })
+  it('classifies chess, burraco, pub quiz and tours', () => {
+    expect(classify(undefined, 'other', { title: 'Gruppo scacchi' }).category).toBe('boardgames')
+    expect(classify(undefined, 'other', { title: 'PubQuiz' }).category).toBe('boardgames')
+    expect(classify(undefined, 'other', { title: 'Herbert Pixner Projekt - Tour 2026' }).category).toBe('concerts')
+  })
+})
+
+describe('adjacent interests', () => {
+  it('tags exhibitions and talks on photography, architecture, tech, nerd culture', () => {
+    expect(classify(undefined, 'other', { title: 'Mostra fotografica di Franco Rubini' }).tags).toContain('adjacent')
+    expect(classify(undefined, 'other', { title: 'Mostra di architettura "Ipostudio"' }).tags).toContain('adjacent')
+    expect(classify(undefined, 'other', { title: 'Star Wars fra musica e scienza' }).tags).toContain('adjacent')
+    expect(classify(undefined, 'other', { title: 'Mostra di libri antichi' }).tags).toContain('adjacent')
+    expect(classify(undefined, 'other', { title: 'Fiera del libro di Trento' }).tags).toContain('adjacent')
+  })
+  it('leaves core categories, plain exhibitions and kids events without it', () => {
+    expect(isAdjacent('nerd', { title: 'Fumetti in piazza' })).toBe(false)
+    expect(classify(undefined, 'other', { title: 'Mostra di pittura del Seicento' }).tags).not.toContain('adjacent')
+    expect(classify(undefined, 'other', { title: 'Laboratorio di fotografia per bambini' }).tags).not.toContain('adjacent')
   })
 })
