@@ -194,6 +194,10 @@ describe('adjacent interests', () => {
     expect(classify(undefined, 'other', { title: 'Star Wars fra musica e scienza' }).tags).toContain('adjacent')
     expect(classify(undefined, 'other', { title: 'Mostra di libri antichi' }).tags).toContain('adjacent')
     expect(classify(undefined, 'other', { title: 'Fiera del libro di Trento' }).tags).toContain('adjacent')
+    expect(isAdjacent('exhibitions', { title: 'Libri e sicurezza - mostra bibliografica' })).toBe(true)
+    expect(isAdjacent('festivals', { title: 'Manifestazione "Libri castagne e altre magagne"' })).toBe(true)
+    expect(isAdjacent('talks', { title: 'Presentazione del libro "Nimm Abschied"' })).toBe(false)
+    expect(isAdjacent('talks', { title: 'Gruppo di lettura' })).toBe(false)
   })
   it('leaves core categories, plain exhibitions and kids events without it', () => {
     expect(isAdjacent('nerd', { title: 'Fumetti in piazza' })).toBe(false)

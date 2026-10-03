@@ -774,8 +774,14 @@ const ADJACENT_WORDS = [
   // Books as objects: fairs and exhibitions of books (not every book presentation).
   'fiera del libro', 'fiere del libro', 'salone del libro', 'festival del libro', 'mostra del libro', 'mostra di libri',
   'mostre di libri', 'mostra mercato del libro', 'libri antichi', 'libro d artista', 'libri d artista', 'book fair',
-  'buchmesse', 'bookcity', 'editoria', 'bibliofil*', 'mostra libraria',
+  'buchmesse', 'bookcity', 'editoria', 'bibliofil*', 'mostra libraria', 'mostra bibliografica', 'mostre bibliografiche',
 ].map(compile)
+
+// A fair or exhibition that merely has "libri" in its name ("Libri, giardini e altri
+// nascondini", "Libri castagne e altre magagne"). Only for exhibitions and
+// festivals: reading groups and book presentations (talks) stay out.
+const BOOK_EVENT = [compile('libro'), compile('libri'), compile('book*'), compile('buch*')]
+const BOOK_CATEGORIES: CategoryId[] = ['exhibitions', 'festivals']
 
 const CORE: CategoryId[] = ['boardgames', 'nerd', 'creative']
 
@@ -786,6 +792,7 @@ export function isAdjacent(
 ): boolean {
   if (CORE.includes(category)) return false
   const hay = hayOf([text.title, text.summary, text.tagText])
+  if (BOOK_CATEGORIES.includes(category) && any(BOOK_EVENT, hayOf([text.title]))) return true
   return any(ADJACENT_WORDS, hay)
 }
 
