@@ -37,11 +37,14 @@ export function matchesQuery(e: EventItem, query: string): boolean {
 
 // --- Date chips ------------------------------------------------------------------
 
-export type DateChip = 'today' | 'tomorrow' | 'weekend'
+export type DateChip = 'today' | 'tomorrow' | 'weekend' | 'ending'
+/** "In scadenza": a multi-day event already running whose last day is within this many days. */
+export const ENDING_DAYS = 10
 export const DATE_CHIPS: { id: DateChip; label: string }[] = [
   { id: 'today', label: 'Oggi' },
   { id: 'tomorrow', label: 'Domani' },
   { id: 'weekend', label: 'Weekend' },
+  { id: 'ending', label: 'In scadenza' },
 ]
 
 function addDays(day: string, n: number): string {
@@ -58,6 +61,7 @@ export function chipRange(chip: DateChip, now: number): [string, string] {
     const t = addDays(today, 1)
     return [t, t]
   }
+  if (chip === 'ending') return [today, addDays(today, ENDING_DAYS)]
   const dow = new Date(`${today}T12:00:00Z`).getUTCDay() // 0 = Sun
   if (dow === 0) return [today, today]
   if (dow === 6) return [today, addDays(today, 1)]
@@ -76,6 +80,26 @@ export function matchesRange(e: EventItem, [from, to]: [string, string], now: nu
   }
   const last = localDay(e.end ?? e.start)
   return localDay(e.start) <= to && last >= from
+}
+
+/**
+ * Days left (0 = last day is today) for a multi-day event that is already
+ * running and ends within ENDING_DAYS; null otherwise. Single-day events and
+ * sparse series (whose end is just the end of the run) are never "ending".
+ */
+export function endingInDays(e: EventItem, now: number): number | null {
+  if (!e.end || isSparseSeries(e)) return null
+  const [today, limit] = chipRange('ending', now)
+  const first = localDay(e.start)
+  const last = localDay(e.end)
+  if (!(first < last && first <= today && last >= today && last <= limit)) return null
+  return Math.round((Date.parse(`${last}T12:00:00Z`) - Date.parse(`${today}T12:00:00Z`)) / 86400000)
+}
+
+/** Does the event belong under this chip? Day chips use the range; "ending" is its own rule. */
+export function matchesChip(e: EventItem, chip: DateChip, now: number): boolean {
+  if (chip !== 'ending') return matchesRange(e, chipRange(chip, now), now)
+  return endingInDays(e, now) !== null
 }
 
 // --- Remembered selection --------------------------------------------------------

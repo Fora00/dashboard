@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { EventItem } from './types'
 import { cleanFormats, formatLabel, matchesFormat } from './format'
 import {
-  EMPTY_FILTERS, chipRange, loadFilters, matchesQuery, matchesRange, normalizeText, saveFilters,
+  EMPTY_FILTERS, chipRange, loadFilters, matchesChip, matchesQuery, matchesRange, normalizeText, saveFilters,
   type StoredFilters,
 } from './filters'
 
@@ -99,6 +99,29 @@ describe('matchesRange', () => {
     const weekly = ev({ allDay: true, start: '2026-09-01T00:00:00+02:00', end: '2026-12-29T00:00:00+01:00', occurrences: 18 })
     expect(matchesRange(weekly, today, now)).toBe(false) // next date is Tue 13 Oct
     expect(matchesRange(weekly, ['2026-10-13', '2026-10-13'], now)).toBe(true)
+  })
+})
+
+describe('matchesChip "ending" (In scadenza, 10 days)', () => {
+  const now = Date.parse('2026-10-10T10:00:00Z')
+  const show = (start: string, end: string, over: Partial<EventItem> = {}) =>
+    ev({ allDay: true, start: `${start}T00:00:00+02:00`, end: `${end}T00:00:00+02:00`, ...over })
+
+  it('a running multi-day event ending within 10 days matches', () => {
+    expect(matchesChip(show('2026-09-01', '2026-10-15'), 'ending', now)).toBe(true)
+    expect(matchesChip(show('2026-09-01', '2026-10-20'), 'ending', now)).toBe(true)
+  })
+  it('one ending later, already over, not started, single-day or without end does not', () => {
+    expect(matchesChip(show('2026-09-01', '2026-10-21'), 'ending', now)).toBe(false)
+    expect(matchesChip(show('2026-09-01', '2026-10-09'), 'ending', now)).toBe(false)
+    expect(matchesChip(show('2026-10-12', '2026-10-15'), 'ending', now)).toBe(false)
+    expect(matchesChip(ev(), 'ending', now)).toBe(false)
+  })
+  it('a sparse series is not a deadline', () => {
+    expect(matchesChip(show('2026-09-01', '2026-10-15', { occurrences: 8 }), 'ending', now)).toBe(false)
+  })
+  it('day chips still use the range', () => {
+    expect(matchesChip(ev(), 'today', now)).toBe(true)
   })
 })
 

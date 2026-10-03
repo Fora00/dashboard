@@ -2,10 +2,9 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { EventMark, EventPrefs } from '../../lib/db'
 import { setFavouriteCategories } from '../../lib/eventMarksSync'
 import {
-  chipRange,
   loadFilters,
   matchesQuery,
-  matchesRange,
+  matchesChip,
   normalizeText,
   saveFilters,
   type DateChip,
@@ -154,10 +153,9 @@ export function useEventFilters(
   }, [view, events, marksRaw, marks, now, showHidden])
 
   // Date chip and search narrow the whole list, so the sheet counts follow them.
-  const range = useMemo(() => (dateChip ? chipRange(dateChip, now) : null), [dateChip, now])
   const scoped = useMemo(
-    () => base.filter((e) => (!range || matchesRange(e, range, now)) && matchesQuery(e, nq)),
-    [base, range, nq, now],
+    () => base.filter((e) => (!dateChip || matchesChip(e, dateChip, now)) && matchesQuery(e, nq)),
+    [base, dateChip, nq, now],
   )
 
   // Sheet counts: each one respects every filter except its own.
