@@ -153,6 +153,18 @@
       "summary": "Festival del fumetto, dei videogiochi e della cultura pop (sesta edizione): arcade, manga, cosplay, Lego, palchi con spettacoli. Sabato e domenica 10-19.",
       "tags": ["nerd", "festivals"],
       "category": "nerd"
+    },
+    {
+      "id": "milan-games-week-2026-11",
+      "title": "Milan Games Week & Cartoomics",
+      "start": "2026-11-27",
+      "end": "2026-11-29",
+      "city": "Milano",
+      "venue": "Fiera Milano Rho",
+      "url": "https://www.milangamesweek.it/",
+      "summary": "Il più grande evento italiano su videogiochi, fumetti e cultura pop: anteprime, tornei esport, cosplay, creator e area Cartoomics.",
+      "tags": ["nerd", "festivals"],
+      "category": "nerd"
     }
   ]
 }
