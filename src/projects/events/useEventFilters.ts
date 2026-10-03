@@ -12,10 +12,11 @@ import {
 import { cleanFormats, matchesFormat, FORMAT_CHIPS } from './format'
 import type { EventItem } from './types'
 import { isManual } from './custom'
-import { DISTANCE_STEPS, tooFarForCategory, withinMinutes } from './distance'
+import { DISTANCE_STEPS, isNear, tooFarForCategory, withinMinutes } from './distance'
 import {
   CATEGORIES,
   DEFAULT_CATEGORIES,
+  categoryOf,
   groupByDay,
   inCategory,
   isLongRunning,
@@ -183,11 +184,16 @@ export function useEventFilters(
     () =>
       scoped.filter(
         (e) =>
-          (inCats(e, activeCats) || (selectedCats === null && (isManual(e) || (view === 'saved' && isSpot(e))))) &&
+          (inCats(e, activeCats) ||
+            (selectedCats === null &&
+              (isManual(e) ||
+                (view === 'saved' && isSpot(e)) ||
+                // Untouched defaults: an exhibition close by (the Mart) is worth a look.
+                (favourites.length === 0 && categoryOf(e) === 'exhibitions' && isNear(e))))) &&
           matchesFormat(e, selectedFormats) &&
           (maxMin === null || withinMinutes(e, maxMin)),
       ),
-    [scoped, activeCats, selectedCats, selectedFormats, view, maxMin],
+    [scoped, activeCats, selectedCats, selectedFormats, view, maxMin, favourites],
   )
 
   // Flat, ordered list of groups; then cut to `limit` cards in total.
