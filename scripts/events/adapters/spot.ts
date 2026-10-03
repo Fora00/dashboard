@@ -13,6 +13,8 @@ interface SpotEntry {
   city: string
   venue?: string
   url: string
+  /** Optional absolute https image (the event page's og:image, picked by hand). */
+  image?: string
   summary: string
   tags?: string[]
   category?: CategoryId
@@ -39,6 +41,7 @@ export const spot: Adapter = {
       venue: e.venue ?? null,
       city: e.city,
       url: e.url,
+      image: e.image ?? null,
       description: e.summary,
       summary: e.summary,
       ...(e.category ? { categoryHint: e.category } : {}),

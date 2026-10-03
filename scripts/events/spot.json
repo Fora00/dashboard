@@ -9,6 +9,7 @@
       "city": "Rovereto",
       "venue": "Block3",
       "url": "https://prenota.block3.it",
+      "image": "https://prenota.block3.it/Og_image.png",
       "summary": "Serata di Block3, la palestra di arrampicata di Rovereto. Iscrizione su prenota.block3.it; orari e formato non pubblicati: info@block3.it, 388 9772120.",
       "tags": ["outdoor"],
       "category": "outdoor"
@@ -21,6 +22,7 @@
       "city": "Castione di Brentonico",
       "venue": "Castione, Altopiano di Brentonico",
       "url": "https://www.visitrovereto.it/en/enjoy/events/festa-castagna-castione/",
+      "image": "https://www.visitrovereto.it/wp-content/uploads/2020/10/castagne-foto-marco-simonini.jpg",
       "summary": "Festa d'autunno dei marroni del Monte Baldo: banchi con piatti tipici e castagne arrostite, prodotti locali nei cortili del paese, musica.",
       "tags": ["festivals", "food"],
       "category": "food"
@@ -66,6 +68,7 @@
       "city": "Bologna",
       "venue": "BolognaFiere",
       "url": "https://www.artefiera.it/",
+      "image": "https://www.artefiera.it/media/artefiera/2027/homepage/AF27_sito_1920x1080_lancio_low.gif",
       "summary": "Cinquantesima edizione della fiera d'arte moderna e contemporanea di Bologna, tema \"C'e tempo\".",
       "tags": ["exhibitions"],
       "category": "exhibitions"
@@ -90,6 +93,7 @@
       "city": "Bologna",
       "venue": "BolognaFiere",
       "url": "https://www.play-festival.it/",
+      "image": "https://www.play-festival.it/assets/Uploads/play2027-opengraph.png",
       "summary": "Festival del gioco: giochi da tavolo, di ruolo, di carte e di miniature (dal 2027 a BolognaFiere).",
       "tags": ["boardgames", "nerd"],
       "category": "boardgames"
@@ -102,6 +106,7 @@
       "city": "Milano",
       "venue": "Morel Milano",
       "url": "https://www.ludolabo.com/combo/",
+      "image": "https://www.ludolabo.com/intersezione/wp-content/uploads/2026/07/Combo-1080_1080.jpg",
       "summary": "Prima edizione del festival di pedine, dadi e carte dedicato al gioco da tavolo e di ruolo contemporaneo.",
       "tags": ["boardgames"],
       "category": "boardgames"
@@ -126,6 +131,7 @@
       "city": "Mantova",
       "venue": "Palazzo Te",
       "url": "https://www.centropalazzote.it/inventare-la-natura-leonardo-arcimboldo-caravaggio/",
+      "image": "https://www.centropalazzote.it/wp-content/uploads/2026/03/Caravaggio-1024x736.png",
       "summary": "Mostra di Palazzo Te nelle sale monumentali, a compimento dell'anno del Cinquecentenario: Leonardo, Arcimboldo e Caravaggio e l'invenzione della natura.",
       "tags": ["exhibitions"],
       "category": "exhibitions"
@@ -138,6 +144,7 @@
       "city": "Ferrara",
       "venue": "Palazzo dei Diamanti",
       "url": "https://www.palazzodiamanti.it/mostre/da-monet-a-van-gogh-a-kandinsky/",
+      "image": "https://www.palazzodiamanti.it/wp-content/uploads/2026/04/Screenshot-2026-09-10-alle-13.23.05.png",
       "summary": "Mostra di Fondazione Ferrara Arte a Palazzo dei Diamanti, dall'Impressionismo alle avanguardie del Novecento.",
       "tags": ["exhibitions"],
       "category": "exhibitions"
@@ -150,6 +157,7 @@
       "city": "Montichiari",
       "venue": "Centro Fiera del Garda",
       "url": "https://www.gardacon.it/",
+      "image": "https://www.gardacon.it/wp-content/uploads/2026/02/SEO-GARDACON-03-26.jpg",
       "summary": "Festival del fumetto, dei videogiochi e della cultura pop (sesta edizione): arcade, manga, cosplay, Lego, palchi con spettacoli. Sabato e domenica 10-19.",
       "tags": ["nerd", "festivals"],
       "category": "nerd"
