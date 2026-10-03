@@ -3,7 +3,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { useSearchParams } from 'react-router-dom'
 import { db, type CustomEvent, type EventMark } from '../../lib/db'
 import { deleteCustomEvent, pruneCustomEvents, sync as customSync } from '../../lib/customEventsSync'
-import { pruneEventMarks, restoreEventMark, toggleEventMark } from '../../lib/eventMarksSync'
+import { hideEvents, pruneEventMarks, restoreEventMark, toggleEventMark } from '../../lib/eventMarksSync'
 import { SyncCard } from '../../components/SyncCard'
 import { PageHeader } from '../../components/PageHeader'
 import { EmptyState } from '../../components/EmptyState'
@@ -24,7 +24,13 @@ import type { EventItem } from './types'
 import { areaLabel, categoryLabel, fetchEventsFile, isKidsEvent, relativeTime } from './model'
 
 /** The add/edit sheet: closed, adding (with an optional prefill) or editing a row. */
-type Editor = { open: false } | { open: true; editing: CustomEvent | null; prefill: Partial<CustomEventForm> | null }
+type Editor =
+  | { open: false }
+  | {
+      open: true
+      editing: CustomEvent | null
+      prefill: Partial<CustomEventForm> | null
+    }
 
 export function Events() {
   const { trigger: triggerUndo, pending: pendingUndo, confirmUndo } = useUndoSnackbar()
@@ -56,6 +62,9 @@ export function Events() {
 
   const [fetchState, setFetchState] = useState<'loading' | 'ok' | 'offline' | 'missing'>('loading')
   const [sheetOpen, setSheetOpen] = useState(false)
+  // Multi-select: pick several cards, hide them in one go.
+  const [selecting, setSelecting] = useState(false)
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set())
   const [showSources, setShowSources] = useState(false)
   // The clock is read once per mount/refresh, not on every render.
   const [now, setNow] = useState(() => Date.now())
@@ -66,7 +75,11 @@ export function Events() {
       const out = await fetchEventsFile()
       if (cancelled) return
       if (out.kind === 'ok') {
-        await db.eventsCache.put({ id: 'latest', file: out.file, fetchedAt: Date.now() })
+        await db.eventsCache.put({
+          id: 'latest',
+          file: out.file,
+          fetchedAt: Date.now(),
+        })
         setNow(Date.now())
         setFetchState('ok')
       } else {
@@ -90,7 +103,21 @@ export function Events() {
     now,
     persist: Boolean(file),
   })
-  const { view, query, nq, dateChip, showHidden, selectedCats, selectedAreas, selectedCities, selectedFormats, activeCats, favourites, filtering, filterCount } = filters
+  const {
+    view,
+    query,
+    nq,
+    dateChip,
+    showHidden,
+    selectedCats,
+    selectedAreas,
+    selectedCities,
+    selectedFormats,
+    activeCats,
+    favourites,
+    filtering,
+    filterCount,
+  } = filters
   const { visibleGroups, total, limit } = groups
 
   // Stable across renders (they read the current mark from Dexie), so the
@@ -110,6 +137,17 @@ export function Events() {
   )
   const onToggleSave = useCallback((e: EventItem) => void setMark(e, 'saved'), [setMark])
   const onToggleHide = useCallback((e: EventItem) => void setMark(e, 'hidden'), [setMark])
+  const onSelect = useCallback((e: EventItem) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (!next.delete(e.id)) next.add(e.id)
+      return next
+    })
+  }, [])
+  const exitSelect = () => {
+    setSelecting(false)
+    setSelectedIds(new Set())
+  }
   const onEdit = useCallback((e: EventItem) => {
     void db.customEvents.get(e.id).then((row) => {
       if (row) setEditor({ open: true, editing: row, prefill: null })
@@ -121,6 +159,20 @@ export function Events() {
     closeEditor()
     void deleteCustomEvent(row.id).then((undo) => triggerUndo('Event deleted', undo))
   }
+
+  const hideSelected = () => {
+    const picked = visibleGroups.flatMap((g) => g.events).filter((e) => selectedIds.has(e.id))
+    // An event can sit in two groups: hide each once.
+    const unique = [...new Map(picked.map((e) => [e.id, e])).values()]
+    exitSelect()
+    void hideEvents(unique).then((changed) => {
+      if (changed.length === 0) return
+      triggerUndo(`${changed.length} ${changed.length === 1 ? 'event' : 'events'} hidden`, async () => {
+        for (const [id, prev] of changed) await restoreEventMark(id, prev)
+      })
+    })
+  }
+  const selectAllVisible = () => setSelectedIds(new Set(visibleGroups.flatMap((g) => g.events).map((e) => e.id)))
 
   const failed = file?.sources.filter((s) => !s.ok) ?? []
 
@@ -134,6 +186,9 @@ export function Events() {
           : 'Public events around Trentino, Bolzano and Verona.'
       }
     >
+      <Button variant="ghost" onClick={() => (selecting ? exitSelect() : setSelecting(true))}>
+        {selecting ? 'Cancel' : 'Select'}
+      </Button>
       <Button onClick={openAdd} aria-label="Add event">
         ＋ Add
       </Button>
@@ -225,7 +280,10 @@ export function Events() {
           [
             ['all', 'All'],
             ['open', 'Open now'],
-            ['saved', `Saved${marksRaw.filter((m) => m.state === 'saved').length ? ` (${marksRaw.filter((m) => m.state === 'saved').length})` : ''}`],
+            [
+              'saved',
+              `Saved${marksRaw.filter((m) => m.state === 'saved').length ? ` (${marksRaw.filter((m) => m.state === 'saved').length})` : ''}`,
+            ],
           ] as [View, string][]
         ).map(([id, label]) => (
           <button
@@ -270,7 +328,7 @@ export function Events() {
         </button>
       </div>
 
-      <div className="mb-2 grid grid-cols-3 gap-2">
+      <div className="mb-2 grid grid-cols-[1fr_1fr_1fr_1.4fr] gap-2">
         {DATE_CHIPS.map(({ id, label }) => (
           <Chip key={id} active={dateChip === id} onClick={() => toggles.toggleDateChip(id)}>
             {label}
@@ -378,9 +436,7 @@ export function Events() {
         <div className="space-y-5">
           {visibleGroups.map((g) => (
             <section key={g.key}>
-              <h2 className="mb-2 text-sm font-semibold text-slate-500 dark:text-slate-400">
-                {g.label}
-              </h2>
+              <h2 className="mb-2 text-sm font-semibold text-slate-500 dark:text-slate-400">{g.label}</h2>
               <ul className="space-y-2">
                 {g.events.map((e) => (
                   <EventCard
@@ -392,6 +448,9 @@ export function Events() {
                     onToggleSave={onToggleSave}
                     onToggleHide={onToggleHide}
                     onEdit={onEdit}
+                    selecting={selecting}
+                    selected={selectedIds.has(e.id)}
+                    onSelect={onSelect}
                   />
                 ))}
               </ul>
@@ -411,8 +470,32 @@ export function Events() {
           <SyncCard sync={customSync} />
         </div>
       )}
-      {pendingUndo && <Snackbar label={pendingUndo.label} onUndo={confirmUndo} />}
+      {selecting && (
+        <div
+          className="fixed inset-x-0 z-20 flex justify-center px-4"
+          style={{ bottom: 'calc(env(safe-area-inset-bottom) + 1rem)' }}
+        >
+          <div className="flex items-center gap-1 rounded-full bg-white py-2 pl-4 pr-2 text-sm font-medium text-slate-900 shadow-lg ring-1 ring-slate-200 dark:bg-slate-800 dark:text-slate-100 dark:ring-slate-700">
+            <span className="shrink-0">{selectedIds.size} selected</span>
+            <button
+              type="button"
+              onClick={selectAllVisible}
+              className="min-h-10 rounded-full px-3 text-indigo-600 dark:text-indigo-300"
+            >
+              All
+            </button>
+            <button
+              type="button"
+              disabled={selectedIds.size === 0}
+              onClick={hideSelected}
+              className="min-h-10 rounded-full bg-indigo-500 px-4 font-semibold text-white disabled:opacity-40"
+            >
+              ✕ Hide
+            </button>
+          </div>
+        </div>
+      )}
+      {!selecting && pendingUndo && <Snackbar label={pendingUndo.label} onUndo={confirmUndo} />}
     </div>
   )
 }
-

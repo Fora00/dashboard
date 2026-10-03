@@ -112,7 +112,12 @@ export async function toggleEventMark(e: EventItem, state: EventMark['state']): 
   }
   const event = sanitizeSnapshot(e)
   if (!event) return prev
-  await engine.upsert('event_marks', { id: event.id, state, event, updatedAt: stamp(prev?.updatedAt) })
+  await engine.upsert('event_marks', {
+    id: event.id,
+    state,
+    event,
+    updatedAt: stamp(prev?.updatedAt),
+  })
   return prev
 }
 
@@ -123,10 +128,35 @@ export async function toggleEventMark(e: EventItem, state: EventMark['state']): 
 export async function restoreEventMark(id: string, prev: EventMark | undefined): Promise<void> {
   if (prev) {
     const cur = await db.eventMarks.get(id)
-    await engine.upsert('event_marks', { ...prev, updatedAt: stamp(Math.max(prev.updatedAt, cur?.updatedAt ?? 0)) })
+    await engine.upsert('event_marks', {
+      ...prev,
+      updatedAt: stamp(Math.max(prev.updatedAt, cur?.updatedAt ?? 0)),
+    })
   } else if (await db.eventMarks.get(id)) {
     await engine.remove('event_marks', id)
   }
+}
+
+/**
+ * Hide several events at once. Events already hidden are left alone. Returns
+ * the previous marks of the ones it changed, for a single Undo.
+ */
+export async function hideEvents(events: EventItem[]): Promise<Array<[string, EventMark | undefined]>> {
+  const changed: Array<[string, EventMark | undefined]> = []
+  for (const e of events) {
+    const prev = await db.eventMarks.get(e.id)
+    if (prev?.state === 'hidden') continue
+    const event = sanitizeSnapshot(e)
+    if (!event) continue
+    await engine.upsert('event_marks', {
+      id: event.id,
+      state: 'hidden',
+      event,
+      updatedAt: stamp(prev?.updatedAt),
+    })
+    changed.push([e.id, prev])
+  }
+  return changed
 }
 
 /** Clear an event's mark (no-op, and nothing queued, when it has none). */
