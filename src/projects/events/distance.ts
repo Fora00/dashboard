@@ -86,7 +86,7 @@ const MINUTES: Record<string, number> = {
   Pinzolo: 85,
   Tesero: 65,
   Predazzo: 80,
-  'Primiero San Martino di Castrozza': 80,
+  'Primiero San Martino di Castrozza': 80, 'Viote del Monte Bondone': 50,
   // Verona and Lake Garda (east shore)
   'Limone sul Garda': 45,
   Malcesine: 50,

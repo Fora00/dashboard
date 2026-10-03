@@ -23,6 +23,7 @@ import { stabileveneto } from './stabileveneto.ts'
 import { teatrosociale } from './teatrosociale.ts'
 import { filarmonica } from './filarmonica.ts'
 import { arcadia } from './arcadia.ts'
+import { muse } from './muse.ts'
 
 export const ADAPTERS: Adapter[] = [
   // Batch A — board games
@@ -77,6 +78,8 @@ export const ADAPTERS: Adapter[] = [
     home: 'https://www.buonconsiglio.it/agenda/', city: 'Trento',
   }),
   trentinospettacoli,
+  // MUSE (Trento science museum): dates only on each event page, see adapters/muse.ts.
+  muse,
   infinityboulder,
   santachiara,
   tebe,
