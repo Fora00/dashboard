@@ -20,7 +20,23 @@ export const CATEGORIES: { id: string; label: string }[] = [
   { id: 'tours', label: 'Visite' },
   { id: 'outdoor', label: 'Outdoor' },
   { id: 'festivals', label: 'Festivals & food' },
+  { id: 'adjacent', label: 'Interessi adiacenti' },
   { id: 'other', label: 'Other' },
+]
+/**
+ * Shown by default when no favourite categories are set (the owner's picks,
+ * 2026-10-03). Concerts, food, exhibitions, talks and "other" stay reachable
+ * from Filters. Starring categories there replaces this list.
+ */
+export const DEFAULT_CATEGORIES: readonly string[] = [
+  'boardgames',
+  'nerd',
+  'creative',
+  'festivals',
+  'theatre',
+  'cinema',
+  'outdoor',
+  'tours',
 ]
 const KNOWN = new Set(CATEGORIES.map((c) => c.id))
 

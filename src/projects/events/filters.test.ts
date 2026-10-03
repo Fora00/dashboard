@@ -170,7 +170,7 @@ describe('remembered selection', () => {
 
   it('round-trips', () => {
     stubStorage()
-    const f: StoredFilters = { cats: ['theatre'], areas: ['trentino'], cities: ['Trento'], chip: 'weekend', formats: ['solo-ok'], showHidden: true }
+    const f: StoredFilters = { cats: ['theatre'], chip: 'weekend', formats: ['solo-ok'], showHidden: true, maxMin: 50 }
     saveFilters(f)
     expect(loadFilters()).toEqual(f)
   })
@@ -191,8 +191,8 @@ describe('remembered selection', () => {
   })
 
   it('cleans bad fields: non-string entries, unknown chip, unknown formats', () => {
-    stubStorage({ [KEY]: JSON.stringify({ cats: ['a', 5], areas: 'x', cities: [null, 'Trento'], chip: 'nextweek', formats: ['solo-ok', 'nope'], showHidden: 'yes' }) })
-    expect(loadFilters()).toEqual({ cats: ['a'], areas: [], cities: ['Trento'], chip: null, formats: ['solo-ok'], showHidden: false })
+    stubStorage({ [KEY]: JSON.stringify({ cats: ['a', 5], chip: 'nextweek', formats: ['solo-ok', 'nope'], showHidden: 'yes', maxMin: 45 }) })
+    expect(loadFilters()).toEqual({ cats: ['a'], chip: null, formats: ['solo-ok'], showHidden: false, maxMin: null })
   })
 
   it('values from before formats existed load with none', () => {

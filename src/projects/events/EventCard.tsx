@@ -5,6 +5,7 @@ import { addToCalendar } from './ics'
 import { FOCUS_RING, FOCUS_RING_INSET } from '../../components/focus'
 import { CalendarPlusIcon, CheckIcon, EyeIcon, EyeOffIcon, PencilIcon, ShareIcon, StarIcon, ThingsIcon } from './icons'
 import { CategoryThumb } from './CategoryThumb'
+import { driveLabel } from './distance'
 import { endingInDays } from './filters'
 import { cleanFormats, formatLabel } from './format'
 import { isManual, isSafeImageDataUrl } from './custom'
@@ -54,6 +55,7 @@ export const EventCard = memo(function EventCard({
   const [open, setOpen] = useState(false)
   const [imgOk, setImgOk] = useState(true)
   const [copied, flashCopied] = useFlash(2000)
+  const drive = driveLabel(e.city)
   const place = [e.venue, e.city].filter(Boolean).join(' · ')
   const url = safeHttpUrl(e.url)
   const manual = isManual(e)
@@ -126,7 +128,12 @@ export const EventCard = memo(function EventCard({
               {saved && <span aria-label="Saved">★</span>}
             </div>
             <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{formatRange(e)}</p>
-            {place && <p className="text-xs text-slate-500 dark:text-slate-400">{place}</p>}
+            {place && (
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                {place}
+                {drive && <span className="whitespace-nowrap"> · 🚗 {drive}</span>}
+              </p>
+            )}
             <div className="flex flex-wrap items-center gap-1.5 pt-1">
               {left !== null && (
                 <span className={`${BADGE} bg-rose-100 text-rose-800 dark:bg-rose-500/20 dark:text-rose-200`}>

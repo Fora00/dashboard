@@ -12,10 +12,10 @@ import {
 import { cleanFormats, matchesFormat, FORMAT_CHIPS } from './format'
 import type { EventItem } from './types'
 import { isManual } from './custom'
+import { DISTANCE_STEPS, tooFarForCategory, withinMinutes } from './distance'
 import {
   CATEGORIES,
-  areaOf,
-  areaRank,
+  DEFAULT_CATEGORIES,
   groupByDay,
   inCategory,
   isLongRunning,
@@ -35,15 +35,6 @@ export function toggleIn<T>(list: readonly T[], id: T): T[] {
 
 function byStart(a: EventItem, b: EventItem): number {
   return Date.parse(a.start) - Date.parse(b.start) || a.title.localeCompare(b.title)
-}
-
-/** OR over the selected areas; none selected = every area. */
-function inAreas(e: EventItem, areas: string[]): boolean {
-  return areas.length === 0 || areas.includes(areaOf(e))
-}
-
-function inCities(e: EventItem, cities: string[]): boolean {
-  return cities.length === 0 || cities.includes(e.city)
 }
 
 function inCats(e: EventItem, cats: string[]): boolean {
@@ -87,11 +78,10 @@ export function useEventFilters(
   const [initial] = useState(loadFilters)
   // null = "not touched": the favourites (if any) are the default filter.
   const [rawCats, setSelectedCats] = useState<string[] | null>(initial.cats)
-  const [rawAreas, setSelectedAreas] = useState<string[]>(initial.areas)
-  const [rawCities, setSelectedCities] = useState<string[]>(initial.cities)
   const [dateChip, setDateChip] = useState<DateChip | null>(initial.chip)
   const [rawFormats, setSelectedFormats] = useState<string[]>(initial.formats)
   const [showHidden, setShowHiddenState] = useState(initial.showHidden)
+  const [maxMin, setMaxMin] = useState<number | null>(initial.maxMin)
   const [query, setQueryState] = useState('')
   const [limit, setLimit] = useState(PAGE)
 
@@ -104,30 +94,23 @@ export function useEventFilters(
     () => (rawCats === null ? null : rawCats.filter((id) => CATEGORIES.some((c) => c.id === id))),
     [rawCats],
   )
-  const selectedAreas = useMemo(() => {
-    const known = new Set(events.map(areaOf))
-    return rawAreas.filter((a) => known.has(a))
-  }, [rawAreas, events])
-  const selectedCities = useMemo(() => {
-    const known = new Set(events.map((e) => e.city))
-    return rawCities.filter((c) => known.has(c))
-  }, [rawCities, events])
   const selectedFormats = useMemo(() => cleanFormats(rawFormats), [rawFormats])
 
   useEffect(() => {
     if (!persist) return
     saveFilters({
       cats: selectedCats,
-      areas: selectedAreas,
-      cities: selectedCities,
       chip: dateChip,
       formats: selectedFormats,
       showHidden,
+      maxMin,
     })
-  }, [persist, selectedCats, selectedAreas, selectedCities, dateChip, selectedFormats, showHidden])
+  }, [persist, selectedCats, dateChip, selectedFormats, showHidden, maxMin])
 
   const nq = useMemo(() => normalizeText(query), [query])
-  const activeCats = selectedCats ?? favourites
+  // Untouched = the favourites, or the default picks when there are none.
+  const defaultCats = useMemo(() => (favourites.length > 0 ? favourites : [...DEFAULT_CATEGORIES]), [favourites])
+  const activeCats = selectedCats ?? defaultCats
 
   // Base list of the current view, before category/city filters.
   const base = useMemo(() => {
@@ -146,6 +129,7 @@ export function useEventFilters(
     }
     return events.filter((e) => {
       if (isOver(e, now)) return false
+      if (tooFarForCategory(e) && !isManual(e) && !isSpot(e)) return false
       if (!showHidden && marks.get(e.id)?.state === 'hidden') return false
       if (view === 'open') return isOngoingNow(e, now)
       return true
@@ -159,33 +143,21 @@ export function useEventFilters(
   )
 
   // Sheet counts: each one respects every filter except its own.
-  // Areas, nearest first; counts over the whole view.
-  const areaCounts = useMemo(
-    () =>
-      [...countBy(scoped, () => true, (e) => [areaOf(e)]).entries()].sort(
-        (a, b) => areaRank(a[0]) - areaRank(b[0]) || a[0].localeCompare(b[0]),
-      ),
-    [scoped],
-  )
-
-  // Only the cities of the selected areas (all when none is selected).
-  const cityCounts = useMemo(
-    () =>
-      [...countBy(scoped, (e) => inAreas(e, selectedAreas), (e) => [e.city]).entries()].sort(
-        (a, b) => b[1] - a[1] || a[0].localeCompare(b[0]),
-      ),
-    [scoped, selectedAreas],
-  )
+  // Events within each distance step (cumulative), respecting category and format.
+  const distanceCounts = useMemo(() => {
+    const pool = scoped.filter((e) => inCats(e, activeCats) && matchesFormat(e, selectedFormats))
+    return new Map<number, number>(DISTANCE_STEPS.map((m) => [m, pool.filter((e) => withinMinutes(e, m)).length]))
+  }, [scoped, activeCats, selectedFormats])
 
   // Category counts respect the area, city and format filters but not the category filter.
   const catCounts = useMemo(
     () =>
       countBy(
         scoped,
-        (e) => inAreas(e, selectedAreas) && inCities(e, selectedCities) && matchesFormat(e, selectedFormats),
+        (e) => matchesFormat(e, selectedFormats) && (maxMin === null || withinMinutes(e, maxMin)),
         (e) => CATEGORIES.filter((c) => inCategory(e, c.id)).map((c) => c.id),
       ),
-    [scoped, selectedAreas, selectedCities, selectedFormats],
+    [scoped, selectedFormats, maxMin],
   )
 
   // Format counts respect every other filter (area, category, city) but not the format selection.
@@ -193,10 +165,10 @@ export function useEventFilters(
     () =>
       countBy(
         scoped,
-        (e) => inAreas(e, selectedAreas) && inCities(e, selectedCities) && inCats(e, activeCats),
+        (e) => inCats(e, activeCats) && (maxMin === null || withinMinutes(e, maxMin)),
         (e) => FORMAT_CHIPS.filter((c) => e.tags.includes(c.id)).map((c) => c.id),
       ),
-    [scoped, selectedAreas, selectedCities, activeCats],
+    [scoped, activeCats, maxMin],
   )
 
   const catOrder = useMemo(() => {
@@ -212,11 +184,10 @@ export function useEventFilters(
       scoped.filter(
         (e) =>
           (inCats(e, activeCats) || (selectedCats === null && (isManual(e) || (view === 'saved' && isSpot(e))))) &&
-          inAreas(e, selectedAreas) &&
-          inCities(e, selectedCities) &&
-          matchesFormat(e, selectedFormats),
+          matchesFormat(e, selectedFormats) &&
+          (maxMin === null || withinMinutes(e, maxMin)),
       ),
-    [scoped, activeCats, selectedCats, selectedAreas, selectedCities, selectedFormats, view],
+    [scoped, activeCats, selectedCats, selectedFormats, view, maxMin],
   )
 
   // Flat, ordered list of groups; then cut to `limit` cards in total.
@@ -251,8 +222,8 @@ export function useEventFilters(
     return out
   }, [groups, limit])
 
-  const filtering = activeCats.length > 0 || selectedAreas.length > 0 || selectedCities.length > 0 || selectedFormats.length > 0
-  const filterCount = activeCats.length + selectedAreas.length + selectedCities.length + selectedFormats.length
+  const filtering = activeCats.length > 0 || selectedFormats.length > 0 || maxMin !== null
+  const filterCount = activeCats.length + selectedFormats.length + (maxMin !== null ? 1 : 0)
 
   // --- Toggles ---------------------------------------------------------------------
 
@@ -285,30 +256,20 @@ export function useEventFilters(
 
   const toggleCat = useCallback(
     (id: string) => {
-      setSelectedCats((cur) => toggleIn(cur ?? favourites, id))
+      setSelectedCats((cur) => toggleIn(cur ?? defaultCats, id))
       resetLimit()
     },
-    [favourites, resetLimit],
+    [defaultCats, resetLimit],
   )
-
-  function toggleArea(area: string) {
-    const next = toggleIn(selectedAreas, area)
-    setSelectedAreas(next)
-    // A selected city outside the new areas would silently empty the list.
-    if (next.length) {
-      const keep = new Set(base.filter((e) => next.includes(areaOf(e))).map((e) => e.city))
-      setSelectedCities((cur) => cur.filter((c) => keep.has(c)))
-    }
-    resetLimit()
-  }
-
-  function toggleCity(city: string) {
-    setSelectedCities((cur) => toggleIn(cur, city))
-    resetLimit()
-  }
 
   function toggleFormat(id: string) {
     setSelectedFormats((cur) => toggleIn(cur, id))
+    resetLimit()
+  }
+
+  /** Same step again clears the limit. */
+  function toggleMaxMin(m: number) {
+    setMaxMin((cur) => (cur === m ? null : m))
     resetLimit()
   }
 
@@ -320,8 +281,7 @@ export function useEventFilters(
   function clearAll() {
     setSelectedFormats([])
     setSelectedCats([])
-    setSelectedAreas([])
-    setSelectedCities([])
+    setMaxMin(null)
     setShowHiddenState(false)
     resetLimit()
   }
@@ -331,9 +291,9 @@ export function useEventFilters(
   }
 
   return {
-    filters: { view, query, nq, dateChip, showHidden, selectedCats, selectedAreas, selectedCities, selectedFormats, activeCats, favourites, filtering, filterCount },
-    toggles: { setView, setQuery, toggleDateChip, toggleCat, toggleArea, toggleCity, toggleFormat, setShowHidden, clearAll, toggleFavourite, showMore },
-    counts: { areaCounts, cityCounts, catCounts, formatCounts, catOrder },
+    filters: { view, query, nq, dateChip, showHidden, maxMin, selectedCats, selectedFormats, activeCats, favourites, filtering, filterCount },
+    toggles: { setView, setQuery, toggleDateChip, toggleCat, toggleFormat, toggleMaxMin, setShowHidden, clearAll, toggleFavourite, showMore },
+    counts: { distanceCounts, catCounts, formatCounts, catOrder },
     groups: { visibleGroups, total, limit },
     marks,
   }

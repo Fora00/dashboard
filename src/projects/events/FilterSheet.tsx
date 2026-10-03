@@ -4,8 +4,8 @@ import { Button } from '../../components/Button'
 import { Chip } from '../../components/Chip'
 import { rowTone } from '../../components/chipTone'
 import { FOCUS_RING_INSET } from '../../components/focus'
-import { areaLabel, categoryLabel } from './model'
-import { normalizeText } from './filters'
+import { categoryLabel } from './model'
+import { DISTANCE_STEPS, NEAR_MINUTES, minutesLabel } from './distance'
 import { FORMAT_CHIPS, formatLabel } from './format'
 
 interface Props {
@@ -15,13 +15,10 @@ interface Props {
   catCounts: Map<string, number>
   activeCats: string[]
   favourites: string[]
-  /** [area id, count], nearest first. */
-  areaCounts: [string, number][]
-  selectedAreas: string[]
-  onToggleArea: (id: string) => void
-  /** Cities of the selected areas only (all when none is selected). */
-  cityCounts: [string, number][]
-  selectedCities: string[]
+  /** Events within each distance step (max driving minutes from Rovereto). */
+  distanceCounts: Map<number, number>
+  maxMin: number | null
+  onToggleMaxMin: (m: number) => void
   formatCounts: Map<string, number>
   selectedFormats: string[]
   onToggleFormat: (id: string) => void
@@ -32,7 +29,6 @@ interface Props {
   total: number
   onToggleCat: (id: string) => void
   onToggleFavourite: (id: string) => void
-  onToggleCity: (city: string) => void
   onShowHidden: (v: boolean) => void
   onClearAll: () => void
 }
@@ -116,63 +112,6 @@ function OptionGrid({
   )
 }
 
-function CityChecklist({
-  cityCounts,
-  selected,
-  onToggle,
-}: {
-  cityCounts: [string, number][]
-  selected: string[]
-  onToggle: (city: string) => void
-}) {
-  const [q, setQ] = useState('')
-  const nq = normalizeText(q)
-  // Selected cities first (even with no event left in the current scope), then by count.
-  const known = new Set(cityCounts.map(([c]) => c))
-  const all: [string, number][] = [...cityCounts, ...selected.filter((c) => !known.has(c)).map((c): [string, number] => [c, 0])]
-  const rank = ([c, n]: [string, number]) => (selected.includes(c) ? 0 : n === 0 ? 2 : 1)
-  const rows = all
-    .filter(([c]) => !nq || normalizeText(c).includes(nq))
-    .sort((a, b) => rank(a) - rank(b))
-  return (
-    <>
-      <input
-        type="text"
-        inputMode="search"
-        autoComplete="off"
-        autoCorrect="off"
-        spellCheck={false}
-        aria-label="Search cities"
-        placeholder="Search cities…"
-        value={q}
-        onChange={(e) => setQ(e.target.value)}
-        className="mb-1 h-10 w-full rounded-lg border-2 border-slate-200 bg-white px-3 text-base text-slate-900 placeholder:text-slate-400 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-100"
-      />
-      <ul className="max-h-72 overflow-y-auto overscroll-contain">
-        {rows.map(([city, n]) => (
-          <li key={city}>
-            <label
-              className={`flex min-h-10 cursor-pointer items-center gap-3 px-1 text-sm text-slate-700 dark:text-slate-200 ${
-                n === 0 ? 'opacity-60' : ''
-              }`}
-            >
-              <input
-                type="checkbox"
-                checked={selected.includes(city)}
-                onChange={() => onToggle(city)}
-                className="size-5 shrink-0"
-              />
-              <span className="min-w-0 flex-1 truncate">{city}</span>
-              <span className="text-xs opacity-70">{n}</span>
-            </label>
-          </li>
-        ))}
-        {rows.length === 0 && <li className="py-2 text-sm text-slate-500 dark:text-slate-400">No city matches</li>}
-      </ul>
-    </>
-  )
-}
-
 export function FilterSheet(p: Props) {
   const cats = p.catOrder.map((id) => ({ id, count: p.catCounts.get(id) ?? 0 }))
   const zeroLast = [...cats].sort((a, b) => Number(a.count === 0) - Number(b.count === 0))
@@ -213,19 +152,27 @@ export function FilterSheet(p: Props) {
             </button>
           </div>
 
-          {p.areaCounts.length > 1 && (
-            <Section
-              title="Area"
-              summary={summarize(p.selectedAreas, areaLabel)}
-              defaultOpen
-            >
-              <OptionGrid
-                items={p.areaCounts.map(([id, count]) => ({ id, label: areaLabel(id), count }))}
-                selected={p.selectedAreas}
-                onToggle={p.onToggleArea}
-              />
-            </Section>
-          )}
+          <Section
+            title="Distanza da Rovereto"
+            summary={p.maxMin === null ? '' : `entro ${minutesLabel(p.maxMin)}`}
+            defaultOpen
+          >
+            <ul className="grid grid-cols-1 gap-2 min-[400px]:grid-cols-2">
+              {DISTANCE_STEPS.map((m) => (
+                <li key={m}>
+                  <Chip
+                    shape="row"
+                    active={p.maxMin === m}
+                    count={p.distanceCounts.get(m) ?? 0}
+                    onClick={() => p.onToggleMaxMin(m)}
+                  >
+                    Entro {minutesLabel(m)}
+                    {m === NEAR_MINUTES ? ' · Vicino' : ''}
+                  </Chip>
+                </li>
+              ))}
+            </ul>
+          </Section>
 
           <Section
             title="Categories"
@@ -271,16 +218,6 @@ export function FilterSheet(p: Props) {
               })}
             </ul>
           </Section>
-
-          {(p.cityCounts.length > 1 || p.selectedCities.length > 0) && (
-            <Section
-              title="Cities"
-              summary={summarize(p.selectedCities, (c) => c)}
-              defaultOpen={p.selectedCities.length > 0}
-            >
-              <CityChecklist cityCounts={p.cityCounts} selected={p.selectedCities} onToggle={p.onToggleCity} />
-            </Section>
-          )}
 
           <Section
             title="Come"

@@ -17,12 +17,13 @@ import { FilterSheet } from './FilterSheet'
 import { CustomEventSheet } from './CustomEventSheet'
 import { PREFILL_KEYS, mergeEvents, parsePrefill, type CustomEventForm } from './custom'
 import { DATE_CHIPS } from './filters'
+import { NEAR_MINUTES, minutesLabel } from './distance'
 import { formatLabel } from './format'
 import { EventCard } from './EventCard'
 import { EyeOffIcon, ListChecksIcon, PlusIcon, XIcon } from './icons'
 import { useEventFilters, type View } from './useEventFilters'
 import type { EventItem } from './types'
-import { areaLabel, categoryLabel, fetchEventsFile, isKidsEvent, relativeTime } from './model'
+import { categoryLabel, fetchEventsFile, isKidsEvent, relativeTime } from './model'
 
 /** The add/edit sheet: closed, adding (with an optional prefill) or editing a row. */
 type Editor =
@@ -110,9 +111,8 @@ export function Events() {
     nq,
     dateChip,
     showHidden,
+    maxMin,
     selectedCats,
-    selectedAreas,
-    selectedCities,
     selectedFormats,
     activeCats,
     favourites,
@@ -346,20 +346,12 @@ export function Events() {
 
       <div className="-mx-4 mb-4 overflow-x-auto px-4 pb-1">
         <div className="flex w-max items-center gap-2">
+          <Chip active={maxMin !== null} onClick={() => toggles.toggleMaxMin(maxMin ?? NEAR_MINUTES)}>
+            {maxMin === null ? `Vicino · ${NEAR_MINUTES} min` : `Entro ${minutesLabel(maxMin)} ✕`}
+          </Chip>
           <Chip toggle={false} active={filterCount > 0} onClick={() => setSheetOpen(true)}>
             Filters{filterCount ? ` · ${filterCount}` : ''}
           </Chip>
-          {selectedAreas.map((id) => (
-            <Chip
-              key={`a-${id}`}
-              toggle={false}
-              active={false}
-              aria-label={`Remove filter ${areaLabel(id)}`}
-              onClick={() => toggles.toggleArea(id)}
-            >
-              {areaLabel(id)} ✕
-            </Chip>
-          ))}
           {activeCats.map((id) => (
             <Chip
               key={`c-${id}`}
@@ -369,18 +361,6 @@ export function Events() {
               onClick={() => toggles.toggleCat(id)}
             >
               {categoryLabel(id)} ✕
-            </Chip>
-          ))}
-          {selectedCities.map((city) => (
-            <Chip
-              key={`t-${city}`}
-              toggle={false}
-              active={false}
-              aria-label={`Remove filter ${city}`}
-              onClick={() => toggles.toggleCity(city)}
-              className="max-w-48 truncate"
-            >
-              {city} ✕
             </Chip>
           ))}
           {selectedFormats.map((id) => (
@@ -409,18 +389,15 @@ export function Events() {
         catCounts={counts.catCounts}
         activeCats={activeCats}
         favourites={favourites}
-        areaCounts={counts.areaCounts}
-        selectedAreas={selectedAreas}
-        onToggleArea={toggles.toggleArea}
-        cityCounts={counts.cityCounts}
-        selectedCities={selectedCities}
+        distanceCounts={counts.distanceCounts}
+        maxMin={maxMin}
+        onToggleMaxMin={toggles.toggleMaxMin}
         showHidden={showHidden}
         canShowHidden={view !== 'saved'}
         canReset={filtering || showHidden}
         total={total}
         onToggleCat={toggles.toggleCat}
         onToggleFavourite={(id) => void toggles.toggleFavourite(id)}
-        onToggleCity={toggles.toggleCity}
         formatCounts={counts.formatCounts}
         selectedFormats={selectedFormats}
         onToggleFormat={toggles.toggleFormat}
