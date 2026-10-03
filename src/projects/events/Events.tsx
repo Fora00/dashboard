@@ -19,6 +19,7 @@ import { PREFILL_KEYS, mergeEvents, parsePrefill, type CustomEventForm } from '.
 import { DATE_CHIPS } from './filters'
 import { formatLabel } from './format'
 import { EventCard } from './EventCard'
+import { EyeOffIcon, ListChecksIcon, PlusIcon, XIcon } from './icons'
 import { useEventFilters, type View } from './useEventFilters'
 import type { EventItem } from './types'
 import { areaLabel, categoryLabel, fetchEventsFile, isKidsEvent, relativeTime } from './model'
@@ -186,12 +187,19 @@ export function Events() {
           : 'Public events around Trentino, Bolzano and Verona.'
       }
     >
-      <Button variant="ghost" onClick={() => (selecting ? exitSelect() : setSelecting(true))}>
-        {selecting ? 'Cancel' : 'Select'}
-      </Button>
-      <Button onClick={openAdd} aria-label="Add event">
-        ＋ Add
-      </Button>
+      <div className="flex items-center gap-2">
+        <Button
+          variant="ghost"
+          className="min-w-10 px-2"
+          aria-label={selecting ? 'Cancel selection' : 'Select events'}
+          onClick={() => (selecting ? exitSelect() : setSelecting(true))}
+        >
+          {selecting ? <XIcon /> : <ListChecksIcon />}
+        </Button>
+        <Button className="min-w-10 px-2" onClick={openAdd} aria-label="Add event">
+          <PlusIcon />
+        </Button>
+      </div>
     </PageHeader>
   )
 
@@ -480,17 +488,19 @@ export function Events() {
             <button
               type="button"
               onClick={selectAllVisible}
-              className="min-h-10 rounded-full px-3 text-indigo-600 dark:text-indigo-300"
+              className="flex min-h-10 min-w-10 items-center justify-center rounded-full px-3 text-indigo-600 dark:text-indigo-300"
             >
-              All
+              <ListChecksIcon />
+              <span className="sr-only">Select all</span>
             </button>
             <button
               type="button"
               disabled={selectedIds.size === 0}
               onClick={hideSelected}
-              className="min-h-10 rounded-full bg-indigo-500 px-4 font-semibold text-white disabled:opacity-40"
+              className="flex min-h-10 min-w-12 items-center justify-center rounded-full bg-indigo-500 px-4 font-semibold text-white disabled:opacity-40"
             >
-              ✕ Hide
+              <EyeOffIcon />
+              <span className="sr-only">Hide selected</span>
             </button>
           </div>
         </div>

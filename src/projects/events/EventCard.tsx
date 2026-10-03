@@ -3,6 +3,7 @@ import { useFlash } from '../../lib/useFlash'
 import type { EventItem } from './types'
 import { addToCalendar } from './ics'
 import { FOCUS_RING, FOCUS_RING_INSET } from '../../components/focus'
+import { CalendarPlusIcon, CheckIcon, EyeIcon, EyeOffIcon, PencilIcon, ShareIcon, StarIcon, ThingsIcon } from './icons'
 import { endingInDays } from './filters'
 import { cleanFormats, formatLabel } from './format'
 import { isManual, isSafeImageDataUrl } from './custom'
@@ -35,9 +36,7 @@ interface Props {
 }
 
 const BADGE = 'rounded-full px-2.5 py-1 text-xs font-medium'
-const ACTION = `inline-flex min-h-10 items-center justify-center gap-1.5 rounded-lg px-3.5 text-sm font-medium transition-colors ${FOCUS_RING}`
-const GHOST =
-  'bg-slate-100 text-slate-800 hover:bg-slate-200 active:bg-slate-300 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 dark:active:bg-slate-600'
+const ICON = `inline-flex min-h-10 min-w-10 flex-1 items-center justify-center rounded-lg px-2 text-slate-700 transition-colors hover:bg-slate-100 active:bg-slate-200 dark:text-slate-200 dark:hover:bg-slate-700 dark:active:bg-slate-600 ${FOCUS_RING}`
 
 export const EventCard = memo(function EventCard({
   event: e,
@@ -169,19 +168,36 @@ export const EventCard = memo(function EventCard({
         </div>
       </button>
       {selecting ? null : (
-        <div className="flex flex-wrap gap-2 px-3 pb-3">
-          <button type="button" onClick={() => onToggleSave(e)} className={`${ACTION} ${GHOST}`}>
-            {saved ? '★ Saved' : '☆ Save'}
+        <div className="flex items-center justify-between gap-1 border-t border-slate-100 px-2 py-1 dark:border-slate-700/50">
+          <button
+            type="button"
+            onClick={() => onToggleSave(e)}
+            aria-pressed={saved}
+            aria-label={saved ? 'Remove from saved' : 'Save'}
+            className={`${ICON} ${saved ? 'text-amber-500' : ''}`}
+          >
+            <StarIcon filled={saved} />
           </button>
-          <button type="button" onClick={() => onToggleHide(e)} className={`${ACTION} ${GHOST}`}>
-            {hidden ? 'Unhide' : '✕ Hide'}
+          <a href={buildThingsAddUrl(e)} aria-label="Add to Things" className={ICON}>
+            <ThingsIcon />
+          </a>
+          <button type="button" onClick={() => void addToCalendar(e)} aria-label="Add to calendar" className={ICON}>
+            <CalendarPlusIcon />
           </button>
-          <button type="button" onClick={() => void share()} className={`${ACTION} ${GHOST}`}>
-            {copied ? 'Copied ✓' : '↗ Share'}
+          <button
+            type="button"
+            onClick={() => onToggleHide(e)}
+            aria-label={hidden ? 'Unhide' : 'Hide'}
+            className={`${ICON} ${hidden ? 'text-indigo-600 dark:text-indigo-400' : ''}`}
+          >
+            {hidden ? <EyeIcon /> : <EyeOffIcon />}
+          </button>
+          <button type="button" onClick={() => void share()} aria-label="Share" className={ICON}>
+            {copied ? <CheckIcon /> : <ShareIcon />}
           </button>
           {manual && onEdit && (
-            <button type="button" onClick={() => onEdit(e)} className={`${ACTION} ${GHOST}`}>
-              ✎ Edit
+            <button type="button" onClick={() => onEdit(e)} aria-label="Edit" className={ICON}>
+              <PencilIcon />
             </button>
           )}
         </div>
@@ -211,14 +227,6 @@ export const EventCard = memo(function EventCard({
               Open event page ↗
             </a>
           )}
-          <div className="flex flex-wrap gap-2">
-            <a href={buildThingsAddUrl(e)} className={`${ACTION} ${GHOST}`}>
-              ✓ To Things
-            </a>
-            <button type="button" onClick={() => void addToCalendar(e)} className={`${ACTION} ${GHOST}`}>
-              📅 Calendar
-            </button>
-          </div>
         </div>
       )}
     </li>
