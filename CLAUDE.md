@@ -1,7 +1,14 @@
 # Dashboard — agent instructions
 
-Read `ROADMAP.md` FIRST, fully — it is the single source of truth for status,
-conventions and the task queue. `WORKFLOW.md` defines how work is delegated.
+Start here: read the top of `ROADMAP.md` (intro, workflow, conventions: up to
+"Archived sections"), then run `npm run roadmap` for the open-task queue and
+read only the section you are working on (`sed -n '<line>,+60p' ROADMAP.md`).
+`ROADMAP.md` is the single source of truth for status; fully-done sections are
+in `docs/ROADMAP_ARCHIVE.md`. `docs/ARCHITECTURE.md` maps the code, the sync
+files and who can see which table. `WORKFLOW.md` defines how work is delegated.
+
+Before committing: `npm run check` (lint + typecheck + tests; also runs as the
+pre-commit hook in `.githooks/`). Before declaring done: `npm run build`.
 
 ## Non-negotiables
 

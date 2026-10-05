@@ -1,0 +1,5 @@
+#!/bin/sh
+# Fast gate before every commit: lint + typecheck + tests (~10 s). The full
+# `npm run build` stays the owner's/CI's job. Skip once with: git commit --no-verify
+set -e
+npm run --silent check

@@ -22,6 +22,7 @@ import { PoliteHttp } from './http.ts'
 import { OG_MAX_REQUESTS, enrichImages } from './ogimage.ts'
 import type { DropCounts } from './pipeline.ts'
 import { PreviousFileSchema, describeIssues } from './schemas.ts'
+import { countDelta, staleSources, upcomingTentative } from './health.ts'
 import { HORIZON_DAYS, dedup, inWindow, isOngoing, sortEvents, toEvents, withPlace } from './pipeline.ts'
 
 const DEFAULT_PREVIOUS = 'https://fora00.github.io/dashboard/events.json'
@@ -62,23 +63,30 @@ function carryOver(previous: EventsFile | null, adapter: Adapter, now: number, d
     .map((e) => ({ ...e, ongoing: isOngoing(e, now) })), drops)
 }
 
-function table(rows: SourceStatus[], ms: Map<string, number>): string {
+function table(rows: SourceStatus[], ms: Map<string, number>, previous: ReadonlyMap<string, SourceStatus>): string {
   const lines = rows.map((s) => [
     s.ok ? 'ok ' : 'ERR',
     s.id.padEnd(20),
     String(s.count).padStart(5),
+    countDelta(previous.get(s.id)?.count, s.count).padStart(5),
     `${((ms.get(s.id) ?? 0) / 1000).toFixed(1)}s`.padStart(7),
     s.error ?? '',
   ].join('  '))
-  return ['     source                count     time  error', ...lines].join('\n')
+  return ['     source                count    Δ     time  error', ...lines].join('\n')
 }
 
 /** CI visibility: step summary table, ::warning:: per failed source, ::error:: (job still passes) if > 1/3 fail. */
-async function report(rows: SourceStatus[], ms: Map<string, number>, total: number, ran: number): Promise<void> {
+async function report(rows: SourceStatus[], ms: Map<string, number>, total: number, ran: number, events: readonly Event[], now: number): Promise<void> {
   // Sources skipped via EVENTS_ONLY keep their old status; only judge the ones that ran.
   const bad = rows.filter((s) => !s.ok && ms.has(s.id))
   const esc = (t: string) => t.replace(/%/g, '%25').replace(/\r/g, '%0D').replace(/\n/g, '%0A')
   for (const s of bad) console.log(`::warning title=Events source failed::${esc(`${s.id}: ${s.error ?? 'failed'} (kept ${s.count} previous events)`)}`)
+  for (const st of staleSources(rows, now)) {
+    console.log(`::warning title=Events source stale::${esc(`${st.id} has not succeeded for ${st.days === null ? 'ever (no lastSuccess)' : `${st.days} days`}: its events are aging`)}`)
+  }
+  for (const t of upcomingTentative(events, now)) {
+    console.log(`::warning title=Unconfirmed event soon::${esc(`"${t.title}" (${t.start.slice(0, 10)}) still has datesTentative: verify it on the official site and drop "verified": false in spot.json`)}`)
+  }
   if (bad.length * 3 > ran) {
     console.log(`::error title=Events crawl degraded::${bad.length} of ${ran} sources failed`)
   }
@@ -187,8 +195,8 @@ async function main(): Promise<void> {
     process.exit(1)
   }
 
-  console.log(table(statuses, timings))
-  await report(statuses, timings, events.length, timings.size)
+  console.log(table(statuses, timings, prevStatus))
+  await report(statuses, timings, events.length, timings.size, events, now)
   const byCat = new Map<string, number>()
   for (const e of events) byCat.set(e.category, (byCat.get(e.category) ?? 0) + 1)
   console.log(`\n${events.length} events after dedup (${all.length} before) · ${[...byCat].map(([k, v]) => `${k} ${v}`).join(', ')}`)
