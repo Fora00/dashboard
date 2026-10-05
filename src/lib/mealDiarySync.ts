@@ -18,6 +18,7 @@ interface MealRow {
   day: string
   meal: MealKind
   text: string
+  weighed: boolean
   grams: number | null
   kcal: number | null
   protein_g: number | null
@@ -31,7 +32,7 @@ interface MealRow {
 const mealsTable: TableSync<MealEntry, MealRow> = {
   remote: 'meal_entries',
   table: () => db.meals,
-  columns: 'id, day, meal, text, grams, kcal, protein_g, carbs_g, fat_g, estimated, created_at, updated_at',
+  columns: 'id, day, meal, text, weighed, grams, kcal, protein_g, carbs_g, fat_g, estimated, created_at, updated_at',
   realtime: true,
   updatedAt: (m) => m.updatedAt,
   toRow: (m) => ({
@@ -39,6 +40,8 @@ const mealsTable: TableSync<MealEntry, MealRow> = {
     day: m.day,
     meal: m.meal,
     text: m.text,
+    // Rows saved before the flag existed have no value: they count as by eye.
+    weighed: m.weighed === true,
     grams: m.grams,
     kcal: m.kcal,
     protein_g: m.proteinG,
@@ -53,6 +56,7 @@ const mealsTable: TableSync<MealEntry, MealRow> = {
     day: r.day,
     meal: r.meal,
     text: r.text,
+    weighed: Boolean(r.weighed),
     grams: r.grams ?? null,
     kcal: r.kcal ?? null,
     proteinG: r.protein_g ?? null,
@@ -72,7 +76,12 @@ const engine = createCloudSync({
 // --- Local mutations (used by the UI; safe with or without sync) -----------
 
 /** Add an entry; blank text is ignored. Returns whether one was added. */
-export async function addMeal(day: string, meal: MealKind, text: string, nutrition?: Partial<Nutrition>): Promise<boolean> {
+export async function addMeal(
+  day: string,
+  meal: MealKind,
+  text: string,
+  options: { weighed?: boolean; nutrition?: Partial<Nutrition> } = {},
+): Promise<boolean> {
   const trimmed = text.trim().slice(0, MAX_TEXT_LENGTH)
   if (!trimmed) return false
   const now = Date.now()
@@ -81,7 +90,8 @@ export async function addMeal(day: string, meal: MealKind, text: string, nutriti
     day,
     meal,
     text: trimmed,
-    ...(nutrition ? sanitizeNutrition(nutrition) : NO_NUTRITION),
+    weighed: options.weighed === true,
+    ...(options.nutrition ? sanitizeNutrition(options.nutrition) : NO_NUTRITION),
     createdAt: now,
     updatedAt: now,
   })
@@ -90,7 +100,7 @@ export async function addMeal(day: string, meal: MealKind, text: string, nutriti
 
 export async function updateMeal(
   entry: MealEntry,
-  changes: { text?: string; meal?: MealKind; day?: string; nutrition?: Partial<Nutrition> },
+  changes: { text?: string; meal?: MealKind; day?: string; weighed?: boolean; nutrition?: Partial<Nutrition> },
 ): Promise<void> {
   const text = changes.text === undefined ? entry.text : changes.text.trim().slice(0, MAX_TEXT_LENGTH)
   if (!text) return
@@ -98,6 +108,7 @@ export async function updateMeal(
     ...entry,
     ...(changes.nutrition ? sanitizeNutrition(changes.nutrition) : {}),
     text,
+    weighed: changes.weighed ?? entry.weighed === true,
     meal: changes.meal ?? entry.meal,
     day: changes.day ?? entry.day,
     updatedAt: Date.now(),

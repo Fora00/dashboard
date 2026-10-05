@@ -420,6 +420,7 @@ export type Database = {
           protein_g: number | null
           text: string
           updated_at: number
+          weighed: boolean
         }
         Insert: {
           carbs_g?: number | null
@@ -434,6 +435,7 @@ export type Database = {
           protein_g?: number | null
           text: string
           updated_at: number
+          weighed?: boolean
         }
         Update: {
           carbs_g?: number | null
@@ -448,6 +450,7 @@ export type Database = {
           protein_g?: number | null
           text?: string
           updated_at?: number
+          weighed?: boolean
         }
         Relationships: []
       }

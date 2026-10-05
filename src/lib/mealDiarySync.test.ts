@@ -45,7 +45,7 @@ describe('meal diary local mutations', () => {
 
 describe('meal diary nutrition', () => {
   it('stores optional nutrition clamped to the server bounds; absent stays null', async () => {
-    await addMeal('2026-10-05', 'lunch', 'pasta', { grams: 80, kcal: 99_999, proteinG: 10, estimated: true })
+    await addMeal('2026-10-05', 'lunch', 'pasta', { nutrition: { grams: 80, kcal: 99_999, proteinG: 10, estimated: true } })
     await addMeal('2026-10-05', 'lunch', 'caffè')
     const all = await db.meals.toArray()
     const a = all.find((m) => m.text === 'pasta')
@@ -55,9 +55,25 @@ describe('meal diary nutrition', () => {
   })
 
   it('an update can clear nutrition and replace it', async () => {
-    await addMeal('2026-10-05', 'dinner', 'riso', { kcal: 300, estimated: true })
+    await addMeal('2026-10-05', 'dinner', 'riso', { nutrition: { kcal: 300, estimated: true } })
     const row = (await db.meals.toArray())[0]!
     await updateMeal(row, { nutrition: { kcal: null, fatG: 7, estimated: false } })
     expect(await db.meals.get(row.id)).toMatchObject({ kcal: null, fatG: 7, estimated: false })
+  })
+})
+
+describe('meal diary weighed flag', () => {
+  it('defaults to by eye, stores weighed when asked, and can be toggled by an update', async () => {
+    await addMeal('2026-10-05', 'lunch', 'riso')
+    await addMeal('2026-10-05', 'lunch', 'pasta', { weighed: true })
+    const all = await db.meals.toArray()
+    const riso = all.find((m) => m.text === 'riso')!
+    expect(riso.weighed).toBe(false)
+    expect(all.find((m) => m.text === 'pasta')?.weighed).toBe(true)
+    await new Promise((r) => setTimeout(r, 5))
+    await updateMeal(riso, { weighed: true })
+    expect((await db.meals.get(riso.id))?.weighed).toBe(true)
+    await updateMeal((await db.meals.get(riso.id))!, { text: 'riso basmati' })
+    expect((await db.meals.get(riso.id))?.weighed).toBe(true) // an unrelated edit keeps it
   })
 })

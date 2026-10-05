@@ -92,6 +92,9 @@ export interface MealEntry {
   day: string
   meal: MealKind
   text: string
+  // Weighed on a scale (true) or eyeballed (false, the default): tells the AI
+  // estimate how far to trust a quantity written in the text.
+  weighed: boolean
   // Optional nutrition (whole numbers, null = not entered). `estimated` = the
   // values came from the built-in food table, not typed by the owner.
   grams: number | null

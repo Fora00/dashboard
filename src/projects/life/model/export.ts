@@ -105,7 +105,7 @@ export function buildExportMarkdown(
       out.push(`- ${label} ${d.day}: ${sum}`)
       for (const m of d.entries) {
         const kcal = m.kcal === null ? '' : ` — ${m.estimated ? '≈ ' : ''}${m.kcal} kcal`
-        out.push(`  - ${m.meal}: ${oneLine(m.text)}${kcal}`)
+        out.push(`  - ${m.meal}: ${oneLine(m.text)}${m.weighed ? ' (weighed)' : ''}${kcal}`)
       }
     }
     out.push('')
@@ -127,7 +127,7 @@ export function buildExportMarkdown(
     ...(food.days.length
       ? {
           meals: food.days.flatMap((d) =>
-            d.entries.map(({ day, meal, text, grams, kcal, proteinG, carbsG, fatG, estimated }) => ({ day, meal, text, grams, kcal, proteinG, carbsG, fatG, estimated })),
+            d.entries.map(({ day, meal, text, weighed, grams, kcal, proteinG, carbsG, fatG, estimated }) => ({ day, meal, text, weighed: weighed === true, grams, kcal, proteinG, carbsG, fatG, estimated })),
           ),
         }
       : {}),

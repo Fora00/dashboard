@@ -53,18 +53,20 @@ export function MealDiary() {
   const [day, setDay] = useState(today)
   const [meal, setMeal] = useState<MealKind>(() => defaultMeal(now.getHours()))
   const [text, setText] = useState('')
-  const [editing, setEditing] = useState<{ id: string; text: string; nutrition: NutritionForm } | null>(null)
+  // Sticky across entries: you tend to weigh (or not) a whole cooking session.
+  const [weighed, setWeighed] = useState(false)
+  const [editing, setEditing] = useState<{ id: string; text: string; weighed: boolean; nutrition: NutritionForm } | null>(null)
 
   const groups = useMemo(() => groupByDay(entries ?? []), [entries])
 
   async function add(e: FormEvent) {
     e.preventDefault()
-    if (await addMeal(day, meal, text)) setText('')
+    if (await addMeal(day, meal, text, { weighed })) setText('')
   }
 
   async function saveEdit(entry: MealEntry) {
     if (!editing) return
-    await updateMeal(entry, { text: editing.text, nutrition: toNutrition(editing.nutrition) })
+    await updateMeal(entry, { text: editing.text, weighed: editing.weighed, nutrition: toNutrition(editing.nutrition) })
     setEditing(null)
   }
 
@@ -108,6 +110,7 @@ export function MealDiary() {
             enterKeyHint="done"
             className={INPUT}
           />
+          <WeighedToggle weighed={weighed} onChange={setWeighed} />
           <Button type="submit" disabled={!text.trim()}>
             Add
           </Button>
@@ -165,6 +168,7 @@ export function MealDiary() {
                               maxLength={MAX_TEXT_LENGTH}
                               className={INPUT}
                             />
+                            <WeighedToggle weighed={editing.weighed} onChange={(w) => setEditing({ ...editing, weighed: w })} />
                             <Button type="submit" disabled={!editing.text.trim()}>
                               Save
                             </Button>
@@ -181,14 +185,17 @@ export function MealDiary() {
                         <>
                           <button
                             type="button"
-                            onClick={() => setEditing({ id: entry.id, text: entry.text, nutrition: toForm(entry) })}
+                            onClick={() => setEditing({ id: entry.id, text: entry.text, weighed: entry.weighed === true, nutrition: toForm(entry) })}
                             aria-label={`Edit ${entry.text}`}
                             className="min-h-10 min-w-0 flex-1 break-words text-left text-sm"
                           >
                             {entry.text}
-                            {macros(entry) && (
-                              <span className="block text-xs text-slate-500 dark:text-slate-400">{macros(entry)}</span>
-                            )}
+                            <span className="block text-xs text-slate-500 dark:text-slate-400">
+                              <span title={entry.weighed ? 'Weighed' : 'By eye'} aria-label={entry.weighed ? 'Weighed' : 'By eye'}>
+                                {entry.weighed ? '⚖️' : '👁️'}
+                              </span>
+                              {macros(entry) && ` ${macros(entry)}`}
+                            </span>
                           </button>
                           <Button variant="danger" onClick={() => void remove(entry)} aria-label={`Delete ${entry.text}`} className="min-w-10">
                             ✕
@@ -218,5 +225,16 @@ function DayTotalsLine({ entries }: { entries: MealEntry[] }) {
       {t.kcal} kcal · P {t.proteinG} · C {t.carbsG} · F {t.fatG}
       {t.uncounted > 0 && ` · ${t.uncounted} without values`}
     </p>
+  )
+}
+
+// ⚖️ weighed on a scale vs 👁️ by eye: a hint for the AI estimate, which trusts a
+// written quantity when weighed and applies the owner's habits when not.
+function WeighedToggle({ weighed, onChange }: { weighed: boolean; onChange: (next: boolean) => void }) {
+  const label = weighed ? 'Weighed on a scale (tap for by eye)' : 'By eye (tap for weighed)'
+  return (
+    <Button type="button" variant="ghost" aria-pressed={weighed} aria-label={label} title={label} onClick={() => onChange(!weighed)} className="min-w-10 px-2">
+      {weighed ? '⚖️' : '👁️'}
+    </Button>
   )
 }

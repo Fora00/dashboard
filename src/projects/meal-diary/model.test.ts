@@ -3,7 +3,7 @@ import type { MealEntry } from '../../lib/db'
 import { dayLabel, defaultMeal, groupByDay } from './model'
 
 const e = (id: string, day: string, meal: MealEntry['meal'], createdAt = 0): MealEntry => ({
-  id, day, meal, text: id, grams: null, kcal: null, proteinG: null, carbsG: null, fatG: null, estimated: false, createdAt, updatedAt: createdAt,
+  id, day, meal, text: id, weighed: false, grams: null, kcal: null, proteinG: null, carbsG: null, fatG: null, estimated: false, createdAt, updatedAt: createdAt,
 })
 
 describe('defaultMeal', () => {
