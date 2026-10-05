@@ -360,6 +360,7 @@ export function Sharing() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="guest@example.com"
+            aria-label="Guest email"
             autoComplete="off"
             required
             className="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none dark:border-slate-700 dark:bg-slate-800"

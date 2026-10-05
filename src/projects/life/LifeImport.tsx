@@ -85,6 +85,7 @@ export function LifeImport() {
           setLinkErrors(null)
         }}
         placeholder={'{ "version": 1, "week": "2026-01-05", "focus": [], "rules": [], "tasks": [], "trackers": [], "sundayCheck": [], "checkins": [] }'}
+        aria-label="Week JSON"
         rows={10}
         spellCheck={false}
         autoCapitalize="off"

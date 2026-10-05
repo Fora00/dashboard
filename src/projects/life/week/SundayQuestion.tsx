@@ -55,6 +55,7 @@ export function SundayQuestion({ week, question, value }: { week: string; questi
         <input
           type="number"
           inputMode="decimal"
+          aria-label={question.label}
           defaultValue={typeof value === 'number' ? value : ''}
           onBlur={(e) => {
             const raw = e.target.value.trim()
@@ -82,6 +83,7 @@ export function SundayQuestion({ week, question, value }: { week: string; questi
       {question.type === 'text' && (
         <textarea
           defaultValue={typeof value === 'string' ? value : ''}
+          aria-label={question.label}
           onBlur={(e) => void save(e.target.value)}
           rows={2}
           maxLength={2000}

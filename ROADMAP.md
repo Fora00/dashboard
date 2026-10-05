@@ -840,7 +840,7 @@ Low-confidence — flagged for completeness, not verified as real problems:
       `apple-touch-icon`; iOS scales it down fine in practice, this is
       cosmetic at best. Only worth doing if a 180px asset is trivial to
       generate alongside the existing 192/512 set. Effort XS.
-- [ ] **Accessibility pass unverified** [sonnet] — 10 of 28 `.tsx` files use
+- [x] **Accessibility pass unverified** [sonnet] — static pass done 2026-10-05 (no screen reader or browser run): 10 fields without an accessible name got `aria-label` (placeholder is not a label: Sharing, SyncCard x2, Life import/check-in/focus/rules/Sunday questions/export), the two `✕` cancel buttons (ShopList, PeoplePicker) and the energy scale numbers got `aria-label`, the Local Transfer drop zone (`role=button`) now also opens on Space. Checked by script: no `<img>` without alt, no clickable div/span except that drop zone, no `outline-none` without a focus style. Still manual: real VoiceOver pass per screen, colour contrast, focus order in sheets. Original: 10 of 28 `.tsx` files use
       `aria-`/`role` attributes; that ratio alone doesn't establish a real
       gap (most files may not need any), so this isn't a confirmed finding.
       Would need an actual manual pass (keyboard-only nav, screen reader)

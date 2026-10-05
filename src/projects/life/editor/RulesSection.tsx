@@ -15,6 +15,7 @@ export function RulesSection({ rules, setRules }: { rules: RuleRow[]; setRules: 
               onChange={(e) => setRules(updateAt(rules, i, { text: e.target.value }))}
               maxLength={LIFE_CAPS.rule}
               placeholder="Rule…"
+              aria-label={`Rule ${i + 1}`}
               className={inputClass}
             />
             <button

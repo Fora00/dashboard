@@ -187,7 +187,7 @@ export function ShopList() {
           <Button type="submit" disabled={!areaName.trim()}>
             Create
           </Button>
-          <Button variant="ghost" type="button" onClick={() => setAddingArea(false)}>
+          <Button variant="ghost" type="button" aria-label="Cancel" onClick={() => setAddingArea(false)}>
             ✕
           </Button>
         </form>

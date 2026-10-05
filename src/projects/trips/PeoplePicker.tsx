@@ -125,7 +125,7 @@ export function PeoplePicker({
                 <Button type="button" onClick={() => void createPerson()}>
                   Add
                 </Button>
-                <Button type="button" variant="ghost" onClick={() => setAdding(false)}>
+                <Button type="button" variant="ghost" aria-label="Cancel" onClick={() => setAdding(false)}>
                   ✕
                 </Button>
               </div>

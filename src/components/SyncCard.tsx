@@ -187,6 +187,7 @@ export function SyncCard({ sync }: SyncCardProps) {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@example.com"
+            aria-label="Email"
             autoComplete="email"
             autoFocus
             required
@@ -208,6 +209,7 @@ export function SyncCard({ sync }: SyncCardProps) {
             // Strip spaces/non-digits so a pasted "123 456" (iOS Mail) works.
             onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
             placeholder="6-digit code from your email"
+            aria-label="6-digit code"
             autoComplete="one-time-code"
             required
             className="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none dark:border-slate-700 dark:bg-slate-800"

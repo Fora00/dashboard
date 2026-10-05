@@ -15,6 +15,7 @@ export function FocusSection({ focus, setFocus }: { focus: FocusRow[]; setFocus:
               onChange={(e) => setFocus(updateAt(focus, i, { title: e.target.value }))}
               maxLength={LIFE_CAPS.focusTitle}
               placeholder="Focus title…"
+              aria-label={`Focus ${i + 1}`}
               className={inputClass}
             />
             <button

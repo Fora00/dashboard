@@ -45,6 +45,7 @@ export function EnergyScale({
             type="button"
             onClick={() => onPick(n)}
             aria-pressed={value === n}
+            aria-label={label ? `${label}: ${n} of 5` : `${n} of 5`}
             className={`flex size-10 items-center justify-center rounded-lg border text-sm font-medium transition-colors ${
               value === n
                 ? 'border-indigo-500 bg-indigo-500 text-white'

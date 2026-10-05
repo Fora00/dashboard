@@ -66,6 +66,7 @@ export function ExportSection({
         {fallbackText !== null && (
           <textarea
             readOnly
+            aria-label="Week export text"
             value={fallbackText}
             rows={6}
             onFocus={(e) => e.target.select()}

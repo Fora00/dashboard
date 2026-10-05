@@ -72,6 +72,7 @@ export function CheckinRow({ week, status, readOnly }: { week: string; status: C
           rows={2}
           maxLength={LIFE_CAPS.checkinNote}
           placeholder="Note (optional)"
+          aria-label={`Note for ${checkin.label}`}
           autoFocus
           onBlur={(e) => void saveNote(e.target.value)}
           className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm focus:border-indigo-400 focus:outline-none dark:border-slate-700 dark:bg-slate-800"
