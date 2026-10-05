@@ -3,22 +3,8 @@
 import { readFile } from 'node:fs/promises'
 import type { Adapter, RawEvent } from '../types.ts'
 import type { CategoryId } from '../tags.ts'
+import { SpotFileSchema, parseOrThrow } from '../schemas.ts'
 import { dateToIso } from '../time.ts'
-
-interface SpotEntry {
-  id: string
-  title: string
-  start: string
-  end: string
-  city: string
-  venue?: string
-  url: string
-  /** Optional absolute https image (the event page's og:image, picked by hand). */
-  image?: string
-  summary: string
-  tags?: string[]
-  category?: CategoryId
-}
 
 export const spot: Adapter = {
   id: 'spot',
@@ -32,8 +18,8 @@ export const spot: Adapter = {
   area: 'abroad',
   ring: 'spot',
   async run() {
-    const file = JSON.parse(await readFile(new URL('../spot.json', import.meta.url), 'utf8')) as { events?: SpotEntry[] }
-    return (file.events ?? []).map((e): RawEvent => ({
+    const file = parseOrThrow(SpotFileSchema, JSON.parse(await readFile(new URL('../spot.json', import.meta.url), 'utf8')), 'spot.json')
+    return file.events.map((e): RawEvent => ({
       nativeId: e.id,
       title: e.title,
       start: dateToIso(e.start),
@@ -46,7 +32,8 @@ export const spot: Adapter = {
       image: e.image ?? null,
       description: e.summary,
       summary: e.summary,
-      ...(e.category ? { categoryHint: e.category } : {}),
+      ...(e.category ? { categoryHint: e.category as CategoryId } : {}),
+      ...(e.verified ? {} : { datesTentative: true }),
       tagText: (e.tags ?? []).join(' '),
     }))
   },

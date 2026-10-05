@@ -121,6 +121,7 @@ export function toEvents(adapter: Adapter, raws: RawEvent[], now: number, fetche
       image: r.image ?? null,
       occurrences: r.occurrences,
       fetchedAt,
+      ...(r.datesTentative ? { datesTentative: true as const } : {}),
     })
   }
   return events

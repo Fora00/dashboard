@@ -1,5 +1,5 @@
 {
-  "_readme": "Hand-curated big events in far cities (the 'spot ring'). To add one: append an object to `events`. Required: id (kebab-case, stable, include the year: never change it once published, it keys saved/hidden state), title, start and end (YYYY-MM-DD, local Rome dates, BOTH INCLUSIVE; a one-day event has end = start), city, url (the OFFICIAL site page where you verified the dates), summary (one line). Optional: venue, tags (array of tag/category ids such as boardgames, nerd, exhibitions, festivals, talks; also matched as free text), category (primary category id, wins over the tag rules). Only add dates you have verified on the official site; never guess. Entries past the 180-day window are kept and appear automatically when they come into range; delete old editions when convenient.",
+  "_readme": "Hand-curated big events in far cities (the 'spot ring'). To add one: append an object to `events`. Required: id (kebab-case, stable, include the year: never change it once published, it keys saved/hidden state), title, start and end (YYYY-MM-DD, local Rome dates, BOTH INCLUSIVE; a one-day event has end = start), city, url (the OFFICIAL site page where you verified the dates), summary (one line). Optional: venue, tags (array of tag/category ids such as boardgames, nerd, exhibitions, festivals, talks; also matched as free text), category (primary category id, wins over the tag rules). Only add dates you have verified on the official site; never guess. If the event surely exists but the dates are not verifiable (aggregators only, or conflicting), add it with `verified: false`: it is shown as 'Date da confermare'; remove the flag once confirmed. Entries past the 180-day window are kept and appear automatically when they come into range; delete old editions when convenient.",
   "events": [
     {
       "id": "blocktoberfest-block3-2026",
@@ -173,6 +173,19 @@
       "summary": "Il più grande evento italiano su videogiochi, fumetti e cultura pop: anteprime, tornei esport, cosplay, creator e area Cartoomics.",
       "tags": ["nerd", "festivals"],
       "category": "nerd"
+    },
+    {
+      "id": "trio-desenzano-2026",
+      "title": "TriO Desenzano (triathlon)",
+      "start": "2026-10-10",
+      "end": "2026-10-10",
+      "city": "Desenzano del Garda",
+      "venue": "Lungolago",
+      "url": "https://triodesenzano.it/",
+      "summary": "Triathlon sul lungolago di Desenzano organizzato da TriO Events. Data (sabato 10 ottobre) da aggregatori, non confermata sul sito ufficiale: controlla prima di andare.",
+      "tags": ["outdoor"],
+      "category": "outdoor",
+      "verified": false
     }
   ]
 }

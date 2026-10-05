@@ -63,6 +63,7 @@ unknown `category`/`tags` value like `other`. A breaking change bumps
 | `summary` | string | One line of plain text, at most ~300 chars: the source's own abstract/intro when it has one, else the start of `description`. Can equal `description` for sources with only short text. `""` when none. |
 | `image` | string \| null | Absolute https URL of the source's image for the event. Hot-linked from the source, never re-hosted; may disappear. |
 | `occurrences` | number | `1` normally. `N > 1` when a series with more than 8 dates in the window was folded into one span record (see "Recurring events"). |
+| `datesTentative` | `true` \| absent | Only on hand-added spot events whose dates are not confirmed on the official site (`verified: false` in spot.json); the page shows a "Date da confermare" badge. Absent otherwise. Added 2026-10-05. |
 | `fetchedAt` | string | UTC ISO time this record was last fetched. Older than `generatedAt` when its source failed and the record was carried over. |
 
 ### Times and time zone
@@ -485,7 +486,12 @@ never change it once published), `title`, `start`/`end` (local Rome
 `YYYY-MM-DD`, both inclusive), `city`, `url` (official page where you verified
 the dates), `summary`, and optionally `venue`, `tags`, `category` and `image` (the event page's
 `og:image`, picked by hand: skip logos and generic placeholders). Only
-add dates confirmed on the official site. Entries stay in the file and appear
+add dates confirmed on the official site; if an event is certain to exist but
+its dates are only on aggregators (or conflict), add it with `"verified": false`:
+it is published with `datesTentative` and shown as "Date da confermare" until
+you verify it and drop the flag. The file is validated with zod
+(`scripts/events/schemas.ts`): a malformed entry fails the `spot` adapter with
+the entry named, the crawl carries the previous spot events over. Entries stay in the file and appear
 when they come into the spot horizon (540 days, not the 90 of the crawled sources).
 Spot events get `ring: "spot"`; their `area` comes from the town map in
 `scripts/events/areas.ts`, so add a new town there (else it lands in

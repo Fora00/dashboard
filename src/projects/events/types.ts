@@ -33,6 +33,8 @@ export interface EventItem {
   image: string | null
   occurrences: number
   fetchedAt: string
+  /** Hand-added spot event whose dates are not confirmed (added 2026-10-05). */
+  datesTentative?: true
 }
 
 export interface EventsFile {

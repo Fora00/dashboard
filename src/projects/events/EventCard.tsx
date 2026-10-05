@@ -160,6 +160,11 @@ export const EventCard = memo(function EventCard({
                   Spot
                 </span>
               )}
+              {e.datesTentative && (
+                <span className={`${BADGE} bg-sky-100 text-sky-800 dark:bg-sky-500/20 dark:text-sky-200`}>
+                  Date da confermare
+                </span>
+              )}
               {hidden && (
                 <span className={`${BADGE} bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200`}>
                   Hidden

@@ -15,7 +15,9 @@
 // site's own links); image: the site's `_mediaUrl` + `blobLinkIds`.
 import type { Adapter, AdapterContext, RawEvent } from '../types.ts'
 import type { CategoryId } from '../tags.ts'
+import { z } from 'zod'
 import { dateToIso } from '../time.ts'
+import { parseList, parseOrThrow } from '../schemas.ts'
 import { titleCase } from '../text.ts'
 
 const API = 'https://api.teatrostabileveneto.it/api/Public/eventslist'
@@ -26,21 +28,22 @@ const BODY = {
   productions: false, firstDate: null, page: 0, pageSize: 100, giftCard: null,
 }
 
-interface TsvEvent {
-  mainEventId?: number
-  startDate?: string
-  endDate?: string
-  datePeriod?: string
-  locationName?: string
-  locationCity?: string | null
-  title?: string
-  shortDescription?: string | null
-  genres?: string | null
-  companyName?: string | null
-  hsUrl?: string
-  blobLinkIds?: string | null
-}
-interface TsvPage { Events?: TsvEvent[]; HasNextPage?: boolean }
+const TsvEventSchema = z.looseObject({
+  mainEventId: z.number().optional(),
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
+  datePeriod: z.string().optional(),
+  locationName: z.string().optional(),
+  locationCity: z.string().nullish(),
+  title: z.string().optional(),
+  shortDescription: z.string().nullish(),
+  genres: z.string().nullish(),
+  companyName: z.string().nullish(),
+  hsUrl: z.string().optional(),
+  blobLinkIds: z.string().nullish(),
+})
+const TsvPageSchema = z.looseObject({ Events: z.array(z.unknown()).optional(), HasNextPage: z.boolean().optional() })
+type TsvEvent = z.infer<typeof TsvEventSchema>
 
 /** '{"it":"Padova","en":"Padua"}' → 'Padova'; plain text passes through. */
 function it(value: string | null | undefined): string {
@@ -57,8 +60,8 @@ async function run(ctx: AdapterContext): Promise<RawEvent[]> {
   const events: TsvEvent[] = []
   // One page today; follow HasNextPage just in case the season grows.
   for (let page = 0; page < 3; page++) {
-    const res = await ctx.postJson<TsvPage>(API, { ...BODY, page })
-    events.push(...(res.Events ?? []))
+    const res = parseOrThrow(TsvPageSchema, await ctx.postJson(API, { ...BODY, page }), 'stabile-veneto')
+    events.push(...parseList(TsvEventSchema, res.Events ?? [], 'stabile-veneto'))
     if (!res.HasNextPage) break
   }
   const out: RawEvent[] = []

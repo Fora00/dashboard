@@ -40,6 +40,8 @@ export interface Event {
   occurrences: number
   /** When this record was last fetched from its source (ISO, UTC). */
   fetchedAt: string
+  /** True only for hand-added spot events whose dates are not confirmed on the official site; the page shows "dates to be confirmed". Absent otherwise. Added 2026-10-05. */
+  datesTentative?: true
 }
 
 /**
@@ -70,6 +72,8 @@ export interface RawEvent {
   tagText?: string
   /** An adapter that already folded several dates into this record (start = the next one). Default 1. */
   occurrences?: number
+  /** Dates not confirmed by the organiser (spot.json `verified: false`); published as `datesTentative`. */
+  datesTentative?: true
 }
 
 export interface FetchResult {

@@ -15,6 +15,7 @@
 // venue and a larger image, ~200 KB each) are not fetched; the listing
 // thumbnail is used as the image.
 import type { Adapter, AdapterContext, RawEvent } from '../types.ts'
+import { z } from 'zod'
 import { dateToIso, localToIso } from '../time.ts'
 import { absUrl, decodeEntities, htmlToText, normalize } from '../text.ts'
 
@@ -25,7 +26,12 @@ const MAX_PAGES = 20
 /** Year-round weekly markets (listed with an end in 2068) and bus services: noise here. */
 const SKIP_TITLE = /^bus\b|\bnavetta\b|\bmercat(o|ini) settimanal|\bmercato (del|di) (lunedi|martedi|mercoledi|giovedi|venerdi|sabato|domenica)/i
 
-interface Gtm { title?: string; locations?: { name?: string }[]; categories?: { name?: string }[] }
+const GtmSchema = z.looseObject({
+  title: z.string().optional(),
+  locations: z.array(z.looseObject({ name: z.string().optional() })).optional(),
+  categories: z.array(z.looseObject({ name: z.string().optional() })).optional(),
+})
+type Gtm = z.infer<typeof GtmSchema>
 
 function ymd(d: string, m: string, y: string): string {
   return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`
@@ -57,7 +63,7 @@ function parseCard(card: string): RawEvent | null {
   let gtm: Gtm = {}
   const rawGtm = card.match(/data-gtm-el="([^"]*)"/)?.[1]
   try {
-    if (rawGtm) gtm = JSON.parse(decodeEntities(rawGtm)) as Gtm
+    if (rawGtm) gtm = GtmSchema.parse(JSON.parse(decodeEntities(rawGtm)))
   } catch {
     gtm = {}
   }

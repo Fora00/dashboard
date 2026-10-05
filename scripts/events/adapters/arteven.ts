@@ -19,31 +19,34 @@
 // kids via tagText; weekday-morning performances (10:00, 11:00) are school
 // matinées and are dropped, like CTB's.
 import type { Adapter, AdapterContext, RawEvent } from '../types.ts'
+import { z } from 'zod'
 import { localToIso } from '../time.ts'
+import { parseList } from '../schemas.ts'
 import { absUrl, htmlToText, titleCase } from '../text.ts'
 
 const BASE = 'https://www.myarteven.it'
 const MARKER = 'rappresentazionitotal = ['
 
-interface Named { id?: string; name?: string; slug?: string }
-interface Spettacolo extends Named {
-  sottotitolo?: string | null
-  compagnia_teatrale?: string | null
-  descrizione?: string | null
-  anteprima_id?: { mediaurl?: string | null } | null
-}
-interface Rappresentazione {
-  id: string
-  name?: string
-  data_rapp?: string
-  orario?: string | null
-  slug?: string
-  stato_web?: boolean
-  ref_spettacolo?: Spettacolo | null
-  teatro_id?: Named | null
-  rassegna_id?: Named | null
-}
-
+// Only the fields the adapter reads; a record missing the id or with a
+// wrongly typed field is skipped, a changed format fails the adapter.
+const NamedSchema = z.looseObject({ id: z.string().optional(), name: z.string().optional(), slug: z.string().optional() })
+const SpettacoloSchema = NamedSchema.extend({
+  sottotitolo: z.string().nullish(),
+  compagnia_teatrale: z.string().nullish(),
+  descrizione: z.string().nullish(),
+  anteprima_id: z.looseObject({ mediaurl: z.string().nullish() }).nullish(),
+})
+const RappresentazioneSchema = z.looseObject({
+  id: z.string(),
+  name: z.string().optional(),
+  data_rapp: z.string().optional(),
+  orario: z.string().nullish(),
+  slug: z.string().optional(),
+  stato_web: z.boolean().optional(),
+  ref_spettacolo: SpettacoloSchema.nullish(),
+  teatro_id: NamedSchema.nullish(),
+  rassegna_id: NamedSchema.nullish(),
+})
 const KIDS_RASSEGNA = /da favola|domenica teatro|giovanissimi|primi passi|ragazzi|famigli/i
 /** Slice the JSON array that starts at `from` (at its "["), respecting strings. */
 export function sliceJsonArray(text: string, from: number): string {
@@ -75,7 +78,7 @@ async function run(ctx: AdapterContext): Promise<RawEvent[]> {
   const { text } = await ctx.fetchText(`${BASE}/`)
   const at = text.indexOf(MARKER)
   if (at < 0) throw new Error('rappresentazionitotal not found (markup changed?)')
-  const list = JSON.parse(sliceJsonArray(text, at + MARKER.length - 1)) as Rappresentazione[]
+  const list = parseList(RappresentazioneSchema, JSON.parse(sliceJsonArray(text, at + MARKER.length - 1)), 'arteven')
   const out: RawEvent[] = []
   for (const r of list) {
     const show = r.ref_spettacolo

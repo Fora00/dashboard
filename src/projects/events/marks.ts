@@ -110,6 +110,7 @@ export function sanitizeSnapshot(raw: unknown): EventItem | null {
   }
   if (typeof r.area === 'string' && r.area) out.area = str(r.area, C.short)
   if (typeof r.ring === 'string' && r.ring) out.ring = str(r.ring, C.short)
+  if (r.datesTentative === true) out.datesTentative = true
   // Belt and braces: the caps above already fit the budget in the worst case,
   // but never hand the server something it would reject forever.
   if (utf8Bytes(JSON.stringify(out)) > SNAPSHOT_BUDGET) {

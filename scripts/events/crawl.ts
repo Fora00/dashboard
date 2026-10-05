@@ -21,6 +21,7 @@ import { ADAPTERS } from './adapters/index.ts'
 import { PoliteHttp } from './http.ts'
 import { OG_MAX_REQUESTS, enrichImages } from './ogimage.ts'
 import type { DropCounts } from './pipeline.ts'
+import { PreviousFileSchema, describeIssues } from './schemas.ts'
 import { HORIZON_DAYS, dedup, inWindow, isOngoing, sortEvents, toEvents, withPlace } from './pipeline.ts'
 
 const DEFAULT_PREVIOUS = 'https://fora00.github.io/dashboard/events.json'
@@ -43,12 +44,11 @@ async function loadPrevious(): Promise<EventsFile | null> {
     } else {
       text = await readFile(where.startsWith('file:') ? fileURLToPath(where) : resolve(where), 'utf8')
     }
-    const data = JSON.parse(text) as Partial<EventsFile>
-    if (data.schemaVersion !== 1 || !Array.isArray(data.events) || !Array.isArray(data.sources)) {
-      throw new Error('not a schemaVersion 1 events.json')
-    }
+    const parsed = PreviousFileSchema.safeParse(JSON.parse(text))
+    if (!parsed.success) throw new Error(`not a schemaVersion 1 events.json (${describeIssues(parsed.error, 2)})`)
+    const data = parsed.data
     console.log(`previous: ${data.events.length} events from ${where} (generated ${data.generatedAt ?? '?'})`)
-    return data as EventsFile
+    return data as unknown as EventsFile
   } catch (e) {
     console.log(`previous: none usable at ${where} (${(e as Error).message})`)
     return null
