@@ -1,7 +1,8 @@
-// Pure nutrition helpers for the meal diary: input parsing/clamping, the
-// "estimate from text" lookup, and daily totals. No React, no Dexie.
+// Pure nutrition helpers for the meal diary: input parsing/clamping and daily
+// totals. The numbers themselves usually come from /meal-reconcile (an AI
+// estimate written back as `estimated`), or are typed when editing an entry.
+// No React, no Dexie.
 import type { MealEntry } from '../../lib/db'
-import { FOODS, type Food } from './foods.ts'
 
 /** Upper bounds. MUST match the CHECK constraints in supabase/migrations/20261005140000_meal_diary.sql. */
 export const NUTRITION_MAX = { grams: 10_000, kcal: 10_000, proteinG: 1000, carbsG: 1000, fatG: 1000 } as const
@@ -48,47 +49,6 @@ export function sanitizeNutrition(n: Partial<Nutrition> | undefined): Nutrition 
   const fatG = parseAmount(n?.fatG, 'fatG')
   const hasValue = kcal !== null || proteinG !== null || carbsG !== null || fatG !== null
   return { grams, kcal, proteinG, carbsG, fatG, estimated: Boolean(n?.estimated) && hasValue }
-}
-
-const normalize = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
-
-export interface Estimate {
-  food: Food
-  grams: number
-  /** True when the entry had no grams and the food's typical portion was used. */
-  typicalPortion: boolean
-  kcal: number
-  proteinG: number
-  carbsG: number
-  fatG: number
-}
-
-/**
- * The first food named in `text` (earliest mention wins), scaled to `grams`
- * (or to its typical portion when grams are empty). One food per entry: log
- * "pasta e mela" as two entries for two estimates.
- */
-export function estimate(text: string, grams: number | null): Estimate | null {
-  const t = ` ${normalize(text)} `
-  let best: { food: Food; at: number } | null = null
-  for (const food of FOODS) {
-    for (const word of food.words) {
-      const at = t.search(new RegExp(`[^a-z]${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}[^a-z]`))
-      if (at >= 0 && (best === null || at < best.at)) best = { food, at }
-    }
-  }
-  if (!best) return null
-  const g = grams && grams > 0 ? grams : best.food.portion
-  const k = g / 100
-  return {
-    food: best.food,
-    grams: g,
-    typicalPortion: !(grams && grams > 0),
-    kcal: Math.round(best.food.kcal * k),
-    proteinG: Math.round(best.food.proteinG * k),
-    carbsG: Math.round(best.food.carbsG * k),
-    fatG: Math.round(best.food.fatG * k),
-  }
 }
 
 export interface DayTotals {

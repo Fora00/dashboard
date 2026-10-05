@@ -12,7 +12,7 @@ import { Snackbar } from '../../components/Snackbar'
 import { SkeletonList } from '../../components/Skeleton'
 import { SyncCard } from '../../components/SyncCard'
 import { MEALS, dayLabel, defaultMeal, groupByDay, mealMeta } from './model'
-import { EMPTY_FORM, dayTotals, parseAmount, type Nutrition, type NutritionForm } from './nutrition'
+import { dayTotals, parseAmount, type Nutrition, type NutritionForm } from './nutrition'
 import { NutritionFields } from './NutritionFields'
 
 function toNutrition(f: NutritionForm): Nutrition {
@@ -53,17 +53,13 @@ export function MealDiary() {
   const [day, setDay] = useState(today)
   const [meal, setMeal] = useState<MealKind>(() => defaultMeal(now.getHours()))
   const [text, setText] = useState('')
-  const [nutrition, setNutrition] = useState<NutritionForm>(EMPTY_FORM)
   const [editing, setEditing] = useState<{ id: string; text: string; nutrition: NutritionForm } | null>(null)
 
   const groups = useMemo(() => groupByDay(entries ?? []), [entries])
 
   async function add(e: FormEvent) {
     e.preventDefault()
-    if (await addMeal(day, meal, text, toNutrition(nutrition))) {
-      setText('')
-      setNutrition(EMPTY_FORM)
-    }
+    if (await addMeal(day, meal, text)) setText('')
   }
 
   async function saveEdit(entry: MealEntry) {
@@ -79,7 +75,11 @@ export function MealDiary() {
 
   return (
     <div>
-      <PageHeader emoji="🍽️" title="Meal Diary" subtitle="What you ate, day by day, with optional calories and macros. Synced across your devices, only yours." />
+      <PageHeader
+        emoji="🍽️"
+        title="Meal Diary"
+        subtitle={'What you ate, day by day: just write it, e.g. "100g pasta al pesto rosso". Calories and macros are added later by the AI. Synced across your devices, only yours.'}
+      />
 
       <SyncCard sync={sync} />
 
@@ -102,7 +102,7 @@ export function MealDiary() {
             value={text}
             onChange={(e) => setText(e.target.value)}
             aria-label="What did you eat"
-            placeholder="What did you eat?"
+            placeholder="e.g. 100g pasta al pesto rosso"
             maxLength={MAX_TEXT_LENGTH}
             autoComplete="off"
             enterKeyHint="done"
@@ -112,7 +112,6 @@ export function MealDiary() {
             Add
           </Button>
         </div>
-        <NutritionFields text={text} value={nutrition} onChange={setNutrition} />
         <label className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
           Day
           <input
@@ -174,7 +173,6 @@ export function MealDiary() {
                             </Button>
                           </div>
                           <NutritionFields
-                            text={editing.text}
                             value={editing.nutrition}
                             onChange={(n) => setEditing({ ...editing, nutrition: n })}
                           />
