@@ -1,12 +1,15 @@
 import { useMemo } from 'react'
-import type { LifeEntry, LifePlan } from '../../../lib/db'
-import { summarizeWeek } from '../model'
+import { useLiveQuery } from 'dexie-react-hooks'
+import { db, type LifeEntry, type LifePlan } from '../../../lib/db'
+import { summarizeMealsWeek, summarizeWeek } from '../model'
+import { addDays } from '../model/dates.ts'
 import { useUndoSnackbar } from '../../../lib/useUndoSnackbar'
 import { Snackbar } from '../../../components/Snackbar'
 import { CheckinRow } from './CheckinRow'
 import { CollapsibleSection } from './CollapsibleSection'
 import { ExportSection } from './ExportSection'
 import { FocusSection } from './FocusSection'
+import { FoodSection } from './FoodSection'
 import { SundaySection } from './SundaySection'
 import { ThingsSection } from './ThingsSection'
 import { TrackersSection } from './TrackersSection'
@@ -24,6 +27,9 @@ interface WeekBodyProps {
 
 export function WeekBody({ week, plan, entries, readOnly }: WeekBodyProps) {
   const summary = useMemo(() => summarizeWeek(plan, entries), [plan, entries])
+  // The meal diary's entries for this week (read-only here), live.
+  const meals = useLiveQuery(() => db.meals.where('day').between(week, addDays(week, 6), true, true).toArray(), [week])
+  const food = useMemo(() => summarizeMealsWeek(meals ?? [], week), [meals, week])
   const { pending, trigger, confirmUndo } = useUndoSnackbar()
   const { sections, sundayOpen, toggleSection, toggleSunday } = useSections(week, readOnly)
   const sentCount = plan.tasks.filter((t) => summary.sentTaskIds.has(t.id)).length
@@ -107,9 +113,12 @@ export function WeekBody({ week, plan, entries, readOnly }: WeekBodyProps) {
         />
       )}
 
+      <FoodSection week={week} food={food} open={sections.food} onToggle={() => toggleSection('food')} readOnly={readOnly} />
+
       <ExportSection
         plan={plan}
         entries={entries}
+        meals={meals ?? []}
         open={sections.export}
         onToggle={() => toggleSection('export')}
         readOnly={readOnly}

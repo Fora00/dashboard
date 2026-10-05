@@ -1,6 +1,7 @@
-import type { LifeAnswer, LifeEntry, LifePlan, LifeQuestion } from '../../../lib/db'
+import type { LifeAnswer, LifeEntry, LifePlan, LifeQuestion, MealEntry } from '../../../lib/db'
 import { withCheckinIds } from './checkinIds.ts'
-import { dayKey } from './dates.ts'
+import { dayKey, weekDays } from './dates.ts'
+import { summarizeMealsWeek } from './meals.ts'
 import { summarizeWeek } from './summary.ts'
 
 // --- Export ---------------------------------------------------------------------
@@ -21,12 +22,13 @@ function energyPair(e: Extract<LifeEntry, { kind: 'tracker' }>): string | null {
 }
 
 /** Markdown for the week: focus, trackers per day + energy, Sunday, check-ins,
- *  tasks, entries removed from the plan, and the raw JSON in a <details>
+ *  tasks, food (the meal diary's entries of the week, when given), entries removed from the plan, and the raw JSON in a <details>
  *  block. `today` (a day key) only marks overdue check-ins. */
 export function buildExportMarkdown(
   planIn: LifePlan,
   entries: readonly LifeEntry[],
   today: string = dayKey(new Date()),
+  meals: readonly MealEntry[] = [],
 ): string {
   const plan = withCheckinIds(planIn)
   const s = summarizeWeek(plan, entries, today)
@@ -84,6 +86,31 @@ export function buildExportMarkdown(
     out.push('')
   }
 
+  const food = summarizeMealsWeek(meals, plan.week)
+  if (food.days.length) {
+    const approx = food.approximate ? '≈ ' : ''
+    out.push('## Food', '')
+    if (food.average) {
+      const a = food.average
+      out.push(`- Average over ${food.loggedDays} logged day${food.loggedDays === 1 ? '' : 's'}: ${approx}${a.kcal} kcal · P ${a.proteinG} · C ${a.carbsG} · F ${a.fatG}`)
+    } else {
+      out.push('- Entries logged, no calories or macros entered')
+    }
+    for (const d of food.days) {
+      const t = d.totals
+      const label = DAY_NAMES[weekDays(plan.week).indexOf(d.day)] ?? d.day
+      const sum = t.counted
+        ? `${t.approximate ? '≈ ' : ''}${t.kcal} kcal · P ${t.proteinG} · C ${t.carbsG} · F ${t.fatG}${t.uncounted ? ` (${t.uncounted} without values)` : ''}`
+        : 'no values'
+      out.push(`- ${label} ${d.day}: ${sum}`)
+      for (const m of d.entries) {
+        const kcal = m.kcal === null ? '' : ` — ${m.estimated ? '≈ ' : ''}${m.kcal} kcal`
+        out.push(`  - ${m.meal}: ${oneLine(m.text)}${kcal}`)
+      }
+    }
+    out.push('')
+  }
+
   if (s.removed.length) {
     out.push('## Removed from plan', '')
     for (const e of s.removed) out.push(`- ${describeRemoved(e)} (removed from plan)`)
@@ -96,6 +123,14 @@ export function buildExportMarkdown(
       .slice()
       .sort((a, b) => a.createdAt - b.createdAt)
       .map(({ kind, ref, day, value }) => ({ kind, ref, day, value })),
+    // Present only when the diary has entries this week.
+    ...(food.days.length
+      ? {
+          meals: food.days.flatMap((d) =>
+            d.entries.map(({ day, meal, text, grams, kcal, proteinG, carbsG, fatG, estimated }) => ({ day, meal, text, grams, kcal, proteinG, carbsG, fatG, estimated })),
+          ),
+        }
+      : {}),
   }
   out.push(
     '<details>',

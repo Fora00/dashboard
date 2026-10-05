@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { LifeEntry, LifePlan } from '../../../lib/db'
+import type { LifeEntry, LifePlan, MealEntry } from '../../../lib/db'
 import { buildExportMarkdown } from '../model'
 import { useFlash } from '../../../lib/useFlash'
 import { Button } from '../../../components/Button'
@@ -9,12 +9,14 @@ import { CollapsibleSection } from './CollapsibleSection'
 export function ExportSection({
   plan,
   entries,
+  meals,
   open,
   onToggle,
   readOnly,
 }: {
   plan: LifePlan
   entries: LifeEntry[]
+  meals: MealEntry[]
   open: boolean
   onToggle: () => void
   readOnly: boolean
@@ -25,7 +27,7 @@ export function ExportSection({
   const [fallbackText, setFallbackText] = useState<string | null>(null)
 
   async function doExport() {
-    const md = buildExportMarkdown(plan, entries)
+    const md = buildExportMarkdown(plan, entries, undefined, meals)
     if (navigator.clipboard) {
       try {
         await navigator.clipboard.writeText(md)
@@ -40,7 +42,7 @@ export function ExportSection({
   }
 
   async function doShare() {
-    const md = buildExportMarkdown(plan, entries)
+    const md = buildExportMarkdown(plan, entries, undefined, meals)
     try {
       await navigator.share({ title: `Week of ${plan.week}`, text: md })
     } catch {
@@ -51,7 +53,7 @@ export function ExportSection({
   return (
     <CollapsibleSection title="Export" open={open} onToggle={onToggle} readOnly={readOnly}>
       <p className="mb-3 text-sm text-slate-500 dark:text-slate-400">
-        Copies a summary of this week — focus, trackers with energy, Sunday answers, check-ins, tasks — to paste
+        Copies a summary of this week — focus, trackers with energy, Sunday answers, check-ins, tasks, food — to paste
         into /settimana on your Mac.
       </p>
       <Card className="space-y-3 text-sm">

@@ -406,6 +406,51 @@ export type Database = {
         }
         Relationships: []
       }
+      meal_entries: {
+        Row: {
+          carbs_g: number | null
+          created_at: number
+          day: string
+          estimated: boolean
+          fat_g: number | null
+          grams: number | null
+          id: string
+          kcal: number | null
+          meal: string
+          protein_g: number | null
+          text: string
+          updated_at: number
+        }
+        Insert: {
+          carbs_g?: number | null
+          created_at: number
+          day: string
+          estimated?: boolean
+          fat_g?: number | null
+          grams?: number | null
+          id: string
+          kcal?: number | null
+          meal: string
+          protein_g?: number | null
+          text: string
+          updated_at: number
+        }
+        Update: {
+          carbs_g?: number | null
+          created_at?: number
+          day?: string
+          estimated?: boolean
+          fat_g?: number | null
+          grams?: number | null
+          id?: string
+          kcal?: number | null
+          meal?: string
+          protein_g?: number | null
+          text?: string
+          updated_at?: number
+        }
+        Relationships: []
+      }
       project_invites: {
         Row: {
           created_at: string

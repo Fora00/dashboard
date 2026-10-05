@@ -30,4 +30,5 @@ export {
   type ThingsUrlOptions,
 } from './things.ts'
 export { buildExportMarkdown } from './export.ts'
+export { summarizeMealsWeek, type MealsWeek, type MealsDay } from './meals.ts'
 export { LIFE_IMPORT_BASE, encodeImportLink, decodeImportParam } from './importLink.ts'

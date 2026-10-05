@@ -391,8 +391,10 @@ work fully signed out.
 
 ## 7. Apply the backend — **owner only**
 
-The migration file is committed like any code, but applying it to the hosted
-Supabase project is the owner's job, never a worker's:
+The migration file is committed like any code. Applying it to the hosted
+Supabase project is the owner's job or the orchestrating session's (owner
+authorization 2026-10-05: run `npx supabase db push --dry-run` first and check
+only your migration is pending), never a worker's:
 
 ```
 npx supabase db push          # owner only — applies migrations to the hosted DB

@@ -83,6 +83,27 @@ export interface HabitCheck {
   createdAt: number
 }
 
+// One line of the meal diary. Cloud-syncable via the generic engine, owner-only
+// (src/lib/mealDiarySync.ts).
+export type MealKind = 'breakfast' | 'lunch' | 'dinner' | 'snack'
+export interface MealEntry {
+  id: string
+  // Local-date string 'YYYY-MM-DD' so an entry belongs to the day the user saw.
+  day: string
+  meal: MealKind
+  text: string
+  // Optional nutrition (whole numbers, null = not entered). `estimated` = the
+  // values came from the built-in food table, not typed by the owner.
+  grams: number | null
+  kcal: number | null
+  proteinG: number | null
+  carbsG: number | null
+  fatG: number | null
+  estimated: boolean
+  createdAt: number
+  updatedAt: number
+}
+
 // A generic todo. Cloud-syncable via the generic engine (src/lib/cloudSync.ts).
 export interface Todo {
   id: string
@@ -310,6 +331,7 @@ export interface OutboxMap {
   links: LinkItem
   life_weeks: LifeWeek
   life_entries: LifeEntry
+  meal_entries: MealEntry
   trip_ideas: TripIdea
   trip_companions: TripCompanion
   custom_events: CustomEvent
@@ -411,6 +433,7 @@ export const db = new Dexie('dashboard') as Dexie & {
   tripIdeas: EntityTable<TripIdea, 'id'>
   tripCompanions: EntityTable<TripCompanion, 'id'>
   customEvents: EntityTable<CustomEvent, 'id'>
+  meals: EntityTable<MealEntry, 'id'>
 }
 
 db.version(1).stores({
@@ -714,6 +737,32 @@ db.version(15)
     }
     if (entries.length > 0) await tx.table('outbox').bulkAdd(entries)
   })
+
+// v16: meal diary (local-only). New table only; nothing is migrated or removed.
+db.version(16).stores({
+  files: 'id, name, createdAt, synced',
+  shopItems: 'id, done, createdAt, areaId',
+  shopAreas: 'id, createdAt',
+  outbox: '++seq, rowId',
+  climbSessions: 'id, date',
+  climbs: 'id, sessionId, date',
+  habits: 'id, createdAt',
+  habitChecks: 'id, habitId, day, [habitId+day]',
+  todos: 'id, done, createdAt',
+  bookIdeas: 'id, createdAt',
+  boardgameIdeas: 'id, createdAt',
+  links: 'id, read, createdAt, *tags',
+  projectStats: 'id, starred, opens',
+  lifeWeeks: 'id, importedAt',
+  lifeEntries: 'id, week, [week+kind]',
+  eventsCache: 'id',
+  eventMarks: 'id, state, updatedAt',
+  eventPrefs: 'id',
+  tripIdeas: 'id, done, createdAt, *companionIds',
+  tripCompanions: 'id, createdAt',
+  customEvents: 'id, start, updatedAt',
+  meals: 'id, day, createdAt',
+})
 
 // Ask the browser not to evict our data under storage pressure (important on iOS).
 export async function requestPersistentStorage(): Promise<boolean> {

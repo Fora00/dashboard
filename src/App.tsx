@@ -9,6 +9,7 @@ import { startEventMarksSync } from './lib/eventMarksSync'
 import { startHabitSync } from './lib/habitSync'
 import { startLifeSync } from './lib/lifeSync'
 import { startLinksSync } from './lib/linksSync'
+import { startMealDiarySync } from './lib/mealDiarySync'
 import { startShopSync } from './lib/shopSync'
 import { startTripsSync } from './lib/tripsSync'
 import { startTodoSync } from './lib/todoSync'
@@ -24,6 +25,7 @@ const page = <T extends Record<string, React.ComponentType>>(load: () => Promise
 const BoardgameIdeas = page(() => import('./projects/boardgame-ideas/BoardgameIdeas'), 'BoardgameIdeas')
 const BookIdeas = page(() => import('./projects/book-ideas/BookIdeas'), 'BookIdeas')
 const Climbing = page(() => import('./projects/climbing/Climbing'), 'Climbing')
+const MealDiary = page(() => import('./projects/meal-diary/MealDiary'), 'MealDiary')
 const Habits = page(() => import('./projects/habits/Habits'), 'Habits')
 const Events = page(() => import('./projects/events/Events'), 'Events')
 const JoinProject = page(() => import('./projects/join/JoinProject'), 'JoinProject')
@@ -59,6 +61,7 @@ export default function App() {
       startBoardgameIdeasSync(),
       startLinksSync(),
       startLifeSync(),
+      startMealDiarySync(),
       startTripsSync(),
       startCustomEventsSync(),
       startEventMarksSync(),
@@ -78,6 +81,7 @@ export default function App() {
           <Route path="/todo" element={<Todo />} />
           <Route path="/climbing" element={<Climbing />} />
           <Route path="/habits" element={<Habits />} />
+          <Route path="/meal-diary" element={<MealDiary />} />
           <Route path="/book-ideas" element={<BookIdeas />} />
           <Route path="/boardgame-ideas" element={<BoardgameIdeas />} />
           <Route path="/links" element={<Links />} />

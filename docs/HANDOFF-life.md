@@ -54,6 +54,17 @@ projects on `/sharing`.
    2026-09-28.
 6. **Trackers stay separate from Habits** (default; no mapping).
 
+## Food (Meal Diary) in the week
+
+Added 2026-10-05. The Life week screen shows a read-only **Food** section
+(average per logged day and per-day totals) from the `meals` table of the
+Meal Diary, live, also in History. "Export week" appends a `## Food` Markdown
+section and a `meals` array in the JSON block (only when the week has diary
+entries; `life-things-status.ts` ignores it). Code: `model/meals.ts`
+(`summarizeMealsWeek`), `week/FoodSection.tsx`, `model/export.ts`. Nothing is
+stored in Life tables: the diary stays the source of truth. Estimates are
+marked `≈`; `/meal-reconcile` fills missing values before exporting.
+
 ## 2.1 Import the week (pasted JSON)
 
 Life → "Import week": paste, validate, preview (with the diff), save.

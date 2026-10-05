@@ -13,7 +13,7 @@ import { readJSON, writeJSON } from '../../../lib/safeStorage'
 
 const SECTIONS_KEY = 'dashboard:life-sections'
 
-export type SectionId = 'focus' | 'trackers' | 'rules' | 'checkins' | 'things' | 'export'
+export type SectionId = 'focus' | 'trackers' | 'rules' | 'checkins' | 'things' | 'food' | 'export'
 
 interface SectionsState {
   focus: boolean
@@ -21,6 +21,7 @@ interface SectionsState {
   rules: boolean
   checkins: boolean
   things: boolean
+  food: boolean
   export: boolean
   sundayWeek: string | null
   sundayOpen: boolean
@@ -32,6 +33,7 @@ const DEFAULT_SECTIONS: SectionsState = {
   rules: false,
   checkins: true,
   things: true,
+  food: true,
   export: true,
   sundayWeek: null,
   sundayOpen: false,
@@ -50,6 +52,7 @@ function sanitizeSections(raw: unknown): SectionsState {
     rules: isBool(r.rules) ? r.rules : DEFAULT_SECTIONS.rules,
     checkins: isBool(r.checkins) ? r.checkins : DEFAULT_SECTIONS.checkins,
     things: isBool(r.things) ? r.things : DEFAULT_SECTIONS.things,
+    food: isBool(r.food) ? r.food : DEFAULT_SECTIONS.food,
     export: isBool(r.export) ? r.export : DEFAULT_SECTIONS.export,
     sundayWeek: typeof r.sundayWeek === 'string' ? r.sundayWeek : null,
     sundayOpen: isBool(r.sundayOpen) ? r.sundayOpen : DEFAULT_SECTIONS.sundayOpen,

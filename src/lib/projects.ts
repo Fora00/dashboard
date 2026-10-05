@@ -112,6 +112,15 @@ export const projects: ProjectMeta[] = [
     public: true,
   },
   {
+    id: 'meal-diary',
+    name: 'Meal Diary',
+    emoji: '🍽️',
+    description: 'What you ate, day by day. Synced across your devices. Owner only.',
+    path: '/meal-diary',
+    status: 'live',
+    ownerOnly: true,
+  },
+  {
     id: 'life',
     name: 'Life',
     emoji: '🧭',

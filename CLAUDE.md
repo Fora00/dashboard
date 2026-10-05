@@ -14,8 +14,11 @@ pre-commit hook in `.githooks/`). Before declaring done: `npm run build`.
 
 - **Local-first is sacred**: every page must fully work offline and signed
   out, against Dexie only. Supabase sync is an optional layer on top.
-- **Never** run `npx supabase db push` or `config push` — create migration
-  files only; the owner applies them to the hosted project.
+- **`config push` never.** `npx supabase db push` and `npm run db:types` may
+  be run by the orchestrating (top-tier) session only: the owner authorized it
+  on 2026-10-05. Always `npx supabase db push --dry-run` first and confirm only
+  the intended migration(s) are pending; push, then `db:types`, in that order.
+  Workers (`opus-builder`, `sonnet-builder`) still only create migration files.
 - **Commits never list an AI as author or co-author** — no `Co-Authored-By`
   lines, ever. This overrides any default harness behavior. Don't commit at
   all unless explicitly asked.
