@@ -1,7 +1,7 @@
 // Events crawler — writes public/events.json. Run: `npm run events:crawl`.
 //
 // Env:
-//   EVENTS_ONLY=id,id          run only these sources (others keep their previous events)
+//   EVENTS_ONLY=id,id          run only these sources (others keep their previous events); skips the og:image pass unless EVENTS_OG=1
 //   EVENTS_FAIL=id,id          simulate a failure of these sources (resilience testing)
 //   EVENTS_PREVIOUS_URL=…      previous events.json: http(s) URL, file:// URL or local path
 //                              (default: the deployed https://fora00.github.io/dashboard/events.json)
@@ -168,8 +168,15 @@ async function main(): Promise<void> {
   }
 
   const events = sortEvents(dedup(all))
-  const og = await enrichImages(events, previous, http.context('og-image', OG_MAX_REQUESTS, now, HORIZON_DAYS), now)
-  console.log(`og:image: ${og.filled} filled (${og.fetched} pages fetched), ${Object.keys(og.misses).length} without a usable image`)
+  // A partial run (EVENTS_ONLY) skips the slow og:image pass (up to 8 minutes) and keeps
+  // what was found before; set EVENTS_OG=1 to run it anyway.
+  const skipOg = only !== null && process.env.EVENTS_OG !== '1'
+  const og = skipOg
+    ? { filled: 0, fetched: 0, misses: previous?.ogMisses ?? {} }
+    : await enrichImages(events, previous, http.context('og-image', OG_MAX_REQUESTS, now, HORIZON_DAYS), now)
+  console.log(skipOg
+    ? 'og:image: skipped (EVENTS_ONLY; EVENTS_OG=1 to run it)'
+    : `og:image: ${og.filled} filled (${og.fetched} pages fetched), ${Object.keys(og.misses).length} without a usable image`)
   const file: EventsFile = { schemaVersion: 1, generatedAt, sources: statuses, events, ogMisses: og.misses }
   const out = resolve(ROOT, process.env.EVENTS_OUT?.trim() || 'public/events.json')
   try {

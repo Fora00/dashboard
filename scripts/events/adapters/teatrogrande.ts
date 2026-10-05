@@ -84,6 +84,9 @@ export const teatrogrande: Adapter = {
   defaultCategory: 'other',
   area: 'lombardia',
   ring: 'near',
+  // Theatre is out of the near ring, so a quiet stretch with no concerts/talks is normal.
+  // A changed markup still throws inside run().
+  mayBeEmpty: true,
   maxRequests: 2,
   run,
 }
