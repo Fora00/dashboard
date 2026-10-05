@@ -727,14 +727,14 @@ what's already shipped. Ranked by how cheap + how load-bearing.
 > **Parked — not being worked on right now.** Logged so the findings aren't
 > lost, not dispatched to any builder. Pick items up explicitly when ready.
 
-- [ ] **Stale "local-only" copy on todo/habits** [sonnet] — `src/lib/projects.ts`
+- [x] **Stale "local-only" copy on todo/habits** [sonnet] — already done (found 2026-10-05): no such copy left in `src/lib/projects.ts`. Original: — `src/lib/projects.ts`
       still describes `todo` as "Local-only on this device for now" and
       `habits` as "Local-only on this device," but both have synced via the
       generic engine since 2026-07-04 (Projects 5/6, `App.tsx` starts
       `startTodoSync()`/`startHabitSync()`). The home grid is telling users
       the wrong thing about their own data. Effort XS — one-line copy fix
       each, no code paths touched.
-- [ ] **No automated tests for `cloudSync.ts`** [opus] — this one file is the
+- [x] **No automated tests for `cloudSync.ts`** [opus] — already done (found 2026-10-05, roadmap was stale): `src/lib/cloudSync.test.ts` (406 lines, commit 312ad46) covers offline edits never dead-lettered, server-answered failures (RLS 42501, 500 dead at try 8, expired JWT), pull racing local writes, retryDead/discardDead, pull shield, nested transactions and realtime last-writer-wins. Original: — this one file is the
       shared engine behind every synced project, and its entire content is a
       list of manually-audited-and-fixed concurrency/data-loss bugs (dead-
       letter classification via `classify()`, last-writer-wins by
@@ -756,8 +756,8 @@ what's already shipped. Ranked by how cheap + how load-bearing.
       browser tab (no obvious "reload" chrome). Wrap the routed `<Layout />`
       content with a small boundary that shows an EmptyState-style fallback
       + a reload button. Effort S.
-- [ ] **No route-level code splitting — confirmed 617 KB single JS bundle**
-      [sonnet] — `src/App.tsx` eagerly imports all nine project pages; a
+- [x] **No route-level code splitting — confirmed 617 KB single JS bundle**
+      [sonnet] — done 2026-10-05: every page except Home is `React.lazy` in `App.tsx` (`page()` helper), `Suspense` + `SkeletonList` inside Layout's ErrorBoundary; PWA precaches all chunks so pages work offline. Entry chunk 796 → 259 KB; a shared ~359 KB vendor chunk (supabase/dexie, named `Card-*.js`) still loads up front, so the saving is the page code, not the libraries. Not eyeballed in a browser (offline cold load, chunk-failure fallback). Original: — `src/App.tsx` eagerly imports all nine project pages; a
       throwaway `npm run build` on 2026-07-05 shipped one
       `index-*.js` at 617 KB (176 KB gzip), and Vite's own build output
       flags it ("Some chunks are larger than 500 kB"). Every visitor
@@ -775,6 +775,13 @@ what's already shipped. Ranked by how cheap + how load-bearing.
       to something less clear. Prefer a structured check (error code/status,
       or a custom SQLSTATE raised by the trigger) over message matching.
       Effort XS–S.
+      **Analysis 2026-10-05:** not fixable client-side with a real gain. GoTrue
+      wraps any trigger exception in the same opaque "Database error saving new
+      user" (HTTP 500, code `unexpected_failure`), so even a custom SQLSTATE in
+      the whitelist trigger would not reach the client. Options: keep the regex
+      (add a test that pins it) or move the check server-side (an RPC
+      `is_email_invited(email)` called before `signInWithOtp`: needs a migration
+      and exposes whitelist membership to anyone, so probably not worth it).
 - [x] **`database.types.ts` regeneration is undocumented** [sonnet] — DONE
       2026-09-10 while adding `links`: `npm run db:types` added to
       package.json (writes to a temp file first, so a failed/offline run
@@ -803,8 +810,8 @@ what's already shipped. Ranked by how cheap + how load-bearing.
       someone happens to run it locally. Add a `.github/dependabot.yml`
       (weekly, npm ecosystem) and/or an `npm audit --audit-level=high` CI
       step. Effort XS.
-- [ ] **Dead-lettered outbox entries have no recovery path except a full
-      device wipe** [sonnet] — a permanently-rejected sync entry is (by
+- [x] **Dead-lettered outbox entries have no recovery path except a full
+      device wipe** [sonnet] — already done (found 2026-10-05): `SyncCard` has Retry/Discard buttons backed by `engine.retryDead()` / `discardDead()` (tested in `cloudSync.test.ts`). Original: — a permanently-rejected sync entry is (by
       design, see `cloudSync.ts`) never deleted, so it keeps shielding its
       local row from `pull()` forever — see `SyncCard`'s persistent "⚠️ N
       changes were rejected" line. Right now the *only* way to clear that
@@ -815,7 +822,7 @@ what's already shipped. Ranked by how cheap + how load-bearing.
       per project with per-entry "Discard" (drop the tombstone, let the next
       pull take the remote version) and/or "Retry" (clear `dead`, requeue).
       Effort S.
-- [ ] **No length limits on user-entered text** [sonnet] — todo text, shop
+- [x] **No length limits on user-entered text** [sonnet] — already done (found 2026-10-05): per-field caps in the `*Sync.ts` add functions mirrored by `supabase/migrations/20260930160100_text_caps.sql`, inputs use `maxLength`, `src/lib/textCaps.test.ts` pins client/server parity. Original: — todo text, shop
       item names, book-idea/boardgame-idea title + notes, etc. have no
       `maxLength` on their inputs (checked all `src/projects/*` — the only
       `maxLength` in the codebase is the 6-digit OTP code field in

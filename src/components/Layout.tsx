@@ -1,9 +1,10 @@
-import { useEffect, useRef } from 'react'
+import { Suspense, useEffect, useRef } from 'react'
 import { Link, Outlet, useLocation } from 'react-router-dom'
 import { ErrorBoundary } from './ErrorBoundary'
 import { InstallHint } from './InstallHint'
 import { OnlineBadge } from './OnlineBadge'
 import { OfflineBanner } from './OfflineBanner'
+import { SkeletonList } from './Skeleton'
 import { UpdateToast } from './UpdateToast'
 import { projects } from '../lib/projects'
 import { recordOpen } from '../lib/projectStats'
@@ -44,7 +45,9 @@ export function Layout() {
       <main className="mx-auto max-w-3xl px-4 py-6 pb-16">
         <ErrorBoundary resetKey={location.pathname}>
           {justJoined && <InstallHint />}
-          <Outlet />
+          <Suspense fallback={<SkeletonList rows={5} rowClassName="h-14" />}>
+            <Outlet />
+          </Suspense>
         </ErrorBoundary>
       </main>
       <UpdateToast />

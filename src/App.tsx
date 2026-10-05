@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { lazy, useEffect } from 'react'
 import { HashRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { Layout } from './components/Layout'
 import { startBoardgameIdeasSync } from './lib/boardgameIdeasSync'
@@ -14,24 +14,30 @@ import { startTripsSync } from './lib/tripsSync'
 import { startTodoSync } from './lib/todoSync'
 import { startTransferSync } from './lib/transferSync'
 import { useAuth } from './lib/useAuth'
-import { BoardgameIdeas } from './projects/boardgame-ideas/BoardgameIdeas'
-import { BookIdeas } from './projects/book-ideas/BookIdeas'
-import { Climbing } from './projects/climbing/Climbing'
-import { Habits } from './projects/habits/Habits'
-import { Events } from './projects/events/Events'
 import { Home } from './projects/home/Home'
-import { JoinProject } from './projects/join/JoinProject'
-import { Life } from './projects/life/Life'
-import { LifeEditor } from './projects/life/LifeEditor'
-import { LifeImport } from './projects/life/LifeImport'
-import { Links } from './projects/links/Links'
-import { LocalTransfer } from './projects/local-transfer/LocalTransfer'
-import { Settings } from './projects/settings/Settings'
-import { Todo } from './projects/todo/Todo'
-import { Trips } from './projects/trips/Trips'
-import { Sharing } from './projects/sharing/Sharing'
-import { JoinArea } from './projects/shop-list/JoinArea'
-import { ShopList } from './projects/shop-list/ShopList'
+
+// Each project page is its own chunk (the home grid stays eager): visitors only
+// download what they open. The PWA precaches every chunk, so pages still work
+// offline; a chunk that fails to load lands in Layout's ErrorBoundary.
+const page = <T extends Record<string, React.ComponentType>>(load: () => Promise<T>, name: keyof T & string) =>
+  lazy(() => load().then((m) => ({ default: m[name] as React.ComponentType })))
+const BoardgameIdeas = page(() => import('./projects/boardgame-ideas/BoardgameIdeas'), 'BoardgameIdeas')
+const BookIdeas = page(() => import('./projects/book-ideas/BookIdeas'), 'BookIdeas')
+const Climbing = page(() => import('./projects/climbing/Climbing'), 'Climbing')
+const Habits = page(() => import('./projects/habits/Habits'), 'Habits')
+const Events = page(() => import('./projects/events/Events'), 'Events')
+const JoinProject = page(() => import('./projects/join/JoinProject'), 'JoinProject')
+const Life = page(() => import('./projects/life/Life'), 'Life')
+const LifeEditor = page(() => import('./projects/life/LifeEditor'), 'LifeEditor')
+const LifeImport = page(() => import('./projects/life/LifeImport'), 'LifeImport')
+const Links = page(() => import('./projects/links/Links'), 'Links')
+const LocalTransfer = page(() => import('./projects/local-transfer/LocalTransfer'), 'LocalTransfer')
+const Settings = page(() => import('./projects/settings/Settings'), 'Settings')
+const Todo = page(() => import('./projects/todo/Todo'), 'Todo')
+const Trips = page(() => import('./projects/trips/Trips'), 'Trips')
+const Sharing = page(() => import('./projects/sharing/Sharing'), 'Sharing')
+const JoinArea = page(() => import('./projects/shop-list/JoinArea'), 'JoinArea')
+const ShopList = page(() => import('./projects/shop-list/ShopList'), 'ShopList')
 
 // Hash-based routing so deep links work on GitHub Pages without a server.
 export default function App() {
