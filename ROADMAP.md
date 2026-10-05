@@ -835,8 +835,8 @@ what's already shipped. Ranked by how cheap + how load-bearing.
 
 Low-confidence — flagged for completeness, not verified as real problems:
 
-- [ ] **`apple-touch-icon` uses the 192px icon, Apple recommends 180px**
-      [sonnet] — `index.html` links `icons/icon-192.png` for
+- [x] **`apple-touch-icon` uses the 192px icon, Apple recommends 180px**
+      [sonnet] — done 2026-10-05: `public/icons/apple-touch-icon.png` (180px, downscaled from icon-512 with `sips`, fully opaque so iOS draws no black corners); the favicon still uses icon-192. Original: `index.html` links `icons/icon-192.png` for
       `apple-touch-icon`; iOS scales it down fine in practice, this is
       cosmetic at best. Only worth doing if a 180px asset is trivial to
       generate alongside the existing 192/512 set. Effort XS.
