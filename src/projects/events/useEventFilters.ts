@@ -191,16 +191,18 @@ export function useEventFilters(
   const groups = useMemo(() => {
     const out: DayGroup[] = []
     if (view === 'all') {
+      // Dated days first (grouped into weeks by the page); the long "Open now"
+      // list goes last so it never fills the page and hides the weeks.
       const running = filtered
         .filter((e) => isLongRunning(e, now))
         .sort((a, b) => Date.parse(a.end ?? a.start) - Date.parse(b.end ?? b.start))
-      if (running.length) out.push({ key: 'open-now', label: 'Open now', events: running })
       out.push(
         ...groupByDay(
           filtered.filter((e) => !isLongRunning(e, now)),
           now,
         ),
       )
+      if (running.length) out.push({ key: 'open-now', label: 'Open now', events: running })
     } else if (view === 'open') {
       const running = [...filtered].sort((a, b) => Date.parse(a.end ?? a.start) - Date.parse(b.end ?? b.start))
       if (running.length) out.push({ key: 'open-now', label: 'Open now', events: running })
