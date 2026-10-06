@@ -5,11 +5,11 @@ import type { NutritionField, NutritionForm } from './nutrition'
 // empty field stays empty (= null).
 
 const FIELDS: { key: NutritionField; label: string; unit: string }[] = [
-  { key: 'grams', label: 'Grams', unit: 'g' },
-  { key: 'kcal', label: 'Calories', unit: 'kcal' },
-  { key: 'proteinG', label: 'Protein', unit: 'g' },
-  { key: 'carbsG', label: 'Carbs', unit: 'g' },
-  { key: 'fatG', label: 'Fat', unit: 'g' },
+  { key: 'grams', label: '⚖️ Grams', unit: 'g' },
+  { key: 'kcal', label: '🔥 Calories', unit: 'kcal' },
+  { key: 'proteinG', label: '🥩 Protein', unit: 'g' },
+  { key: 'carbsG', label: '🍞 Carbs', unit: 'g' },
+  { key: 'fatG', label: '🥑 Fat', unit: 'g' },
 ]
 
 const BOX =
@@ -29,7 +29,7 @@ export function NutritionFields({ value, onChange }: Props) {
   return (
     <div className="grid grid-cols-5 gap-2">
       {FIELDS.map((f) => (
-        <label key={f.key} className="min-w-0 text-xs text-slate-500 dark:text-slate-400">
+        <label key={f.key} title={`${f.label.slice(3)} (${f.unit})`} className="min-w-0 text-xs text-slate-500 dark:text-slate-400">
           {f.label}
           <input
             value={value[f.key]}

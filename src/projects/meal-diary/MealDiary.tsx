@@ -12,8 +12,9 @@ import { Snackbar } from '../../components/Snackbar'
 import { SkeletonList } from '../../components/Skeleton'
 import { SyncCard } from '../../components/SyncCard'
 import { MEALS, dayLabel, defaultMeal, groupByDay, mealMeta } from './model'
-import { dayTotals, parseAmount, type Nutrition, type NutritionForm } from './nutrition'
+import { MACRO_EMOJI, dayTotals, parseAmount, type Nutrition, type NutritionForm } from './nutrition'
 import { NutritionFields } from './NutritionFields'
+import { NutritionTrends } from './NutritionTrends'
 
 function toNutrition(f: NutritionForm): Nutrition {
   return {
@@ -31,14 +32,30 @@ function toForm(e: MealEntry): NutritionForm {
   return { grams: s(e.grams), kcal: s(e.kcal), proteinG: s(e.proteinG), carbsG: s(e.carbsG), fatG: s(e.fatG), estimated: e.estimated }
 }
 
-function macros(e: Pick<MealEntry, 'grams' | 'kcal' | 'proteinG' | 'carbsG' | 'fatG' | 'estimated'>): string {
+function macros(e: Pick<MealEntry, 'grams' | 'kcal' | 'proteinG' | 'carbsG' | 'fatG' | 'estimated'>): { text: string; hint: string } {
   const parts: string[] = []
-  if (e.grams !== null) parts.push(`${e.grams} g`)
-  if (e.kcal !== null) parts.push(`${e.estimated ? '≈ ' : ''}${e.kcal} kcal`)
-  if (e.proteinG !== null) parts.push(`P ${e.proteinG}`)
-  if (e.carbsG !== null) parts.push(`C ${e.carbsG}`)
-  if (e.fatG !== null) parts.push(`F ${e.fatG}`)
-  return parts.join(' · ')
+  const hints: string[] = []
+  if (e.grams !== null) {
+    parts.push(`${e.grams} g`)
+    hints.push(`${e.grams} g total`)
+  }
+  if (e.kcal !== null) {
+    parts.push(`${MACRO_EMOJI.kcal} ${e.estimated ? '≈ ' : ''}${e.kcal}`)
+    hints.push(`${e.kcal} kcal${e.estimated ? ' (AI estimate)' : ''}`)
+  }
+  if (e.proteinG !== null) {
+    parts.push(`${MACRO_EMOJI.proteinG} ${e.proteinG}`)
+    hints.push(`${e.proteinG} g protein`)
+  }
+  if (e.carbsG !== null) {
+    parts.push(`${MACRO_EMOJI.carbsG} ${e.carbsG}`)
+    hints.push(`${e.carbsG} g carbs`)
+  }
+  if (e.fatG !== null) {
+    parts.push(`${MACRO_EMOJI.fatG} ${e.fatG}`)
+    hints.push(`${e.fatG} g fat`)
+  }
+  return { text: parts.join(' · '), hint: hints.join(' · ') }
 }
 
 const INPUT =
@@ -93,6 +110,7 @@ export function MealDiary() {
               type="button"
               variant={meal === m.id ? 'primary' : 'ghost'}
               aria-pressed={meal === m.id}
+              title={m.label}
               onClick={() => setMeal(m.id)}
             >
               {m.emoji} {m.label}
@@ -111,7 +129,7 @@ export function MealDiary() {
             className={INPUT}
           />
           <WeighedToggle weighed={weighed} onChange={setWeighed} />
-          <Button type="submit" disabled={!text.trim()}>
+          <Button type="submit" disabled={!text.trim()} title="Add to the diary">
             Add
           </Button>
         </div>
@@ -131,6 +149,8 @@ export function MealDiary() {
           )}
         </label>
       </form>
+
+      {entries !== undefined && <NutritionTrends entries={entries} now={now} />}
 
       {entries === undefined ? (
         <SkeletonList rows={4} rowClassName="h-12" />
@@ -172,7 +192,7 @@ export function MealDiary() {
                             <Button type="submit" disabled={!editing.text.trim()}>
                               Save
                             </Button>
-                            <Button type="button" variant="ghost" aria-label="Cancel" onClick={() => setEditing(null)}>
+                            <Button type="button" variant="ghost" aria-label="Cancel" title="Cancel" onClick={() => setEditing(null)}>
                               ✕
                             </Button>
                           </div>
@@ -194,10 +214,14 @@ export function MealDiary() {
                               <span title={entry.weighed ? 'Weighed' : 'By eye'} aria-label={entry.weighed ? 'Weighed' : 'By eye'}>
                                 {entry.weighed ? '⚖️' : '👁️'}
                               </span>
-                              {macros(entry) && ` ${macros(entry)}`}
+                              {macros(entry).text && (
+                                <span title={macros(entry).hint} aria-label={macros(entry).hint}>
+                                  {` ${macros(entry).text}`}
+                                </span>
+                              )}
                             </span>
                           </button>
-                          <Button variant="danger" onClick={() => void remove(entry)} aria-label={`Delete ${entry.text}`} className="min-w-10">
+                          <Button variant="danger" onClick={() => void remove(entry)} aria-label={`Delete ${entry.text}`} title="Delete" className="min-w-10">
                             ✕
                           </Button>
                         </>
@@ -220,10 +244,13 @@ function DayTotalsLine({ entries }: { entries: MealEntry[] }) {
   const t = dayTotals(entries)
   if (t.counted === 0) return null
   return (
-    <p className="text-xs text-slate-500 dark:text-slate-400">
-      {t.approximate ? '≈ ' : ''}
-      {t.kcal} kcal · P {t.proteinG} · C {t.carbsG} · F {t.fatG}
-      {t.uncounted > 0 && ` · ${t.uncounted} without values`}
+    <p
+      className="text-xs text-slate-500 dark:text-slate-400"
+      title={`${t.approximate ? 'About ' : ''}${t.kcal} kcal · ${t.proteinG} g protein · ${t.carbsG} g carbs · ${t.fatG} g fat${t.uncounted > 0 ? ` · ${t.uncounted} entries without values` : ''}`}
+    >
+      {MACRO_EMOJI.kcal} {t.approximate ? '≈ ' : ''}
+      {t.kcal} · {MACRO_EMOJI.proteinG} {t.proteinG} · {MACRO_EMOJI.carbsG} {t.carbsG} · {MACRO_EMOJI.fatG} {t.fatG}
+      {t.uncounted > 0 && ` · ❔ ${t.uncounted}`}
     </p>
   )
 }
