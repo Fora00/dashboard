@@ -314,12 +314,20 @@ export function weekStart(day: string): string {
   return addDays(day, -dow)
 }
 
-/** "Questa settimana", "Prossima settimana", else "lun 12 ott – dom 18 ott". */
+/** ISO 8601 week number of the week starting on `monday`. */
+export function isoWeekNumber(monday: string): number {
+  const thursday = new Date(`${addDays(monday, 3)}T12:00:00Z`)
+  const jan1 = Date.UTC(thursday.getUTCFullYear(), 0, 1, 12)
+  return Math.floor((thursday.getTime() - jan1) / 86_400_000 / 7) + 1
+}
+
+/** "This week", "Next week", else "Week 43 · 19 ott – 25 ott". */
 export function weekLabel(start: string, now: number): string {
   const thisWeek = weekStart(romeDate(now))
-  if (start === thisWeek) return 'Questa settimana'
-  if (start === addDays(thisWeek, 7)) return 'Prossima settimana'
-  return `${shortDay(start)} – ${shortDay(addDays(start, 6))}`
+  if (start === thisWeek) return 'This week'
+  if (start === addDays(thisWeek, 7)) return 'Next week'
+  const noWeekday = (day: string) => shortDay(day).split(' ').slice(1).join(' ')
+  return `Week ${isoWeekNumber(start)} · ${noWeekday(start)} – ${noWeekday(addDays(start, 6))}`
 }
 
 /** Buckets consecutive day groups into weeks (Mon–Sun); the 'open-now' group stays its own bucket. */

@@ -429,10 +429,14 @@ export function Events() {
       ) : (
         <div className="space-y-5">
           {weeks.map((w) => {
-            const folded = collapsedWeeks.has(w.key)
+            const isOpenNow = w.key === 'open-now'
+            const folded = !isOpenNow && collapsedWeeks.has(w.key)
             return (
               <section key={w.key} aria-label={w.label}>
                 <h2 className="mb-2 text-sm font-semibold text-slate-600 dark:text-slate-300">
+                  {isOpenNow ? (
+                    w.label
+                  ) : (
                   <button
                     type="button"
                     onClick={() => toggleWeek(w.key)}
@@ -446,6 +450,7 @@ export function Events() {
                       · {w.count} 📍
                     </span>
                   </button>
+                  )}
                 </h2>
                 {!folded && (
                   <div className="space-y-5">

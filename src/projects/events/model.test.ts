@@ -3,7 +3,7 @@ import type { EventItem } from './types'
 import {
   areaLabel, areaOf, areaRank, buildThingsAddUrl, categoryLabel, categoryOf, dayLabel, formatRange, groupByDay,
   inCategory, isKidsEvent, isLongRunning, isOngoingNow, isOver, isSparseSeries, isSpot, listingDay, localDay,
-  nextSeriesDay, relativeTime, romeDate, safeHttpUrl, shortDay, groupByWeek, weekStart,
+  nextSeriesDay, relativeTime, romeDate, safeHttpUrl, shortDay, groupByWeek, isoWeekNumber, weekStart,
 } from './model'
 import type { DayGroup } from './model'
 
@@ -252,13 +252,19 @@ describe('weeks', () => {
     expect(weekStart('2026-11-01')).toBe('2026-10-26')
   })
 
+  it('isoWeekNumber follows ISO 8601', () => {
+    expect(isoWeekNumber('2026-10-19')).toBe(43)
+    expect(isoWeekNumber('2026-12-28')).toBe(53)
+    expect(isoWeekNumber('2027-01-04')).toBe(1)
+  })
+
   it('groups days into weeks and labels this/next week', () => {
     const w = groupByWeek([g('open-now'), g('2026-10-06'), g('2026-10-11'), g('2026-10-12'), g('2026-10-20')], now)
     expect(w.map((x) => [x.key, x.label, x.count])).toEqual([
       ['open-now', 'open-now', 1],
-      ['2026-10-05', 'Questa settimana', 2],
-      ['2026-10-12', 'Prossima settimana', 1],
-      ['2026-10-19', expect.stringContaining('ott'), 1],
+      ['2026-10-05', 'This week', 2],
+      ['2026-10-12', 'Next week', 1],
+      ['2026-10-19', 'Week 43 · 19 ott – 25 ott', 1],
     ])
   })
 })
