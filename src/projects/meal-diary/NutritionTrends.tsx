@@ -11,6 +11,7 @@ const SEG = { protein: 'fill-rose-500', carbs: 'fill-amber-400', fat: 'fill-sky-
 
 /** Calories per day as stacked bars (protein / carbs / fat by calorie share), plus the average macro split. Plain SVG, no library. */
 export function NutritionTrends({ entries, now }: { entries: MealEntry[]; now: Date }) {
+  const [open, setOpen] = useState(true)
   const [range, setRange] = useState<(typeof RANGES)[number]>(7)
   const points = useMemo(() => lastDays(entries, now, range, dayKey), [entries, now, range])
   const avg = averageOfLogged(points)
@@ -25,10 +26,19 @@ export function NutritionTrends({ entries, now }: { entries: MealEntry[]; now: D
   return (
     <Card className="mb-6 space-y-3">
       <div className="flex items-center justify-between gap-2">
-        <h2 className="text-sm font-medium text-slate-500 dark:text-slate-400" title="Daily calories; each bar is split by where the calories come from">
-          📊 Trends
+        <h2 className="text-sm font-medium text-slate-500 dark:text-slate-400">
+          <button
+            type="button"
+            onClick={() => setOpen(!open)}
+            aria-expanded={open}
+            title={open ? 'Hide trends' : 'Show trends'}
+            className="flex min-h-10 items-center gap-1.5"
+          >
+            <span aria-hidden="true" className="text-xs">{open ? '▾' : '▸'}</span>
+            📊 Trends
+          </button>
         </h2>
-        <div className="flex gap-1" role="group" aria-label="Range">
+        {open && <div className="flex gap-1" role="group" aria-label="Range">
           {RANGES.map((r) => (
             <button
               key={r}
@@ -41,9 +51,11 @@ export function NutritionTrends({ entries, now }: { entries: MealEntry[]; now: D
               {r}d
             </button>
           ))}
-        </div>
+        </div>}
       </div>
 
+      {open && (
+        <>
       <p className="text-xs text-slate-500 dark:text-slate-400" title={`Average over the ${avg.days} day(s) with values; empty days are skipped`}>
         {MACRO_EMOJI.kcal} avg {avg.kcal} kcal · {MACRO_EMOJI.proteinG} {avg.proteinG} g · {MACRO_EMOJI.carbsG} {avg.carbsG} g · {MACRO_EMOJI.fatG} {avg.fatG} g
       </p>
@@ -92,6 +104,8 @@ export function NutritionTrends({ entries, now }: { entries: MealEntry[]; now: D
           {MACRO_EMOJI.proteinG} {split.protein}% · {MACRO_EMOJI.carbsG} {split.carbs}% · {MACRO_EMOJI.fatG} {split.fat}%
         </p>
       </div>
+        </>
+      )}
     </Card>
   )
 }

@@ -74,6 +74,15 @@ export function MealDiary() {
   const [weighed, setWeighed] = useState(false)
   const [editing, setEditing] = useState<{ id: string; text: string; weighed: boolean; nutrition: NutritionForm } | null>(null)
 
+  // Days the user folded away (all open by default).
+  const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set())
+  const toggleDay = (d: string) =>
+    setCollapsed((prev) => {
+      const next = new Set(prev)
+      if (!next.delete(d)) next.add(d)
+      return next
+    })
+
   const groups = useMemo(() => groupByDay(entries ?? []), [entries])
 
   async function add(e: FormEvent) {
@@ -150,8 +159,6 @@ export function MealDiary() {
         </label>
       </form>
 
-      {entries !== undefined && <NutritionTrends entries={entries} now={now} />}
-
       {entries === undefined ? (
         <SkeletonList rows={4} rowClassName="h-12" />
       ) : groups.length === 0 ? (
@@ -161,9 +168,22 @@ export function MealDiary() {
           {groups.map((g) => (
             <section key={g.day} aria-label={dayLabel(g.day, now)}>
               <div className="mb-2 flex flex-wrap items-baseline justify-between gap-x-3">
-                <h2 className="text-sm font-medium text-slate-500 dark:text-slate-400">{dayLabel(g.day, now)}</h2>
+                <h2 className="text-sm font-medium text-slate-500 dark:text-slate-400">
+                  <button
+                    type="button"
+                    onClick={() => toggleDay(g.day)}
+                    aria-expanded={!collapsed.has(g.day)}
+                    title={collapsed.has(g.day) ? 'Show this day' : 'Hide this day'}
+                    className="flex min-h-10 items-center gap-1.5"
+                  >
+                    <span aria-hidden="true" className="text-xs">{collapsed.has(g.day) ? '▸' : '▾'}</span>
+                    {dayLabel(g.day, now)}
+                    {collapsed.has(g.day) && <span className="text-xs">({g.entries.length})</span>}
+                  </button>
+                </h2>
                 <DayTotalsLine entries={g.entries} />
               </div>
+              {!collapsed.has(g.day) && (
               <Card className="divide-y divide-slate-100 p-0 dark:divide-slate-800">
                 <ul>
                   {g.entries.map((entry) => (
@@ -230,10 +250,13 @@ export function MealDiary() {
                   ))}
                 </ul>
               </Card>
+              )}
             </section>
           ))}
         </div>
       )}
+
+      {entries !== undefined && <div className="mt-6"><NutritionTrends entries={entries} now={now} /></div>}
 
       {pending && <Snackbar label={pending.label} onUndo={confirmUndo} />}
     </div>

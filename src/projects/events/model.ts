@@ -301,6 +301,43 @@ export function groupByDay(events: EventItem[], now: number): DayGroup[] {
   return groups
 }
 
+export interface WeekGroup {
+  key: string // Monday of the week (local day), or 'open-now'
+  label: string
+  days: DayGroup[]
+  count: number
+}
+
+/** Monday (local day key) of the week containing `day`. */
+export function weekStart(day: string): string {
+  const dow = (new Date(`${day}T12:00:00Z`).getUTCDay() + 6) % 7
+  return addDays(day, -dow)
+}
+
+/** "Questa settimana", "Prossima settimana", else "lun 12 ott – dom 18 ott". */
+export function weekLabel(start: string, now: number): string {
+  const thisWeek = weekStart(romeDate(now))
+  if (start === thisWeek) return 'Questa settimana'
+  if (start === addDays(thisWeek, 7)) return 'Prossima settimana'
+  return `${shortDay(start)} – ${shortDay(addDays(start, 6))}`
+}
+
+/** Buckets consecutive day groups into weeks (Mon–Sun); the 'open-now' group stays its own bucket. */
+export function groupByWeek(days: DayGroup[], now: number): WeekGroup[] {
+  const out: WeekGroup[] = []
+  for (const g of days) {
+    const key = g.key === 'open-now' ? 'open-now' : weekStart(g.key)
+    const last = out[out.length - 1]
+    if (last && last.key === key && key !== 'open-now') {
+      last.days.push(g)
+      last.count += g.events.length
+    } else {
+      out.push({ key, label: key === 'open-now' ? g.label : weekLabel(key, now), days: [g], count: g.events.length })
+    }
+  }
+  return out
+}
+
 const rtf = new Intl.RelativeTimeFormat('en', { numeric: 'auto' })
 
 /** "3 hours ago" style age of an ISO timestamp. */

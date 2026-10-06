@@ -23,7 +23,7 @@ import { EventCard } from './EventCard'
 import { EyeOffIcon, ListChecksIcon, PlusIcon, XIcon } from './icons'
 import { useEventFilters, type View } from './useEventFilters'
 import type { EventItem } from './types'
-import { categoryLabel, fetchEventsFile, isKidsEvent, relativeTime } from './model'
+import { categoryLabel, fetchEventsFile, groupByWeek, isKidsEvent, relativeTime } from './model'
 
 /** The add/edit sheet: closed, adding (with an optional prefill) or editing a row. */
 type Editor =
@@ -120,6 +120,15 @@ export function Events() {
     filterCount,
   } = filters
   const { visibleGroups, total, limit } = groups
+  const weeks = useMemo(() => groupByWeek(visibleGroups, now), [visibleGroups, now])
+  // Weeks the user folded away (all open by default).
+  const [collapsedWeeks, setCollapsedWeeks] = useState<ReadonlySet<string>>(new Set())
+  const toggleWeek = (k: string) =>
+    setCollapsedWeeks((prev) => {
+      const next = new Set(prev)
+      if (!next.delete(k)) next.add(k)
+      return next
+    })
 
   // Stable across renders (they read the current mark from Dexie), so the
   // memoised EventCards only re-render when their own props change.
@@ -419,28 +428,56 @@ export function Events() {
         />
       ) : (
         <div className="space-y-5">
-          {visibleGroups.map((g) => (
-            <section key={g.key}>
-              <h2 className="mb-2 text-sm font-semibold text-slate-500 dark:text-slate-400">{g.label}</h2>
-              <ul className="space-y-2">
-                {g.events.map((e) => (
-                  <EventCard
-                    key={`${g.key}-${e.id}`}
-                    event={e}
-                    saved={marks.get(e.id)?.state === 'saved'}
-                    hidden={marks.get(e.id)?.state === 'hidden'}
-                    now={now}
-                    onToggleSave={onToggleSave}
-                    onToggleHide={onToggleHide}
-                    onEdit={onEdit}
-                    selecting={selecting}
-                    selected={selectedIds.has(e.id)}
-                    onSelect={onSelect}
-                  />
-                ))}
-              </ul>
-            </section>
-          ))}
+          {weeks.map((w) => {
+            const folded = collapsedWeeks.has(w.key)
+            return (
+              <section key={w.key} aria-label={w.label}>
+                <h2 className="mb-2 text-sm font-semibold text-slate-600 dark:text-slate-300">
+                  <button
+                    type="button"
+                    onClick={() => toggleWeek(w.key)}
+                    aria-expanded={!folded}
+                    title={folded ? 'Show this week' : 'Hide this week'}
+                    className={`flex min-h-10 w-full items-center gap-1.5 rounded-lg text-left ${FOCUS_RING}`}
+                  >
+                    <span aria-hidden="true" className="text-xs">{folded ? '▸' : '▾'}</span>
+                    {w.label}
+                    <span className="text-xs font-normal text-slate-500 dark:text-slate-400" title={`${w.count} events`}>
+                      · {w.count} 📍
+                    </span>
+                  </button>
+                </h2>
+                {!folded && (
+                  <div className="space-y-5">
+                    {w.days.map((g) => (
+                      <div key={g.key}>
+                        {w.key !== 'open-now' && (
+                          <h3 className="mb-2 text-sm font-semibold text-slate-500 dark:text-slate-400">{g.label}</h3>
+                        )}
+                        <ul className="space-y-2">
+                          {g.events.map((e) => (
+                            <EventCard
+                              key={`${g.key}-${e.id}`}
+                              event={e}
+                              saved={marks.get(e.id)?.state === 'saved'}
+                              hidden={marks.get(e.id)?.state === 'hidden'}
+                              now={now}
+                              onToggleSave={onToggleSave}
+                              onToggleHide={onToggleHide}
+                              onEdit={onEdit}
+                              selecting={selecting}
+                              selected={selectedIds.has(e.id)}
+                              onSelect={onSelect}
+                            />
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </section>
+            )
+          })}
           {limit < total && (
             <div className="flex justify-center">
               <Button variant="ghost" onClick={toggles.showMore}>

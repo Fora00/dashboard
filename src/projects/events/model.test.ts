@@ -3,8 +3,9 @@ import type { EventItem } from './types'
 import {
   areaLabel, areaOf, areaRank, buildThingsAddUrl, categoryLabel, categoryOf, dayLabel, formatRange, groupByDay,
   inCategory, isKidsEvent, isLongRunning, isOngoingNow, isOver, isSparseSeries, isSpot, listingDay, localDay,
-  nextSeriesDay, relativeTime, romeDate, safeHttpUrl, shortDay,
+  nextSeriesDay, relativeTime, romeDate, safeHttpUrl, shortDay, groupByWeek, weekStart,
 } from './model'
+import type { DayGroup } from './model'
 
 // Sat 10 Oct 2026, 12:00 in Rome.
 const NOW = Date.parse('2026-10-10T10:00:00Z')
@@ -238,5 +239,26 @@ describe('buildThingsAddUrl', () => {
     const url = buildThingsAddUrl(ev({ title: 'Rock & Roll #1 100%' }), NOW)
     expect(url).toContain(encodeURIComponent('Rock & Roll #1 100%'))
     expect(parse(url).title).toBe('Rock & Roll #1 100%')
+  })
+})
+
+describe('weeks', () => {
+  const g = (key: string): DayGroup => ({ key, label: key, events: [{ id: key } as EventItem] })
+  const now = Date.parse('2026-10-06T10:00:00+02:00') // Tuesday
+
+  it('weekStart is the Monday, across a month boundary and on Sunday', () => {
+    expect(weekStart('2026-10-06')).toBe('2026-10-05')
+    expect(weekStart('2026-10-11')).toBe('2026-10-05')
+    expect(weekStart('2026-11-01')).toBe('2026-10-26')
+  })
+
+  it('groups days into weeks and labels this/next week', () => {
+    const w = groupByWeek([g('open-now'), g('2026-10-06'), g('2026-10-11'), g('2026-10-12'), g('2026-10-20')], now)
+    expect(w.map((x) => [x.key, x.label, x.count])).toEqual([
+      ['open-now', 'open-now', 1],
+      ['2026-10-05', 'Questa settimana', 2],
+      ['2026-10-12', 'Prossima settimana', 1],
+      ['2026-10-19', expect.stringContaining('ott'), 1],
+    ])
   })
 })
