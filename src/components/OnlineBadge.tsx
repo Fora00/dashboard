@@ -10,9 +10,7 @@ export function OnlineBadge() {
           : 'bg-amber-500/10 text-amber-700 dark:text-amber-400'
       }`}
     >
-      <span
-        className={`size-1.5 rounded-full ${online ? 'bg-emerald-400' : 'bg-amber-400'}`}
-      />
+      <span className={`size-1.5 rounded-full ${online ? 'bg-emerald-400' : 'bg-amber-400'}`} />
       {online ? 'Online' : 'Offline'}
     </span>
   )

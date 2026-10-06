@@ -229,20 +229,11 @@ export function Sharing() {
         if (err) throw err
       }
       // Then drop whatever is left, including an owner-invited whitelist row.
-      const { error: e0 } = await supabase!
-        .from('shop_area_members')
-        .delete()
-        .eq('email', guest.email)
+      const { error: e0 } = await supabase!.from('shop_area_members').delete().eq('email', guest.email)
       if (e0) throw e0
-      const { error: e1 } = await supabase!
-        .from('project_members')
-        .delete()
-        .eq('email', guest.email)
+      const { error: e1 } = await supabase!.from('project_members').delete().eq('email', guest.email)
       if (e1) throw e1
-      const { error: e2 } = await supabase!
-        .from('allowed_emails')
-        .delete()
-        .eq('email', guest.email)
+      const { error: e2 } = await supabase!.from('allowed_emails').delete().eq('email', guest.email)
       if (e2) throw e2
     })
   }
@@ -370,11 +361,7 @@ export function Sharing() {
           </Button>
         </div>
         <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={() => setShopOn((s) => !s)}
-            className={chip(shopOn, 'indigo')}
-          >
+          <button type="button" onClick={() => setShopOn((s) => !s)} className={chip(shopOn, 'indigo')}>
             🛒 Shop List
           </button>
           {shareable.map((p) => {
@@ -383,9 +370,7 @@ export function Sharing() {
               <button
                 key={p.id}
                 type="button"
-                onClick={() =>
-                  setSelected((s) => (on ? s.filter((id) => id !== p.id) : [...s, p.id]))
-                }
+                onClick={() => setSelected((s) => (on ? s.filter((id) => id !== p.id) : [...s, p.id]))}
                 className={chip(on, 'indigo')}
               >
                 {p.emoji} {p.name}
@@ -476,9 +461,8 @@ export function Sharing() {
       <section className="mt-6">
         <h2 className="mb-1 text-sm font-semibold">Invite links</h2>
         <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
-          One link per project. Whoever opens it enters their email and gets that project only.
-          Removing a guest resets the link; Reset kills links you already sent. Shop areas have
-          their own links in the Shop List.
+          One link per project. Whoever opens it enters their email and gets that project only. Removing a guest resets
+          the link; Reset kills links you already sent. Shop areas have their own links in the Shop List.
         </p>
         <div className={listBox}>
           {shareable.map((p) => (
@@ -486,9 +470,7 @@ export function Sharing() {
               <span className="min-w-0 flex-1 truncate text-sm">
                 {p.emoji} {p.name}
                 {notice?.id === p.id && (
-                  <span className="ml-2 text-xs text-emerald-600 dark:text-emerald-400">
-                    {notice.text}
-                  </span>
+                  <span className="ml-2 text-xs text-emerald-600 dark:text-emerald-400">{notice.text}</span>
                 )}
               </span>
               <Button
@@ -525,16 +507,10 @@ export function Sharing() {
                 <span className="min-w-0 flex-1 truncate text-sm">
                   {p.emoji} {p.name}
                   {notice?.id === p.id && (
-                    <span className="ml-2 text-xs text-emerald-600 dark:text-emerald-400">
-                      {notice.text}
-                    </span>
+                    <span className="ml-2 text-xs text-emerald-600 dark:text-emerald-400">{notice.text}</span>
                   )}
                 </span>
-                <Button
-                  variant="ghost"
-                  onClick={() => void sharePublic(p)}
-                  aria-label={`Share ${p.name} link`}
-                >
+                <Button variant="ghost" onClick={() => void sharePublic(p)} aria-label={`Share ${p.name} link`}>
                   🔗 Link
                 </Button>
               </div>

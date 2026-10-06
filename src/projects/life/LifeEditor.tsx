@@ -201,11 +201,7 @@ export function LifeEditor() {
 
   return (
     <div>
-      <PageHeader
-        emoji="🧭"
-        title={existing ? 'Edit week' : 'Build a week'}
-        subtitle={`Week of ${week}`}
-      />
+      <PageHeader emoji="🧭" title={existing ? 'Edit week' : 'Build a week'} subtitle={`Week of ${week}`} />
 
       {session === null && (
         <p className="mb-4 rounded-lg border border-amber-300 bg-amber-50 px-3.5 py-2 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-300">

@@ -1,9 +1,30 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { LifeEntry, LifePlan, LifeTask } from '../../lib/db'
 import {
-  LIFE_CAPS, addDays, buildThingsUrl, canReturnFromThings, daysBetween, decodeImportParam, derivedCheckinId,
-  diffPlans, encodeImportLink, entryId, isDateKey, isEnergy, isIosLike, isMondayKey, lifeReturnUrl, nextCheckin,
-  parseWeekJson, summarizeWeek, thingsItems, validateAnswer, validatePlan, weekDays, weekKey, withCheckinIds,
+  LIFE_CAPS,
+  addDays,
+  buildThingsUrl,
+  canReturnFromThings,
+  daysBetween,
+  decodeImportParam,
+  derivedCheckinId,
+  diffPlans,
+  encodeImportLink,
+  entryId,
+  isDateKey,
+  isEnergy,
+  isIosLike,
+  isMondayKey,
+  lifeReturnUrl,
+  nextCheckin,
+  parseWeekJson,
+  summarizeWeek,
+  thingsItems,
+  validateAnswer,
+  validatePlan,
+  weekDays,
+  weekKey,
+  withCheckinIds,
 } from './model'
 
 const WEEK = '2026-09-28' // a Monday
@@ -23,7 +44,15 @@ function basePlan(over: Partial<LifePlan> = {}): LifePlan {
 }
 
 const task = (over: Partial<LifeTask> = {}): LifeTask => ({
-  id: 't1', title: 'Call dentist', when: null, deadline: null, area: null, project: null, tags: [], notes: '', ...over,
+  id: 't1',
+  title: 'Call dentist',
+  when: null,
+  deadline: null,
+  area: null,
+  project: null,
+  tags: [],
+  notes: '',
+  ...over,
 })
 
 function ok(value: unknown): LifePlan {
@@ -60,7 +89,13 @@ describe('date keys', () => {
     expect(addDays('2026-12-30', 3)).toBe('2027-01-02')
     expect(addDays('2026-03-01', -1)).toBe('2026-02-28')
     expect(weekDays('2026-12-28')).toEqual([
-      '2026-12-28', '2026-12-29', '2026-12-30', '2026-12-31', '2027-01-01', '2027-01-02', '2027-01-03',
+      '2026-12-28',
+      '2026-12-29',
+      '2026-12-30',
+      '2026-12-31',
+      '2027-01-01',
+      '2027-01-02',
+      '2027-01-03',
     ])
   })
 
@@ -153,19 +188,32 @@ describe('parseWeekJson', () => {
       expect(errors({ version: 1, week: WEEK, focus: [{ id: 'has space', title: 't' }] })[0]).toMatch(/focus\[0\]\.id/)
       expect(errors({ version: 1, week: WEEK, focus: [{ title: 't' }] })[0]).toMatch(/focus\[0\]\.id/)
       expect(
-        errors({ version: 1, week: WEEK, focus: [{ id: 'a', title: 'x' }, { id: 'a', title: 'y' }] }),
+        errors({
+          version: 1,
+          week: WEEK,
+          focus: [
+            { id: 'a', title: 'x' },
+            { id: 'a', title: 'y' },
+          ],
+        }),
       ).toContain('focus: id "a" is used more than once')
     })
     it('titles are required, bounded strings', () => {
       expect(errors({ version: 1, week: WEEK, focus: [{ id: 'a', title: '   ' }] })[0]).toMatch(/must not be empty/)
-      expect(errors({ version: 1, week: WEEK, focus: [{ id: 'a', title: 'x'.repeat(201) }] })[0]).toMatch(/longer than 200/)
+      expect(errors({ version: 1, week: WEEK, focus: [{ id: 'a', title: 'x'.repeat(201) }] })[0]).toMatch(
+        /longer than 200/,
+      )
       expect(errors({ version: 1, week: WEEK, rules: [''] })[0]).toMatch(/rules\[0\] must not be empty/)
       expect(errors({ version: 1, week: WEEK, rules: [5] })[0]).toMatch(/must be a string/)
     })
   })
 
   describe('tasks', () => {
-    const t = (over: Record<string, unknown>) => ({ version: 1, week: WEEK, tasks: [{ id: 't1', title: 'x', ...over }] })
+    const t = (over: Record<string, unknown>) => ({
+      version: 1,
+      week: WEEK,
+      tasks: [{ id: 't1', title: 'x', ...over }],
+    })
 
     it('absent optional fields become null / [] / ""', () => {
       expect(ok(t({})).tasks[0]).toEqual(task({ id: 't1', title: 'x' }))
@@ -205,14 +253,26 @@ describe('parseWeekJson', () => {
   })
 
   describe('trackers', () => {
-    const tr = (over: Record<string, unknown>) => ({ version: 1, week: WEEK, trackers: [{ id: 'gym', label: 'Gym', ...over }] })
+    const tr = (over: Record<string, unknown>) => ({
+      version: 1,
+      week: WEEK,
+      trackers: [{ id: 'gym', label: 'Gym', ...over }],
+    })
 
     it('defaults: no emoji, no target/max, energy off', () => {
-      expect(ok(tr({})).trackers[0]).toEqual({ id: 'gym', emoji: '', label: 'Gym', target: null, max: null, energy: false })
+      expect(ok(tr({})).trackers[0]).toEqual({
+        id: 'gym',
+        emoji: '',
+        label: 'Gym',
+        target: null,
+        max: null,
+        energy: false,
+      })
     })
     it('target and max are integers in 1..1000', () => {
       expect(ok(tr({ target: 3, max: 5 })).trackers[0]).toMatchObject({ target: 3, max: 5 })
-      for (const bad of [0, -1, 1.5, 1001, '3']) expect(errors(tr({ target: bad }))[0]).toMatch(/target must be a positive integer/)
+      for (const bad of [0, -1, 1.5, 1001, '3'])
+        expect(errors(tr({ target: bad }))[0]).toMatch(/target must be a positive integer/)
     })
     it('energy must be boolean', () => {
       expect(ok(tr({ energy: true })).trackers[0]?.energy).toBe(true)
@@ -222,7 +282,10 @@ describe('parseWeekJson', () => {
 
   describe('sundayCheck', () => {
     const q = (over: Record<string, unknown>, trackers: unknown[] = []) => ({
-      version: 1, week: WEEK, trackers, sundayCheck: [{ id: 'q1', label: 'How?', type: 'text', ...over }],
+      version: 1,
+      week: WEEK,
+      trackers,
+      sundayCheck: [{ id: 'q1', label: 'How?', type: 'text', ...over }],
     })
     it('type must be one of the four', () => {
       expect(ok(q({ type: 'scale5' })).sundayCheck[0]?.type).toBe('scale5')
@@ -243,7 +306,8 @@ describe('parseWeekJson', () => {
     })
     it('identical date + label get -2, -3; explicit ids are kept and never collided with', () => {
       const p = ok({
-        version: 1, week: WEEK,
+        version: 1,
+        week: WEEK,
         checkins: [
           { date: '2026-10-01', label: 'Call' },
           { date: '2026-10-01', label: 'Call' },
@@ -252,7 +316,10 @@ describe('parseWeekJson', () => {
         ],
       })
       expect(p.checkins.map((c) => c.id)).toEqual([
-        'c-2026-10-01-call', 'c-2026-10-01-call-2', 'c-2026-10-01-call-3', 'c-2026-10-01-call-4',
+        'c-2026-10-01-call',
+        'c-2026-10-01-call-2',
+        'c-2026-10-01-call-3',
+        'c-2026-10-01-call-4',
       ])
     })
     it('date is required and real', () => {
@@ -268,7 +335,8 @@ describe('parseWeekJson', () => {
 
   it('normalizing is idempotent: a valid plan re-validates to itself', () => {
     const plan = ok({
-      version: 1, week: WEEK,
+      version: 1,
+      week: WEEK,
       focus: [{ id: 'f', title: ' a ' }],
       tasks: [{ id: 't', title: 'b', when: 'today', tags: ['x'], listId: 'L-1' }],
       trackers: [{ id: 'gym', label: 'Gym', target: 3 }],
@@ -323,7 +391,8 @@ describe('entry helpers', () => {
 
 describe('import link', () => {
   const plan = ok({
-    version: 1, week: WEEK,
+    version: 1,
+    week: WEEK,
     focus: [{ id: 'f1', title: 'Finire la tesi — è importante 🎯' }],
     rules: ['Niente telefono dopo le 22'],
     tasks: [{ id: 't1', title: 'Chiamare il dentista', when: 'today', notes: 'perché sì' }],
@@ -345,7 +414,9 @@ describe('import link', () => {
   })
 
   it('honours a custom base', () => {
-    expect(encodeImportLink(plan, 'http://localhost:5173/dashboard/')).toMatch(/^http:\/\/localhost:5173\/dashboard\/#\/life\/import\?d=/)
+    expect(encodeImportLink(plan, 'http://localhost:5173/dashboard/')).toMatch(
+      /^http:\/\/localhost:5173\/dashboard\/#\/life\/import\?d=/,
+    )
   })
 
   it('tolerates surrounding whitespace', () => {
@@ -354,7 +425,10 @@ describe('import link', () => {
   })
 
   it('damaged links are errors, never throws', () => {
-    expect(decodeImportParam('not base64!!')).toEqual({ ok: false, errors: ['The import link is damaged (not base64url)'] })
+    expect(decodeImportParam('not base64!!')).toEqual({
+      ok: false,
+      errors: ['The import link is damaged (not base64url)'],
+    })
     expect(decodeImportParam('A')).toMatchObject({ ok: false }) // length % 4 === 1
     // valid base64url of invalid UTF-8 (0xFF 0xFE)
     expect(decodeImportParam('__4')).toEqual({ ok: false, errors: ['The import link is damaged (not UTF-8 text)'] })
@@ -410,9 +484,21 @@ describe('Things bridge', () => {
   })
 
   it('isIosLike / canReturnFromThings', () => {
-    const iphone = { userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)', platform: 'iPhone', maxTouchPoints: 5 }
-    const ipadOs = { userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', platform: 'MacIntel', maxTouchPoints: 5 }
-    const mac = { userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)', platform: 'MacIntel', maxTouchPoints: 0 }
+    const iphone = {
+      userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)',
+      platform: 'iPhone',
+      maxTouchPoints: 5,
+    }
+    const ipadOs = {
+      userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)',
+      platform: 'MacIntel',
+      maxTouchPoints: 5,
+    }
+    const mac = {
+      userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)',
+      platform: 'MacIntel',
+      maxTouchPoints: 0,
+    }
     expect(isIosLike(iphone)).toBe(true)
     expect(isIosLike(ipadOs)).toBe(true)
     expect(isIosLike(mac)).toBe(false)
@@ -423,7 +509,9 @@ describe('Things bridge', () => {
   })
 
   it('lifeReturnUrl builds the hash route of this deployment', () => {
-    expect(lifeReturnUrl({ origin: 'https://x.github.io', pathname: '/dashboard/' })).toBe('https://x.github.io/dashboard/#/life')
+    expect(lifeReturnUrl({ origin: 'https://x.github.io', pathname: '/dashboard/' })).toBe(
+      'https://x.github.io/dashboard/#/life',
+    )
     expect(lifeReturnUrl({ origin: 'https://x.github.io', pathname: '/dashboard/' }, '/life/edit')).toBe(
       'https://x.github.io/dashboard/#/life/edit',
     )
@@ -437,7 +525,10 @@ describe('summarizeWeek', () => {
     ({ ...base, id: `e${n++}`, createdAt: n, ...e }) as LifeEntry
 
   const plan = basePlan({
-    focus: [{ id: 'f1', title: 'Focus' }, { id: 'f2', title: 'Other' }],
+    focus: [
+      { id: 'f1', title: 'Focus' },
+      { id: 'f2', title: 'Other' },
+    ],
     tasks: [task({ id: 't1' }), task({ id: 't2' })],
     trackers: [
       { id: 'gym', emoji: '🏋', label: 'Gym', target: 3, max: 4, energy: false },
@@ -485,7 +576,11 @@ describe('summarizeWeek', () => {
 
   it('counts tracker entries per day (Mon..Sun), target and max', () => {
     const at = (day: string) => entry({ kind: 'tracker', ref: 'gym', day, value: {} })
-    const s = summarizeWeek(plan, [at('2026-09-28'), at('2026-09-28'), at('2026-10-04'), at('2026-09-30')], '2026-10-04')
+    const s = summarizeWeek(
+      plan,
+      [at('2026-09-28'), at('2026-09-28'), at('2026-10-04'), at('2026-09-30')],
+      '2026-10-04',
+    )
     const gym = s.trackers[0]!
     expect(gym.total).toBe(4)
     expect(gym.perDay).toEqual([2, 0, 1, 0, 0, 0, 1])
@@ -497,10 +592,7 @@ describe('summarizeWeek', () => {
     const at = (ref: string) => entry({ kind: 'tracker', ref, day: '2026-09-29', value: {} })
     const s = summarizeWeek(
       plan,
-      [
-        at('gym'), at('gym'), at('read'),
-        entry({ kind: 'sunday', ref: 'q-gym', value: { answer: 99 } }),
-      ],
+      [at('gym'), at('gym'), at('read'), entry({ kind: 'sunday', ref: 'q-gym', value: { answer: 99 } })],
       '2026-10-04',
     )
     expect(s.answers.get('q-gym')).toBe(2) // number = count, stored 99 ignored
@@ -524,7 +616,11 @@ describe('summarizeWeek', () => {
 
   it('check-ins without stored ids get derived ones', () => {
     const legacy = { ...plan, checkins: [{ date: '2026-09-29', label: 'Earlier' }] } as unknown as LifePlan
-    const s = summarizeWeek(legacy, [entry({ kind: 'checkin', ref: 'c-2026-09-29-earlier', value: { done: true } })], '2026-09-30')
+    const s = summarizeWeek(
+      legacy,
+      [entry({ kind: 'checkin', ref: 'c-2026-09-29-earlier', value: { done: true } })],
+      '2026-09-30',
+    )
     expect(s.checkins[0]?.done).toBe(true)
   })
 

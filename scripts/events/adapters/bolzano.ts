@@ -18,8 +18,19 @@ const MUNICIPALITIES = [
 ]
 const PAGE_SIZE = 200
 
-interface Detail { Title?: string; BaseText?: string; IntroText?: string }
-interface EventDate { From?: string; To?: string; Begin?: string; End?: string; Cancelled?: string; IsCancelled?: boolean }
+interface Detail {
+  Title?: string
+  BaseText?: string
+  IntroText?: string
+}
+interface EventDate {
+  From?: string
+  To?: string
+  Begin?: string
+  End?: string
+  Cancelled?: string
+  IsCancelled?: boolean
+}
 interface OdhEvent {
   Id: string
   Shortname?: string
@@ -32,7 +43,10 @@ interface OdhEvent {
   ImageGallery?: { ImageUrl?: string }[]
   LocationInfo?: { MunicipalityInfo?: { Name?: Record<string, string> } }
 }
-interface OdhPage { TotalPages?: number; Items?: OdhEvent[] }
+interface OdhPage {
+  TotalPages?: number
+  Items?: OdhEvent[]
+}
 
 /** Some items carry "..." as their Italian title; the German one (or Shortname) is real. */
 function realTitle(...titles: (string | undefined)[]): string {
@@ -61,7 +75,8 @@ async function run(ctx: AdapterContext): Promise<RawEvent[]> {
   const until = addDays(today, ctx.horizonDays)
   const out: RawEvent[] = []
   for (let page = 1; page <= 10; page++) {
-    const url = `${API}?pagesize=${PAGE_SIZE}&pagenumber=${page}&begindate=${today}&enddate=${until}` +
+    const url =
+      `${API}?pagesize=${PAGE_SIZE}&pagenumber=${page}&begindate=${today}&enddate=${until}` +
       `&locfilter=${MUNICIPALITIES.map((m) => `mun${m}`).join(',')}&active=true&removenullvalues=true`
     const res = await ctx.fetchJson<OdhPage>(url)
     for (const ev of res.Items ?? []) {
@@ -73,12 +88,21 @@ async function run(ctx: AdapterContext): Promise<RawEvent[]> {
       const image = absUrl(ev.ImageGallery?.find((g) => g.ImageUrl)?.ImageUrl, 'https://tourism.api.opendatahub.com/')
       const booking = ev.EventUrls?.find((u) => u.Url)?.Url
       const link = booking?.it ?? booking?.de ?? `https://mysuedtirol.info/it/eventi?eventid=${ev.Id}`
-      const venue = firstNonEmpty(
-        ev.EventAdditionalInfos?.it?.Location, ev.EventAdditionalInfos?.it?.Mplace, ev.ContactInfos?.it?.CompanyName,
-      ).trim() || null
+      const venue =
+        firstNonEmpty(
+          ev.EventAdditionalInfos?.it?.Location,
+          ev.EventAdditionalInfos?.it?.Mplace,
+          ev.ContactInfos?.it?.CompanyName,
+        ).trim() || null
       const city = ev.LocationInfo?.MunicipalityInfo?.Name?.it ?? 'Bolzano'
-      const tagText = [ev.Detail?.de?.Title, ev.Detail?.en?.Title, originHint(title), ...(ev.Topics ?? []).map((t) => t.TopicInfo)]
-        .filter(Boolean).join(' · ')
+      const tagText = [
+        ev.Detail?.de?.Title,
+        ev.Detail?.en?.Title,
+        originHint(title),
+        ...(ev.Topics ?? []).map((t) => t.TopicInfo),
+      ]
+        .filter(Boolean)
+        .join(' · ')
       for (const d of ev.EventDate ?? []) {
         if (d.IsCancelled || d.Cancelled === '1') continue
         const from = d.From?.slice(0, 10)

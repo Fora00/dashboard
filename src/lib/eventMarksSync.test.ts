@@ -23,7 +23,8 @@ vi.mock('./sync', () => ({
   syncEnabled: true,
 }))
 
-const { eventMarksTable, pruneEventMarks, restoreEventMark, setFavouriteCategories, sync, toggleEventMark } = await import('./eventMarksSync')
+const { eventMarksTable, pruneEventMarks, restoreEventMark, setFavouriteCategories, sync, toggleEventMark } =
+  await import('./eventMarksSync')
 const { deleteCustomEvent, saveCustomEvent, sync: customSync } = await import('./customEventsSync')
 
 const ev = (over: Partial<EventItem> = {}): EventItem => ({
@@ -120,7 +121,10 @@ describe('event marks sync', () => {
   it('prune deletes marks of events that are over, locally and remotely, and keeps the rest', async () => {
     await toggleEventMark(ev({ id: 'aaaaaaaaaaaaaaaa', start: '2026-10-01T20:00:00+02:00' }), 'saved')
     await toggleEventMark(ev({ id: 'bbbbbbbbbbbbbbbb', start: '2026-10-01T20:00:00+02:00' }), 'hidden')
-    await toggleEventMark(ev({ id: 'cccccccccccccccc', start: '2026-10-01T20:00:00+02:00', end: '2026-10-12T22:00:00+02:00' }), 'saved')
+    await toggleEventMark(
+      ev({ id: 'cccccccccccccccc', start: '2026-10-01T20:00:00+02:00', end: '2026-10-12T22:00:00+02:00' }),
+      'saved',
+    )
     await toggleEventMark(ev({ id: 'dddddddddddddddd', start: '2026-10-10T20:00:00+02:00' }), 'saved')
     await settle()
     expect(fake.remote.event_marks).toHaveLength(4)
@@ -297,7 +301,9 @@ describe('Dexie v15 upgrade', () => {
 
     // First signed-in sync with another device's marks on the server: a union.
     fake.signIn()
-    fake.remote.event_marks = [eventMarksTable.toRow({ id: 'b1', state: 'saved', event: ev({ id: 'b1' }), updatedAt: 7 })]
+    fake.remote.event_marks = [
+      eventMarksTable.toRow({ id: 'b1', state: 'saved', event: ev({ id: 'b1' }), updatedAt: 7 }),
+    ]
     await sync.syncNow()
     await settle()
     expect((await db.eventMarks.toCollection().primaryKeys()).sort()).toEqual(['a1', 'a2', 'b1'])

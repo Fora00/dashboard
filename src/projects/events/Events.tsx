@@ -437,19 +437,24 @@ export function Events() {
                   {isOpenNow ? (
                     w.label
                   ) : (
-                  <button
-                    type="button"
-                    onClick={() => toggleWeek(w.key)}
-                    aria-expanded={!folded}
-                    title={folded ? 'Show this week' : 'Hide this week'}
-                    className={`flex min-h-10 w-full items-center gap-1.5 rounded-lg text-left ${FOCUS_RING}`}
-                  >
-                    <span aria-hidden="true" className="text-xs">{folded ? '▸' : '▾'}</span>
-                    {w.label}
-                    <span className="text-xs font-normal text-slate-500 dark:text-slate-400" title={`${w.count} events`}>
-                      · {w.count} 📍
-                    </span>
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() => toggleWeek(w.key)}
+                      aria-expanded={!folded}
+                      title={folded ? 'Show this week' : 'Hide this week'}
+                      className={`flex min-h-10 w-full items-center gap-1.5 rounded-lg text-left ${FOCUS_RING}`}
+                    >
+                      <span aria-hidden="true" className="text-xs">
+                        {folded ? '▸' : '▾'}
+                      </span>
+                      {w.label}
+                      <span
+                        className="text-xs font-normal text-slate-500 dark:text-slate-400"
+                        title={`${w.count} events`}
+                      >
+                        · {w.count} 📍
+                      </span>
+                    </button>
                   )}
                 </h2>
                 {!folded && (

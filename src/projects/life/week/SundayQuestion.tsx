@@ -90,7 +90,13 @@ export function SundayQuestion({ week, question, value }: { week: string; questi
           className="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm focus:border-indigo-400 focus:outline-none dark:border-slate-700 dark:bg-slate-800"
         />
       )}
-      {question.type === 'scale5' && <EnergyScale label="" value={typeof value === 'number' ? value : undefined} onPick={(n) => void save(value === n ? null : n)} />}
+      {question.type === 'scale5' && (
+        <EnergyScale
+          label=""
+          value={typeof value === 'number' ? value : undefined}
+          onPick={(n) => void save(value === n ? null : n)}
+        />
+      )}
       {error && <p className="mt-1 text-xs text-rose-600 dark:text-rose-400">{error}</p>}
     </div>
   )

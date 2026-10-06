@@ -29,9 +29,7 @@ function fmtOffset(mins: number): string {
 }
 
 /** Local wall time in `timeZone` → ISO with that zone's offset. */
-export function wallToIso(
-  y: number, mo: number, d: number, h = 0, mi = 0, s = 0, timeZone = TZ,
-): string {
+export function wallToIso(y: number, mo: number, d: number, h = 0, mi = 0, s = 0, timeZone = TZ): string {
   const wallAsUtc = Date.UTC(y, mo - 1, d, h, mi, s)
   let off = offsetMinutes(wallAsUtc, timeZone)
   const off2 = offsetMinutes(wallAsUtc - off * 60_000, timeZone)

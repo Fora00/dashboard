@@ -17,20 +17,12 @@ interface Props {
 }
 
 const SEGMENT = `min-h-10 flex-1 border-2 px-3 text-sm font-medium transition-colors first:rounded-l-lg last:rounded-r-lg ${FOCUS_RING_INSET}`
-const SEGMENT_ON =
-  'border-indigo-700 bg-indigo-600 text-white dark:border-indigo-300 dark:bg-indigo-500'
+const SEGMENT_ON = 'border-indigo-700 bg-indigo-600 text-white dark:border-indigo-300 dark:bg-indigo-500'
 const SEGMENT_OFF =
   'border-slate-200 bg-white text-slate-600 hover:bg-slate-100 active:bg-slate-200 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-300 dark:hover:bg-slate-800'
 
 /** Solo | With others segmented control plus the multi-select people chips. Shared by the add form and the expanded row. */
-export function PeoplePicker({
-  mode,
-  onModeChange,
-  companions,
-  selected,
-  onSelectedChange,
-  idPrefix,
-}: Props) {
+export function PeoplePicker({ mode, onModeChange, companions, selected, onSelectedChange, idPrefix }: Props) {
   const [adding, setAdding] = useState(false)
   const [name, setName] = useState('')
   const [error, setError] = useState<string | null>(null)

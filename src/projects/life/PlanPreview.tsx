@@ -34,14 +34,24 @@ export function PlanPreview({
     <Card className="mb-4 space-y-3 text-sm">
       <p className="font-medium text-slate-800 dark:text-slate-100">Week of {plan.week}</p>
       <ul className="space-y-0.5 text-slate-600 dark:text-slate-300">
-        <li>{plan.focus.length} focus item{plan.focus.length === 1 ? '' : 's'}</li>
-        <li>{plan.tasks.length} task{plan.tasks.length === 1 ? '' : 's'}</li>
-        <li>{plan.trackers.length} tracker{plan.trackers.length === 1 ? '' : 's'}</li>
+        <li>
+          {plan.focus.length} focus item{plan.focus.length === 1 ? '' : 's'}
+        </li>
+        <li>
+          {plan.tasks.length} task{plan.tasks.length === 1 ? '' : 's'}
+        </li>
+        <li>
+          {plan.trackers.length} tracker{plan.trackers.length === 1 ? '' : 's'}
+        </li>
         <li>
           {plan.sundayCheck.length} Sunday question{plan.sundayCheck.length === 1 ? '' : 's'}
         </li>
-        <li>{plan.rules.length} rule{plan.rules.length === 1 ? '' : 's'}</li>
-        <li>{plan.checkins.length} check-in{plan.checkins.length === 1 ? '' : 's'}</li>
+        <li>
+          {plan.rules.length} rule{plan.rules.length === 1 ? '' : 's'}
+        </li>
+        <li>
+          {plan.checkins.length} check-in{plan.checkins.length === 1 ? '' : 's'}
+        </li>
       </ul>
 
       <div className="border-t border-slate-200 pt-2 dark:border-slate-800">

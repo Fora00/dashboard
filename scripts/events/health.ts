@@ -6,7 +6,11 @@ import type { Event, SourceStatus } from './types.ts'
 const DAY = 86_400_000
 
 /** Failing sources whose last success is older than `days` (or never): they keep serving stale events. */
-export function staleSources(rows: readonly SourceStatus[], now: number, days = 3): { id: string; since: string | null; days: number | null }[] {
+export function staleSources(
+  rows: readonly SourceStatus[],
+  now: number,
+  days = 3,
+): { id: string; since: string | null; days: number | null }[] {
   const out: { id: string; since: string | null; days: number | null }[] = []
   for (const s of rows) {
     if (s.ok) continue

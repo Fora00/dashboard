@@ -31,7 +31,14 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..')
 
 function envList(name: string): Set<string> | null {
   const v = process.env[name]?.trim()
-  return v ? new Set(v.split(',').map((s) => s.trim()).filter(Boolean)) : null
+  return v
+    ? new Set(
+        v
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean),
+      )
+    : null
 }
 
 async function loadPrevious(): Promise<EventsFile | null> {
@@ -58,34 +65,56 @@ async function loadPrevious(): Promise<EventsFile | null> {
 
 function carryOver(previous: EventsFile | null, adapter: Adapter, now: number, drops: DropCounts): Event[] {
   if (!previous) return []
-  return withPlace(adapter, previous.events
-    .filter((e) => e && e.source === adapter.id && typeof e.start === 'string' && inWindow(e, now, adapter.horizonDays))
-    .map((e) => ({ ...e, ongoing: isOngoing(e, now) })), drops)
+  return withPlace(
+    adapter,
+    previous.events
+      .filter(
+        (e) => e && e.source === adapter.id && typeof e.start === 'string' && inWindow(e, now, adapter.horizonDays),
+      )
+      .map((e) => ({ ...e, ongoing: isOngoing(e, now) })),
+    drops,
+  )
 }
 
 function table(rows: SourceStatus[], ms: Map<string, number>, previous: ReadonlyMap<string, SourceStatus>): string {
-  const lines = rows.map((s) => [
-    s.ok ? 'ok ' : 'ERR',
-    s.id.padEnd(20),
-    String(s.count).padStart(5),
-    countDelta(previous.get(s.id)?.count, s.count).padStart(5),
-    `${((ms.get(s.id) ?? 0) / 1000).toFixed(1)}s`.padStart(7),
-    s.error ?? '',
-  ].join('  '))
+  const lines = rows.map((s) =>
+    [
+      s.ok ? 'ok ' : 'ERR',
+      s.id.padEnd(20),
+      String(s.count).padStart(5),
+      countDelta(previous.get(s.id)?.count, s.count).padStart(5),
+      `${((ms.get(s.id) ?? 0) / 1000).toFixed(1)}s`.padStart(7),
+      s.error ?? '',
+    ].join('  '),
+  )
   return ['     source                count    Δ     time  error', ...lines].join('\n')
 }
 
 /** CI visibility: step summary table, ::warning:: per failed source, ::error:: (job still passes) if > 1/3 fail. */
-async function report(rows: SourceStatus[], ms: Map<string, number>, total: number, ran: number, events: readonly Event[], now: number): Promise<void> {
+async function report(
+  rows: SourceStatus[],
+  ms: Map<string, number>,
+  total: number,
+  ran: number,
+  events: readonly Event[],
+  now: number,
+): Promise<void> {
   // Sources skipped via EVENTS_ONLY keep their old status; only judge the ones that ran.
   const bad = rows.filter((s) => !s.ok && ms.has(s.id))
   const esc = (t: string) => t.replace(/%/g, '%25').replace(/\r/g, '%0D').replace(/\n/g, '%0A')
-  for (const s of bad) console.log(`::warning title=Events source failed::${esc(`${s.id}: ${s.error ?? 'failed'} (kept ${s.count} previous events)`)}`)
+  for (const s of bad)
+    console.log(
+      `::warning title=Events source failed::${esc(`${s.id}: ${s.error ?? 'failed'} (kept ${s.count} previous events)`)}`,
+    )
   for (const st of staleSources(rows, now)) {
-    console.log(`::warning title=Events source stale::${esc(`${st.id} has not succeeded for ${st.days === null ? 'ever (no lastSuccess)' : `${st.days} days`}: its events are aging`)}`)
+    console.log(
+      `::warning title=Events source stale::${esc(`${st.id} has not succeeded for ${st.days === null ? 'ever (no lastSuccess)' : `${st.days} days`}: its events are aging`)}`,
+    )
   }
   for (const t of upcomingTentative(events, now)) {
-    console.log(`::warning title=Unconfirmed event soon::${esc(`"${t.title}" (${t.start.slice(0, 10)}) still has datesTentative: verify it on the official site and drop "verified": false in spot.json`)}`)
+    console.log(
+      `::warning title=Unconfirmed event soon::${esc(`"${t.title}" (${t.start.slice(0, 10)}) still has datesTentative: verify it on the official site and drop "verified": false in spot.json`)}`,
+    )
   }
   if (bad.length * 3 > ran) {
     console.log(`::error title=Events crawl degraded::${bad.length} of ${ran} sources failed`)
@@ -100,7 +129,10 @@ async function report(rows: SourceStatus[], ms: Map<string, number>, total: numb
     '',
     '| | source | events | time | error |',
     '|---|---|---:|---:|---|',
-    ...rows.map((s) => `| ${s.ok ? 'ok' : 'ERR'} | ${s.id} | ${s.count} | ${((ms.get(s.id) ?? 0) / 1000).toFixed(1)}s | ${cell(s.error ?? '')} |`),
+    ...rows.map(
+      (s) =>
+        `| ${s.ok ? 'ok' : 'ERR'} | ${s.id} | ${s.count} | ${((ms.get(s.id) ?? 0) / 1000).toFixed(1)}s | ${cell(s.error ?? '')} |`,
+    ),
     '',
   ].join('\n')
   try {
@@ -142,22 +174,43 @@ async function main(): Promise<void> {
     const keepPrevious = (error: string) => {
       all.push(...previousEvents)
       addDrops(carriedDrops)
-      statuses.push({ id: adapter.id, name: adapter.name, ok: false, count: previousEvents.length, error, lastSuccess: prev?.lastSuccess ?? null })
+      statuses.push({
+        id: adapter.id,
+        name: adapter.name,
+        ok: false,
+        count: previousEvents.length,
+        error,
+        lastSuccess: prev?.lastSuccess ?? null,
+      })
     }
 
     if (only && !only.has(adapter.id)) {
       // Not run this time (development): keep the previous state as it was.
       all.push(...previousEvents)
       addDrops(carriedDrops)
-      statuses.push(prev
-        ? { ...prev, name: adapter.name, count: previousEvents.length }
-        : { id: adapter.id, name: adapter.name, ok: false, count: 0, error: 'not run (EVENTS_ONLY)', lastSuccess: null })
+      statuses.push(
+        prev
+          ? { ...prev, name: adapter.name, count: previousEvents.length }
+          : {
+              id: adapter.id,
+              name: adapter.name,
+              ok: false,
+              count: 0,
+              error: 'not run (EVENTS_ONLY)',
+              lastSuccess: null,
+            },
+      )
       continue
     }
 
     try {
       if (failing.has(adapter.id)) throw new Error('simulated failure (EVENTS_FAIL)')
-      const ctx = http.context(adapter.id, adapter.maxRequests ?? DEFAULT_MAX_REQUESTS, now, adapter.horizonDays ?? HORIZON_DAYS)
+      const ctx = http.context(
+        adapter.id,
+        adapter.maxRequests ?? DEFAULT_MAX_REQUESTS,
+        now,
+        adapter.horizonDays ?? HORIZON_DAYS,
+      )
       const raws = await adapter.run(ctx)
       const freshDrops: DropCounts = new Map()
       const events = toEvents(adapter, raws, now, generatedAt, freshDrops)
@@ -182,9 +235,11 @@ async function main(): Promise<void> {
   const og = skipOg
     ? { filled: 0, fetched: 0, misses: previous?.ogMisses ?? {} }
     : await enrichImages(events, previous, http.context('og-image', OG_MAX_REQUESTS, now, HORIZON_DAYS), now)
-  console.log(skipOg
-    ? 'og:image: skipped (EVENTS_ONLY; EVENTS_OG=1 to run it)'
-    : `og:image: ${og.filled} filled (${og.fetched} pages fetched), ${Object.keys(og.misses).length} without a usable image`)
+  console.log(
+    skipOg
+      ? 'og:image: skipped (EVENTS_ONLY; EVENTS_OG=1 to run it)'
+      : `og:image: ${og.filled} filled (${og.fetched} pages fetched), ${Object.keys(og.misses).length} without a usable image`,
+  )
   const file: EventsFile = { schemaVersion: 1, generatedAt, sources: statuses, events, ogMisses: og.misses }
   const out = resolve(ROOT, process.env.EVENTS_OUT?.trim() || 'public/events.json')
   try {
@@ -199,11 +254,16 @@ async function main(): Promise<void> {
   await report(statuses, timings, events.length, timings.size, events, now)
   const byCat = new Map<string, number>()
   for (const e of events) byCat.set(e.category, (byCat.get(e.category) ?? 0) + 1)
-  console.log(`\n${events.length} events after dedup (${all.length} before) · ${[...byCat].map(([k, v]) => `${k} ${v}`).join(', ')}`)
+  console.log(
+    `\n${events.length} events after dedup (${all.length} before) · ${[...byCat].map(([k, v]) => `${k} ${v}`).join(', ')}`,
+  )
   const tally = (k: 'area' | 'ring') => {
     const m = new Map<string, number>()
     for (const e of events) m.set(e[k], (m.get(e[k]) ?? 0) + 1)
-    return [...m].sort((a, b) => b[1] - a[1]).map(([id, n]) => `${id} ${n}`).join(', ')
+    return [...m]
+      .sort((a, b) => b[1] - a[1])
+      .map(([id, n]) => `${id} ${n}`)
+      .join(', ')
   }
   console.log(`areas: ${tally('area')} · rings: ${tally('ring')}`)
   const dropLines = [...drops].map(([rule, bySource]) => {

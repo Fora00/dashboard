@@ -2,7 +2,14 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { EventItem } from './types'
 import { cleanFormats, formatLabel, matchesFormat } from './format'
 import {
-  EMPTY_FILTERS, chipRange, loadFilters, matchesChip, matchesQuery, matchesRange, normalizeText, saveFilters,
+  EMPTY_FILTERS,
+  chipRange,
+  loadFilters,
+  matchesChip,
+  matchesQuery,
+  matchesRange,
+  normalizeText,
+  saveFilters,
   type StoredFilters,
 } from './filters'
 
@@ -96,7 +103,12 @@ describe('matchesRange', () => {
   })
 
   it('a sparse series is judged by its next date, not its whole span', () => {
-    const weekly = ev({ allDay: true, start: '2026-09-01T00:00:00+02:00', end: '2026-12-29T00:00:00+01:00', occurrences: 18 })
+    const weekly = ev({
+      allDay: true,
+      start: '2026-09-01T00:00:00+02:00',
+      end: '2026-12-29T00:00:00+01:00',
+      occurrences: 18,
+    })
     expect(matchesRange(weekly, today, now)).toBe(false) // next date is Tue 13 Oct
     expect(matchesRange(weekly, ['2026-10-13', '2026-10-13'], now)).toBe(true)
   })
@@ -191,7 +203,15 @@ describe('remembered selection', () => {
   })
 
   it('cleans bad fields: non-string entries, unknown chip, unknown formats', () => {
-    stubStorage({ [KEY]: JSON.stringify({ cats: ['a', 5], chip: 'nextweek', formats: ['solo-ok', 'nope'], showHidden: 'yes', maxMin: 45 }) })
+    stubStorage({
+      [KEY]: JSON.stringify({
+        cats: ['a', 5],
+        chip: 'nextweek',
+        formats: ['solo-ok', 'nope'],
+        showHidden: 'yes',
+        maxMin: 45,
+      }),
+    })
     expect(loadFilters()).toEqual({ cats: ['a'], chip: null, formats: ['solo-ok'], showHidden: false, maxMin: null })
   })
 
@@ -202,8 +222,12 @@ describe('remembered selection', () => {
 
   it('storage that throws (Safari private mode) is survived on read and write', () => {
     vi.stubGlobal('localStorage', {
-      getItem: () => { throw new Error('blocked') },
-      setItem: () => { throw new Error('blocked') },
+      getItem: () => {
+        throw new Error('blocked')
+      },
+      setItem: () => {
+        throw new Error('blocked')
+      },
     })
     expect(loadFilters()).toEqual(EMPTY_FILTERS)
     expect(() => saveFilters(EMPTY_FILTERS)).not.toThrow()

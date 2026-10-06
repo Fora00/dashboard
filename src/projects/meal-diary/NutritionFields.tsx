@@ -29,7 +29,11 @@ export function NutritionFields({ value, onChange }: Props) {
   return (
     <div className="grid grid-cols-5 gap-2">
       {FIELDS.map((f) => (
-        <label key={f.key} title={`${f.label.slice(3)} (${f.unit})`} className="min-w-0 text-xs text-slate-500 dark:text-slate-400">
+        <label
+          key={f.key}
+          title={`${f.label.slice(3)} (${f.unit})`}
+          className="min-w-0 text-xs text-slate-500 dark:text-slate-400"
+        >
           {f.label}
           <input
             value={value[f.key]}

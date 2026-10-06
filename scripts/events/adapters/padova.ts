@@ -15,9 +15,17 @@ import { dateToIso, instantToIso } from '../time.ts'
 const BASE = 'https://www.comune.padova.it'
 const PAGE = 50
 
-interface DateDelta { value?: string; end_value?: string; duration?: number }
-interface Term { name?: string }
-interface Place { title?: string }
+interface DateDelta {
+  value?: string
+  end_value?: string
+  duration?: number
+}
+interface Term {
+  name?: string
+}
+interface Place {
+  title?: string
+}
 interface PdEvent {
   drupal_internal__nid?: number
   title?: string
@@ -29,7 +37,10 @@ interface PdEvent {
   event_type?: Term | Term[] | null
   event_place?: Place[] | Place | null
 }
-interface PdPage { data?: PdEvent[]; links?: { next?: { href?: string } } }
+interface PdPage {
+  data?: PdEvent[]
+  links?: { next?: { href?: string } }
+}
 
 const TYPE_HINT: Record<string, CategoryId> = {
   Mostre: 'exhibitions',
@@ -69,7 +80,8 @@ async function run(ctx: AdapterContext): Promise<RawEvent[]> {
     'page[limit]': String(PAGE),
     include: 'event_type,event_place',
     jsonapi_include: '1',
-    'fields[event]': 'drupal_internal__nid,title,path,event_date,field_text_date,event_short_description,event_description,event_type,event_place',
+    'fields[event]':
+      'drupal_internal__nid,title,path,event_date,field_text_date,event_short_description,event_description,event_type,event_place',
   })
   let url: string | null = `${BASE}/api/events?${q}`
   const out: RawEvent[] = []
@@ -78,8 +90,13 @@ async function run(ctx: AdapterContext): Promise<RawEvent[]> {
     for (const ev of res.data ?? []) {
       const title = ev.title?.trim()
       if (!title || !ev.drupal_internal__nid) continue
-      const types = list(ev.event_type).map((t) => t.name).filter((n): n is string => Boolean(n))
-      const venue = list(ev.event_place).map((p) => p.title).find((t) => t && t !== 'Città di Padova') ?? null
+      const types = list(ev.event_type)
+        .map((t) => t.name)
+        .filter((n): n is string => Boolean(n))
+      const venue =
+        list(ev.event_place)
+          .map((p) => p.title)
+          .find((t) => t && t !== 'Città di Padova') ?? null
       const hint = types.map((t) => TYPE_HINT[t]).find(Boolean)
       const short = ev.event_short_description?.trim() ?? ''
       const summary = [ev.field_text_date?.trim(), short].filter(Boolean).join(' · ')

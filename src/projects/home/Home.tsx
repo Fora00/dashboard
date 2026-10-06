@@ -15,9 +15,7 @@ import { InstallHint } from '../../components/InstallHint'
 // ('YYYY-MM-DD' in device local time — see habits/habitStore.ts).
 function todayKey(): string {
   const d = new Date()
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(
-    d.getDate(),
-  ).padStart(2, '0')}`
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
 // Within-group order shown in the home grid (starred/unstarred grouping is
@@ -118,12 +116,8 @@ export function Home() {
     stats === undefined
       ? visible
       : (() => {
-          const starredGroup = visible
-            .filter((p) => statsById.get(p.id)?.starred === 1)
-            .sort(compareWithinGroup)
-          const unstarredGroup = visible
-            .filter((p) => statsById.get(p.id)?.starred !== 1)
-            .sort(compareWithinGroup)
+          const starredGroup = visible.filter((p) => statsById.get(p.id)?.starred === 1).sort(compareWithinGroup)
+          const unstarredGroup = visible.filter((p) => statsById.get(p.id)?.starred !== 1).sort(compareWithinGroup)
           if (reversed) {
             starredGroup.reverse()
             unstarredGroup.reverse()
@@ -209,8 +203,7 @@ export function Home() {
         </div>
       </div>
       <p className="mb-6 text-sm text-slate-500 dark:text-slate-400">
-        Everything lives on this device and works offline. Sign in to sync
-        across devices.
+        Everything lives on this device and works offline. Sign in to sync across devices.
       </p>
       <InstallHint />
       <div className="grid gap-4 sm:grid-cols-2">

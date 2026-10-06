@@ -1,11 +1,6 @@
 import { useState } from 'react'
 import type { TripCompanion } from '../../lib/db'
-import {
-  MAX_EMOJI_LENGTH,
-  MAX_NAME_LENGTH,
-  renameCompanion,
-  setCompanionEmoji,
-} from '../../lib/tripsSync'
+import { MAX_EMOJI_LENGTH, MAX_NAME_LENGTH, renameCompanion, setCompanionEmoji } from '../../lib/tripsSync'
 import { Button } from '../../components/Button'
 import { Sheet } from '../../components/Sheet'
 
@@ -83,20 +78,14 @@ export function PeopleSheet({ open, onClose, companions, counts, onDelete }: Pro
                     aria-label={`Name for ${c.name}`}
                     className="min-h-10 min-w-0 flex-1 rounded-lg border border-slate-300 bg-white px-3.5 text-sm focus:border-indigo-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-indigo-300 dark:border-slate-700 dark:bg-slate-800"
                   />
-                  <Button
-                    variant="danger"
-                    onClick={() => void onDelete(c)}
-                    aria-label={`Delete ${c.name}`}
-                  >
+                  <Button variant="danger" onClick={() => void onDelete(c)} aria-label={`Delete ${c.name}`}>
                     ✕
                   </Button>
                 </div>
                 <p className="px-1 pt-0.5 text-xs text-slate-500 dark:text-slate-400">
                   {count} {count === 1 ? 'trip' : 'trips'}
                 </p>
-                {error?.id === c.id && (
-                  <p className="px-1 text-xs text-rose-700 dark:text-rose-400">{error.text}</p>
-                )}
+                {error?.id === c.id && <p className="px-1 text-xs text-rose-700 dark:text-rose-400">{error.text}</p>}
               </li>
             )
           })}

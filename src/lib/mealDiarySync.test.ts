@@ -45,7 +45,9 @@ describe('meal diary local mutations', () => {
 
 describe('meal diary nutrition', () => {
   it('stores optional nutrition clamped to the server bounds; absent stays null', async () => {
-    await addMeal('2026-10-05', 'lunch', 'pasta', { nutrition: { grams: 80, kcal: 99_999, proteinG: 10, estimated: true } })
+    await addMeal('2026-10-05', 'lunch', 'pasta', {
+      nutrition: { grams: 80, kcal: 99_999, proteinG: 10, estimated: true },
+    })
     await addMeal('2026-10-05', 'lunch', 'caffè')
     const all = await db.meals.toArray()
     const a = all.find((m) => m.text === 'pasta')

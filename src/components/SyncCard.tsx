@@ -52,8 +52,7 @@ export function SyncCard({ sync }: SyncCardProps) {
   if (!syncEnabled) {
     return (
       <Card className="mb-6 text-sm text-slate-500 dark:text-slate-400">
-        ☁️ Cloud sync isn't configured in this build — the list lives on this
-        device only.
+        ☁️ Cloud sync isn't configured in this build — the list lives on this device only.
       </Card>
     )
   }
@@ -66,8 +65,7 @@ export function SyncCard({ sync }: SyncCardProps) {
       return (
         <Card className="mb-6 flex items-center justify-between gap-3 text-sm">
           <span className="min-w-0 truncate text-slate-500 dark:text-slate-400">
-            ☁️ Syncing as{' '}
-            <span className="text-slate-800 dark:text-slate-200">{session.user.email}</span>
+            ☁️ Syncing as <span className="text-slate-800 dark:text-slate-200">{session.user.email}</span>
           </span>
           <Button variant="ghost" onClick={() => void signOut()}>
             Sign out
@@ -80,8 +78,7 @@ export function SyncCard({ sync }: SyncCardProps) {
       <Card className="mb-6 space-y-2 text-sm">
         <div className="flex items-center justify-between gap-3">
           <span className="min-w-0 truncate text-slate-500 dark:text-slate-400">
-            ☁️ Syncing as{' '}
-            <span className="text-slate-800 dark:text-slate-200">{session.user.email}</span>
+            ☁️ Syncing as <span className="text-slate-800 dark:text-slate-200">{session.user.email}</span>
           </span>
           <Button variant="ghost" onClick={() => void signOut()}>
             Sign out
@@ -94,9 +91,7 @@ export function SyncCard({ sync }: SyncCardProps) {
             </span>
           )}
           {status.syncing && <span>Syncing…</span>}
-          {!status.syncing && status.lastSyncedAt && (
-            <span>Synced {relativeTime(status.lastSyncedAt)}</span>
-          )}
+          {!status.syncing && status.lastSyncedAt && <span>Synced {relativeTime(status.lastSyncedAt)}</span>}
         </div>
         {status.lastError && (
           <div className="space-y-2">
@@ -177,9 +172,7 @@ export function SyncCard({ sync }: SyncCardProps) {
 
   return (
     <Card className="mb-6 space-y-3 text-sm">
-      <p className="text-slate-500 dark:text-slate-400">
-        ☁️ Sign in to sync this list across devices and share it.
-      </p>
+      <p className="text-slate-500 dark:text-slate-400">☁️ Sign in to sync this list across devices and share it.</p>
       {stage === 'email' ? (
         <form onSubmit={sendCode} className="flex gap-2">
           <input

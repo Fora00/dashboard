@@ -41,11 +41,10 @@ const FILTER_LABELS: [Filter, string][] = [
 ]
 
 function Badge({ idea, byId }: { idea: TripIdea; byId: Map<string, TripCompanion> }) {
-  const base = 'shrink-0 rounded bg-slate-100 px-1.5 py-0.5 text-[10px] text-slate-600 dark:bg-slate-700/60 dark:text-slate-300'
+  const base =
+    'shrink-0 rounded bg-slate-100 px-1.5 py-0.5 text-[10px] text-slate-600 dark:bg-slate-700/60 dark:text-slate-300'
   if (ideaKind(idea) === 'solo') return <span className={base}>Solo</span>
-  const people = (idea.companionIds ?? [])
-    .map((id) => byId.get(id))
-    .filter((c): c is TripCompanion => c !== undefined)
+  const people = (idea.companionIds ?? []).map((id) => byId.get(id)).filter((c): c is TripCompanion => c !== undefined)
   if (people.length === 0) return <span className={base}>With others</span>
   const shown = people.slice(0, ROW_PEOPLE_LIMIT)
   const extra = people.length - shown.length
@@ -98,14 +97,16 @@ function IdeaEditor({
         defaultValue={idea.title}
         onBlur={(e) => void saveTitle(e.target)}
         maxLength={MAX_TITLE_LENGTH}
-        aria-label={`Title of ${idea.title}`} placeholder="Title…"
+        aria-label={`Title of ${idea.title}`}
+        placeholder="Title…"
         className="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-indigo-300 dark:border-slate-700 dark:bg-slate-800"
       />
       <textarea
         key={`notes-${idea.id}`}
         defaultValue={idea.notes}
         onBlur={(e) => void saveNotes(e.target.value)}
-        aria-label={`Notes for ${idea.title}`} placeholder="Notes…"
+        aria-label={`Notes for ${idea.title}`}
+        placeholder="Notes…"
         rows={3}
         maxLength={MAX_NOTES_LENGTH}
         className="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-indigo-300 dark:border-slate-700 dark:bg-slate-800"
@@ -199,9 +200,8 @@ export function Trips() {
     setAddIds((cur) => cur.filter((p) => p !== c.id))
     setPeopleOpen(false)
     const n = snapshot.ideas.length
-    trigger(
-      `Deleted ${c.name}${n > 0 ? ` from ${n} ${n === 1 ? 'trip' : 'trips'}` : ''} · Undo`,
-      () => restoreCompanion(snapshot),
+    trigger(`Deleted ${c.name}${n > 0 ? ` from ${n} ${n === 1 ? 'trip' : 'trips'}` : ''} · Undo`, () =>
+      restoreCompanion(snapshot),
     )
   }
 
@@ -233,20 +233,14 @@ export function Trips() {
             </ListRow>
           </div>
         </SwipeableRow>
-        {expanded && (
-          <IdeaEditor idea={idea} companions={companions} onDelete={() => void remove(idea)} />
-        )}
+        {expanded && <IdeaEditor idea={idea} companions={companions} onDelete={() => void remove(idea)} />}
       </li>
     )
   }
 
   return (
     <div>
-      <PageHeader
-        emoji="✈️"
-        title="Trips"
-        subtitle="Travel ideas, solo or with friends. Saved on this device."
-      />
+      <PageHeader emoji="✈️" title="Trips" subtitle="Travel ideas, solo or with friends. Saved on this device." />
 
       <SyncCard sync={sync} />
 
@@ -259,7 +253,8 @@ export function Trips() {
             autoComplete="off"
             enterKeyHint="done"
             maxLength={MAX_TITLE_LENGTH}
-            aria-label="Trip destination" placeholder="Where to?"
+            aria-label="Trip destination"
+            placeholder="Where to?"
             className="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-indigo-300 dark:border-slate-700 dark:bg-slate-800"
           />
           <Button type="submit" disabled={!canAdd}>

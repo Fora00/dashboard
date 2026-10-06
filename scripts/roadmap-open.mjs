@@ -24,4 +24,6 @@ for (const s of shown) {
   for (const t of s.open) console.log(`  :${t.line}  ${t.title}`)
 }
 const total = shown.reduce((n, s) => n + s.open.length, 0)
-console.log(`\n${total} open task(s) in ${shown.length} section(s). Read a section with: sed -n '<line>,+60p' ROADMAP.md`)
+console.log(
+  `\n${total} open task(s) in ${shown.length} section(s). Read a section with: sed -n '<line>,+60p' ROADMAP.md`,
+)

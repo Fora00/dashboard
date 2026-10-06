@@ -88,7 +88,9 @@ export function TrackerRow({
           {!readOnly && (
             <span
               className={`flex size-7 shrink-0 items-center justify-center rounded-full border text-sm ${
-                doneToday ? 'border-emerald-400 bg-emerald-400 text-slate-900' : 'border-slate-400 dark:border-slate-500'
+                doneToday
+                  ? 'border-emerald-400 bg-emerald-400 text-slate-900'
+                  : 'border-slate-400 dark:border-slate-500'
               }`}
             >
               {doneToday && '✓'}

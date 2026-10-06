@@ -172,10 +172,7 @@ export async function toggleRead(link: LinkItem): Promise<void> {
   await engine.upsert('links', { ...link, read: link.read === 0 ? 1 : 0, updatedAt: Date.now() })
 }
 
-export async function updateLink(
-  link: LinkItem,
-  patch: { title?: string; notes?: string },
-): Promise<void> {
+export async function updateLink(link: LinkItem, patch: { title?: string; notes?: string }): Promise<void> {
   await engine.upsert('links', { ...link, ...patch, updatedAt: Date.now() })
 }
 

@@ -29,36 +29,94 @@ export const ADAPTERS: Adapter[] = [
   // Batch A — board games
   ludimus,
   openpa({
-    id: 'bibcom-trento', name: 'Biblioteca comunale di Trento', host: 'bibcom.trento.it', mode: 'search', classes: '[event]',
+    id: 'bibcom-trento',
+    name: 'Biblioteca comunale di Trento',
+    host: 'bibcom.trento.it',
+    mode: 'search',
+    classes: '[event]',
     // Branches are all in the Trento municipality; titles carry the branch
     // ("A Povo - …", "In Sala degli affreschi - …") which www.comune.trento.it drops.
-    city: 'Trento', fixedCity: true,
+    city: 'Trento',
+    fixedCity: true,
     titlePrefix: /^(?:(?:A|Ad|Al|Alla|In|Nella|Nel|Presso)\s+|All['’]\s*)[^-–]{2,40}?\s+[-–]\s+/,
   }),
-  openpa({ id: 'trentogiovani', name: 'Trentogiovani', host: 'trentogiovani.it', mode: 'calendar', classes: '[event]', city: 'Trento', mayBeEmpty: true }),
+  openpa({
+    id: 'trentogiovani',
+    name: 'Trentogiovani',
+    host: 'trentogiovani.it',
+    mode: 'calendar',
+    classes: '[event]',
+    city: 'Trento',
+    mayBeEmpty: true,
+  }),
   volkan,
   // Batch B — city and culture
-  openpa({ id: 'rovereto', name: 'Comune di Rovereto — eventi', host: 'eventi.comune.rovereto.tn.it', mode: 'search', classes: '[event]', city: 'Rovereto' }),
-  openpa({ id: 'comune-trento', name: 'Comune di Trento', host: 'www.comune.trento.it', mode: 'calendar', classes: '[event_link]', city: 'Trento' }),
+  openpa({
+    id: 'rovereto',
+    name: 'Comune di Rovereto — eventi',
+    host: 'eventi.comune.rovereto.tn.it',
+    mode: 'search',
+    classes: '[event]',
+    city: 'Rovereto',
+  }),
+  openpa({
+    id: 'comune-trento',
+    name: 'Comune di Trento',
+    host: 'www.comune.trento.it',
+    mode: 'calendar',
+    classes: '[event_link]',
+    city: 'Trento',
+  }),
   mart,
   bolzano,
-  openpa({ id: 'verona', name: 'Comune di Verona', host: 'www.comune.verona.it', mode: 'calendar', classes: '[event]', city: 'Verona', area: 'verona-garda' }),
+  openpa({
+    id: 'verona',
+    name: 'Comune di Verona',
+    host: 'www.comune.verona.it',
+    mode: 'calendar',
+    classes: '[event]',
+    city: 'Verona',
+    area: 'verona-garda',
+  }),
   // Batch C — culture, theatre and creative (added 2026-09-29)
   // Provincial culture portal: every town in Trentino. robots.txt asks for
   // Crawl-delay 10 (honoured by http.ts), so its ~5 pages take ~50 s.
-  openpa({ id: 'cultura-trentino', name: 'Trentino Cultura', host: 'www.cultura.trentino.it', mode: 'search', classes: '[event]', city: 'Trentino' }),
+  openpa({
+    id: 'cultura-trentino',
+    name: 'Trentino Cultura',
+    host: 'www.cultura.trentino.it',
+    mode: 'search',
+    classes: '[event]',
+    city: 'Trentino',
+  }),
   // ViviRovereto: the municipal agenda (RAM film festival, theatre season
   // preludes…). robots.txt only allows /opendata/api/calendar here.
-  openpa({ id: 'rovereto-comune', name: 'Comune di Rovereto — ViviRovereto', host: 'www.comune.rovereto.tn.it', mode: 'calendar', classes: '[event]', city: 'Rovereto' }),
+  openpa({
+    id: 'rovereto-comune',
+    name: 'Comune di Rovereto — ViviRovereto',
+    host: 'www.comune.rovereto.tn.it',
+    mode: 'calendar',
+    classes: '[event]',
+    city: 'Rovereto',
+  }),
   // Teatro Zandonai (Rovereto): same OpenPA install, `spettacolo` class with a
   // single main_datetime. The whole prose/dance season is published in one
   // batch in early October (2025-10-07 last year, up to 5 months ahead); other
   // shows about 2 weeks ahead. Nearly empty between seasons. Titles are often
   // in capitals; the series ("STAGIONE TEATRALE") is the subtitle (tagText).
   openpa({
-    id: 'zandonai', name: 'Teatro Zandonai', host: 'www.teatro-zandonai.it', mode: 'search', classes: '[spettacolo]',
-    city: 'Rovereto', fixedCity: true, venue: 'Teatro Zandonai', fixCaps: true, skipTitle: /\bannullat[oaie]\b/i,
-    timeFields: { from: 'main_datetime' }, mayBeEmpty: true,
+    id: 'zandonai',
+    name: 'Teatro Zandonai',
+    host: 'www.teatro-zandonai.it',
+    mode: 'search',
+    classes: '[spettacolo]',
+    city: 'Rovereto',
+    fixedCity: true,
+    venue: 'Teatro Zandonai',
+    fixCaps: true,
+    skipTitle: /\bannullat[oaie]\b/i,
+    timeFields: { from: 'main_datetime' },
+    mayBeEmpty: true,
   }),
   // Associazione Filarmonica di Rovereto: MEC RSS + per-event iCal. Its season
   // concerts at the Zandonai merge with `zandonai` in dedup.
@@ -66,16 +124,55 @@ export const ADAPTERS: Adapter[] = [
   // Towns around Trento/Rovereto on the same OpenPA install as Rovereto (their
   // robots.txt allows /opendata/api/calendar). Added 2026-10-01; cultura-trentino
   // overlaps a little, dedup merges. Ala is nearly empty: `mayBeEmpty`.
-  openpa({ id: 'riva-del-garda', name: 'Comune di Riva del Garda', host: 'www.comune.rivadelgarda.tn.it', mode: 'calendar', classes: '[event]', city: 'Riva del Garda' }),
-  openpa({ id: 'arco', name: 'Comune di Arco', host: 'www.comune.arco.tn.it', mode: 'calendar', classes: '[event]', city: 'Arco' }),
-  openpa({ id: 'mori', name: 'Comune di Mori', host: 'www.comune.mori.tn.it', mode: 'calendar', classes: '[event]', city: 'Mori' }),
-  openpa({ id: 'ala', name: 'Comune di Ala', host: 'www.comune.ala.tn.it', mode: 'calendar', classes: '[event]', city: 'Ala', mayBeEmpty: true }),
-  openpa({ id: 'pergine', name: 'Comune di Pergine Valsugana', host: 'www.comune.pergine.tn.it', mode: 'calendar', classes: '[event]', city: 'Pergine Valsugana' }),
+  openpa({
+    id: 'riva-del-garda',
+    name: 'Comune di Riva del Garda',
+    host: 'www.comune.rivadelgarda.tn.it',
+    mode: 'calendar',
+    classes: '[event]',
+    city: 'Riva del Garda',
+  }),
+  openpa({
+    id: 'arco',
+    name: 'Comune di Arco',
+    host: 'www.comune.arco.tn.it',
+    mode: 'calendar',
+    classes: '[event]',
+    city: 'Arco',
+  }),
+  openpa({
+    id: 'mori',
+    name: 'Comune di Mori',
+    host: 'www.comune.mori.tn.it',
+    mode: 'calendar',
+    classes: '[event]',
+    city: 'Mori',
+  }),
+  openpa({
+    id: 'ala',
+    name: 'Comune di Ala',
+    host: 'www.comune.ala.tn.it',
+    mode: 'calendar',
+    classes: '[event]',
+    city: 'Ala',
+    mayBeEmpty: true,
+  }),
+  openpa({
+    id: 'pergine',
+    name: 'Comune di Pergine Valsugana',
+    host: 'www.comune.pergine.tn.it',
+    mode: 'calendar',
+    classes: '[event]',
+    city: 'Pergine Valsugana',
+  }),
   // Libreria Arcadia Ubik: author evenings; schedule lives in the post title.
   arcadia,
   ical({
-    id: 'buonconsiglio', name: 'Castello del Buonconsiglio', feed: 'https://www.buonconsiglio.it/events.ics',
-    home: 'https://www.buonconsiglio.it/agenda/', city: 'Trento',
+    id: 'buonconsiglio',
+    name: 'Castello del Buonconsiglio',
+    feed: 'https://www.buonconsiglio.it/events.ics',
+    home: 'https://www.buonconsiglio.it/agenda/',
+    city: 'Trento',
   }),
   trentinospettacoli,
   // MUSE (Trento science museum): dates only on each event page, see adapters/muse.ts.
@@ -92,9 +189,23 @@ export const ADAPTERS: Adapter[] = [
   tcvi,
   arteven,
   // Municipium (Maggioli) comune listings: one config line per town.
-  municipium({ id: 'mantova', name: 'Comune di Mantova', host: 'www.comune.mantova.it', city: 'Mantova', area: 'lombardia', ring: 'near' }),
+  municipium({
+    id: 'mantova',
+    name: 'Comune di Mantova',
+    host: 'www.comune.mantova.it',
+    city: 'Mantova',
+    area: 'lombardia',
+    ring: 'near',
+  }),
   teatrosociale,
-  municipium({ id: 'brescia', name: 'Comune di Brescia', host: 'www.comune.brescia.it', city: 'Brescia', area: 'lombardia', ring: 'near' }),
+  municipium({
+    id: 'brescia',
+    name: 'Comune di Brescia',
+    host: 'www.comune.brescia.it',
+    city: 'Brescia',
+    area: 'lombardia',
+    ring: 'near',
+  }),
   ctb,
   teatrogrande,
   // Spot (hand-curated)

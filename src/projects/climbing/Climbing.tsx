@@ -24,9 +24,7 @@ const BAR_COLOR: Record<Discipline, string> = {
 
 function today(): string {
   const d = new Date()
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(
-    d.getDate(),
-  ).padStart(2, '0')}`
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
 function formatMonth(month: string): string {
@@ -51,9 +49,7 @@ export function Climbing() {
   const [discipline, setDiscipline] = useState<Discipline>('boulder')
   const [notes, setNotes] = useState('')
 
-  const sessions = useLiveQuery(() =>
-    db.climbSessions.orderBy('date').reverse().toArray(),
-  )
+  const sessions = useLiveQuery(() => db.climbSessions.orderBy('date').reverse().toArray())
   const climbs = useLiveQuery(() => db.climbs.toArray())
 
   const sendCount = climbs?.filter((c) => c.sent === 1).length ?? 0
@@ -67,18 +63,12 @@ export function Climbing() {
       const month = climb.date.slice(0, 7)
       const best = byMonth.get(month) ?? {}
       const current = best[climb.discipline]
-      if (
-        current === undefined ||
-        gradeIndex(climb.discipline, climb.grade) >
-          gradeIndex(climb.discipline, current)
-      ) {
+      if (current === undefined || gradeIndex(climb.discipline, climb.grade) > gradeIndex(climb.discipline, current)) {
         best[climb.discipline] = climb.grade
       }
       byMonth.set(month, best)
     }
-    return [...byMonth.entries()]
-      .sort(([a], [b]) => (a < b ? 1 : -1))
-      .map(([month, best]) => ({ month, best }))
+    return [...byMonth.entries()].sort(([a], [b]) => (a < b ? 1 : -1)).map(([month, best]) => ({ month, best }))
   }, [climbs])
 
   async function createSession(e: FormEvent) {
@@ -93,11 +83,7 @@ export function Climbing() {
 
   return (
     <div>
-      <PageHeader
-        emoji="🧗"
-        title="Climbing"
-        subtitle="Log sessions and sends — data stays on this device."
-      >
+      <PageHeader emoji="🧗" title="Climbing" subtitle="Log sessions and sends — data stays on this device.">
         {!showForm && <Button onClick={() => setShowForm(true)}>+ Session</Button>}
       </PageHeader>
 
@@ -135,7 +121,8 @@ export function Climbing() {
               <input
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
-                aria-label="Session location" placeholder="Where? e.g. Vertical Gym"
+                aria-label="Session location"
+                placeholder="Where? e.g. Vertical Gym"
                 autoFocus
                 maxLength={MAX_LOCATION_LENGTH}
                 className={`${inputClass} min-w-40 flex-1`}
@@ -144,7 +131,8 @@ export function Climbing() {
             <input
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              aria-label="Session notes" placeholder="Notes (optional)"
+              aria-label="Session notes"
+              placeholder="Notes (optional)"
               maxLength={MAX_NOTES_LENGTH}
               className={inputClass}
             />
@@ -165,9 +153,7 @@ export function Climbing() {
         <Card>
           <div className="flex gap-6">
             <div>
-              <p className="text-2xl font-semibold text-slate-900 dark:text-slate-100">
-                {sessions?.length ?? 0}
-              </p>
+              <p className="text-2xl font-semibold text-slate-900 dark:text-slate-100">{sessions?.length ?? 0}</p>
               <p className="text-xs text-slate-500 dark:text-slate-400">sessions</p>
             </div>
             <div>
@@ -188,9 +174,7 @@ export function Climbing() {
                       if (!grade) return null
                       return (
                         <div key={d} className="flex items-center gap-2">
-                          <span className="w-14 shrink-0 text-xs text-slate-500">
-                            {DISCIPLINE_LABEL[d]}
-                          </span>
+                          <span className="w-14 shrink-0 text-xs text-slate-500">{DISCIPLINE_LABEL[d]}</span>
                           <div className="h-3 flex-1 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800">
                             <div
                               className={`h-full rounded-full ${BAR_COLOR[d]}`}

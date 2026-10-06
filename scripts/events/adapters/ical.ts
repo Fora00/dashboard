@@ -34,12 +34,16 @@ const REGION = /^(trentino|alto adige|s[üu]dtirol|veneto|italy|italia|tn|bz|vr)
  * / country / postcode tail.
  */
 export function place(location: string, fallbackCity: string): { venue: string | null; city: string } {
-  const parts = location.split(/\s*,\s*/).map((p) => p.trim()).filter(Boolean)
+  const parts = location
+    .split(/\s*,\s*/)
+    .map((p) => p.trim())
+    .filter(Boolean)
   let i = parts.length - 1
   while (i > 0 && (REGION.test(parts[i] ?? '') || /^\d/.test(parts[i] ?? ''))) i--
   const city = i > 0 ? parts[i] : undefined
   // A street ("via …", "piazza …") is not a town.
-  const town = city && !/^(via|viale|piazza|piazzale|corso|largo|vicolo|loc\.?|localit)/i.test(city) ? city : fallbackCity
+  const town =
+    city && !/^(via|viale|piazza|piazzale|corso|largo|vicolo|loc\.?|localit)/i.test(city) ? city : fallbackCity
   return { venue: parts[0] ?? null, city: town }
 }
 

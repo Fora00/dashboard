@@ -15,7 +15,15 @@ import { absUrl, decodeEntities } from './text.ts'
 
 /** Sources whose pages carry a real per-event og:image. */
 export const OG_SOURCES = new Set([
-  'verona', 'pergine', 'riva-del-garda', 'arco', 'mori', 'ala', 'rovereto-comune', 'trentogiovani', 'cultura-trentino',
+  'verona',
+  'pergine',
+  'riva-del-garda',
+  'arco',
+  'mori',
+  'ala',
+  'rovereto-comune',
+  'trentogiovani',
+  'cultura-trentino',
 ])
 
 export const OG_MAX_REQUESTS = 150

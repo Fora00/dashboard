@@ -3,8 +3,17 @@ import type { RawEvent } from '../types.ts'
 import { foldScreenings } from './trentinospettacoli.ts'
 
 const raw = (over: Partial<RawEvent>): RawEvent => ({
-  nativeId: 'x', title: 'Tony', start: '2026-10-03T21:00:00+02:00', end: null, allDay: false,
-  venue: null, city: 'Tione di Trento', url: 'https://t.it/a', description: '', categoryHint: 'cinema', ...over,
+  nativeId: 'x',
+  title: 'Tony',
+  start: '2026-10-03T21:00:00+02:00',
+  end: null,
+  allDay: false,
+  venue: null,
+  city: 'Tione di Trento',
+  url: 'https://t.it/a',
+  description: '',
+  categoryHint: 'cinema',
+  ...over,
 })
 
 describe('foldScreenings', () => {
@@ -15,7 +24,11 @@ describe('foldScreenings', () => {
       raw({ nativeId: 'c', title: 'Tony', start: '2026-10-18T17:00:00+02:00' }),
     ])
     expect(out).toHaveLength(1)
-    expect(out[0]).toMatchObject({ title: 'Tony – Diario di un Giovane Cuoco', start: '2026-10-03T21:00:00+02:00', occurrences: 3 })
+    expect(out[0]).toMatchObject({
+      title: 'Tony – Diario di un Giovane Cuoco',
+      start: '2026-10-03T21:00:00+02:00',
+      occurrences: 3,
+    })
     expect(out[0]?.description).toMatch(/^Proiezioni: .*·.*·/)
   })
   it('keeps one record per town, and leaves shows and single screenings alone', () => {

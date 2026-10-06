@@ -142,10 +142,10 @@ export interface BoardgameIdea {
 // notes. Cloud-syncable via the generic engine.
 export interface LinkItem {
   id: string
-  url: string          // absolute, always has a scheme (normalized on add)
-  title: string        // user-editable; defaults to the URL's hostname + path
+  url: string // absolute, always has a scheme (normalized on add)
+  title: string // user-editable; defaults to the URL's hostname + path
   notes: string
-  read: 0 | 1          // Dexie can't index booleans — store 0/1
+  read: 0 | 1 // Dexie can't index booleans — store 0/1
   // Free-form tags. Always normalized to lowercase and deduped on write (see
   // normalizeTag/addTag in linksSync.ts), and indexed multi-entry (`*tags`) so
   // Dexie can query by a single tag. Never undefined — v9 backfills [].
@@ -162,7 +162,7 @@ export interface TripIdea {
   title: string
   notes: string
   companionIds: string[]
-  done: 0 | 1          // been there; Dexie can't index booleans
+  done: 0 | 1 // been there; Dexie can't index booleans
   createdAt: number
   updatedAt: number
 }
@@ -181,9 +181,9 @@ export interface TripCompanion {
 // Drives the home grid's ordering. Deliberately local-only — open counts
 // are per-device, so this never syncs and has no remote table.
 export interface ProjectStat {
-  id: string          // matches ProjectMeta.id in src/lib/projects.ts
+  id: string // matches ProjectMeta.id in src/lib/projects.ts
   opens: number
-  starred: 0 | 1      // Dexie can't index booleans — store 0/1
+  starred: 0 | 1 // Dexie can't index booleans — store 0/1
   lastOpenedAt: number
   // Hidden from the home grid. Unset = use DEFAULT_HIDDEN (projectStats.ts),
   // so an explicit choice is never overwritten by the defaults. Not indexed,
@@ -399,16 +399,16 @@ export interface EventPrefs {
 // as source 'manual' by src/projects/events/custom.ts. Times follow
 // events.json: ISO with the Europe/Rome offset, all-day end inclusive.
 export interface CustomEvent {
-  id: string           // crypto.randomUUID()
+  id: string // crypto.randomUUID()
   title: string
   start: string
   end: string | null
   allDay: boolean
   venue: string | null
   city: string
-  url: string          // http(s) or ''
-  note: string         // shown as description; first line = summary
-  category: string     // a CATEGORIES id from events/model.ts, default 'other'
+  url: string // http(s) or ''
+  note: string // shown as description; first line = summary
+  category: string // a CATEGORIES id from events/model.ts, default 'other'
   image: string | null // compressed JPEG data URL (≤ MAX_IMAGE_LENGTH chars)
   createdAt: number
   updatedAt: number

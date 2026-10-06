@@ -72,9 +72,7 @@ export function TrackersSection({
             energyPromptId={energyPromptId}
             setEnergyPromptId={setEnergyPromptId}
             lastSunday={lastSundayFor(ts.tracker.id, ts.tracker.label)}
-            onLogged={(entry) =>
-              trigger(`✓ ${ts.tracker.label}`, () => removeTrackerEntry(entry.id))
-            }
+            onLogged={(entry) => trigger(`✓ ${ts.tracker.label}`, () => removeTrackerEntry(entry.id))}
             onRemove={(entry) => {
               if (energyPromptId === entry.id) setEnergyPromptId(null)
               void removeTrackerEntry(entry.id)

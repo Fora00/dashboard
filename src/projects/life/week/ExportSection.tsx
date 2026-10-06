@@ -58,7 +58,9 @@ export function ExportSection({
       </p>
       <Card className="space-y-3 text-sm">
         <div className="flex flex-wrap gap-2">
-          <Button onClick={() => void doExport()}>{copied && fallbackText === null ? 'Copied ✓' : '📋 Export week'}</Button>
+          <Button onClick={() => void doExport()}>
+            {copied && fallbackText === null ? 'Copied ✓' : '📋 Export week'}
+          </Button>
           {typeof navigator !== 'undefined' && 'share' in navigator && (
             <Button variant="ghost" onClick={() => void doShare()}>
               Share

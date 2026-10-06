@@ -1,14 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { EventMark, EventPrefs } from '../../lib/db'
 import { setFavouriteCategories } from '../../lib/eventMarksSync'
-import {
-  loadFilters,
-  matchesQuery,
-  matchesChip,
-  normalizeText,
-  saveFilters,
-  type DateChip,
-} from './filters'
+import { loadFilters, matchesQuery, matchesChip, normalizeText, saveFilters, type DateChip } from './filters'
 import { cleanFormats, matchesFormat, FORMAT_CHIPS } from './format'
 import type { EventItem } from './types'
 import { isManual } from './custom'
@@ -117,9 +110,7 @@ export function useEventFilters(
   const base = useMemo(() => {
     if (view === 'saved') {
       const live = new Map(events.map((e) => [e.id, e]))
-      const saved = (marksRaw ?? [])
-        .filter((m) => m.state === 'saved')
-        .map((m) => live.get(m.id) ?? m.event)
+      const saved = (marksRaw ?? []).filter((m) => m.state === 'saved').map((m) => live.get(m.id) ?? m.event)
       // Saved also holds everything the owner curates (hand-added + spot),
       // unless it is over or hidden.
       const ids = new Set(saved.map((e) => e.id))
@@ -204,11 +195,14 @@ export function useEventFilters(
         .filter((e) => isLongRunning(e, now))
         .sort((a, b) => Date.parse(a.end ?? a.start) - Date.parse(b.end ?? b.start))
       if (running.length) out.push({ key: 'open-now', label: 'Open now', events: running })
-      out.push(...groupByDay(filtered.filter((e) => !isLongRunning(e, now)), now))
-    } else if (view === 'open') {
-      const running = [...filtered].sort(
-        (a, b) => Date.parse(a.end ?? a.start) - Date.parse(b.end ?? b.start),
+      out.push(
+        ...groupByDay(
+          filtered.filter((e) => !isLongRunning(e, now)),
+          now,
+        ),
       )
+    } else if (view === 'open') {
+      const running = [...filtered].sort((a, b) => Date.parse(a.end ?? a.start) - Date.parse(b.end ?? b.start))
       if (running.length) out.push({ key: 'open-now', label: 'Open now', events: running })
     } else {
       out.push(...groupByDay(filtered, now))
@@ -297,8 +291,32 @@ export function useEventFilters(
   }
 
   return {
-    filters: { view, query, nq, dateChip, showHidden, maxMin, selectedCats, selectedFormats, activeCats, favourites, filtering, filterCount },
-    toggles: { setView, setQuery, toggleDateChip, toggleCat, toggleFormat, toggleMaxMin, setShowHidden, clearAll, toggleFavourite, showMore },
+    filters: {
+      view,
+      query,
+      nq,
+      dateChip,
+      showHidden,
+      maxMin,
+      selectedCats,
+      selectedFormats,
+      activeCats,
+      favourites,
+      filtering,
+      filterCount,
+    },
+    toggles: {
+      setView,
+      setQuery,
+      toggleDateChip,
+      toggleCat,
+      toggleFormat,
+      toggleMaxMin,
+      setShowHidden,
+      clearAll,
+      toggleFavourite,
+      showMore,
+    },
     counts: { distanceCounts, catCounts, formatCounts, catOrder },
     groups: { visibleGroups, total, limit },
     marks,

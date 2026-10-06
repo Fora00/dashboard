@@ -140,7 +140,14 @@ describe('rowToForm', () => {
       { time: '19:00' },
       { time: '19:00', endTime: '21:30' },
       { time: '19:00', endDate: '2026-10-10', endTime: '01:00' },
-      { venue: 'Campfour', city: 'Bolzano', url: 'https://example.org/', category: 'outdoor', note: 'a\nb', image: JPEG },
+      {
+        venue: 'Campfour',
+        city: 'Bolzano',
+        url: 'https://example.org/',
+        category: 'outdoor',
+        note: 'a\nb',
+        image: JPEG,
+      },
     ] as Partial<CustomEventForm>[]) {
       const f = form(over)
       expect(rowToForm(build(over))).toEqual(f)
@@ -238,7 +245,9 @@ describe('parsePrefill', () => {
 
   it('reads and validates every field', () => {
     expect(
-      p('add=1&title=%20Gara%20&url=https%3A%2F%2Fwww.instagram.com%2Fp%2Fabc%2F&date=2026-10-09&time=20:30&venue=Block3&city=Trento&note=hi&category=outdoor'),
+      p(
+        'add=1&title=%20Gara%20&url=https%3A%2F%2Fwww.instagram.com%2Fp%2Fabc%2F&date=2026-10-09&time=20:30&venue=Block3&city=Trento&note=hi&category=outdoor',
+      ),
     ).toEqual({
       title: 'Gara',
       url: 'https://www.instagram.com/p/abc/',
@@ -285,7 +294,9 @@ describe('isExpiredCustomEvent', () => {
   })
   it('expires an event past the cutoff, judging by its end when it has one', () => {
     expect(isExpiredCustomEvent({ start: '2026-10-16T20:00:00+02:00', end: null }, now)).toBe(true)
-    expect(isExpiredCustomEvent({ start: '2026-10-10T00:00:00+02:00', end: '2026-10-20T00:00:00+02:00' }, now)).toBe(false)
+    expect(isExpiredCustomEvent({ start: '2026-10-10T00:00:00+02:00', end: '2026-10-20T00:00:00+02:00' }, now)).toBe(
+      false,
+    )
   })
   it('never expires a future event or a malformed date', () => {
     expect(isExpiredCustomEvent({ start: '2027-01-01T00:00:00+01:00', end: null }, now)).toBe(false)

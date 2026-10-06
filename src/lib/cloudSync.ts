@@ -1,12 +1,6 @@
 import Dexie, { type Table } from 'dexie'
 import type { RealtimeChannel } from '@supabase/supabase-js'
-import {
-  db,
-  type OutboxEntry,
-  type OutboxMap,
-  type OutboxPayload,
-  type OutboxTable,
-} from './db'
+import { db, type OutboxEntry, type OutboxMap, type OutboxPayload, type OutboxTable } from './db'
 import { supabase } from './sync'
 
 // Generic, table-config-driven local-first cloud sync.
@@ -39,11 +33,7 @@ import { supabase } from './sync'
  *  for a row type not in OutboxMap yet (a freshly generated scaffold before its
  *  db.ts edit — see docs/NEW_PROJECT.md), so scaffolds still compile. */
 type RemoteMatching<L> = {
-  [K in OutboxTable]: [L] extends [OutboxMap[K]]
-    ? [OutboxMap[K]] extends [L]
-      ? K
-      : never
-    : never
+  [K in OutboxTable]: [L] extends [OutboxMap[K]] ? ([OutboxMap[K]] extends [L] ? K : never) : never
 }[OutboxTable]
 type RemoteFor<L> = [RemoteMatching<L>] extends [never] ? OutboxTable : RemoteMatching<L>
 
@@ -197,9 +187,7 @@ function detached(fn: () => void): void {
 }
 
 export function createCloudSync(config: SyncConfig): CloudSync {
-  const byRemote = new Map<OutboxTable, AnyTableSync>(
-    config.tables.map((t) => [t.remote as OutboxTable, t]),
-  )
+  const byRemote = new Map<OutboxTable, AnyTableSync>(config.tables.map((t) => [t.remote as OutboxTable, t]))
   const remotes = new Set<OutboxTable>(byRemote.keys())
 
   function tableFor(remote: OutboxTable): AnyTableSync {
@@ -286,15 +274,10 @@ export function createCloudSync(config: SyncConfig): CloudSync {
     const tc = byRemote.get(entry.table)
     if (!tc) return
     if (entry.op === 'upsert' && entry.payload) {
-      const { error, status: http } = await supabase
-        .from(entry.table)
-        .upsert(tc.toRow(entry.payload))
+      const { error, status: http } = await supabase.from(entry.table).upsert(tc.toRow(entry.payload))
       if (error) throw new PushError(error, http)
     } else if (entry.op === 'delete') {
-      const { error, status: http } = await supabase
-        .from(entry.table)
-        .delete()
-        .eq('id', entry.rowId)
+      const { error, status: http } = await supabase.from(entry.table).delete().eq('id', entry.rowId)
       if (error) throw new PushError(error, http)
     }
   }
@@ -391,9 +374,7 @@ export function createCloudSync(config: SyncConfig): CloudSync {
       // Signed out, RLS answers every select with zero rows — treating that
       // as "the server has nothing" would wipe local data. Never pull then.
       if (!(await signedIn())) return false
-      const results = await Promise.all(
-        config.tables.map((tc) => supabase!.from(tc.remote).select(tc.columns)),
-      )
+      const results = await Promise.all(config.tables.map((tc) => supabase!.from(tc.remote).select(tc.columns)))
       // If any table errored, abort the whole pull — never partial-delete based
       // on an incomplete remote view.
       if (results.some((r) => r.error || !Array.isArray(r.data))) return false
@@ -403,11 +384,7 @@ export function createCloudSync(config: SyncConfig): CloudSync {
       await db.transaction('rw', [...dexieTables, db.outbox], async () => {
         // Rows with any pending or dead-lettered outbox entry are "ours":
         // remote must not overwrite or delete them.
-        const pending = new Set(
-          (await db.outbox.toArray())
-            .filter((e) => remotes.has(e.table))
-            .map((e) => e.rowId),
-        )
+        const pending = new Set((await db.outbox.toArray()).filter((e) => remotes.has(e.table)).map((e) => e.rowId))
         for (let i = 0; i < config.tables.length; i++) {
           const tc = config.tables[i]
           const result = results[i]
@@ -425,9 +402,7 @@ export function createCloudSync(config: SyncConfig): CloudSync {
           }
           const localIds = (await tc.table().toCollection().primaryKeys()) as string[]
           await tc.table().bulkPut(rows.filter((r) => !pending.has(r.id)))
-          await tc
-            .table()
-            .bulkDelete(localIds.filter((id) => !remoteIds.has(id) && !pending.has(id)))
+          await tc.table().bulkDelete(localIds.filter((id) => !remoteIds.has(id) && !pending.has(id)))
         }
       })
       if (skipped > 0) {
@@ -499,11 +474,14 @@ export function createCloudSync(config: SyncConfig): CloudSync {
             'postgres_changes',
             { event: '*', schema: 'public', table: tc.remote },
             (payload) =>
-              void onRealtime(tc, payload as unknown as {
-                eventType: string
-                new: unknown
-                old: unknown
-              }),
+              void onRealtime(
+                tc,
+                payload as unknown as {
+                  eventType: string
+                  new: unknown
+                  old: unknown
+                },
+              ),
           )
           .subscribe(),
       )
@@ -564,18 +542,12 @@ export function createCloudSync(config: SyncConfig): CloudSync {
     await db.transaction('rw', tc.table(), db.outbox, async () => {
       await tc.table().bulkDelete(ids)
       const ts = Date.now()
-      await db.outbox.bulkAdd(
-        ids.map((id) => ({ table: remote, op: 'delete' as const, rowId: id, ts })),
-      )
+      await db.outbox.bulkAdd(ids.map((id) => ({ table: remote, op: 'delete' as const, rowId: id, ts })))
     })
     afterMutation()
   }
 
-  async function removeCascade(
-    remote: OutboxTable,
-    id: string,
-    children: CascadeChild[],
-  ): Promise<void> {
+  async function removeCascade(remote: OutboxTable, id: string, children: CascadeChild[]): Promise<void> {
     const tc = tableFor(remote)
     const kids = children.map((c) => ({ tc: tableFor(c.remote), key: c.key }))
     await db.transaction('rw', [tc.table(), ...kids.map((k) => k.tc.table()), db.outbox], async () => {
@@ -591,9 +563,7 @@ export function createCloudSync(config: SyncConfig): CloudSync {
   async function retryDead(): Promise<void> {
     const tables = config.tables.map((t) => t.table())
     await db.transaction('rw', [...tables, db.outbox], async () => {
-      const dead = (await db.outbox.orderBy('seq').toArray()).filter(
-        (e) => e.dead && remotes.has(e.table),
-      )
+      const dead = (await db.outbox.orderBy('seq').toArray()).filter((e) => e.dead && remotes.has(e.table))
       if (dead.length === 0) return
       // A dead entry's payload may be stale: later edits of the same row may
       // have been pushed since (the queue skips dead entries). Re-pushing the

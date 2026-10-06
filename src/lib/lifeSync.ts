@@ -295,23 +295,21 @@ export async function markTasksSent(week: string, taskIds: string[], sent = true
   const today = dayKey(new Date())
   const ids = taskIds.map((t) => entryId(week, 'sent', t))
   const prev = (await db.lifeEntries.bulkGet(ids)) as (LifeSentEntry | undefined)[]
-  const rows = taskIds.map(
-    (taskId, i): LifeSentEntry => ({
-      id: ids[i] ?? entryId(week, 'sent', taskId),
-      week,
-      kind: 'sent',
-      ref: taskId,
-      day: today,
-      // Every send is recorded (last 10), so a resend of a batch that had in
-      // fact worked shows up as a duplicate instead of hiding the first one.
-      value: {
-        sent,
-        sends: sent ? [...(prev[i]?.value.sends ?? []), now].slice(-10) : (prev[i]?.value.sends ?? []),
-      },
-      createdAt: prev[i]?.createdAt ?? now,
-      updatedAt: now,
-    }),
-  )
+  const rows = taskIds.map((taskId, i): LifeSentEntry => ({
+    id: ids[i] ?? entryId(week, 'sent', taskId),
+    week,
+    kind: 'sent',
+    ref: taskId,
+    day: today,
+    // Every send is recorded (last 10), so a resend of a batch that had in
+    // fact worked shows up as a duplicate instead of hiding the first one.
+    value: {
+      sent,
+      sends: sent ? [...(prev[i]?.value.sends ?? []), now].slice(-10) : (prev[i]?.value.sends ?? []),
+    },
+    createdAt: prev[i]?.createdAt ?? now,
+    updatedAt: now,
+  }))
   await engine.upsertMany('life_entries', rows)
 }
 

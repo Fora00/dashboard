@@ -4,9 +4,7 @@ import { supabase } from './sync'
 
 /** Current Supabase session (null = signed out, undefined = still loading). */
 export function useAuth(): Session | null | undefined {
-  const [session, setSession] = useState<Session | null | undefined>(
-    supabase ? undefined : null,
-  )
+  const [session, setSession] = useState<Session | null | undefined>(supabase ? undefined : null)
 
   useEffect(() => {
     if (!supabase) return

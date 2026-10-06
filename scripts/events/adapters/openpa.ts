@@ -113,20 +113,37 @@ function imageUrl(d: Json, host: string): string | null {
 
 /** Venue, city, texts, image and tag text from an OpenPA data block (any class). */
 function extract(d: Json, cfg: OpenPaConfig) {
-  const places = ['takes_place_in', 'virtual_takes_place_in', 'site', 'luogo', 'luogo_svolgimento', 'luogo_della_cultura']
-  const venue = places.flatMap((k) => names(d[k]))[0] ?? (typeof d.presso === 'string' ? d.presso : null) ?? cfg.venue ?? null
+  const places = [
+    'takes_place_in',
+    'virtual_takes_place_in',
+    'site',
+    'luogo',
+    'luogo_svolgimento',
+    'luogo_della_cultura',
+  ]
+  const venue =
+    places.flatMap((k) => names(d[k]))[0] ?? (typeof d.presso === 'string' ? d.presso : null) ?? cfg.venue ?? null
   const addr = [...places.flatMap((k) => addresses(d[k])), ...addresses(d.geo), ...addresses(d.gps)]
-  const city = cfg.fixedCity
-    ? cfg.city
-    : names(d.comune)[0] ?? addr.map(cityFromAddress).find(Boolean) ?? cfg.city
+  const city = cfg.fixedCity ? cfg.city : (names(d.comune)[0] ?? addr.map(cityFromAddress).find(Boolean) ?? cfg.city)
   const str = (k: string) => (typeof d[k] === 'string' ? (d[k] as string) : '')
   const abstract = firstNonEmpty(str('event_abstract'), str('abstract'), str('short_description'), str('sottotitolo'))
   const full = firstNonEmpty(str('description'), str('text'), str('descrizione'), str('informazioni'))
   const tagText = [
-    'has_public_event_typology', 'virtual_has_public_event_typology', 'tipo_evento', 'tipologia',
-    'topics', 'virtual_topic', 'materia', 'argomento', 'utenza_target', 'destinatari', 'target',
+    'has_public_event_typology',
+    'virtual_has_public_event_typology',
+    'tipo_evento',
+    'tipologia',
+    'topics',
+    'virtual_topic',
+    'materia',
+    'argomento',
+    'utenza_target',
+    'destinatari',
+    'target',
     'sottotitolo',
-  ].flatMap((k) => names(d[k])).join(' · ')
+  ]
+    .flatMap((k) => names(d[k]))
+    .join(' · ')
   return {
     venue,
     city,

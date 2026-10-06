@@ -84,12 +84,7 @@ export function Todo() {
               {t.text}
             </span>
           </ListRow>
-          <Button
-            variant="danger"
-            onClick={() => void remove(t)}
-            aria-label={`Delete ${t.text}`}
-            className="min-w-10"
-          >
+          <Button variant="danger" onClick={() => void remove(t)} aria-label={`Delete ${t.text}`} className="min-w-10">
             ✕
           </Button>
         </div>
@@ -99,11 +94,7 @@ export function Todo() {
 
   return (
     <div>
-      <PageHeader
-        emoji="📝"
-        title="Todo"
-        subtitle="A simple list — tap to mark done. Saved on this device."
-      />
+      <PageHeader emoji="📝" title="Todo" subtitle="A simple list — tap to mark done. Saved on this device." />
 
       <SyncCard sync={sync} />
 
@@ -111,7 +102,8 @@ export function Todo() {
         <input
           value={text}
           onChange={(e) => setText(e.target.value)}
-          aria-label="Add a todo" placeholder="Add something to do…"
+          aria-label="Add a todo"
+          placeholder="Add something to do…"
           maxLength={MAX_TEXT_LENGTH}
           autoComplete="off"
           enterKeyHint="done"
@@ -138,18 +130,14 @@ export function Todo() {
         <div className="space-y-6">
           {open.length > 0 && (
             <section>
-              <h2 className="mb-2 text-sm font-medium text-slate-500 dark:text-slate-400">
-                Open · {open.length}
-              </h2>
+              <h2 className="mb-2 text-sm font-medium text-slate-500 dark:text-slate-400">Open · {open.length}</h2>
               <ul className="space-y-2">{open.map(renderTodo)}</ul>
             </section>
           )}
           {done.length > 0 && (
             <section>
               <div className="mb-2 flex items-center justify-between">
-                <h2 className="text-sm font-medium text-slate-500 dark:text-slate-400">
-                  Done · {done.length}
-                </h2>
+                <h2 className="text-sm font-medium text-slate-500 dark:text-slate-400">Done · {done.length}</h2>
                 <Button variant="danger" onClick={() => void clearDone()}>
                   Clear done
                 </Button>

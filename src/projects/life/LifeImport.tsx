@@ -43,10 +43,7 @@ export function LifeImport() {
 
   const result = useMemo<ParseResult | null>(() => (text.trim() ? parseWeekJson(text) : null), [text])
   const planWeek = result?.ok ? result.plan.week : null
-  const existing = useLiveQuery(
-    () => (planWeek ? db.lifeWeeks.get(planWeek).then((w) => w ?? null) : null),
-    [planWeek],
-  )
+  const existing = useLiveQuery(() => (planWeek ? db.lifeWeeks.get(planWeek).then((w) => w ?? null) : null), [planWeek])
 
   async function save() {
     if (!result?.ok) return
@@ -84,7 +81,9 @@ export function LifeImport() {
           setText(e.target.value)
           setLinkErrors(null)
         }}
-        placeholder={'{ "version": 1, "week": "2026-01-05", "focus": [], "rules": [], "tasks": [], "trackers": [], "sundayCheck": [], "checkins": [] }'}
+        placeholder={
+          '{ "version": 1, "week": "2026-01-05", "focus": [], "rules": [], "tasks": [], "trackers": [], "sundayCheck": [], "checkins": [] }'
+        }
         aria-label="Week JSON"
         rows={10}
         spellCheck={false}

@@ -18,7 +18,11 @@ export const spot: Adapter = {
   area: 'abroad',
   ring: 'spot',
   async run() {
-    const file = parseOrThrow(SpotFileSchema, JSON.parse(await readFile(new URL('../spot.json', import.meta.url), 'utf8')), 'spot.json')
+    const file = parseOrThrow(
+      SpotFileSchema,
+      JSON.parse(await readFile(new URL('../spot.json', import.meta.url), 'utf8')),
+      'spot.json',
+    )
     return file.events.map((e): RawEvent => ({
       nativeId: e.id,
       title: e.title,

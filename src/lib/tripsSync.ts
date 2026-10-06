@@ -114,9 +114,7 @@ function nameTaken(all: TripCompanion[], name: string, exceptId?: string): boole
 
 // --- Local mutations (used by the UI; safe with or without sync) -----------
 
-export type CompanionResult =
-  | { ok: true; companion: TripCompanion }
-  | { ok: false; reason: 'invalid' | 'duplicate' }
+export type CompanionResult = { ok: true; companion: TripCompanion } | { ok: false; reason: 'invalid' | 'duplicate' }
 
 /** Create a person. Rejects empty/too-long names and case-insensitive duplicates. */
 export async function addCompanion(rawName: string, emoji?: string): Promise<CompanionResult> {
@@ -137,10 +135,7 @@ export async function addCompanion(rawName: string, emoji?: string): Promise<Com
   })
 }
 
-export async function renameCompanion(
-  companion: TripCompanion,
-  rawName: string,
-): Promise<CompanionResult> {
+export async function renameCompanion(companion: TripCompanion, rawName: string): Promise<CompanionResult> {
   const name = normalizeName(rawName)
   if (!name) return { ok: false, reason: 'invalid' }
   return db.transaction('rw', db.tripCompanions, db.outbox, async (): Promise<CompanionResult> => {
@@ -165,9 +160,7 @@ export async function setCompanionEmoji(companion: TripCompanion, raw: string): 
  * id after the companion delete). Returns the snapshot Undo needs: the
  * companion and the ideas as they were before.
  */
-export async function deleteCompanion(
-  id: string,
-): Promise<{ companion: TripCompanion; ideas: TripIdea[] } | null> {
+export async function deleteCompanion(id: string): Promise<{ companion: TripCompanion; ideas: TripIdea[] } | null> {
   return db.transaction('rw', db.tripIdeas, db.tripCompanions, db.outbox, async () => {
     const companion = await db.tripCompanions.get(id)
     if (!companion) return null
@@ -187,10 +180,7 @@ export async function deleteCompanion(
 }
 
 /** Undo of deleteCompanion: re-insert the person and the original ideas. */
-export async function restoreCompanion(snapshot: {
-  companion: TripCompanion
-  ideas: TripIdea[]
-}): Promise<void> {
+export async function restoreCompanion(snapshot: { companion: TripCompanion; ideas: TripIdea[] }): Promise<void> {
   const now = Date.now()
   await db.transaction('rw', db.tripIdeas, db.tripCompanions, db.outbox, async () => {
     await engine.upsert('trip_companions', { ...snapshot.companion, updatedAt: now })

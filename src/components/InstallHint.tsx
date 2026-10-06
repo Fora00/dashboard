@@ -106,15 +106,15 @@ export function InstallHint() {
         <p className="mt-0.5 text-slate-500 dark:text-slate-400">
           {eligible === 'ios' ? (
             <>
-              Tap <span className={strong}>Share</span>, then <span className={strong}>Add to Home Screen</span>{' '}
-              for the full-screen app experience.
+              Tap <span className={strong}>Share</span>, then <span className={strong}>Add to Home Screen</span> for the
+              full-screen app experience.
             </>
           ) : canPrompt ? (
             <>Add it to your home screen for the full-screen app experience.</>
           ) : (
             <>
-              Open the browser menu <span className={strong}>⋮</span>, then{' '}
-              <span className={strong}>Install app</span> (or Add to Home screen).
+              Open the browser menu <span className={strong}>⋮</span>, then <span className={strong}>Install app</span>{' '}
+              (or Add to Home screen).
             </>
           )}
         </p>

@@ -34,16 +34,14 @@ export function JoinArea() {
   // Already signed in: join and go straight to the list.
   useEffect(() => {
     if (!supabase || !session || !areaName || !token) return
-    void supabase
-      .rpc('join_area', { token })
-      .then(async ({ error: err }) => {
-        if (err) {
-          setError(err.message)
-          return
-        }
-        await syncNow()
-        void navigate('/shop-list', { replace: true })
-      })
+    void supabase.rpc('join_area', { token }).then(async ({ error: err }) => {
+      if (err) {
+        setError(err.message)
+        return
+      }
+      await syncNow()
+      void navigate('/shop-list', { replace: true })
+    })
   }, [session, areaName, token, navigate])
 
   async function redeem(e: FormEvent) {
@@ -106,11 +104,7 @@ export function JoinArea() {
 
   return (
     <div>
-      <PageHeader
-        emoji="🔗"
-        title={`Join “${areaName}”`}
-        subtitle="You've been invited to a shared shopping list."
-      />
+      <PageHeader emoji="🔗" title={`Join “${areaName}”`} subtitle="You've been invited to a shared shopping list." />
       {session ? (
         <Card className="text-sm text-slate-500 dark:text-slate-400">Joining…</Card>
       ) : (
@@ -125,7 +119,8 @@ export function JoinArea() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  aria-label="Your email" placeholder="you@example.com"
+                  aria-label="Your email"
+                  placeholder="you@example.com"
                   autoComplete="email"
                   required
                   className="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-indigo-300 dark:border-slate-700 dark:bg-slate-800"
@@ -147,7 +142,8 @@ export function JoinArea() {
                   inputMode="numeric"
                   value={code}
                   onChange={(e) => setCode(e.target.value)}
-                  aria-label="6-digit code" placeholder="6-digit code"
+                  aria-label="6-digit code"
+                  placeholder="6-digit code"
                   autoComplete="one-time-code"
                   required
                   className="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-indigo-300 dark:border-slate-700 dark:bg-slate-800"

@@ -41,7 +41,6 @@ export interface WeekSummary {
   removed: LifeEntry[]
 }
 
-
 /**
  * Fold a week's entries onto its plan. Entries of other weeks are ignored.
  * `today` (a local day key) only drives the check-ins' daysLeft/overdue.

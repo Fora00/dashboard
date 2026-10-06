@@ -39,7 +39,15 @@ export function summarizeMealsWeek(meals: readonly MealEntry[], week: string): M
   return {
     days,
     loggedDays: n,
-    average: n === 0 ? null : { kcal: avg((t) => t.kcal), proteinG: avg((t) => t.proteinG), carbsG: avg((t) => t.carbsG), fatG: avg((t) => t.fatG) },
+    average:
+      n === 0
+        ? null
+        : {
+            kcal: avg((t) => t.kcal),
+            proteinG: avg((t) => t.proteinG),
+            carbsG: avg((t) => t.carbsG),
+            fatG: avg((t) => t.fatG),
+          },
     approximate: counted.some((d) => d.totals.approximate),
   }
 }

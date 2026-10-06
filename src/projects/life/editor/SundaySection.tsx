@@ -26,53 +26,53 @@ export function SundaySection({
       <Card className="space-y-3">
         {sundayCheck.map((q, i) => (
           <div key={q.id} className="space-y-2">
-          <div className="flex items-center gap-2">
-            <input
-              value={q.label}
-              onChange={(e) => setSundayCheck(updateAt(sundayCheck, i, { label: e.target.value }))}
-              maxLength={LIFE_CAPS.questionLabel}
-              placeholder="Question…"
-              aria-label="Question label"
-              className={`${inputClass} flex-1`}
-            />
-            <select
-              value={q.type}
-              onChange={(e) => setSundayCheck(updateAt(sundayCheck, i, { type: e.target.value as LifeQuestionType }))}
-              aria-label="Question type"
-              className={`${inputClass} w-32`}
-            >
-              {QUESTION_TYPE_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
-            <button
-              type="button"
-              onClick={() => setSundayCheck(removeAt(sundayCheck, i))}
-              aria-label="Remove question"
-              className={removeBtnClass}
-            >
-              ✕
-            </button>
-          </div>
-          {AUTO_QUESTION_TYPES.includes(q.type) && trackers.length > 0 && (
-            <select
-              value={trackers.some((t) => t.id === q.tracker) ? q.tracker : ''}
-              onChange={(e) => setSundayCheck(updateAt(sundayCheck, i, { tracker: e.target.value }))}
-              aria-label="Answer source"
-              className={inputClass}
-            >
-              <option value="">Answered by hand</option>
-              {trackers.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {`Auto from ${t.emoji ? `${t.emoji} ` : ''}${t.label || 'unnamed habit'} ${
-                    q.type === 'number' ? '(count)' : '(goal reached)'
-                  }`}
-                </option>
-              ))}
-            </select>
-          )}
+            <div className="flex items-center gap-2">
+              <input
+                value={q.label}
+                onChange={(e) => setSundayCheck(updateAt(sundayCheck, i, { label: e.target.value }))}
+                maxLength={LIFE_CAPS.questionLabel}
+                placeholder="Question…"
+                aria-label="Question label"
+                className={`${inputClass} flex-1`}
+              />
+              <select
+                value={q.type}
+                onChange={(e) => setSundayCheck(updateAt(sundayCheck, i, { type: e.target.value as LifeQuestionType }))}
+                aria-label="Question type"
+                className={`${inputClass} w-32`}
+              >
+                {QUESTION_TYPE_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={() => setSundayCheck(removeAt(sundayCheck, i))}
+                aria-label="Remove question"
+                className={removeBtnClass}
+              >
+                ✕
+              </button>
+            </div>
+            {AUTO_QUESTION_TYPES.includes(q.type) && trackers.length > 0 && (
+              <select
+                value={trackers.some((t) => t.id === q.tracker) ? q.tracker : ''}
+                onChange={(e) => setSundayCheck(updateAt(sundayCheck, i, { tracker: e.target.value }))}
+                aria-label="Answer source"
+                className={inputClass}
+              >
+                <option value="">Answered by hand</option>
+                {trackers.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {`Auto from ${t.emoji ? `${t.emoji} ` : ''}${t.label || 'unnamed habit'} ${
+                      q.type === 'number' ? '(count)' : '(goal reached)'
+                    }`}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
         ))}
         {sundayCheck.length < LIFE_CAPS.questions && (

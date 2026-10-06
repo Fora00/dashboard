@@ -57,11 +57,7 @@ export function Sheet({ open, onClose, title, children, footer }: Props) {
           </button>
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-3">{children}</div>
-        {footer && (
-          <div className="shrink-0 border-t border-slate-200 px-4 pt-3 dark:border-slate-700">
-            {footer}
-          </div>
-        )}
+        {footer && <div className="shrink-0 border-t border-slate-200 px-4 pt-3 dark:border-slate-700">{footer}</div>}
         <div className="shrink-0" style={{ height: 'env(safe-area-inset-bottom)' }} />
       </div>
     </dialog>

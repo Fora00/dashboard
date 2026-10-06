@@ -1,7 +1,16 @@
 import { LIFE_CAPS, THINGS_WHEN_KEYWORDS } from '../model'
 import { Button } from '../../../components/Button'
 import { Card } from '../../../components/Card'
-import { inputClass, newId, removeAt, removeBtnClass, textareaClass, updateAt, type TaskRow, type WhenMode } from './rows'
+import {
+  inputClass,
+  newId,
+  removeAt,
+  removeBtnClass,
+  textareaClass,
+  updateAt,
+  type TaskRow,
+  type WhenMode,
+} from './rows'
 
 export function TasksSection({ tasks, setTasks }: { tasks: TaskRow[]; setTasks: (v: TaskRow[]) => void }) {
   return (

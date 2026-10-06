@@ -36,7 +36,14 @@ function cityFor(slug: string, venue: string | null): string {
   return m?.[1]?.trim() ?? 'Trentino'
 }
 
-interface Detail { startTime: string | null; endTime: string | null; venue: string | null; description: string; summary: string; image: string | null }
+interface Detail {
+  startTime: string | null
+  endTime: string | null
+  venue: string | null
+  description: string
+  summary: string
+  image: string | null
+}
 
 function parseDetail(html: string): Detail {
   const time = html.match(/🕰️?\s*dalle\s+(\d{1,2})[:.](\d{2})(?:\s+alle\s+(\d{1,2})[:.](\d{2}))?/u)
@@ -62,7 +69,8 @@ async function run(ctx: AdapterContext): Promise<RawEvent[]> {
   const today = romeDate(ctx.now)
   const lastDay = addDays(today, ctx.horizonDays)
   const detailUntil = addDays(today, DETAIL_DAYS)
-  const re = /<a\s+href="(\/events\/(\d{4}-\d{2}-\d{2})-([^"]+?)\.html)"[^>]*>\s*<span>[^<]*<\/span>\s*<span>([^<]+)<\/span>/g
+  const re =
+    /<a\s+href="(\/events\/(\d{4}-\d{2}-\d{2})-([^"]+?)\.html)"[^>]*>\s*<span>[^<]*<\/span>\s*<span>([^<]+)<\/span>/g
   const out: RawEvent[] = []
   const seen = new Set<string>()
   for (const m of listing.text.matchAll(re)) {
@@ -84,9 +92,7 @@ async function run(ctx: AdapterContext): Promise<RawEvent[]> {
       nativeId: url,
       title: decodeEntities(rawTitle).trim(),
       start: timed ? localToIso(date, detail?.startTime ?? '00:00') : dateToIso(date),
-      end: timed
-        ? detail?.endTime ? localToIso(date, detail.endTime) : null
-        : dateToIso(date),
+      end: timed ? (detail?.endTime ? localToIso(date, detail.endTime) : null) : dateToIso(date),
       allDay: !timed,
       venue,
       city: cityFor(slug, venue),

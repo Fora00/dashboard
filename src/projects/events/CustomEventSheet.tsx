@@ -33,10 +33,23 @@ interface Props {
 const INPUT =
   'h-10 w-full rounded-lg border-2 border-slate-200 bg-white px-3 text-base text-slate-900 placeholder:text-slate-400 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-100'
 
-function Field({ label, htmlFor, children, hint }: { label: string; htmlFor: string; children: ReactNode; hint?: string }) {
+function Field({
+  label,
+  htmlFor,
+  children,
+  hint,
+}: {
+  label: string
+  htmlFor: string
+  children: ReactNode
+  hint?: string
+}) {
   return (
     <div className="min-w-0 space-y-1">
-      <label htmlFor={htmlFor} className="block text-xs font-semibold tracking-wide text-slate-500 uppercase dark:text-slate-400">
+      <label
+        htmlFor={htmlFor}
+        className="block text-xs font-semibold tracking-wide text-slate-500 uppercase dark:text-slate-400"
+      >
         {label}
       </label>
       {children}
@@ -242,9 +255,15 @@ function Body({ onClose, editing, prefill, cities, onDelete, onSaved }: Props) {
       </Field>
 
       <div className="space-y-2">
-        <span className="block text-xs font-semibold tracking-wide text-slate-500 uppercase dark:text-slate-400">Image</span>
+        <span className="block text-xs font-semibold tracking-wide text-slate-500 uppercase dark:text-slate-400">
+          Image
+        </span>
         {form.image && (
-          <img src={form.image} alt="Event image preview" className="max-h-48 w-full rounded-lg bg-slate-100 object-contain dark:bg-slate-800" />
+          <img
+            src={form.image}
+            alt="Event image preview"
+            className="max-h-48 w-full rounded-lg bg-slate-100 object-contain dark:bg-slate-800"
+          />
         )}
         <div className="flex flex-wrap gap-2">
           <label

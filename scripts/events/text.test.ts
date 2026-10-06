@@ -1,7 +1,17 @@
 import { describe, expect, it } from 'vitest'
 import {
-  absUrl, cityFromAddress, clip, decodeEntities, firstNonEmpty, htmlToBlocks, htmlToText, normalize, snippet,
-  stableId, tidyBlocks, titleCase,
+  absUrl,
+  cityFromAddress,
+  clip,
+  decodeEntities,
+  firstNonEmpty,
+  htmlToBlocks,
+  htmlToText,
+  normalize,
+  snippet,
+  stableId,
+  tidyBlocks,
+  titleCase,
 } from './text.ts'
 
 describe('decodeEntities', () => {
@@ -15,7 +25,9 @@ describe('decodeEntities', () => {
 
 describe('htmlToText', () => {
   it('strips tags, scripts and styles, and collapses whitespace', () => {
-    expect(htmlToText('<p>Ciao <b>mondo</b></p><script>alert(1)</script><style>p{}</style><p>Fine</p>')).toBe('Ciao mondo Fine')
+    expect(htmlToText('<p>Ciao <b>mondo</b></p><script>alert(1)</script><style>p{}</style><p>Fine</p>')).toBe(
+      'Ciao mondo Fine',
+    )
   })
   it('turns block ends and <br> into spaces', () => {
     expect(htmlToText('a<br/>b<br>c</li><li>d')).toBe('a b c d')

@@ -45,7 +45,9 @@ function ProjectVisibility() {
                   onClick={() => void setHidden(p.id, shown)}
                   className="flex min-h-11 w-full items-center gap-3 text-left"
                 >
-                  <span className="text-xl" aria-hidden="true">{p.emoji}</span>
+                  <span className="text-xl" aria-hidden="true">
+                    {p.emoji}
+                  </span>
                   <span className="flex-1 text-slate-800 dark:text-slate-200">{p.name}</span>
                   <span
                     aria-hidden="true"
@@ -96,11 +98,7 @@ export function Settings() {
 
   return (
     <div>
-      <PageHeader
-        emoji="⚙️"
-        title="Settings"
-        subtitle="This device's storage and sync."
-      />
+      <PageHeader emoji="⚙️" title="Settings" subtitle="This device's storage and sync." />
 
       <div className="space-y-6">
         <ProjectVisibility />
@@ -110,9 +108,7 @@ export function Settings() {
           {syncEnabled ? (
             <SyncCard />
           ) : (
-            <Card className="text-sm text-slate-500 dark:text-slate-400">
-              ☁️ Sync isn't configured in this build.
-            </Card>
+            <Card className="text-sm text-slate-500 dark:text-slate-400">☁️ Sync isn't configured in this build.</Card>
           )}
         </section>
 
@@ -124,9 +120,7 @@ export function Settings() {
               <span className="text-slate-800 dark:text-slate-200">
                 {estimate?.usage !== undefined ? formatBytes(estimate.usage) : '…'}
               </span>
-              {estimate?.quota !== undefined && (
-                <> of {formatBytes(estimate.quota)} available</>
-              )}
+              {estimate?.quota !== undefined && <> of {formatBytes(estimate.quota)} available</>}
             </p>
             <p className="text-slate-500 dark:text-slate-400">
               Protected from eviction:{' '}

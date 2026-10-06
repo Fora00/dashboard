@@ -20,10 +20,7 @@ const EMPTY: SyncStatus = {
 }
 
 export function useSyncStatus(sync?: CloudSync): SyncStatus {
-  const subscribe = useCallback(
-    (onChange: () => void) => (sync ? sync.subscribe(onChange) : () => {}),
-    [sync],
-  )
+  const subscribe = useCallback((onChange: () => void) => (sync ? sync.subscribe(onChange) : () => {}), [sync])
   const getSnapshot = useCallback(() => (sync ? sync.getStatus() : EMPTY), [sync])
   return useSyncExternalStore(subscribe, getSnapshot, getSnapshot)
 }

@@ -30,7 +30,14 @@ export interface NutritionForm {
 
 export const EMPTY_FORM: NutritionForm = { grams: '', kcal: '', proteinG: '', carbsG: '', fatG: '', estimated: false }
 
-export const NO_NUTRITION: Nutrition = { grams: null, kcal: null, proteinG: null, carbsG: null, fatG: null, estimated: false }
+export const NO_NUTRITION: Nutrition = {
+  grams: null,
+  kcal: null,
+  proteinG: null,
+  carbsG: null,
+  fatG: null,
+  estimated: false,
+}
 
 /** "" / junk → null; otherwise rounded and clamped to 0..max (the same bounds the server enforces). */
 export function parseAmount(raw: string | number | null | undefined, field: NutritionField): number | null {
@@ -64,7 +71,9 @@ export interface DayTotals {
   approximate: boolean
 }
 
-export function dayTotals(entries: readonly Pick<MealEntry, 'kcal' | 'proteinG' | 'carbsG' | 'fatG' | 'estimated'>[]): DayTotals {
+export function dayTotals(
+  entries: readonly Pick<MealEntry, 'kcal' | 'proteinG' | 'carbsG' | 'fatG' | 'estimated'>[],
+): DayTotals {
   const t: DayTotals = { kcal: 0, proteinG: 0, carbsG: 0, fatG: 0, counted: 0, uncounted: 0, approximate: false }
   for (const e of entries) {
     if (e.kcal === null && e.proteinG === null && e.carbsG === null && e.fatG === null) {
@@ -90,7 +99,7 @@ export interface DayPoint extends DayTotals {
 
 /** The last `n` days ending at `today` (oldest first), empty days included so gaps show in a chart. */
 export function lastDays(
-  entries: readonly (Pick<MealEntry, 'day' | 'kcal' | 'proteinG' | 'carbsG' | 'fatG' | 'estimated'>)[],
+  entries: readonly Pick<MealEntry, 'day' | 'kcal' | 'proteinG' | 'carbsG' | 'fatG' | 'estimated'>[],
   today: Date,
   n: number,
   keyOf: (d: Date) => string,
@@ -110,15 +119,27 @@ export function lastDays(
 }
 
 /** Average over the days that have at least one counted entry (logged days only); null when none. */
-export function averageOfLogged(points: readonly DayPoint[]): { kcal: number; proteinG: number; carbsG: number; fatG: number; days: number } | null {
+export function averageOfLogged(
+  points: readonly DayPoint[],
+): { kcal: number; proteinG: number; carbsG: number; fatG: number; days: number } | null {
   const logged = points.filter((p) => p.counted > 0)
   if (logged.length === 0) return null
   const avg = (f: (p: DayPoint) => number) => Math.round(logged.reduce((s, p) => s + f(p), 0) / logged.length)
-  return { kcal: avg((p) => p.kcal), proteinG: avg((p) => p.proteinG), carbsG: avg((p) => p.carbsG), fatG: avg((p) => p.fatG), days: logged.length }
+  return {
+    kcal: avg((p) => p.kcal),
+    proteinG: avg((p) => p.proteinG),
+    carbsG: avg((p) => p.carbsG),
+    fatG: avg((p) => p.fatG),
+    days: logged.length,
+  }
 }
 
 /** Share of calories from each macro (4/4/9 kcal per g), in percent summing to ~100; zeros when there are no macros. */
-export function macroSplit(t: Pick<DayTotals, 'proteinG' | 'carbsG' | 'fatG'>): { protein: number; carbs: number; fat: number } {
+export function macroSplit(t: Pick<DayTotals, 'proteinG' | 'carbsG' | 'fatG'>): {
+  protein: number
+  carbs: number
+  fat: number
+} {
   const p = t.proteinG * 4
   const c = t.carbsG * 4
   const f = t.fatG * 9

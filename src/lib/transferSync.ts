@@ -32,8 +32,7 @@ function parseFileName(objectName: string): { id: string; name: string } | null 
   return { id: objectName.slice(0, 36), name: objectName.slice(37) }
 }
 
-const sizeOf = (obj: { metadata: unknown }) =>
-  (obj.metadata as { size?: number } | null)?.size ?? null
+const sizeOf = (obj: { metadata: unknown }) => (obj.metadata as { size?: number } | null)?.size ?? null
 
 let uploading = false
 
@@ -48,9 +47,7 @@ export async function uploadPending(): Promise<void> {
     const pending = await db.files.where('synced').equals(0).toArray()
     for (const f of pending) {
       const path = pathFor(uid, f)
-      const { error } = await supabase.storage
-        .from(BUCKET)
-        .upload(path, f.blob, { contentType: f.type, upsert: true })
+      const { error } = await supabase.storage.from(BUCKET).upload(path, f.blob, { contentType: f.type, upsert: true })
       if (error) break // offline or no access — retry on next call
       await db.files.update(f.id, { synced: 1 as const, remoteUrl: path })
     }
@@ -112,9 +109,7 @@ export async function downloadRemote(r: RemoteFile): Promise<void> {
 /** A share link anyone can download for 7 days (no sign-in needed). */
 export async function signedLink(f: TransferFile): Promise<string> {
   if (!supabase || f.synced !== 1 || !f.remoteUrl) throw new Error('Not uploaded yet')
-  const { data, error } = await supabase.storage
-    .from(BUCKET)
-    .createSignedUrl(f.remoteUrl, 60 * 60 * 24 * 7)
+  const { data, error } = await supabase.storage.from(BUCKET).createSignedUrl(f.remoteUrl, 60 * 60 * 24 * 7)
   if (error || !data) throw error ?? new Error('Could not create link')
   return data.signedUrl
 }

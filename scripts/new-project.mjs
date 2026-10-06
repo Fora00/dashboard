@@ -506,7 +506,7 @@ ${
 
    Once done, in ${synced ? `src/lib/${toCamelCase(id)}Sync.ts` : `src/projects/${id}/${Name}.tsx`}: drop the
    \`${Name}Item\` placeholder interface for the real \`${Name}\` import from
-   './db'${synced ? ", remove the two `as unknown as` casts, and swap `table: () => db.table('" + thingsCamel + "')` for `table: () => db." + thingsCamel + "`" : ", and swap `db.table('" + thingsCamel + "')` for `db." + thingsCamel + "`"}.
+   './db'${synced ? ", remove the two `as unknown as` casts, and swap `table: () => db.table('" + thingsCamel + "')` for `table: () => db." + thingsCamel + '`' : ", and swap `db.table('" + thingsCamel + "')` for `db." + thingsCamel + '`'}.
 
 Then: run \`npm run build\`.${synced ? '\nOwner runs `npx supabase db push` to apply the migration (workers never do this).' : ''}
 `)
@@ -542,9 +542,7 @@ function main() {
   const pagePath = join(projectDir, `${Name}.tsx`)
   writeFileSync(
     pagePath,
-    synced
-      ? pageTemplateSynced({ id, Name, emoji, thingsCamel })
-      : pageTemplateLocal({ id, Name, emoji, thingsCamel }),
+    synced ? pageTemplateSynced({ id, Name, emoji, thingsCamel }) : pageTemplateLocal({ id, Name, emoji, thingsCamel }),
   )
   console.log(`created ${pagePath.replace(ROOT + '/', '')}`)
 

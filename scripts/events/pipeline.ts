@@ -35,19 +35,28 @@ function foldSeries(raws: RawEvent[]): (RawEvent & { occurrences: number })[] {
   const groups = new Map<string, RawEvent[]>()
   const out: (RawEvent & { occurrences: number })[] = []
   for (const r of raws) {
-    if (!r.seriesKey) { out.push({ ...r, occurrences: r.occurrences ?? 1 }); continue }
+    if (!r.seriesKey) {
+      out.push({ ...r, occurrences: r.occurrences ?? 1 })
+      continue
+    }
     const g = groups.get(r.seriesKey)
     if (g) g.push(r)
     else groups.set(r.seriesKey, [r])
   }
   for (const [key, g] of groups) {
-    if (g.length <= MAX_OCCURRENCES) { for (const r of g) out.push({ ...r, occurrences: 1 }); continue }
+    if (g.length <= MAX_OCCURRENCES) {
+      for (const r of g) out.push({ ...r, occurrences: 1 })
+      continue
+    }
     g.sort((a, b) => Date.parse(a.start) - Date.parse(b.start))
     const first = g[0] as RawEvent
-    const lastDay = g.reduce((max, r) => {
-      const d = (r.end ?? r.start).slice(0, 10)
-      return d > max ? d : max
-    }, first.start.slice(0, 10))
+    const lastDay = g.reduce(
+      (max, r) => {
+        const d = (r.end ?? r.start).slice(0, 10)
+        return d > max ? d : max
+      },
+      first.start.slice(0, 10),
+    )
     out.push({
       ...first,
       nativeId: `series:${key}`,
@@ -74,7 +83,13 @@ export const LONG_SERIES = 10
  * Adapter output → published events (window applied, ids and tags derived,
  * DROP RULES applied and counted in `drops`).
  */
-export function toEvents(adapter: Adapter, raws: RawEvent[], now: number, fetchedAt: string, drops?: DropCounts): Event[] {
+export function toEvents(
+  adapter: Adapter,
+  raws: RawEvent[],
+  now: number,
+  fetchedAt: string,
+  drops?: DropCounts,
+): Event[] {
   const seen = new Set<string>()
   const events: Event[] = []
   const ring = adapter.ring ?? 'home'
@@ -90,7 +105,10 @@ export function toEvents(adapter: Adapter, raws: RawEvent[], now: number, fetche
     const text = { title: r.title, summary, description, tagText: r.tagText ?? null }
     let { category, tags } = classify(r.categoryHint, adapter.defaultCategory, text)
     const dropped = dropRule(text, category)
-    if (dropped) { countDrop(drops, dropped); continue }
+    if (dropped) {
+      countDrop(drops, dropped)
+      continue
+    }
     // A long series nothing else classified (Open Data Hub: exhibitions sold
     // as daily tickets) takes the adapter's fallback.
     if (category === 'other' && adapter.longSeriesCategory && r.occurrences >= LONG_SERIES) {
@@ -132,7 +150,13 @@ function dedupKey(e: Event): string {
 }
 
 function richness(e: Event): number {
-  return (e.end ? 1 : 0) + (e.venue ? 1 : 0) + (e.image ? 1 : 0) + (e.allDay ? 0 : 1) + Math.min(e.description.length, 600) / 200
+  return (
+    (e.end ? 1 : 0) +
+    (e.venue ? 1 : 0) +
+    (e.image ? 1 : 0) +
+    (e.allDay ? 0 : 1) +
+    Math.min(e.description.length, 600) / 200
+  )
 }
 
 /**
@@ -168,7 +192,9 @@ export function withPlace(adapter: Adapter, events: Event[], drops?: DropCounts)
 function merge(a: Event, b: Event): Event {
   const [keep, drop] = richness(b) > richness(a) ? [b, a] : [a, b]
   const kids = keep.tags.includes('kids') || drop.tags.includes('kids')
-  const merged: TagId[] = [...keep.tags, ...drop.tags].filter((t) => t !== 'kids' && t !== 'other' && !(kids && t === 'creative'))
+  const merged: TagId[] = [...keep.tags, ...drop.tags].filter(
+    (t) => t !== 'kids' && t !== 'other' && !(kids && t === 'creative'),
+  )
   let category = keep.category === 'other' ? drop.category : keep.category
   if (kids && category === 'creative') category = CATEGORIES.find((c) => merged.includes(c.id))?.id ?? 'other'
   return {
@@ -197,7 +223,10 @@ function mergeSubtitled(events: Event[]): Event[] {
   const groups = new Map<string, Event[]>()
   const out: Event[] = []
   for (const e of events) {
-    if (e.allDay) { out.push(e); continue }
+    if (e.allDay) {
+      out.push(e)
+      continue
+    }
     const key = `${Date.parse(e.start)}|${normalize(e.city)}`
     groups.set(key, [...(groups.get(key) ?? []), e])
   }
@@ -230,7 +259,8 @@ export function dedup(events: Event[]): Event[] {
 }
 
 export function sortEvents(events: Event[]): Event[] {
-  return events.sort((a, b) =>
-    Date.parse(a.start) - Date.parse(b.start) || a.title.localeCompare(b.title, 'it') || a.id.localeCompare(b.id),
+  return events.sort(
+    (a, b) =>
+      Date.parse(a.start) - Date.parse(b.start) || a.title.localeCompare(b.title, 'it') || a.id.localeCompare(b.id),
   )
 }

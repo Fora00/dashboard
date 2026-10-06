@@ -1,4 +1,12 @@
-import type { LifeCheckin, LifeFocus, LifePlan, LifeQuestion, LifeQuestionType, LifeTask, LifeTracker } from '../../../lib/db'
+import type {
+  LifeCheckin,
+  LifeFocus,
+  LifePlan,
+  LifeQuestion,
+  LifeQuestionType,
+  LifeTask,
+  LifeTracker,
+} from '../../../lib/db'
 import { assignCheckinIds } from './checkinIds.ts'
 import { AUTO_QUESTION_TYPES, LIFE_CAPS, QUESTION_TYPES, THINGS_WHEN_KEYWORDS } from './constants.ts'
 import { isDateKey, isMondayKey } from './dates.ts'
@@ -72,11 +80,7 @@ export function validatePlan(value: unknown): ParseResult {
     const p = `tasks[${i}]`
     const o = itemObj(raw, p, ['id', 'title', 'when', 'deadline', 'area', 'project', 'listId', 'tags', 'notes'], err)
     const when = o.when ?? null
-    if (
-      when !== null &&
-      !isDateKey(when) &&
-      !(THINGS_WHEN_KEYWORDS as readonly unknown[]).includes(when)
-    ) {
+    if (when !== null && !isDateKey(when) && !(THINGS_WHEN_KEYWORDS as readonly unknown[]).includes(when)) {
       err(`${p}.when must be YYYY-MM-DD, one of ${THINGS_WHEN_KEYWORDS.join('/')}, or null`)
     }
     const deadline = o.deadline ?? null
@@ -133,32 +137,30 @@ export function validatePlan(value: unknown): ParseResult {
   })
   uniqueIds(trackers, 'trackers', err)
 
-  const sundayCheck = arrayField(value, 'sundayCheck', LIFE_CAPS.questions, err).map(
-    (raw, i): LifeQuestion => {
-      const p = `sundayCheck[${i}]`
-      const o = itemObj(raw, p, ['id', 'label', 'type', 'tracker'], err)
-      const type = o.type
-      if (!(QUESTION_TYPES as readonly unknown[]).includes(type)) {
-        err(`${p}.type must be one of ${QUESTION_TYPES.join(', ')}`)
+  const sundayCheck = arrayField(value, 'sundayCheck', LIFE_CAPS.questions, err).map((raw, i): LifeQuestion => {
+    const p = `sundayCheck[${i}]`
+    const o = itemObj(raw, p, ['id', 'label', 'type', 'tracker'], err)
+    const type = o.type
+    if (!(QUESTION_TYPES as readonly unknown[]).includes(type)) {
+      err(`${p}.type must be one of ${QUESTION_TYPES.join(', ')}`)
+    }
+    const q: LifeQuestion = {
+      id: idField(o, p, err),
+      label: textField(o, 'label', p, LIFE_CAPS.questionLabel, true, err),
+      type: (QUESTION_TYPES as readonly unknown[]).includes(type) ? (type as LifeQuestionType) : 'text',
+    }
+    const link = o.tracker
+    if (link !== undefined && link !== null && link !== '') {
+      if (typeof link !== 'string' || !trackers.some((t) => t.id === link)) {
+        err(`${p}.tracker must be the id of one of this week's trackers`)
+      } else if (!(AUTO_QUESTION_TYPES as readonly string[]).includes(q.type)) {
+        err(`${p}.tracker only works with a number or boolean question`)
+      } else {
+        q.tracker = link
       }
-      const q: LifeQuestion = {
-        id: idField(o, p, err),
-        label: textField(o, 'label', p, LIFE_CAPS.questionLabel, true, err),
-        type: (QUESTION_TYPES as readonly unknown[]).includes(type) ? (type as LifeQuestionType) : 'text',
-      }
-      const link = o.tracker
-      if (link !== undefined && link !== null && link !== '') {
-        if (typeof link !== 'string' || !trackers.some((t) => t.id === link)) {
-          err(`${p}.tracker must be the id of one of this week's trackers`)
-        } else if (!(AUTO_QUESTION_TYPES as readonly string[]).includes(q.type)) {
-          err(`${p}.tracker only works with a number or boolean question`)
-        } else {
-          q.tracker = link
-        }
-      }
-      return q
-    },
-  )
+    }
+    return q
+  })
   uniqueIds(sundayCheck, 'sundayCheck', err)
 
   // Check-in ids are optional in the input (plans written before 2026-09-28

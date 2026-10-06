@@ -97,9 +97,7 @@ export function ShopList() {
     const snapshot = bought
     await clearBoughtItems(area.id)
     trigger(
-      snapshot.length === 1
-        ? 'Cleared 1 bought item · Undo'
-        : `Cleared ${snapshot.length} bought items · Undo`,
+      snapshot.length === 1 ? 'Cleared 1 bought item · Undo' : `Cleared ${snapshot.length} bought items · Undo`,
       async () => {
         for (const i of snapshot) await sync.upsert('shop_items', i)
       },
@@ -122,9 +120,7 @@ export function ShopList() {
           >
             {item.done === 1 && '✓'}
           </span>
-          <span className={item.done === 1 ? 'text-slate-500 line-through' : ''}>
-            {item.text}
-          </span>
+          <span className={item.done === 1 ? 'text-slate-500 line-through' : ''}>{item.text}</span>
         </ListRow>
       </SwipeableRow>
     </li>
@@ -179,7 +175,8 @@ export function ShopList() {
           <input
             value={areaName}
             onChange={(e) => setAreaName(e.target.value)}
-            aria-label="Area name" placeholder="Area name, e.g. Pharmacy"
+            aria-label="Area name"
+            placeholder="Area name, e.g. Pharmacy"
             autoFocus
             maxLength={MAX_AREA_NAME_LENGTH}
             className="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-indigo-300 dark:border-slate-700 dark:bg-slate-800"
@@ -215,7 +212,8 @@ export function ShopList() {
             <input
               value={text}
               onChange={(e) => setText(e.target.value)}
-              aria-label={`Add to ${area.name}`} placeholder={`Add to ${area.name}…`}
+              aria-label={`Add to ${area.name}`}
+              placeholder={`Add to ${area.name}…`}
               maxLength={MAX_ITEM_LENGTH}
               autoComplete="off"
               enterKeyHint="done"
@@ -247,9 +245,7 @@ export function ShopList() {
               {bought.length > 0 && (
                 <section>
                   <div className="mb-2 flex items-center justify-between">
-                    <h2 className="text-sm font-medium text-slate-500 dark:text-slate-400">
-                      Bought · {bought.length}
-                    </h2>
+                    <h2 className="text-sm font-medium text-slate-500 dark:text-slate-400">Bought · {bought.length}</h2>
                     <Button variant="danger" onClick={() => void clearBought()}>
                       Clear bought
                     </Button>

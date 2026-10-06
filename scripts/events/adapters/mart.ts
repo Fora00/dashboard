@@ -69,10 +69,8 @@ function parseOrario(orario: string | undefined): { start: string; end: string |
 
 async function run(ctx: AdapterContext): Promise<RawEvent[]> {
   const out: RawEvent[] = []
-  for (let offset = 0; offset < 1000; ) {
-    const page = await ctx.fetchJson<MartPage>(
-      `${API}?filter%5Bsearch%5D=prossimieventi&offset=${offset}`,
-    )
+  for (let offset = 0; offset < 1000;) {
+    const page = await ctx.fetchJson<MartPage>(`${API}?filter%5Bsearch%5D=prossimieventi&offset=${offset}`)
     const items = page.contents ?? []
     for (const it of items) {
       const open = it.dataDiApertura?.slice(0, 10)
@@ -93,7 +91,9 @@ async function run(ctx: AdapterContext): Promise<RawEvent[]> {
         summary: htmlToText(it.descrizioneRidotta),
         image: absUrl(it.immagini?.[0]?.url?.full, MEDIA),
         ...(it.tipologia && TYPE_CATEGORY[it.tipologia] ? { categoryHint: TYPE_CATEGORY[it.tipologia] } : {}),
-        tagText: [it.tipologia, kidsLab(it.tipologia, it.descrizioneEstesa || it.descrizioneRidotta)].filter(Boolean).join(' · '),
+        tagText: [it.tipologia, kidsLab(it.tipologia, it.descrizioneEstesa || it.descrizioneRidotta)]
+          .filter(Boolean)
+          .join(' · '),
       })
     }
     const total = page.pagination?.total ?? 0

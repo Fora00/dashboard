@@ -95,9 +95,7 @@ export function IdeaList<T extends IdeaRow>({ config }: { config: IdeaListConfig
             >
               <span className="w-full min-w-0 truncate">{idea.text}</span>
               {preview && !expanded && (
-                <span className="w-full min-w-0 truncate text-xs text-slate-500 dark:text-slate-400">
-                  {preview}
-                </span>
+                <span className="w-full min-w-0 truncate text-xs text-slate-500 dark:text-slate-400">{preview}</span>
               )}
             </ListRow>
             <Button

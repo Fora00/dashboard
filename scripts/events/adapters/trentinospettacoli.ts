@@ -16,8 +16,15 @@ const SITE = 'https://www.trentinospettacoli.it'
 const LISTING = `${SITE}/eventi/`
 const REST = `${SITE}/wp-json/wp/v2`
 
-interface WpEvent { link?: string; categorie_eventi?: number[] }
-interface WpTerm { id: number; name: string; slug: string }
+interface WpEvent {
+  link?: string
+  categorie_eventi?: number[]
+}
+interface WpTerm {
+  id: number
+  name: string
+  slug: string
+}
 
 function attr(block: string, re: RegExp): string | null {
   const m = block.match(re)
@@ -29,7 +36,9 @@ async function categoriesByLink(ctx: AdapterContext): Promise<Map<string, string
   const name = new Map(terms.map((t) => [t.id, t.name]))
   const out = new Map<string, string[]>()
   for (let page = 1; page <= 5; page++) {
-    const items = await ctx.fetchJson<WpEvent[]>(`${REST}/eventi?per_page=100&page=${page}&_fields=link,categorie_eventi`)
+    const items = await ctx.fetchJson<WpEvent[]>(
+      `${REST}/eventi?per_page=100&page=${page}&_fields=link,categorie_eventi`,
+    )
     for (const it of items) {
       if (it.link) out.set(it.link, (it.categorie_eventi ?? []).map((id) => name.get(id) ?? '').filter(Boolean))
     }
@@ -39,7 +48,12 @@ async function categoriesByLink(ctx: AdapterContext): Promise<Map<string, string
 }
 
 const WHEN = new Intl.DateTimeFormat('it-IT', {
-  timeZone: 'Europe/Rome', weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
+  timeZone: 'Europe/Rome',
+  weekday: 'short',
+  day: 'numeric',
+  month: 'short',
+  hour: '2-digit',
+  minute: '2-digit',
 })
 
 /**
@@ -52,7 +66,10 @@ export function foldScreenings(events: RawEvent[]): RawEvent[] {
   const groups = new Map<string, RawEvent[]>()
   const out: RawEvent[] = []
   for (const e of events) {
-    if (e.categoryHint !== 'cinema') { out.push(e); continue }
+    if (e.categoryHint !== 'cinema') {
+      out.push(e)
+      continue
+    }
     // "The Invite – Il Piacere è tutto nostro" and "The Invite" are one film.
     const film = normalize(e.title.split(/\s+[–-]\s+/)[0] ?? e.title)
     const key = `${film}|${normalize(e.city)}`
@@ -69,7 +86,8 @@ export function foldScreenings(events: RawEvent[]): RawEvent[] {
       ...first,
       nativeId: `film:${key}`,
       title,
-      description: g.length > 1 ? `Proiezioni: ${g.map((e) => WHEN.format(new Date(e.start))).join(' · ')}` : first.description,
+      description:
+        g.length > 1 ? `Proiezioni: ${g.map((e) => WHEN.format(new Date(e.start))).join(' · ')}` : first.description,
       occurrences: g.length,
     })
   }
@@ -78,7 +96,10 @@ export function foldScreenings(events: RawEvent[]): RawEvent[] {
 
 async function run(ctx: AdapterContext): Promise<RawEvent[]> {
   const { text } = await ctx.fetchText(LISTING)
-  const cards = text.split(/<article\b/).slice(1).filter((c) => c.includes('schema.org/Event'))
+  const cards = text
+    .split(/<article\b/)
+    .slice(1)
+    .filter((c) => c.includes('schema.org/Event'))
   if (!cards.length) throw new Error('no schema.org Event cards on /eventi/ (markup changed?)')
   const cats = await categoriesByLink(ctx)
   const out: RawEvent[] = []
@@ -91,7 +112,9 @@ async function run(ctx: AdapterContext): Promise<RawEvent[]> {
     // Tags: "comune-…" / "teatro-…" are venue tags; the rest are series ("paesaggi sonori").
     const tags = [...card.matchAll(/href="[^"]*\/tag_eventi\/([^/"]+)\/?"[^>]*>([^<]*)</g)]
     const town = tags.find((t) => t[1]?.startsWith('comune-'))?.[2]?.trim()
-    const series = tags.filter((t) => !/^(comune|teatro)-/.test(t[1] ?? '')).map((t) => decodeEntities(t[2] ?? '').trim())
+    const series = tags
+      .filter((t) => !/^(comune|teatro)-/.test(t[1] ?? ''))
+      .map((t) => decodeEntities(t[2] ?? '').trim())
     const categories = cats.get(url) ?? []
     const tagText = [...categories, ...series].join(' · ')
     // "Vallelaghi – Teatro Valle dei Laghi": the town leads the venue name.
@@ -109,7 +132,10 @@ async function run(ctx: AdapterContext): Promise<RawEvent[]> {
       city,
       url,
       description: '',
-      image: absUrl(attr(card, /data-src="([^"]+)"[^>]*itemprop="image"/) ?? attr(card, /itemprop="image"[^>]*data-src="([^"]+)"/), SITE),
+      image: absUrl(
+        attr(card, /data-src="([^"]+)"[^>]*itemprop="image"/) ?? attr(card, /itemprop="image"[^>]*data-src="([^"]+)"/),
+        SITE,
+      ),
       tagText,
       ...(hint ? { categoryHint: hint } : {}),
     })

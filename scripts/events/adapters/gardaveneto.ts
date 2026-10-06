@@ -24,7 +24,8 @@ const LISTING = `${BASE}/it/cosa-fare/eventi-lago-di-garda-veneto`
 const MAX_PAGES = 20
 
 /** Year-round weekly markets (listed with an end in 2068) and bus services: noise here. */
-const SKIP_TITLE = /^bus\b|\bnavetta\b|\bmercat(o|ini) settimanal|\bmercato (del|di) (lunedi|martedi|mercoledi|giovedi|venerdi|sabato|domenica)/i
+const SKIP_TITLE =
+  /^bus\b|\bnavetta\b|\bmercat(o|ini) settimanal|\bmercato (del|di) (lunedi|martedi|mercoledi|giovedi|venerdi|sabato|domenica)/i
 
 const GtmSchema = z.looseObject({
   title: z.string().optional(),
@@ -40,7 +41,12 @@ function ymd(d: string, m: string, y: string): string {
 /** A title-cased town from "BARDOLINO" / "Peschiera del Garda". */
 function town(raw: string): string {
   const t = raw.trim()
-  return t === t.toUpperCase() ? t.toLowerCase().replace(/(^|[\s'-])\p{L}/gu, (c) => c.toUpperCase()).replace(/\b(Del|Di|Sul|Della)\b/g, (w) => w.toLowerCase()) : t
+  return t === t.toUpperCase()
+    ? t
+        .toLowerCase()
+        .replace(/(^|[\s'-])\p{L}/gu, (c) => c.toUpperCase())
+        .replace(/\b(Del|Di|Sul|Della)\b/g, (w) => w.toLowerCase())
+    : t
 }
 
 // Children's typologies ("manifestazioni per famiglie e bambini", "teatro
@@ -97,7 +103,9 @@ function parseCard(card: string): RawEvent | null {
   const at = htmlToText(timeLi).match(/\b(\d{1,2}):(\d{2})\b/)
   const time = at && !(at[1] === '00' && at[2] === '00') ? `${at[1]?.padStart(2, '0')}:${at[2]}` : null
   const timed = Boolean(time) && first === last
-  const categories = familyTypes((gtm.categories ?? []).map((c) => c.name?.replace(/\\\//g, '/').trim()).filter((c): c is string => Boolean(c)))
+  const categories = familyTypes(
+    (gtm.categories ?? []).map((c) => c.name?.replace(/\\\//g, '/').trim()).filter((c): c is string => Boolean(c)),
+  )
   const img = card.match(/data-srcset="([^"\s]+)/)?.[1]
   const summary = [recurrence, time && !timed ? `ore ${time}` : ''].filter(Boolean).join(', ')
   return {

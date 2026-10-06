@@ -42,10 +42,7 @@ export function CheckinsSection({
           </div>
         ))}
         {checkins.length < LIFE_CAPS.checkins && (
-          <Button
-            variant="ghost"
-            onClick={() => setCheckins([...checkins, { id: newId(), date: '', label: '' }])}
-          >
+          <Button variant="ghost" onClick={() => setCheckins([...checkins, { id: newId(), date: '', label: '' }])}>
             + Add check-in
           </Button>
         )}

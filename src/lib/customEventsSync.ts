@@ -42,8 +42,7 @@ export interface CustomEventRow {
 export const customEventsTable: TableSync<CustomEvent, CustomEventRow> = {
   remote: 'custom_events',
   table: () => db.customEvents,
-  columns:
-    'id, title, start_at, end_at, all_day, venue, city, url, note, category, image, created_at, updated_at',
+  columns: 'id, title, start_at, end_at, all_day, venue, city, url, note, category, image, created_at, updated_at',
   realtime: true,
   updatedAt: (e) => e.updatedAt,
   toRow: (e) => ({

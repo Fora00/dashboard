@@ -46,7 +46,11 @@ export function ThingsSection({
   // a second tap would duplicate every to-do.
   async function sendAll() {
     if (unsent.length === 0) return
-    await markTasksSent(week, unsent.map((t) => t.id), true)
+    await markTasksSent(
+      week,
+      unsent.map((t) => t.id),
+      true,
+    )
     window.location.href = buildThingsUrl(unsent, thingsOpts)
   }
 
@@ -55,7 +59,11 @@ export function ThingsSection({
   async function resendSelected() {
     const tasks = plan.tasks.filter((t) => selectedTaskIds.has(t.id))
     if (tasks.length === 0) return
-    await markTasksSent(week, tasks.map((t) => t.id), true)
+    await markTasksSent(
+      week,
+      tasks.map((t) => t.id),
+      true,
+    )
     setSelectedTaskIds(new Set())
     window.location.href = buildThingsUrl(tasks, thingsOpts)
   }

@@ -92,7 +92,9 @@ export function buildExportMarkdown(
     out.push('## Food', '')
     if (food.average) {
       const a = food.average
-      out.push(`- Average over ${food.loggedDays} logged day${food.loggedDays === 1 ? '' : 's'}: ${approx}${a.kcal} kcal · P ${a.proteinG} · C ${a.carbsG} · F ${a.fatG}`)
+      out.push(
+        `- Average over ${food.loggedDays} logged day${food.loggedDays === 1 ? '' : 's'}: ${approx}${a.kcal} kcal · P ${a.proteinG} · C ${a.carbsG} · F ${a.fatG}`,
+      )
     } else {
       out.push('- Entries logged, no calories or macros entered')
     }
@@ -127,7 +129,18 @@ export function buildExportMarkdown(
     ...(food.days.length
       ? {
           meals: food.days.flatMap((d) =>
-            d.entries.map(({ day, meal, text, weighed, grams, kcal, proteinG, carbsG, fatG, estimated }) => ({ day, meal, text, weighed: weighed === true, grams, kcal, proteinG, carbsG, fatG, estimated })),
+            d.entries.map(({ day, meal, text, weighed, grams, kcal, proteinG, carbsG, fatG, estimated }) => ({
+              day,
+              meal,
+              text,
+              weighed: weighed === true,
+              grams,
+              kcal,
+              proteinG,
+              carbsG,
+              fatG,
+              estimated,
+            })),
           ),
         }
       : {}),

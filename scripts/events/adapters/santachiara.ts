@@ -15,17 +15,34 @@ import { addDays, dateToIso, localToIso, romeDate } from '../time.ts'
 import { absUrl, decodeEntities, htmlToText, titleCase } from '../text.ts'
 
 const BASE = 'https://www.centrosantachiara.it'
-const MONTHS = ['gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno', 'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre']
+const MONTHS = [
+  'gennaio',
+  'febbraio',
+  'marzo',
+  'aprile',
+  'maggio',
+  'giugno',
+  'luglio',
+  'agosto',
+  'settembre',
+  'ottobre',
+  'novembre',
+  'dicembre',
+]
 
 const dmy = (ymd: string): string => ymd.split('-').reverse().join('/')
 
 async function run(ctx: AdapterContext): Promise<RawEvent[]> {
   const from = romeDate(ctx.now)
   const to = addDays(from, ctx.horizonDays)
-  const res = await ctx.postForm<{ correct?: string }>(`${BASE}/csc_shows`, { 'date-range': `${dmy(from)} - ${dmy(to)}` })
+  const res = await ctx.postForm<{ correct?: string }>(`${BASE}/csc_shows`, {
+    'date-range': `${dmy(from)} - ${dmy(to)}`,
+  })
   const out: RawEvent[] = []
   for (const card of (res.correct ?? '').split(/(?=<div class="single_next_event)/).slice(1)) {
-    const date = /sne_day">(\d{1,2})<\/p>\s*<p>([A-Za-zì]+),\s*(\d{4})<\/p>\s*(?:<p>(\d{1,2})[.:](\d{2})<\/p>)?/.exec(card)
+    const date = /sne_day">(\d{1,2})<\/p>\s*<p>([A-Za-zì]+),\s*(\d{4})<\/p>\s*(?:<p>(\d{1,2})[.:](\d{2})<\/p>)?/.exec(
+      card,
+    )
     const link = /<a href="(\/spettacoli\/[^"]+)"/.exec(card)
     const title = htmlToText(/sne_title">([\s\S]*?)<\/p>/.exec(card)?.[1] ?? '')
     const m = MONTHS.indexOf((date?.[2] ?? '').toLowerCase())

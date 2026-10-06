@@ -14,7 +14,10 @@ export interface IcalProp {
 export type IcalEvent = Record<string, IcalProp>
 
 export function unfold(text: string): string[] {
-  return text.replace(/\r\n/g, '\n').replace(/\n[ \t]/g, '').split('\n')
+  return text
+    .replace(/\r\n/g, '\n')
+    .replace(/\n[ \t]/g, '')
+    .split('\n')
 }
 
 export function unescapeText(v: string): string {
@@ -28,7 +31,10 @@ function parseLine(line: string): [string, IcalProp] | null {
   for (let i = 0; i < line.length; i++) {
     const ch = line[i]
     if (ch === '"') inQuote = !inQuote
-    else if (ch === ':' && !inQuote) { colon = i; break }
+    else if (ch === ':' && !inQuote) {
+      colon = i
+      break
+    }
   }
   if (colon < 0) return null
   const [name = '', ...paramParts] = line.slice(0, colon).split(';')
@@ -51,13 +57,18 @@ export function parseIcal(text: string): IcalEvent[] {
     if (!parsed) continue
     const [name, prop] = parsed
     if (name === 'BEGIN') {
-      if (prop.value.toUpperCase() === 'VEVENT' && !current) { current = {}; depth = 0 }
-      else if (current) depth++
+      if (prop.value.toUpperCase() === 'VEVENT' && !current) {
+        current = {}
+        depth = 0
+      } else if (current) depth++
       continue
     }
     if (name === 'END') {
       if (current && depth > 0) depth--
-      else if (current && prop.value.toUpperCase() === 'VEVENT') { events.push(current); current = null }
+      else if (current && prop.value.toUpperCase() === 'VEVENT') {
+        events.push(current)
+        current = null
+      }
       continue
     }
     if (current && depth === 0 && !(name in current)) current[name] = prop
@@ -77,7 +88,14 @@ export function icalDate(prop: IcalProp | undefined): { iso: string; allDay: boo
   }
   const t = v.match(/^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})?(Z)?$/)
   if (!t) return null
-  const [y, mo, day, h, mi, s] = [t[1], t[2], t[3], t[4], t[5], t[6] ?? '0'].map(Number) as [number, number, number, number, number, number]
+  const [y, mo, day, h, mi, s] = [t[1], t[2], t[3], t[4], t[5], t[6] ?? '0'].map(Number) as [
+    number,
+    number,
+    number,
+    number,
+    number,
+    number,
+  ]
   let iso: string
   if (t[7]) {
     iso = instantToIso(Date.UTC(y, mo - 1, day, h, mi, s))

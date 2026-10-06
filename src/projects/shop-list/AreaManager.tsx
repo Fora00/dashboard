@@ -41,10 +41,7 @@ export function AreaManager({ area }: { area: ShopArea }) {
 
   async function loadMembers() {
     if (!supabase) return
-    const { data, error: err } = await supabase
-      .from('shop_area_members')
-      .select('email')
-      .eq('area_id', area.id)
+    const { data, error: err } = await supabase.from('shop_area_members').select('email').eq('area_id', area.id)
     if (err) setError(err.message)
     else setMembers(data.map((m) => m.email))
   }
@@ -203,7 +200,8 @@ export function AreaManager({ area }: { area: ShopArea }) {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              aria-label="Guest email" placeholder="guest@example.com"
+              aria-label="Guest email"
+              placeholder="guest@example.com"
               autoComplete="off"
               className="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-indigo-300 dark:border-slate-700 dark:bg-slate-800"
             />

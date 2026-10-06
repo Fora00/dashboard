@@ -138,9 +138,7 @@ export function JoinProject() {
     return (
       <div>
         {header}
-        <Card className="text-sm text-slate-500 dark:text-slate-400">
-          This link can't be used right now.
-        </Card>
+        <Card className="text-sm text-slate-500 dark:text-slate-400">This link can't be used right now.</Card>
       </div>
     )
   }
@@ -210,9 +208,7 @@ export function JoinProject() {
         </Card>
       ) : (
         <Card className="space-y-3 text-sm">
-          {project?.description && (
-            <p className="text-slate-600 dark:text-slate-300">{project.description}</p>
-          )}
+          {project?.description && <p className="text-slate-600 dark:text-slate-300">{project.description}</p>}
           {stage === 'email' ? (
             <>
               <p className="text-slate-500 dark:text-slate-400">

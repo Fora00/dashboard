@@ -32,7 +32,9 @@ export function derivedCheckinId(date: string, label: string, n = 1): string {
  * from date + label, skipping ids already taken (explicit ones first, then
  * earlier derived ones — identical date + label pairs get `-2`, `-3`, …).
  */
-export function assignCheckinIds(list: readonly { id?: string | undefined; date: string; label: string }[]): LifeCheckin[] {
+export function assignCheckinIds(
+  list: readonly { id?: string | undefined; date: string; label: string }[],
+): LifeCheckin[] {
   const taken = new Set(list.map((c) => c.id).filter((id): id is string => !!id))
   return list.map((c) => {
     if (c.id) return { id: c.id, date: c.date, label: c.label }

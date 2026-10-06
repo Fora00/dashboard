@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 html {
   /* Light by default; dark follows prefers-color-scheme via Tailwind's
@@ -16,6 +16,5 @@ html {
 
 body {
   /* Respect iPhone notch / home-indicator safe areas when installed as a PWA. */
-  padding: env(safe-area-inset-top) env(safe-area-inset-right)
-    env(safe-area-inset-bottom) env(safe-area-inset-left);
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
 }

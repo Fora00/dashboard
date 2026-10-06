@@ -57,7 +57,9 @@ describe('isKids', () => {
   })
 
   it('the long description never makes an event kids', () => {
-    expect(isKids('Stagione teatrale', null, 'Il cartellone.', 'Domenica spettacolo per bambini e bambine.')).toBe(false)
+    expect(isKids('Stagione teatrale', null, 'Il cartellone.', 'Domenica spettacolo per bambini e bambine.')).toBe(
+      false,
+    )
   })
 
   it('words deliberately absent from the rules stay adult (false positives seen)', () => {
@@ -88,7 +90,10 @@ describe('classify', () => {
   })
 
   it('a kids event is tagged kids and never creative', () => {
-    const r = classify(undefined, 'other', { title: 'Laboratorio creativo per bambini', summary: 'Per bambini dai 5 anni' })
+    const r = classify(undefined, 'other', {
+      title: 'Laboratorio creativo per bambini',
+      summary: 'Per bambini dai 5 anni',
+    })
     expect(r.tags).toContain('kids')
     expect(r.tags).not.toContain('creative')
     expect(r.category).not.toBe('creative')
@@ -166,13 +171,23 @@ describe('finishTags / sortTags', () => {
   })
 
   it('sortTags dedups and puts kids/format tags after categories', () => {
-    expect(sortTags(['solo-ok', 'kids', 'theatre', 'theatre', 'boardgames'])).toEqual(['boardgames', 'theatre', 'kids', 'solo-ok'])
+    expect(sortTags(['solo-ok', 'kids', 'theatre', 'theatre', 'boardgames'])).toEqual([
+      'boardgames',
+      'theatre',
+      'kids',
+      'solo-ok',
+    ])
   })
 })
 
 describe('course-wellness drop (other only)', () => {
   it('drops courses, wellness and language groups nothing else claimed', () => {
-    for (const title of ['Corso di Yoga', 'Serate a tema nella sauna', 'Sprachen Café', 'Campane tibetane nella grotta salina']) {
+    for (const title of [
+      'Corso di Yoga',
+      'Serate a tema nella sauna',
+      'Sprachen Café',
+      'Campane tibetane nella grotta salina',
+    ]) {
       expect(dropRule({ title }, 'other')).toBe('course-wellness')
     }
   })
@@ -202,6 +217,8 @@ describe('adjacent interests', () => {
   it('leaves core categories, plain exhibitions and kids events without it', () => {
     expect(isAdjacent('nerd', { title: 'Fumetti in piazza' })).toBe(false)
     expect(classify(undefined, 'other', { title: 'Mostra di pittura del Seicento' }).tags).not.toContain('adjacent')
-    expect(classify(undefined, 'other', { title: 'Laboratorio di fotografia per bambini' }).tags).not.toContain('adjacent')
+    expect(classify(undefined, 'other', { title: 'Laboratorio di fotografia per bambini' }).tags).not.toContain(
+      'adjacent',
+    )
   })
 })

@@ -16,16 +16,39 @@ import { absUrl, decodeEntities, htmlToText } from '../text.ts'
 const SITE = 'https://www.muse.it'
 const CALENDAR = `${SITE}/calendario-eventi/`
 const REST = `${SITE}/wp-json/wp/v2/events?per_page=60&orderby=date&order=desc&_fields=link,title,yoast_head_json`
-const MONTHS = ['gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno', 'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre']
+const MONTHS = [
+  'gennaio',
+  'febbraio',
+  'marzo',
+  'aprile',
+  'maggio',
+  'giugno',
+  'luglio',
+  'agosto',
+  'settembre',
+  'ottobre',
+  'novembre',
+  'dicembre',
+]
 const MONTH = MONTHS.join('|')
 const MAX_PAGES = 70
 
 const pad = (n: number | string) => String(n).padStart(2, '0')
 
-interface Candidate { url: string; title: string; summary: string; image: string | null; kind: string }
+interface Candidate {
+  url: string
+  title: string
+  summary: string
+  image: string | null
+  kind: string
+}
 
 /** One date mention before years are filled in. */
-interface Mention { day: number; month: number; year: number | null }
+interface Mention {
+  day: number
+  month: number
+  year: number | null
+}
 
 /**
  * Dates in an Italian phrase, as [first, last] days (YYYY-MM-DD) or null.
@@ -37,14 +60,17 @@ export function parseDates(phrase: string, today: string): [string, string] | nu
   const text = decodeEntities(phrase).replace(/\s+/g, ' ').toLowerCase()
   const found: Mention[] = []
   // "dal 22 al 25 ottobre 2026": the first day has no month of its own.
-  const shared = new RegExp(`(\\d{1,2})\\s*(?:al|a|e|-|–)\\s*(?:l[’']\\s*)?(\\d{1,2})\\s+(${MONTH})(?:\\s+(\\d{4}))?`).exec(text)
+  const shared = new RegExp(
+    `(\\d{1,2})\\s*(?:al|a|e|-|–)\\s*(?:l[’']\\s*)?(\\d{1,2})\\s+(${MONTH})(?:\\s+(\\d{4}))?`,
+  ).exec(text)
   if (shared) {
     const month = MONTHS.indexOf(shared[3] as string)
     const year = shared[4] ? Number(shared[4]) : null
     found.push({ day: Number(shared[1]), month, year }, { day: Number(shared[2]), month, year })
   } else {
     const re = new RegExp(`(?:l[’']\\s*)?(\\d{1,2})°?\\s+(${MONTH})(?:\\s+(\\d{4}))?`, 'g')
-    for (const m of text.matchAll(re)) found.push({ day: Number(m[1]), month: MONTHS.indexOf(m[2] as string), year: m[3] ? Number(m[3]) : null })
+    for (const m of text.matchAll(re))
+      found.push({ day: Number(m[1]), month: MONTHS.indexOf(m[2] as string), year: m[3] ? Number(m[3]) : null })
   }
   if (found.length === 0) return null
   const known = found.find((f) => f.year !== null)?.year ?? null
@@ -82,7 +108,9 @@ function sidebarLines(html: string, icon: string): string[] {
   const out: string[] = []
   const re = new RegExp(`#${icon}"[\\s\\S]*?</div>\\s*(?:<p>([\\s\\S]*?)</p>|([^<]+)</a>)`, 'g')
   for (const m of aside.matchAll(re)) {
-    const t = htmlToText(m[1] ?? m[2] ?? '').replace(/\s+/g, ' ').trim()
+    const t = htmlToText(m[1] ?? m[2] ?? '')
+      .replace(/\s+/g, ' ')
+      .trim()
     if (t) out.push(t)
   }
   return out
@@ -99,7 +127,11 @@ async function candidates(ctx: AdapterContext): Promise<Candidate[]> {
     const kind = htmlToText(/class="eyelet">([^<]*)</.exec(card)?.[1] ?? '')
     byUrl.set(url, { url, title: htmlToText(link[2]), summary: '', image: null, kind })
   }
-  type Rest = { link?: string; title?: { rendered?: string }; yoast_head_json?: { description?: string; og_image?: { url?: string }[] } }
+  type Rest = {
+    link?: string
+    title?: { rendered?: string }
+    yoast_head_json?: { description?: string; og_image?: { url?: string }[] }
+  }
   const rest = await ctx.fetchJson<Rest[]>(REST)
   for (const r of rest) {
     if (!r.link) continue

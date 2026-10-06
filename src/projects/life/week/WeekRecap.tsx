@@ -28,7 +28,9 @@ export function WeekRecap({
           {parts.map((p) => (
             <span key={p.label} className="text-slate-600 dark:text-slate-300">
               {p.label}{' '}
-              <span className={`font-medium ${p.full ? 'text-emerald-700 dark:text-emerald-300' : 'text-slate-800 dark:text-slate-100'}`}>
+              <span
+                className={`font-medium ${p.full ? 'text-emerald-700 dark:text-emerald-300' : 'text-slate-800 dark:text-slate-100'}`}
+              >
                 {p.value}
               </span>
             </span>

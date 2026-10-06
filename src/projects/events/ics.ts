@@ -60,7 +60,10 @@ function romeLocal(ms: number): string {
 }
 
 function utcStamp(ms: number): string {
-  return new Date(ms).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '')
+  return new Date(ms)
+    .toISOString()
+    .replace(/[-:]/g, '')
+    .replace(/\.\d{3}/, '')
 }
 
 function compactDay(day: string): string {
@@ -173,7 +176,8 @@ export async function addToCalendar(e: EventItem): Promise<void> {
       }
     }
 
-    if (typeof URL === 'undefined' || typeof URL.createObjectURL !== 'function' || typeof document === 'undefined') return
+    if (typeof URL === 'undefined' || typeof URL.createObjectURL !== 'function' || typeof document === 'undefined')
+      return
     const href = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = href

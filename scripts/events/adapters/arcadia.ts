@@ -12,7 +12,20 @@ import { absUrl, decodeEntities, htmlToText, titleCase } from '../text.ts'
 
 const SITE = 'https://www.libreriarcadia.com'
 const REST = `${SITE}/wp-json/wp/v2/posts?categories=4&per_page=100&orderby=date&order=desc&_fields=id,link,title,content`
-const MONTHS = ['gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno', 'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre']
+const MONTHS = [
+  'gennaio',
+  'febbraio',
+  'marzo',
+  'aprile',
+  'maggio',
+  'giugno',
+  'luglio',
+  'agosto',
+  'settembre',
+  'ottobre',
+  'novembre',
+  'dicembre',
+]
 const WEEKDAYS = ['domenica', 'lunedì', 'martedì', 'mercoledì', 'giovedì', 'venerdì', 'sabato']
 const SHOP = { venue: 'Libreria Arcadia', city: 'Rovereto' }
 
@@ -36,7 +49,9 @@ export function resolveDate(day: number, month: number, wd: number, from: string
  * "VENERDÌ 2 OTTOBRE, ORE 19:00 ANDREA … PRESENTA “X”" → date, time and the
  * rest. The comma and the "ORE" position vary ("VENERDÌ 25 SETTEMBRE ORE 19:00,").
  */
-export function parseTitle(raw: string): { wd: number; day: number; month: number; time: string | null; rest: string } | null {
+export function parseTitle(
+  raw: string,
+): { wd: number; day: number; month: number; time: string | null; rest: string } | null {
   const t = decodeEntities(raw).replace(/\s+/g, ' ').trim()
   const m = /^([A-Za-zÀ-ÿ]+)\s+(\d{1,2})\s+([A-Za-z]+)\s*,?\s*(?:ORE\s+(\d{1,2})[:.](\d{2}))?\s*,?\s*(.*)$/i.exec(t)
   const wd = WEEKDAYS.indexOf((m?.[1] ?? '').toLowerCase())
@@ -52,7 +67,10 @@ const tidyCaps = (s: string): string =>
 async function run(ctx: AdapterContext): Promise<RawEvent[]> {
   const from = romeDate(ctx.now)
   const to = addDays(from, ctx.horizonDays)
-  const posts = await ctx.fetchJson<{ id: number; link?: string; title?: { rendered?: string }; content?: { rendered?: string } }[]>(REST)
+  const posts =
+    await ctx.fetchJson<
+      { id: number; link?: string; title?: { rendered?: string }; content?: { rendered?: string } }[]
+    >(REST)
   const out: RawEvent[] = []
   for (const p of posts) {
     const t = parseTitle(p.title?.rendered ?? '')
@@ -62,7 +80,10 @@ async function run(ctx: AdapterContext): Promise<RawEvent[]> {
     const where = /\b(?:ALLA|NELLA|AL)\s+(SALA\s+[A-Z]+)\s+(?:DELL['’]|DEL\s+)(URBAN CENTER|MUSEO CIVICO)/i.exec(t.rest)
     const venue = where ? titleCase(`${where[1]} · ${where[2]}`) : SHOP.venue
     const title = t.rest
-      .replace(/\s*[–—-]?\s*\b(?:ALLA|NELLA|AL)\s+SALA\s+[A-Z]+\s+(?:DELL['’]|DEL\s+)(?:URBAN CENTER|MUSEO CIVICO)\s*[–—-]?\s*$/i, '')
+      .replace(
+        /\s*[–—-]?\s*\b(?:ALLA|NELLA|AL)\s+SALA\s+[A-Z]+\s+(?:DELL['’]|DEL\s+)(?:URBAN CENTER|MUSEO CIVICO)\s*[–—-]?\s*$/i,
+        '',
+      )
       .trim()
     const html = p.content?.rendered ?? ''
     const img = /<img[^>]*\ssrc="([^"]+)"/.exec(html)?.[1]

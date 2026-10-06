@@ -25,7 +25,20 @@ import { absUrl, decodeEntities, htmlToText, normalize } from '../text.ts'
 
 const BASE = 'https://www.centroteatralebresciano.it'
 const PAGE = `${BASE}/spettacoli/`
-const MONTHS = ['gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno', 'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre']
+const MONTHS = [
+  'gennaio',
+  'febbraio',
+  'marzo',
+  'aprile',
+  'maggio',
+  'giugno',
+  'luglio',
+  'agosto',
+  'settembre',
+  'ottobre',
+  'novembre',
+  'dicembre',
+]
 
 function ymd(day: string, month: string, year: string): string | null {
   const m = MONTHS.indexOf(month)
@@ -40,7 +53,8 @@ export function parseCtbDate(text: string): { first: string; last: string; time:
     .filter((d): d is string => Boolean(d))
   const first = dates[0]
   if (!first) return null
-  const last = dates.length > 1 && (dates[dates.length - 1] as string) > first ? (dates[dates.length - 1] as string) : first
+  const last =
+    dates.length > 1 && (dates[dates.length - 1] as string) > first ? (dates[dates.length - 1] as string) : first
   // Times follow the first date: "20 30", or "11 00 e 20 30".
   const after = t.slice(t.indexOf(first.slice(0, 4)) + 4)
   const times = [...after.matchAll(/(?:^|\s)(\d{1,2}) (\d{2})(?=\s|$)/g)]
@@ -74,7 +88,10 @@ async function run(ctx: AdapterContext): Promise<RawEvent[]> {
       url,
       description: '',
       // "Martedì 24 novembre 2026 - 20:30 · fino al 29 novembre 2026"
-      summary: when.toLowerCase().replace(/\s+(fino al|solo il)\s+/i, ' · $1 ').replace(/^./, (c) => c.toUpperCase()),
+      summary: when
+        .toLowerCase()
+        .replace(/\s+(fino al|solo il)\s+/i, ' · $1 ')
+        .replace(/^./, (c) => c.toUpperCase()),
       image: absUrl(img ? decodeEntities(img) : null, BASE),
       ...(/concert/i.test(title) ? {} : { categoryHint: 'theatre' as const }),
       tagText: /produzione ctb/i.test(card) ? 'teatro prosa · Produzione CTB' : 'teatro prosa',

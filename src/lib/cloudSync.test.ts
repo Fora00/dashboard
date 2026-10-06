@@ -129,7 +129,11 @@ describe('server-answered failures', () => {
     expect(bad?.dead).toBe(1)
     expect(eng.getStatus().dead).toBe(1)
     expect(eng.getStatus().lastError).toMatch(/rejected/)
-    expect(serverRows().map((r) => r.id).sort()).toEqual(['good1', 'good2'])
+    expect(
+      serverRows()
+        .map((r) => r.id)
+        .sort(),
+    ).toEqual(['good1', 'good2'])
     expect(await db.todos.get('bad')).toBeDefined()
   })
 
@@ -348,7 +352,11 @@ describe('nested transaction', () => {
       await eng.upsert('todos', todo('n2'))
     })
     await settle()
-    expect(serverRows().map((r) => r.id).sort()).toEqual(['n1', 'n2'])
+    expect(
+      serverRows()
+        .map((r) => r.id)
+        .sort(),
+    ).toEqual(['n1', 'n2'])
     expect(await db.outbox.count()).toBe(0)
   })
 })

@@ -34,76 +34,112 @@ export function NutritionTrends({ entries, now }: { entries: MealEntry[]; now: D
             title={open ? 'Hide trends' : 'Show trends'}
             className="flex min-h-10 items-center gap-1.5"
           >
-            <span aria-hidden="true" className="text-xs">{open ? '▾' : '▸'}</span>
+            <span aria-hidden="true" className="text-xs">
+              {open ? '▾' : '▸'}
+            </span>
             📊 Trends
           </button>
         </h2>
-        {open && <div className="flex gap-1" role="group" aria-label="Range">
-          {RANGES.map((r) => (
-            <button
-              key={r}
-              type="button"
-              aria-pressed={range === r}
-              title={`Last ${r} days`}
-              onClick={() => setRange(r)}
-              className={`min-h-10 min-w-10 rounded-lg px-2 text-xs ${range === r ? 'bg-indigo-600 text-white' : 'text-slate-600 dark:text-slate-300'}`}
-            >
-              {r}d
-            </button>
-          ))}
-        </div>}
+        {open && (
+          <div className="flex gap-1" role="group" aria-label="Range">
+            {RANGES.map((r) => (
+              <button
+                key={r}
+                type="button"
+                aria-pressed={range === r}
+                title={`Last ${r} days`}
+                onClick={() => setRange(r)}
+                className={`min-h-10 min-w-10 rounded-lg px-2 text-xs ${range === r ? 'bg-indigo-600 text-white' : 'text-slate-600 dark:text-slate-300'}`}
+              >
+                {r}d
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {open && (
         <>
-      <p className="text-xs text-slate-500 dark:text-slate-400" title={`Average over the ${avg.days} day(s) with values; empty days are skipped`}>
-        {MACRO_EMOJI.kcal} avg {avg.kcal} kcal · {MACRO_EMOJI.proteinG} {avg.proteinG} g · {MACRO_EMOJI.carbsG} {avg.carbsG} g · {MACRO_EMOJI.fatG} {avg.fatG} g
-      </p>
+          <p
+            className="text-xs text-slate-500 dark:text-slate-400"
+            title={`Average over the ${avg.days} day(s) with values; empty days are skipped`}
+          >
+            {MACRO_EMOJI.kcal} avg {avg.kcal} kcal · {MACRO_EMOJI.proteinG} {avg.proteinG} g · {MACRO_EMOJI.carbsG}{' '}
+            {avg.carbsG} g · {MACRO_EMOJI.fatG} {avg.fatG} g
+          </p>
 
-      <svg viewBox={`0 0 ${W} ${H + 14}`} className="w-full" role="img" aria-label={`Calories per day over the last ${range} days, average ${avg.kcal} kcal`}>
-        <line x1="0" x2={W} y1={H - y(avg.kcal)} y2={H - y(avg.kcal)} className="stroke-slate-400" strokeDasharray="3 3" strokeWidth="1">
-          <title>{`Average ${avg.kcal} kcal`}</title>
-        </line>
-        {points.map((p, i) => {
-          const x = i * slot + (slot - bar) / 2
-          const macroKcal = p.proteinG * 4 + p.carbsG * 4 + p.fatG * 9
-          const h = y(p.kcal)
-          const parts = [
-            ['protein', p.proteinG * 4],
-            ['carbs', p.carbsG * 4],
-            ['fat', p.fatG * 9],
-          ] as const
-          let top = H
-          return (
-            <g key={p.day}>
-              <title>{p.counted === 0 ? `${p.day}: nothing logged` : `${p.day}: ${p.approximate ? '≈ ' : ''}${p.kcal} kcal · 🥩 ${p.proteinG} g · 🍞 ${p.carbsG} g · 🥑 ${p.fatG} g`}</title>
-              {/* hit area so empty/short days are still hoverable */}
-              <rect x={i * slot} y={0} width={slot} height={H} className="fill-transparent" />
-              {p.counted > 0 &&
-                parts.map(([k, kc]) => {
-                  const sh = macroKcal > 0 ? h * (kc / macroKcal) : 0
-                  top -= sh
-                  return sh > 0 ? <rect key={k} x={x} y={top} width={bar} height={sh} className={SEG[k]} /> : null
-                })}
-              {p.counted > 0 && macroKcal === 0 && <rect x={x} y={H - h} width={bar} height={h} className="fill-slate-400" />}
-            </g>
-          )
-        })}
-        <line x1="0" x2={W} y1={H} y2={H} className="stroke-slate-300 dark:stroke-slate-700" strokeWidth="1" />
-        <text x="0" y={H + 11} className="fill-slate-500 text-[9px]">{points[0]!.day.slice(5)}</text>
-        <text x={W} y={H + 11} textAnchor="end" className="fill-slate-500 text-[9px]">{points[points.length - 1]!.day.slice(5)}</text>
-      </svg>
+          <svg
+            viewBox={`0 0 ${W} ${H + 14}`}
+            className="w-full"
+            role="img"
+            aria-label={`Calories per day over the last ${range} days, average ${avg.kcal} kcal`}
+          >
+            <line
+              x1="0"
+              x2={W}
+              y1={H - y(avg.kcal)}
+              y2={H - y(avg.kcal)}
+              className="stroke-slate-400"
+              strokeDasharray="3 3"
+              strokeWidth="1"
+            >
+              <title>{`Average ${avg.kcal} kcal`}</title>
+            </line>
+            {points.map((p, i) => {
+              const x = i * slot + (slot - bar) / 2
+              const macroKcal = p.proteinG * 4 + p.carbsG * 4 + p.fatG * 9
+              const h = y(p.kcal)
+              const parts = [
+                ['protein', p.proteinG * 4],
+                ['carbs', p.carbsG * 4],
+                ['fat', p.fatG * 9],
+              ] as const
+              let top = H
+              return (
+                <g key={p.day}>
+                  <title>
+                    {p.counted === 0
+                      ? `${p.day}: nothing logged`
+                      : `${p.day}: ${p.approximate ? '≈ ' : ''}${p.kcal} kcal · 🥩 ${p.proteinG} g · 🍞 ${p.carbsG} g · 🥑 ${p.fatG} g`}
+                  </title>
+                  {/* hit area so empty/short days are still hoverable */}
+                  <rect x={i * slot} y={0} width={slot} height={H} className="fill-transparent" />
+                  {p.counted > 0 &&
+                    parts.map(([k, kc]) => {
+                      const sh = macroKcal > 0 ? h * (kc / macroKcal) : 0
+                      top -= sh
+                      return sh > 0 ? <rect key={k} x={x} y={top} width={bar} height={sh} className={SEG[k]} /> : null
+                    })}
+                  {p.counted > 0 && macroKcal === 0 && (
+                    <rect x={x} y={H - h} width={bar} height={h} className="fill-slate-400" />
+                  )}
+                </g>
+              )
+            })}
+            <line x1="0" x2={W} y1={H} y2={H} className="stroke-slate-300 dark:stroke-slate-700" strokeWidth="1" />
+            <text x="0" y={H + 11} className="fill-slate-500 text-[9px]">
+              {points[0]!.day.slice(5)}
+            </text>
+            <text x={W} y={H + 11} textAnchor="end" className="fill-slate-500 text-[9px]">
+              {points[points.length - 1]!.day.slice(5)}
+            </text>
+          </svg>
 
-      <div title="Share of calories from protein / carbs / fat in the average day">
-        <div className="flex h-2.5 overflow-hidden rounded-full" role="img" aria-label={`Average split: protein ${split.protein}%, carbs ${split.carbs}%, fat ${split.fat}%`}>
-          <div className="bg-rose-500" style={{ width: `${split.protein}%` }} />
-          <div className="bg-amber-400" style={{ width: `${split.carbs}%` }} />
-          <div className="bg-sky-500" style={{ width: `${split.fat}%` }} />
-        </div>
-        <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-          {MACRO_EMOJI.proteinG} {split.protein}% · {MACRO_EMOJI.carbsG} {split.carbs}% · {MACRO_EMOJI.fatG} {split.fat}%
-        </p>
-      </div>
+          <div title="Share of calories from protein / carbs / fat in the average day">
+            <div
+              className="flex h-2.5 overflow-hidden rounded-full"
+              role="img"
+              aria-label={`Average split: protein ${split.protein}%, carbs ${split.carbs}%, fat ${split.fat}%`}
+            >
+              <div className="bg-rose-500" style={{ width: `${split.protein}%` }} />
+              <div className="bg-amber-400" style={{ width: `${split.carbs}%` }} />
+              <div className="bg-sky-500" style={{ width: `${split.fat}%` }} />
+            </div>
+            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+              {MACRO_EMOJI.proteinG} {split.protein}% · {MACRO_EMOJI.carbsG} {split.carbs}% · {MACRO_EMOJI.fatG}{' '}
+              {split.fat}%
+            </p>
+          </div>
         </>
       )}
     </Card>

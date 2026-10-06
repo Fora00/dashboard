@@ -24,8 +24,18 @@ const API = 'https://api.teatrostabileveneto.it/api/Public/eventslist'
 const SITE = 'https://www.teatrostabileveneto.it'
 const MEDIA = 'https://media.teatrostabileveneto.it/uploadedmedia/'
 const BODY = {
-  new: false, filterOnly: false, lang: 'it', listType: 0, search: '', cities: [], genres: [],
-  productions: false, firstDate: null, page: 0, pageSize: 100, giftCard: null,
+  new: false,
+  filterOnly: false,
+  lang: 'it',
+  listType: 0,
+  search: '',
+  cities: [],
+  genres: [],
+  productions: false,
+  firstDate: null,
+  page: 0,
+  pageSize: 100,
+  giftCard: null,
 }
 
 const TsvEventSchema = z.looseObject({
@@ -50,7 +60,7 @@ function it(value: string | null | undefined): string {
   if (!value) return ''
   try {
     const v = JSON.parse(value) as { it?: string } | string
-    return (typeof v === 'string' ? v : v.it ?? '').trim()
+    return (typeof v === 'string' ? v : (v.it ?? '')).trim()
   } catch {
     return value.trim()
   }

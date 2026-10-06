@@ -12,8 +12,17 @@ import { execFileSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 
 type Status = 'open' | 'completed' | 'canceled' | 'deleted'
-interface ThingsTodo { id: string; name: string; status: Status; createdAt: number; completedAt: number | null }
-interface Task { id: string; title: string }
+interface ThingsTodo {
+  id: string
+  name: string
+  status: Status
+  createdAt: number
+  completedAt: number | null
+}
+interface Task {
+  id: string
+  title: string
+}
 interface ExportJson {
   plan: { week: string; tasks: Task[] }
   entries: { kind: string; ref: string; value: { sent?: boolean; sends?: number[] } }[]
@@ -25,7 +34,12 @@ const BEFORE_MS = 2 * 60_000
 const AFTER_MS = 5 * 60_000
 
 function words(s: string): Set<string> {
-  return new Set(s.toLowerCase().split(/[^\p{L}\p{N}]+/u).filter((w) => w.length > 2))
+  return new Set(
+    s
+      .toLowerCase()
+      .split(/[^\p{L}\p{N}]+/u)
+      .filter((w) => w.length > 2),
+  )
 }
 
 function sharedWords(a: string, b: string): number {
@@ -139,9 +153,10 @@ for (const t of tasks) {
 }
 
 const allSends = [...batches.keys()]
-const things = allSends.length || noTimestamp.length
-  ? readThings(Math.min(...allSends, Date.parse(`${input.plan.week}T00:00:00`)) - BEFORE_MS)
-  : []
+const things =
+  allSends.length || noTimestamp.length
+    ? readThings(Math.min(...allSends, Date.parse(`${input.plan.week}T00:00:00`)) - BEFORE_MS)
+    : []
 
 const found = new Map<string, ThingsTodo[]>() // task id -> Things to-dos (>1 = duplicates)
 const unexplained: ThingsTodo[] = []
@@ -194,8 +209,12 @@ for (const t of noTimestamp) {
 const line = (t: Task) => {
   const hits = found.get(t.id)
   if (!sendsByTask.has(t.id)) return `- ${t.title}: not sent to Things`
-  if (!hits || hits.length === 0) return `- ${t.title}: NOT FOUND in Things (renamed with no time match, or never created)`
-  const desc = hits.map((h) => `${h.status}${h.completedAt ? ` ${new Date(h.completedAt).toLocaleDateString()}` : ''}${h.name !== t.title ? ` · now "${h.name}"` : ''}`)
+  if (!hits || hits.length === 0)
+    return `- ${t.title}: NOT FOUND in Things (renamed with no time match, or never created)`
+  const desc = hits.map(
+    (h) =>
+      `${h.status}${h.completedAt ? ` ${new Date(h.completedAt).toLocaleDateString()}` : ''}${h.name !== t.title ? ` · now "${h.name}"` : ''}`,
+  )
   return `- ${t.title}: ${desc.join(' + ')}${hits.length > 1 ? ' (DUPLICATE in Things)' : ''}`
 }
 

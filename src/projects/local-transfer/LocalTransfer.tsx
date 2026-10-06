@@ -141,11 +141,7 @@ export function LocalTransfer() {
 
   return (
     <div>
-      <PageHeader
-        emoji="📁"
-        title="Local Transfer"
-        subtitle="Files are stored on this device and available offline."
-      />
+      <PageHeader emoji="📁" title="Local Transfer" subtitle="Files are stored on this device and available offline." />
 
       <div
         role="button"
@@ -199,8 +195,7 @@ export function LocalTransfer() {
           {files.length > 0 && (
             <section>
               <p className="mb-3 text-sm text-slate-500 dark:text-slate-400">
-                On this device: {files.length} file{files.length === 1 ? '' : 's'} ·{' '}
-                {formatBytes(totalBytes)}
+                On this device: {files.length} file{files.length === 1 ? '' : 's'} · {formatBytes(totalBytes)}
               </p>
               <ul className="space-y-3">
                 {files.map((f) => (
@@ -211,11 +206,7 @@ export function LocalTransfer() {
                           <p className="truncate font-medium">{f.name}</p>
                           <p className="mt-0.5 text-xs text-slate-500">
                             {formatBytes(f.size)} · {formatDate(f.createdAt)}
-                            {f.synced === 1
-                              ? ' · ☁️ in cloud'
-                              : session
-                                ? ' · ⏳ upload pending'
-                                : ''}
+                            {f.synced === 1 ? ' · ☁️ in cloud' : session ? ' · ⏳ upload pending' : ''}
                           </p>
                         </div>
                       </div>
@@ -252,9 +243,7 @@ export function LocalTransfer() {
                   <li key={r.path}>
                     <Card>
                       <p className="truncate font-medium">{r.name}</p>
-                      {r.size !== null && (
-                        <p className="mt-0.5 text-xs text-slate-500">{formatBytes(r.size)}</p>
-                      )}
+                      {r.size !== null && <p className="mt-0.5 text-xs text-slate-500">{formatBytes(r.size)}</p>}
                       <div className="mt-3 flex flex-wrap gap-2">
                         <Button variant="ghost" disabled={busy || !online} onClick={() => void fetchRemote(r)}>
                           ⬇️ Get on this device

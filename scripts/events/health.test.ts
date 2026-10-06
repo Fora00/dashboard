@@ -3,7 +3,14 @@ import { countDelta, staleSources, upcomingTentative } from './health.ts'
 import type { Event, SourceStatus } from './types.ts'
 
 const NOW = Date.parse('2026-10-05T12:00:00Z')
-const src = (o: Partial<SourceStatus>): SourceStatus => ({ id: 'a', name: 'A', ok: false, count: 0, lastSuccess: null, ...o })
+const src = (o: Partial<SourceStatus>): SourceStatus => ({
+  id: 'a',
+  name: 'A',
+  ok: false,
+  count: 0,
+  lastSuccess: null,
+  ...o,
+})
 
 describe('staleSources', () => {
   it('flags a failing source only after N days without success', () => {
@@ -19,9 +26,15 @@ describe('staleSources', () => {
 })
 
 describe('upcomingTentative', () => {
-  const ev = (id: string, start: string, tentative = true) => ({ id, start, ...(tentative ? { datesTentative: true as const } : {}) }) as Event
+  const ev = (id: string, start: string, tentative = true) =>
+    ({ id, start, ...(tentative ? { datesTentative: true as const } : {}) }) as Event
   it('keeps only tentative events starting within the window', () => {
-    const list = [ev('soon', '2026-10-10T00:00:00+02:00'), ev('far', '2026-12-10T00:00:00+01:00'), ev('past', '2026-09-01T00:00:00+02:00'), ev('sure', '2026-10-10T00:00:00+02:00', false)]
+    const list = [
+      ev('soon', '2026-10-10T00:00:00+02:00'),
+      ev('far', '2026-12-10T00:00:00+01:00'),
+      ev('past', '2026-09-01T00:00:00+02:00'),
+      ev('sure', '2026-10-10T00:00:00+02:00', false),
+    ]
     expect(upcomingTentative(list, NOW).map((e) => e.id)).toEqual(['soon'])
   })
 })

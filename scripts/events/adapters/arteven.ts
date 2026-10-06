@@ -29,7 +29,11 @@ const MARKER = 'rappresentazionitotal = ['
 
 // Only the fields the adapter reads; a record missing the id or with a
 // wrongly typed field is skipped, a changed format fails the adapter.
-const NamedSchema = z.looseObject({ id: z.string().optional(), name: z.string().optional(), slug: z.string().optional() })
+const NamedSchema = z.looseObject({
+  id: z.string().optional(),
+  name: z.string().optional(),
+  slug: z.string().optional(),
+})
 const SpettacoloSchema = NamedSchema.extend({
   sottotitolo: z.string().nullish(),
   compagnia_teatrale: z.string().nullish(),
@@ -71,7 +75,11 @@ export function sliceJsonArray(text: string, from: number): string {
 function place(name: string): { venue: string; city: string; prov: string } {
   const m = name.match(/^(.*)\s+-\s+(.*?)\s*\((\w{2})\)\s*$/)
   if (!m) return { venue: titleCase(name.trim()), city: '', prov: '' }
-  return { venue: titleCase((m[1] ?? '').replace(/\s+/g, ' ')), city: titleCase(m[2] ?? ''), prov: (m[3] ?? '').toUpperCase() }
+  return {
+    venue: titleCase((m[1] ?? '').replace(/\s+/g, ' ')),
+    city: titleCase(m[2] ?? ''),
+    prov: (m[3] ?? '').toUpperCase(),
+  }
 }
 
 async function run(ctx: AdapterContext): Promise<RawEvent[]> {
@@ -102,13 +110,20 @@ async function run(ctx: AdapterContext): Promise<RawEvent[]> {
       venue: where.venue,
       city: where.city || 'Vicenza',
       // The page's own template builds this URL.
-      url: r.rassegna_id?.slug && show.slug && r.slug
-        ? `${BASE}/rassegne/${r.rassegna_id.slug}/${show.slug}/${r.slug}`
-        : `${BASE}/`,
+      url:
+        r.rassegna_id?.slug && show.slug && r.slug
+          ? `${BASE}/rassegne/${r.rassegna_id.slug}/${show.slug}/${r.slug}`
+          : `${BASE}/`,
       description: show.descrizione ?? '',
       image: img ? absUrl(encodeURI(img), BASE) : null,
-      tagText: [titleCase(rassegna), htmlToText(show.sottotitolo), htmlToText(show.compagnia_teatrale), KIDS_RASSEGNA.test(rassegna) ? 'teatro ragazzi' : '']
-        .filter(Boolean).join(' · '),
+      tagText: [
+        titleCase(rassegna),
+        htmlToText(show.sottotitolo),
+        htmlToText(show.compagnia_teatrale),
+        KIDS_RASSEGNA.test(rassegna) ? 'teatro ragazzi' : '',
+      ]
+        .filter(Boolean)
+        .join(' · '),
     })
   }
   return out

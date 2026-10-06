@@ -90,9 +90,7 @@ export function ManageTagsSheet({ open, onClose, tags, optionsId, onRename }: Pr
                     </Button>
                   </div>
                   {merges && (
-                    <p className="text-xs text-amber-700 dark:text-amber-400">
-                      “{target}” already exists: will merge
-                    </p>
+                    <p className="text-xs text-amber-700 dark:text-amber-400">“{target}” already exists: will merge</p>
                   )}
                 </form>
               )}

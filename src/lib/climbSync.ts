@@ -114,11 +114,7 @@ export async function deleteSession(id: string): Promise<void> {
   await engine.removeCascade('climb_sessions', id, [{ remote: 'climbs', key: 'sessionId' }])
 }
 
-export async function addClimb(
-  session: ClimbSession,
-  grade: string,
-  sent: boolean,
-): Promise<Climb> {
+export async function addClimb(session: ClimbSession, grade: string, sent: boolean): Promise<Climb> {
   const climb: Climb = {
     id: crypto.randomUUID(),
     sessionId: session.id,

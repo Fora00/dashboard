@@ -124,11 +124,7 @@ export function Habits() {
 
   return (
     <div>
-      <PageHeader
-        emoji="✅"
-        title="Habits"
-        subtitle="Tap a habit to check it off for today. Saved on this device."
-      />
+      <PageHeader emoji="✅" title="Habits" subtitle="Tap a habit to check it off for today. Saved on this device." />
 
       <SyncCard sync={sync} />
 

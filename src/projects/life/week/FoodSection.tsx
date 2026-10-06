@@ -22,14 +22,16 @@ export function FoodSection({
   if (food.days.length === 0) return null
   const a = food.average
   const approx = food.approximate ? '≈ ' : ''
-  const summary = a ? `${approx}${a.kcal} kcal/day · ${food.loggedDays} day${food.loggedDays === 1 ? '' : 's'}` : 'no values entered'
+  const summary = a
+    ? `${approx}${a.kcal} kcal/day · ${food.loggedDays} day${food.loggedDays === 1 ? '' : 's'}`
+    : 'no values entered'
   return (
     <CollapsibleSection title="🍽️ Food" summary={summary} open={open} onToggle={onToggle} readOnly={readOnly}>
       {a && (
         <p className="mb-2 text-sm text-slate-600 dark:text-slate-300">
           Average per logged day: {approx}
-          <span className="font-medium text-slate-800 dark:text-slate-100">{a.kcal} kcal</span> · P {a.proteinG} · C {a.carbsG} · F{' '}
-          {a.fatG}
+          <span className="font-medium text-slate-800 dark:text-slate-100">{a.kcal} kcal</span> · P {a.proteinG} · C{' '}
+          {a.carbsG} · F {a.fatG}
         </p>
       )}
       <ul className="space-y-1 text-sm text-slate-600 dark:text-slate-300">

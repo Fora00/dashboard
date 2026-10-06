@@ -36,7 +36,15 @@ describe('parseIcal', () => {
 
   it('skips nested components (VALARM) and keeps the first of a repeated property', () => {
     const ics = wrap(
-      ['BEGIN:VEVENT', 'SUMMARY:Real', 'BEGIN:VALARM', 'SUMMARY:alarm text', 'END:VALARM', 'SUMMARY:second', 'END:VEVENT'].join('\r\n'),
+      [
+        'BEGIN:VEVENT',
+        'SUMMARY:Real',
+        'BEGIN:VALARM',
+        'SUMMARY:alarm text',
+        'END:VALARM',
+        'SUMMARY:second',
+        'END:VEVENT',
+      ].join('\r\n'),
     )
     const [e] = parseIcal(ics)
     expect(e?.SUMMARY?.value).toBe('Real')
@@ -60,14 +68,18 @@ describe('parseIcal', () => {
 describe('icalDate', () => {
   it('a DATE value is an all-day event at Rome midnight', () => {
     expect(icalDate({ value: '20261004', params: { VALUE: 'DATE' } })).toEqual({
-      iso: '2026-10-04T00:00:00+02:00', allDay: true, date: '2026-10-04',
+      iso: '2026-10-04T00:00:00+02:00',
+      allDay: true,
+      date: '2026-10-04',
     })
     expect(icalDate({ value: '20261004', params: {} })?.allDay).toBe(true)
   })
 
   it('UTC date-time converts to Rome, possibly changing the day', () => {
     expect(icalDate({ value: '20261004T183000Z', params: {} })).toEqual({
-      iso: '2026-10-04T20:30:00+02:00', allDay: false, date: '2026-10-04',
+      iso: '2026-10-04T20:30:00+02:00',
+      allDay: false,
+      date: '2026-10-04',
     })
     expect(icalDate({ value: '20261004T230000Z', params: {} })?.date).toBe('2026-10-05')
   })
@@ -77,11 +89,15 @@ describe('icalDate', () => {
   })
 
   it('TZID converts from that zone', () => {
-    expect(icalDate({ value: '20261004T140000', params: { TZID: 'America/New_York' } })?.iso).toBe('2026-10-04T20:00:00+02:00')
+    expect(icalDate({ value: '20261004T140000', params: { TZID: 'America/New_York' } })?.iso).toBe(
+      '2026-10-04T20:00:00+02:00',
+    )
   })
 
   it('an unknown TZID falls back to Rome instead of throwing', () => {
-    expect(icalDate({ value: '20261004T203000', params: { TZID: 'Mars/Olympus' } })?.iso).toBe('2026-10-04T20:30:00+02:00')
+    expect(icalDate({ value: '20261004T203000', params: { TZID: 'Mars/Olympus' } })?.iso).toBe(
+      '2026-10-04T20:30:00+02:00',
+    )
   })
 
   it('null for missing or malformed values', () => {

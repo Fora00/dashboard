@@ -29,10 +29,20 @@ function toNutrition(f: NutritionForm): Nutrition {
 
 function toForm(e: MealEntry): NutritionForm {
   const s = (n: number | null) => (n === null ? '' : String(n))
-  return { grams: s(e.grams), kcal: s(e.kcal), proteinG: s(e.proteinG), carbsG: s(e.carbsG), fatG: s(e.fatG), estimated: e.estimated }
+  return {
+    grams: s(e.grams),
+    kcal: s(e.kcal),
+    proteinG: s(e.proteinG),
+    carbsG: s(e.carbsG),
+    fatG: s(e.fatG),
+    estimated: e.estimated,
+  }
 }
 
-function macros(e: Pick<MealEntry, 'grams' | 'kcal' | 'proteinG' | 'carbsG' | 'fatG' | 'estimated'>): { text: string; hint: string } {
+function macros(e: Pick<MealEntry, 'grams' | 'kcal' | 'proteinG' | 'carbsG' | 'fatG' | 'estimated'>): {
+  text: string
+  hint: string
+} {
   const parts: string[] = []
   const hints: string[] = []
   if (e.grams !== null) {
@@ -72,7 +82,12 @@ export function MealDiary() {
   const [text, setText] = useState('')
   // Sticky across entries: you tend to weigh (or not) a whole cooking session.
   const [weighed, setWeighed] = useState(false)
-  const [editing, setEditing] = useState<{ id: string; text: string; weighed: boolean; nutrition: NutritionForm } | null>(null)
+  const [editing, setEditing] = useState<{
+    id: string
+    text: string
+    weighed: boolean
+    nutrition: NutritionForm
+  } | null>(null)
 
   // Days the user folded away (all open by default).
   const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set())
@@ -106,7 +121,9 @@ export function MealDiary() {
       <PageHeader
         emoji="🍽️"
         title="Meal Diary"
-        subtitle={'What you ate, day by day: just write it, e.g. "100g pasta al pesto rosso". Calories and macros are added later by the AI. Synced across your devices, only yours.'}
+        subtitle={
+          'What you ate, day by day: just write it, e.g. "100g pasta al pesto rosso". Calories and macros are added later by the AI. Synced across your devices, only yours.'
+        }
       />
 
       <SyncCard sync={sync} />
@@ -152,7 +169,11 @@ export function MealDiary() {
             className="min-h-10 rounded-lg border border-slate-300 bg-white px-3 text-sm dark:border-slate-700 dark:bg-slate-800"
           />
           {day !== today && (
-            <button type="button" className="text-indigo-600 underline dark:text-indigo-300" onClick={() => setDay(today)}>
+            <button
+              type="button"
+              className="text-indigo-600 underline dark:text-indigo-300"
+              onClick={() => setDay(today)}
+            >
               today
             </button>
           )}
@@ -176,7 +197,9 @@ export function MealDiary() {
                     title={collapsed.has(g.day) ? 'Show this day' : 'Hide this day'}
                     className="flex min-h-10 items-center gap-1.5"
                   >
-                    <span aria-hidden="true" className="text-xs">{collapsed.has(g.day) ? '▸' : '▾'}</span>
+                    <span aria-hidden="true" className="text-xs">
+                      {collapsed.has(g.day) ? '▸' : '▾'}
+                    </span>
                     {dayLabel(g.day, now)}
                     {collapsed.has(g.day) && <span className="text-xs">({g.entries.length})</span>}
                   </button>
@@ -184,79 +207,112 @@ export function MealDiary() {
                 <DayTotalsLine entries={g.entries} />
               </div>
               {!collapsed.has(g.day) && (
-              <Card className="divide-y divide-slate-100 p-0 dark:divide-slate-800">
-                <ul>
-                  {g.entries.map((entry) => (
-                    <li key={entry.id} className="flex items-start gap-3 px-4 py-2.5">
-                      <span className="mt-0.5 shrink-0 text-lg" title={mealMeta(entry.meal).label} aria-label={mealMeta(entry.meal).label}>
-                        {mealMeta(entry.meal).emoji}
-                      </span>
-                      {editing?.id === entry.id ? (
-                        <form
-                          className="min-w-0 flex-1 space-y-2"
-                          onSubmit={(ev) => {
-                            ev.preventDefault()
-                            void saveEdit(entry)
-                          }}
+                <Card className="divide-y divide-slate-100 p-0 dark:divide-slate-800">
+                  <ul>
+                    {g.entries.map((entry) => (
+                      <li key={entry.id} className="flex items-start gap-3 px-4 py-2.5">
+                        <span
+                          className="mt-0.5 shrink-0 text-lg"
+                          title={mealMeta(entry.meal).label}
+                          aria-label={mealMeta(entry.meal).label}
                         >
-                          <div className="flex gap-2">
-                            <input
-                              autoFocus
-                              value={editing.text}
-                              onChange={(ev) => setEditing({ ...editing, text: ev.target.value })}
-                              aria-label={`Edit ${entry.text}`}
-                              maxLength={MAX_TEXT_LENGTH}
-                              className={INPUT}
+                          {mealMeta(entry.meal).emoji}
+                        </span>
+                        {editing?.id === entry.id ? (
+                          <form
+                            className="min-w-0 flex-1 space-y-2"
+                            onSubmit={(ev) => {
+                              ev.preventDefault()
+                              void saveEdit(entry)
+                            }}
+                          >
+                            <div className="flex gap-2">
+                              <input
+                                autoFocus
+                                value={editing.text}
+                                onChange={(ev) => setEditing({ ...editing, text: ev.target.value })}
+                                aria-label={`Edit ${entry.text}`}
+                                maxLength={MAX_TEXT_LENGTH}
+                                className={INPUT}
+                              />
+                              <WeighedToggle
+                                weighed={editing.weighed}
+                                onChange={(w) => setEditing({ ...editing, weighed: w })}
+                              />
+                              <Button type="submit" disabled={!editing.text.trim()}>
+                                Save
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                aria-label="Cancel"
+                                title="Cancel"
+                                onClick={() => setEditing(null)}
+                              >
+                                ✕
+                              </Button>
+                            </div>
+                            <NutritionFields
+                              value={editing.nutrition}
+                              onChange={(n) => setEditing({ ...editing, nutrition: n })}
                             />
-                            <WeighedToggle weighed={editing.weighed} onChange={(w) => setEditing({ ...editing, weighed: w })} />
-                            <Button type="submit" disabled={!editing.text.trim()}>
-                              Save
-                            </Button>
-                            <Button type="button" variant="ghost" aria-label="Cancel" title="Cancel" onClick={() => setEditing(null)}>
+                          </form>
+                        ) : (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setEditing({
+                                  id: entry.id,
+                                  text: entry.text,
+                                  weighed: entry.weighed === true,
+                                  nutrition: toForm(entry),
+                                })
+                              }
+                              aria-label={`Edit ${entry.text}`}
+                              className="min-h-10 min-w-0 flex-1 break-words text-left text-sm"
+                            >
+                              {entry.text}
+                              <span className="block text-xs text-slate-500 dark:text-slate-400">
+                                <span
+                                  title={entry.weighed ? 'Weighed' : 'By eye'}
+                                  aria-label={entry.weighed ? 'Weighed' : 'By eye'}
+                                >
+                                  {entry.weighed ? '⚖️' : '👁️'}
+                                </span>
+                                {macros(entry).text && (
+                                  <span title={macros(entry).hint} aria-label={macros(entry).hint}>
+                                    {` ${macros(entry).text}`}
+                                  </span>
+                                )}
+                              </span>
+                            </button>
+                            <Button
+                              variant="danger"
+                              onClick={() => void remove(entry)}
+                              aria-label={`Delete ${entry.text}`}
+                              title="Delete"
+                              className="min-w-10"
+                            >
                               ✕
                             </Button>
-                          </div>
-                          <NutritionFields
-                            value={editing.nutrition}
-                            onChange={(n) => setEditing({ ...editing, nutrition: n })}
-                          />
-                        </form>
-                      ) : (
-                        <>
-                          <button
-                            type="button"
-                            onClick={() => setEditing({ id: entry.id, text: entry.text, weighed: entry.weighed === true, nutrition: toForm(entry) })}
-                            aria-label={`Edit ${entry.text}`}
-                            className="min-h-10 min-w-0 flex-1 break-words text-left text-sm"
-                          >
-                            {entry.text}
-                            <span className="block text-xs text-slate-500 dark:text-slate-400">
-                              <span title={entry.weighed ? 'Weighed' : 'By eye'} aria-label={entry.weighed ? 'Weighed' : 'By eye'}>
-                                {entry.weighed ? '⚖️' : '👁️'}
-                              </span>
-                              {macros(entry).text && (
-                                <span title={macros(entry).hint} aria-label={macros(entry).hint}>
-                                  {` ${macros(entry).text}`}
-                                </span>
-                              )}
-                            </span>
-                          </button>
-                          <Button variant="danger" onClick={() => void remove(entry)} aria-label={`Delete ${entry.text}`} title="Delete" className="min-w-10">
-                            ✕
-                          </Button>
-                        </>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              </Card>
+                          </>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </Card>
               )}
             </section>
           ))}
         </div>
       )}
 
-      {entries !== undefined && <div className="mt-6"><NutritionTrends entries={entries} now={now} /></div>}
+      {entries !== undefined && (
+        <div className="mt-6">
+          <NutritionTrends entries={entries} now={now} />
+        </div>
+      )}
 
       {pending && <Snackbar label={pending.label} onUndo={confirmUndo} />}
     </div>
@@ -283,7 +339,15 @@ function DayTotalsLine({ entries }: { entries: MealEntry[] }) {
 function WeighedToggle({ weighed, onChange }: { weighed: boolean; onChange: (next: boolean) => void }) {
   const label = weighed ? 'Weighed on a scale (tap for by eye)' : 'By eye (tap for weighed)'
   return (
-    <Button type="button" variant="ghost" aria-pressed={weighed} aria-label={label} title={label} onClick={() => onChange(!weighed)} className="min-w-10 px-2">
+    <Button
+      type="button"
+      variant="ghost"
+      aria-pressed={weighed}
+      aria-label={label}
+      title={label}
+      onClick={() => onChange(!weighed)}
+      className="min-w-10 px-2"
+    >
       {weighed ? '⚖️' : '👁️'}
     </Button>
   )

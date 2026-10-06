@@ -1,9 +1,32 @@
 import { describe, expect, it } from 'vitest'
 import type { EventItem } from './types'
 import {
-  areaLabel, areaOf, areaRank, buildThingsAddUrl, categoryLabel, categoryOf, dayLabel, formatRange, groupByDay,
-  inCategory, isKidsEvent, isLongRunning, isOngoingNow, isOver, isSparseSeries, isSpot, listingDay, localDay,
-  nextSeriesDay, relativeTime, romeDate, safeHttpUrl, shortDay, groupByWeek, isoWeekNumber, weekStart,
+  areaLabel,
+  areaOf,
+  areaRank,
+  buildThingsAddUrl,
+  categoryLabel,
+  categoryOf,
+  dayLabel,
+  formatRange,
+  groupByDay,
+  inCategory,
+  isKidsEvent,
+  isLongRunning,
+  isOngoingNow,
+  isOver,
+  isSparseSeries,
+  isSpot,
+  listingDay,
+  localDay,
+  nextSeriesDay,
+  relativeTime,
+  romeDate,
+  safeHttpUrl,
+  shortDay,
+  groupByWeek,
+  isoWeekNumber,
+  weekStart,
 } from './model'
 import type { DayGroup } from './model'
 
@@ -78,7 +101,14 @@ describe('safeHttpUrl', () => {
     expect(safeHttpUrl('http://example.org')).toBe('http://example.org/')
   })
   it('blocks script and other schemes from scraped data', () => {
-    for (const bad of ['javascript:alert(1)', 'JaVaScRiPt:alert(1)', 'data:text/html,<script>', 'file:///etc/passwd', 'ftp://x.org', 'things:///add']) {
+    for (const bad of [
+      'javascript:alert(1)',
+      'JaVaScRiPt:alert(1)',
+      'data:text/html,<script>',
+      'file:///etc/passwd',
+      'ftp://x.org',
+      'things:///add',
+    ]) {
       expect(safeHttpUrl(bad)).toBeNull()
     }
   })
@@ -132,13 +162,20 @@ describe('isOver / isOngoingNow', () => {
 
 describe('series', () => {
   const weekly = ev({
-    allDay: true, start: '2026-09-01T00:00:00+02:00', end: '2026-12-29T00:00:00+01:00', occurrences: 18,
+    allDay: true,
+    start: '2026-09-01T00:00:00+02:00',
+    end: '2026-12-29T00:00:00+01:00',
+    occurrences: 18,
   })
   it('sparse: fewer than one date every two days', () => {
     expect(isSparseSeries(weekly)).toBe(true)
   })
   it('a near-daily folded record is an exhibition, not a series', () => {
-    expect(isSparseSeries(ev({ allDay: true, start: '2026-09-01T00:00:00+02:00', end: '2026-09-30T00:00:00+02:00', occurrences: 26 }))).toBe(false)
+    expect(
+      isSparseSeries(
+        ev({ allDay: true, start: '2026-09-01T00:00:00+02:00', end: '2026-09-30T00:00:00+02:00', occurrences: 26 }),
+      ),
+    ).toBe(false)
   })
   it('single occurrences and missing counts are not series', () => {
     expect(isSparseSeries(ev())).toBe(false)
@@ -170,8 +207,12 @@ describe('formatting', () => {
     expect(formatRange(ev({ end: '2026-10-10T22:00:00+02:00' }))).toBe('sab 10 ott, 20:30–22:00')
     expect(formatRange(ev({ end: '2026-10-11T01:00:00+02:00' }))).toBe('sab 10 ott, 20:30 – dom 11 ott, 01:00')
     expect(formatRange(ev({ allDay: true, start: '2026-10-10T00:00:00+02:00' }))).toBe('sab 10 ott')
-    expect(formatRange(ev({ allDay: true, start: '2026-05-16T00:00:00+02:00', end: '2026-10-18T00:00:00+02:00' }))).toBe('16 mag – 18 ott')
-    expect(formatRange(ev({ allDay: true, start: '2026-12-20T00:00:00+01:00', end: '2027-01-10T00:00:00+01:00' }))).toBe('20 dic 2026 – 10 gen 2027')
+    expect(
+      formatRange(ev({ allDay: true, start: '2026-05-16T00:00:00+02:00', end: '2026-10-18T00:00:00+02:00' })),
+    ).toBe('16 mag – 18 ott')
+    expect(
+      formatRange(ev({ allDay: true, start: '2026-12-20T00:00:00+01:00', end: '2027-01-10T00:00:00+01:00' })),
+    ).toBe('20 dic 2026 – 10 gen 2027')
   })
 
   it('dayLabel: Oggi, Domani, else the short date', () => {
@@ -200,7 +241,13 @@ describe('groupByDay', () => {
     ])
   })
   it('a running weekly series is listed under its next date', () => {
-    const weekly = ev({ id: 's', allDay: true, start: '2026-09-01T00:00:00+02:00', end: '2026-12-29T00:00:00+01:00', occurrences: 18 })
+    const weekly = ev({
+      id: 's',
+      allDay: true,
+      start: '2026-09-01T00:00:00+02:00',
+      end: '2026-12-29T00:00:00+01:00',
+      occurrences: 18,
+    })
     expect(groupByDay([weekly], NOW)[0]?.key).toBe('2026-10-13')
   })
   it('no events, no groups', () => {
@@ -221,7 +268,9 @@ describe('buildThingsAddUrl', () => {
   })
 
   it('when is today for ongoing or same-day events', () => {
-    expect(parse(buildThingsAddUrl(ev({ start: '2026-09-01T00:00:00+02:00', allDay: true }), NOW)).when).toBe('2026-10-10')
+    expect(parse(buildThingsAddUrl(ev({ start: '2026-09-01T00:00:00+02:00', allDay: true }), NOW)).when).toBe(
+      '2026-10-10',
+    )
     expect(parse(buildThingsAddUrl(ev(), NOW)).when).toBe('2026-10-10')
   })
 

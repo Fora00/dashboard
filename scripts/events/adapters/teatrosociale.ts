@@ -25,10 +25,29 @@ import { absUrl, decodeEntities, htmlToText, titleCase } from '../text.ts'
 
 const BASE = 'https://www.teatrosocialemantova.it'
 const PAGE = `${BASE}/it-it/spettacoli.aspx`
-const MONTHS = ['gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno', 'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre']
+const MONTHS = [
+  'gennaio',
+  'febbraio',
+  'marzo',
+  'aprile',
+  'maggio',
+  'giugno',
+  'luglio',
+  'agosto',
+  'settembre',
+  'ottobre',
+  'novembre',
+  'dicembre',
+]
 const WEEKDAYS = ['domenica', 'lunedi', 'martedi', 'mercoledi', 'giovedi', 'venerdi', 'sabato']
 
-const CATEGORY_HINT: Record<string, CategoryId> = { danza: 'theatre', prosa: 'theatre', teatro: 'theatre', musica: 'concerts', concerti: 'concerts' }
+const CATEGORY_HINT: Record<string, CategoryId> = {
+  danza: 'theatre',
+  prosa: 'theatre',
+  teatro: 'theatre',
+  musica: 'concerts',
+  concerti: 'concerts',
+}
 
 /** Day + month + weekday → the date in this year or next that matches, not before `today`. */
 export function inferDate(day: number, month: number, weekday: number, today: string): string | null {
@@ -59,7 +78,12 @@ async function run(ctx: AdapterContext): Promise<RawEvent[]> {
   for (const slide of text.split('<div class="swiper-slide">').slice(1)) {
     const day = Number(slide.match(/numeric-day">\s*(\d{1,2})/)?.[1])
     const month = MONTHS.indexOf(htmlToText(slide.match(/swiper-month">([^<]*)/)?.[1]).toLowerCase()) + 1
-    const weekday = WEEKDAYS.indexOf(htmlToText(slide.match(/swiper-day">([^<]*)/)?.[1]).toLowerCase().normalize('NFD').replace(/\p{M}/gu, ''))
+    const weekday = WEEKDAYS.indexOf(
+      htmlToText(slide.match(/swiper-day">([^<]*)/)?.[1])
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/\p{M}/gu, ''),
+    )
     if (!day || month < 1 || weekday < 0) continue
     const date = inferDate(day, month, weekday, today)
     if (!date) continue
@@ -75,7 +99,8 @@ async function run(ctx: AdapterContext): Promise<RawEvent[]> {
       if (shownYear && shownYear !== date.slice(0, 4)) continue
       const title = titleCase(raw)
       const label = htmlToText(a.match(/content-category">([\s\S]*?)<\/span>/)?.[1])
-      const hint = CATEGORY_HINT[label.toLowerCase()] ?? (matchCategories(title).includes('concerts') ? undefined : 'theatre')
+      const hint =
+        CATEGORY_HINT[label.toLowerCase()] ?? (matchCategories(title).includes('concerts') ? undefined : 'theatre')
       const url = absUrl(href, BASE) ?? PAGE
       const img = a.match(/data-src="([^"]+)"/)?.[1]
       const start = localToIso(date, `${(time[1] ?? '').padStart(2, '0')}:${time[2]}`)

@@ -7,21 +7,23 @@ import { z } from 'zod'
 const DAY = /^\d{4}-\d{2}-\d{2}$/
 
 /** One hand-curated entry of spot.json. */
-export const SpotEntrySchema = z.object({
-  id: z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, 'id must be kebab-case'),
-  title: z.string().min(1),
-  start: z.string().regex(DAY, 'start must be YYYY-MM-DD'),
-  end: z.string().regex(DAY, 'end must be YYYY-MM-DD'),
-  city: z.string().min(1),
-  venue: z.string().optional(),
-  url: z.url({ protocol: /^https?$/ }),
-  image: z.url({ protocol: /^https$/ }).optional(),
-  summary: z.string().min(1),
-  tags: z.array(z.string()).optional(),
-  category: z.string().optional(),
-  /** false = dates not confirmed on the official site: shown as "dates to be confirmed". Default true. */
-  verified: z.boolean().default(true),
-}).refine((e) => e.start <= e.end, { message: 'end is before start', path: ['end'] })
+export const SpotEntrySchema = z
+  .object({
+    id: z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, 'id must be kebab-case'),
+    title: z.string().min(1),
+    start: z.string().regex(DAY, 'start must be YYYY-MM-DD'),
+    end: z.string().regex(DAY, 'end must be YYYY-MM-DD'),
+    city: z.string().min(1),
+    venue: z.string().optional(),
+    url: z.url({ protocol: /^https?$/ }),
+    image: z.url({ protocol: /^https$/ }).optional(),
+    summary: z.string().min(1),
+    tags: z.array(z.string()).optional(),
+    category: z.string().optional(),
+    /** false = dates not confirmed on the official site: shown as "dates to be confirmed". Default true. */
+    verified: z.boolean().default(true),
+  })
+  .refine((e) => e.start <= e.end, { message: 'end is before start', path: ['end'] })
 
 export type SpotEntry = z.infer<typeof SpotEntrySchema>
 

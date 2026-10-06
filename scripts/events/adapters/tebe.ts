@@ -10,7 +10,20 @@ import { dateToIso, localToIso } from '../time.ts'
 import { htmlToText, normalize } from '../text.ts'
 
 const SITE = 'https://www.apstebe.org/'
-const MONTHS = ['gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno', 'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre']
+const MONTHS = [
+  'gennaio',
+  'febbraio',
+  'marzo',
+  'aprile',
+  'maggio',
+  'giugno',
+  'luglio',
+  'agosto',
+  'settembre',
+  'ottobre',
+  'novembre',
+  'dicembre',
+]
 
 function ymd(day: string, month: string, year: string): string | null {
   const m = MONTHS.indexOf(month)

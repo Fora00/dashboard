@@ -70,9 +70,7 @@ export function Links() {
   for (const link of links ?? []) {
     for (const tag of link.tags ?? []) tagCounts.set(tag, (tagCounts.get(tag) ?? 0) + 1)
   }
-  const allTags = [...tagCounts.entries()]
-    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
-    .map(([tag]) => tag)
+  const allTags = [...tagCounts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(([tag]) => tag)
   const tagEntries = allTags.map((tag): [string, number] => [tag, tagCounts.get(tag) ?? 0])
 
   // AND semantics: a link shows only if it carries EVERY selected tag.
@@ -80,9 +78,7 @@ export function Links() {
   const visible = links?.filter((l) => selectedTags.every((t) => (l.tags ?? []).includes(t)))
 
   function toggleTagFilter(tag: string) {
-    setSelectedTags((current) =>
-      current.includes(tag) ? current.filter((t) => t !== tag) : [...current, tag],
-    )
+    setSelectedTags((current) => (current.includes(tag) ? current.filter((t) => t !== tag) : [...current, tag]))
   }
 
   function clearFilters() {
@@ -99,18 +95,15 @@ export function Links() {
     if (swapped) {
       setSelectedTags((cur) => [...new Set(cur.map((t) => (t === from ? to : t)))])
     }
-    trigger(
-      `"${from}" → "${to}" on ${changed} ${changed === 1 ? 'link' : 'links'} · Undo`,
-      async () => {
-        await sync.upsertMany(
-          'links',
-          snapshot.map((l) => ({ ...l, updatedAt: Date.now() })),
-        )
-        if (swapped) {
-          setSelectedTags((cur) => [...new Set(cur.map((t) => (t === to ? from : t)))])
-        }
-      },
-    )
+    trigger(`"${from}" → "${to}" on ${changed} ${changed === 1 ? 'link' : 'links'} · Undo`, async () => {
+      await sync.upsertMany(
+        'links',
+        snapshot.map((l) => ({ ...l, updatedAt: Date.now() })),
+      )
+      if (swapped) {
+        setSelectedTags((cur) => [...new Set(cur.map((t) => (t === to ? from : t)))])
+      }
+    })
   }
 
   async function handleAdd(e: FormEvent) {
@@ -224,9 +217,7 @@ export function Links() {
                   </span>
                 ))}
                 {hiddenTagCount > 0 && (
-                  <span className="shrink-0 text-[10px] text-slate-500 dark:text-slate-400">
-                    +{hiddenTagCount}
-                  </span>
+                  <span className="shrink-0 text-[10px] text-slate-500 dark:text-slate-400">+{hiddenTagCount}</span>
                 )}
               </span>
             </ListRow>
@@ -249,14 +240,16 @@ export function Links() {
               defaultValue={link.title}
               onBlur={(e) => void saveTitle(link, e.target)}
               maxLength={300}
-              aria-label={`Title of ${link.title}`} placeholder="Title…"
+              aria-label={`Title of ${link.title}`}
+              placeholder="Title…"
               className="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-indigo-300 dark:border-slate-700 dark:bg-slate-800"
             />
             <textarea
               key={`notes-${link.id}`}
               defaultValue={link.notes}
               onBlur={(e) => void saveNotes(link, e.target.value)}
-              aria-label={`Notes for ${link.title}`} placeholder="Notes…"
+              aria-label={`Notes for ${link.title}`}
+              placeholder="Notes…"
               rows={3}
               maxLength={2000}
               className="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-indigo-300 dark:border-slate-700 dark:bg-slate-800"
@@ -280,9 +273,7 @@ export function Links() {
                 </span>
               ))}
               {full ? (
-                <span className="text-xs text-slate-500 dark:text-slate-400">
-                  {MAX_TAGS} tags max
-                </span>
+                <span className="text-xs text-slate-500 dark:text-slate-400">{MAX_TAGS} tags max</span>
               ) : (
                 <input
                   key={`tag-${link.id}`}
@@ -310,11 +301,7 @@ export function Links() {
               <Button variant="ghost" onClick={() => void copyLink(link)}>
                 {copiedId === link.id ? 'Copied ✓' : '🔗 Copy'}
               </Button>
-              <Button
-                variant="danger"
-                onClick={() => void remove(link)}
-                aria-label={`Delete ${link.title}`}
-              >
+              <Button variant="danger" onClick={() => void remove(link)} aria-label={`Delete ${link.title}`}>
                 ✕ Delete
               </Button>
             </div>
@@ -341,7 +328,8 @@ export function Links() {
           spellCheck={false}
           enterKeyHint="done"
           maxLength={2000}
-          aria-label="Link URL" placeholder="Paste a URL…"
+          aria-label="Link URL"
+          placeholder="Paste a URL…"
           className="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-indigo-300 dark:border-slate-700 dark:bg-slate-800"
         />
         <Button type="submit" disabled={!canAdd}>

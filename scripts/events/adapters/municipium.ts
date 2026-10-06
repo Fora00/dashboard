@@ -34,7 +34,20 @@ export interface MunicipiumConfig {
   maxPages?: number
 }
 
-const MONTHS = ['gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno', 'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre']
+const MONTHS = [
+  'gennaio',
+  'febbraio',
+  'marzo',
+  'aprile',
+  'maggio',
+  'giugno',
+  'luglio',
+  'agosto',
+  'settembre',
+  'ottobre',
+  'novembre',
+  'dicembre',
+]
 
 /** Typology label (normalised) → category, where it is unambiguous. */
 const TYPE_HINT: [RegExp, CategoryId][] = [
@@ -50,7 +63,7 @@ const MONTH_RE = MONTHS.join('|')
 /** Trailing " - 3 ottobre", " - Dal 16 al 18 ottobre", ". dal 10 ottobre al 10 gennaio 2027". */
 const TITLE_DATE = new RegExp(
   `\\s*[-–.]\\s*(?:dal?\\s+)?(\\d{1,2})(?:\\s+(${MONTH_RE}))?(?:\\s+(\\d{4}))?` +
-  `(?:\\s+al?\\s+(\\d{1,2})\\s+(${MONTH_RE})(?:\\s+(\\d{4}))?)?\\s*$`,
+    `(?:\\s+al?\\s+(\\d{1,2})\\s+(${MONTH_RE})(?:\\s+(\\d{4}))?)?\\s*$`,
   'i',
 )
 

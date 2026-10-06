@@ -70,9 +70,7 @@ export function usePersistedState<T>(
   sanitize: (raw: unknown) => T = (raw) => raw as T,
   codec?: Codec<T>,
 ): [T, (next: T) => void] {
-  const [value, setValue] = useState<T>(() =>
-    codec ? codec.parse(readString(key)) : readJSON(key, sanitize, initial),
-  )
+  const [value, setValue] = useState<T>(() => (codec ? codec.parse(readString(key)) : readJSON(key, sanitize, initial)))
   const set = useCallback(
     (next: T) => {
       setValue(next)

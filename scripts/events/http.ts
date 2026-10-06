@@ -18,7 +18,11 @@ const MAX_REDIRECTS = 5
 /** Ignore absurd Crawl-delay values rather than stall the whole run. */
 const MAX_CRAWL_DELAY_S = 30
 
-interface Rule { allow: boolean; pattern: string; re: RegExp }
+interface Rule {
+  allow: boolean
+  pattern: string
+  re: RegExp
+}
 type Robots = { rules: Rule[]; delayMs: number } | { error: string }
 
 export class RobotsDisallowedError extends Error {}
@@ -34,7 +38,11 @@ function ruleRegExp(pattern: string): RegExp {
 
 /** Parse robots.txt and keep the rules (and Crawl-delay, in seconds) that apply to us. */
 export function parseRobots(text: string): { rules: Rule[]; crawlDelay: number } {
-  interface Group { agents: string[]; rules: Rule[]; delay: number }
+  interface Group {
+    agents: string[]
+    rules: Rule[]
+    delay: number
+  }
   const groups: Group[] = []
   let current: Group | null = null
   let lastWasAgent = false
@@ -76,7 +84,8 @@ export function isAllowed(rules: Rule[], pathAndQuery: string): boolean {
   let best: Rule | null = null
   for (const r of rules) {
     if (!r.re.test(pathAndQuery)) continue
-    if (!best || r.pattern.length > best.pattern.length || (r.pattern.length === best.pattern.length && r.allow)) best = r
+    if (!best || r.pattern.length > best.pattern.length || (r.pattern.length === best.pattern.length && r.allow))
+      best = r
   }
   return best ? best.allow : true
 }
@@ -106,15 +115,22 @@ export class PoliteHttp {
     await mine
   }
 
-  private async rawGet(url: URL, redirect: 'follow' | 'manual', attempt = 0, body?: string, contentType = 'application/json'): Promise<Response> {
+  private async rawGet(
+    url: URL,
+    redirect: 'follow' | 'manual',
+    attempt = 0,
+    body?: string,
+    contentType = 'application/json',
+  ): Promise<Response> {
     await this.slot(url.host)
     this.requests++
     try {
       return await fetch(url, {
         redirect,
-        headers: body === undefined
-          ? { 'User-Agent': USER_AGENT, Accept: '*/*' }
-          : { 'User-Agent': USER_AGENT, Accept: 'application/json', 'Content-Type': contentType },
+        headers:
+          body === undefined
+            ? { 'User-Agent': USER_AGENT, Accept: '*/*' }
+            : { 'User-Agent': USER_AGENT, Accept: 'application/json', 'Content-Type': contentType },
         signal: AbortSignal.timeout(TIMEOUT_MS),
         ...(body === undefined ? {} : { method: 'POST', body }),
       })
@@ -190,7 +206,13 @@ export class PoliteHttp {
     const url = new URL(href)
     await this.assertAllowed(url)
     const res = form
-      ? await this.rawGet(url, 'manual', 0, new URLSearchParams(body as Record<string, string>).toString(), 'application/x-www-form-urlencoded')
+      ? await this.rawGet(
+          url,
+          'manual',
+          0,
+          new URLSearchParams(body as Record<string, string>).toString(),
+          'application/x-www-form-urlencoded',
+        )
       : await this.rawGet(url, 'manual', 0, JSON.stringify(body))
     const text = await res.text()
     if (!res.ok) throw new Error(`HTTP ${res.status} for POST ${url.href}`)

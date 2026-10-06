@@ -71,7 +71,8 @@ export async function addArea(name: string): Promise<ShopArea> {
   const area: ShopArea = {
     id: crypto.randomUUID(),
     name: name.trim().slice(0, MAX_AREA_NAME_LENGTH),
-    createdAt: Date.now() }
+    createdAt: Date.now(),
+  }
   await engine.upsert('shop_areas', area)
   return area
 }
@@ -116,7 +117,10 @@ export async function clearBoughtItems(areaId: string): Promise<void> {
     .equals(areaId)
     .filter((i) => i.done === 1)
     .toArray()
-  await engine.removeMany('shop_items', bought.map((i) => i.id))
+  await engine.removeMany(
+    'shop_items',
+    bought.map((i) => i.id),
+  )
 }
 
 // --- Sync engine ------------------------------------------------------------

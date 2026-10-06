@@ -38,12 +38,8 @@ export class ErrorBoundary extends Component<Props, State> {
         className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-slate-300 px-6 py-12 text-center dark:border-slate-700"
       >
         <span className="text-4xl">💥</span>
-        <p className="font-medium text-slate-600 dark:text-slate-300">
-          Something went wrong
-        </p>
-        <p className="max-w-full break-words text-sm text-slate-500">
-          {error.message || 'Unknown error'}
-        </p>
+        <p className="font-medium text-slate-600 dark:text-slate-300">Something went wrong</p>
+        <p className="max-w-full break-words text-sm text-slate-500">{error.message || 'Unknown error'}</p>
         <Button className="mt-3 min-h-11 px-5" onClick={() => window.location.reload()}>
           Reload
         </Button>

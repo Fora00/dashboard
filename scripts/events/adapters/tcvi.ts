@@ -18,13 +18,31 @@ import { absUrl, decodeEntities, htmlToText } from '../text.ts'
 const BASE = 'https://www.tcvi.it'
 const PAGE = `${BASE}/it/eventi/calendario-eventi/`
 
-const MONTHS = ['gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno', 'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre']
+const MONTHS = [
+  'gennaio',
+  'febbraio',
+  'marzo',
+  'aprile',
+  'maggio',
+  'giugno',
+  'luglio',
+  'agosto',
+  'settembre',
+  'ottobre',
+  'novembre',
+  'dicembre',
+]
 
 // Children's / school programmes: never wanted in ring 2, dropped here.
 const SKIP_TYPES = /^(spettacoli-per-le-scuole|family-show|famiglie-in-dolce-attesa)$/
 
 function hintFor(type: string): CategoryId | undefined {
-  if (/^(prosa|danza|circo|musical|operetta|cabaret|show|spettacoli-\d+-ciclo-classici|luoghi-del-contemporaneo-danza)/.test(type)) return 'theatre'
+  if (
+    /^(prosa|danza|circo|musical|operetta|cabaret|show|spettacoli-\d+-ciclo-classici|luoghi-del-contemporaneo-danza)/.test(
+      type,
+    )
+  )
+    return 'theatre'
   if (/^(concertistica|sinfonica|live|gospel)/.test(type)) return 'concerts'
   if (/^(talk|conferenze)/.test(type)) return 'talks'
   return undefined

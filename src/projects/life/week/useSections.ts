@@ -10,7 +10,6 @@ import { readJSON, writeJSON } from '../../../lib/safeStorage'
 // pages never read or write this: they always render fully expanded (see
 // CollapsibleSection's readOnly branch).
 
-
 const SECTIONS_KEY = 'dashboard:life-sections'
 
 export type SectionId = 'focus' | 'trackers' | 'rules' | 'checkins' | 'things' | 'food' | 'export'
@@ -78,11 +77,7 @@ export function useSections(week: string, readOnly: boolean) {
   const dow = new Date().getDay()
   const isWeekendToday = dow === 0 || dow === 6
   // Only an explicit choice made THIS week overrides the day-of-week default.
-  const sundayOpen = readOnly
-    ? true
-    : sections.sundayWeek === week
-      ? sections.sundayOpen
-      : isWeekendToday
+  const sundayOpen = readOnly ? true : sections.sundayWeek === week ? sections.sundayOpen : isWeekendToday
 
   function toggleSunday() {
     setSections((s) => {

@@ -79,7 +79,10 @@ export async function deleteTodo(id: string): Promise<void> {
 
 export async function clearDoneTodos(): Promise<void> {
   const done = await db.todos.where('done').equals(1).toArray()
-  await engine.removeMany('todos', done.map((t) => t.id))
+  await engine.removeMany(
+    'todos',
+    done.map((t) => t.id),
+  )
 }
 
 // --- Sync engine ------------------------------------------------------------

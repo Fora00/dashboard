@@ -26,10 +26,7 @@ export function SessionCard({ session }: { session: ClimbSession }) {
   const [sent, setSent] = useState(true)
   const [confirmDelete, setConfirmDelete] = useState(false)
 
-  const climbs = useLiveQuery(
-    () => db.climbs.where('sessionId').equals(session.id).sortBy('createdAt'),
-    [session.id],
-  )
+  const climbs = useLiveQuery(() => db.climbs.where('sessionId').equals(session.id).sortBy('createdAt'), [session.id])
   const sends = climbs?.filter((c) => c.sent === 1).length ?? 0
 
   async function logClimb(e: FormEvent) {
@@ -73,7 +70,8 @@ export function SessionCard({ session }: { session: ClimbSession }) {
             {formatDate(session.date)}
             {climbs && climbs.length > 0 && (
               <span className="text-slate-500">
-                {' '}· {sends}/{climbs.length} sent
+                {' '}
+                · {sends}/{climbs.length} sent
               </span>
             )}
           </p>
@@ -91,17 +89,10 @@ export function SessionCard({ session }: { session: ClimbSession }) {
 
       {session.notes && <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">{session.notes}</p>}
 
-      {climbs && climbs.length > 0 && (
-        <ul className="mt-3 flex flex-wrap gap-2">{climbs.map(renderClimb)}</ul>
-      )}
+      {climbs && climbs.length > 0 && <ul className="mt-3 flex flex-wrap gap-2">{climbs.map(renderClimb)}</ul>}
 
       <form onSubmit={logClimb} className="mt-3 flex flex-wrap items-center gap-2">
-        <select
-          value={grade}
-          onChange={(e) => setGrade(e.target.value)}
-          aria-label="Grade"
-          className={inputClass}
-        >
+        <select value={grade} onChange={(e) => setGrade(e.target.value)} aria-label="Grade" className={inputClass}>
           {grades.map((g) => (
             <option key={g} value={g}>
               {g}

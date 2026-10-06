@@ -174,11 +174,7 @@ export function FilterSheet(p: Props) {
             </ul>
           </Section>
 
-          <Section
-            title="Categories"
-            summary={summarize(p.activeCats, categoryLabel)}
-            defaultOpen
-          >
+          <Section title="Categories" summary={summarize(p.activeCats, categoryLabel)} defaultOpen>
             <ul className="grid grid-cols-1 gap-2 min-[400px]:grid-cols-2">
               {zeroLast.map(({ id, count }) => {
                 const on = p.activeCats.includes(id)

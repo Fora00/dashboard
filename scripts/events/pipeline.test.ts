@@ -2,7 +2,16 @@ import { describe, expect, it } from 'vitest'
 import type { Adapter, Event, RawEvent } from './types.ts'
 import type { DropCounts } from './pipeline.ts'
 import {
-  dedup, effectiveEnd, HORIZON_DAYS, inWindow, isOngoing, LONG_SERIES, MAX_OCCURRENCES, sortEvents, toEvents, withPlace,
+  dedup,
+  effectiveEnd,
+  HORIZON_DAYS,
+  inWindow,
+  isOngoing,
+  LONG_SERIES,
+  MAX_OCCURRENCES,
+  sortEvents,
+  toEvents,
+  withPlace,
 } from './pipeline.ts'
 
 const NOW = Date.parse('2026-10-10T10:00:00Z') // Sat 12:00 in Rome
@@ -116,7 +125,12 @@ describe('toEvents', () => {
   })
 
   it('drops an end before the start instead of publishing a backwards range (bibcom, mart)', () => {
-    const [e] = toEvents(adapter(), [raw({ start: '2026-10-20T20:00:00+02:00', end: '2026-10-20T18:00:00+02:00' })], NOW, FETCHED)
+    const [e] = toEvents(
+      adapter(),
+      [raw({ start: '2026-10-20T20:00:00+02:00', end: '2026-10-20T18:00:00+02:00' })],
+      NOW,
+      FETCHED,
+    )
     expect(e?.end).toBeNull()
   })
 
@@ -128,7 +142,11 @@ describe('toEvents', () => {
   it('skips events without a title and events outside the window', () => {
     const out = toEvents(
       adapter(),
-      [raw({ nativeId: 'a', title: '' }), raw({ nativeId: 'b', start: '2025-01-01T20:00:00+01:00' }), raw({ nativeId: 'c' })],
+      [
+        raw({ nativeId: 'a', title: '' }),
+        raw({ nativeId: 'b', start: '2025-01-01T20:00:00+01:00' }),
+        raw({ nativeId: 'c' }),
+      ],
       NOW,
       FETCHED,
     )
@@ -146,7 +164,12 @@ describe('toEvents', () => {
   })
 
   it('normalises whitespace in title and venue, blank city becomes Trentino', () => {
-    const [e] = toEvents(adapter(), [raw({ title: '  Serata   giochi  ', venue: '  Sala \n Rossa ', city: ' ' })], NOW, FETCHED)
+    const [e] = toEvents(
+      adapter(),
+      [raw({ title: '  Serata   giochi  ', venue: '  Sala \n Rossa ', city: ' ' })],
+      NOW,
+      FETCHED,
+    )
     expect(e?.title).toBe('Serata giochi')
     expect(e?.venue).toBe('Sala Rossa')
     expect(e?.city).toBe('Trentino')
@@ -177,7 +200,11 @@ describe('toEvents', () => {
     const drops: DropCounts = new Map()
     const out = toEvents(
       adapter(),
-      [raw({ nativeId: 'a', title: 'Convocazione consiglio circoscrizione' }), raw({ nativeId: 'b', title: '...' }), raw({ nativeId: 'c' })],
+      [
+        raw({ nativeId: 'a', title: 'Convocazione consiglio circoscrizione' }),
+        raw({ nativeId: 'b', title: '...' }),
+        raw({ nativeId: 'c' }),
+      ],
       NOW,
       FETCHED,
       drops,
@@ -206,10 +233,16 @@ describe('toEvents', () => {
   })
 
   describe('series folding', () => {
-    const dates = (n: number) => Array.from({ length: n }, (_, i) => {
-      const day = String(12 + i).padStart(2, '0')
-      return raw({ nativeId: `o${i}`, seriesKey: 's1', start: `2026-10-${day}T20:00:00+02:00`, end: `2026-10-${day}T22:00:00+02:00` })
-    })
+    const dates = (n: number) =>
+      Array.from({ length: n }, (_, i) => {
+        const day = String(12 + i).padStart(2, '0')
+        return raw({
+          nativeId: `o${i}`,
+          seriesKey: 's1',
+          start: `2026-10-${day}T20:00:00+02:00`,
+          end: `2026-10-${day}T22:00:00+02:00`,
+        })
+      })
 
     it(`up to ${MAX_OCCURRENCES} dates stay separate`, () => {
       const out = toEvents(adapter(), dates(MAX_OCCURRENCES), NOW, FETCHED)
@@ -242,7 +275,12 @@ describe('toEvents', () => {
 
     it('a long series nothing classifies takes the adapter longSeriesCategory', () => {
       const series = Array.from({ length: LONG_SERIES }, (_, i) =>
-        raw({ nativeId: `o${i}`, seriesKey: 's', title: 'Qualcosa di speciale', start: `2026-10-${String(12 + i).padStart(2, '0')}T10:00:00+02:00` }),
+        raw({
+          nativeId: `o${i}`,
+          seriesKey: 's',
+          title: 'Qualcosa di speciale',
+          start: `2026-10-${String(12 + i).padStart(2, '0')}T10:00:00+02:00`,
+        }),
       )
       const [e] = toEvents(adapter({ longSeriesCategory: 'exhibitions' }), series, NOW, FETCHED)
       expect(e?.category).toBe('exhibitions')
@@ -256,14 +294,27 @@ describe('toEvents', () => {
 describe('dedup', () => {
   it('merges the same title + day + city from two sources, keeping the richer record', () => {
     const a = event({ id: 'a', source: 'a', sources: ['a'], image: null, venue: null })
-    const b = event({ id: 'b', source: 'b', sources: ['b'], image: 'https://img/x.jpg', venue: 'Sala', end: '2026-10-20T22:00:00+02:00' })
+    const b = event({
+      id: 'b',
+      source: 'b',
+      sources: ['b'],
+      image: 'https://img/x.jpg',
+      venue: 'Sala',
+      end: '2026-10-20T22:00:00+02:00',
+    })
     const out = dedup([a, b])
     expect(out).toHaveLength(1)
     expect(out[0]).toMatchObject({ id: 'b', image: 'https://img/x.jpg', venue: 'Sala', sources: ['a', 'b'] })
   })
 
   it('fills the gaps of the kept record from the duplicate', () => {
-    const rich = event({ id: 'rich', end: '2026-10-20T22:00:00+02:00', venue: 'Sala', image: 'https://i/1.jpg', description: 'x'.repeat(400) })
+    const rich = event({
+      id: 'rich',
+      end: '2026-10-20T22:00:00+02:00',
+      venue: 'Sala',
+      image: 'https://i/1.jpg',
+      description: 'x'.repeat(400),
+    })
     const poor = event({ id: 'poor', source: 'b', sources: ['b'], summary: 'Un riassunto' })
     const [m] = dedup([rich, poor])
     expect(m?.id).toBe('rich')
@@ -271,7 +322,10 @@ describe('dedup', () => {
   })
 
   it('matches across case, accents and punctuation of the title', () => {
-    const out = dedup([event({ id: 'a', title: 'Caffè, Concerto!' }), event({ id: 'b', source: 'b', sources: ['b'], title: 'CAFFE CONCERTO' })])
+    const out = dedup([
+      event({ id: 'a', title: 'Caffè, Concerto!' }),
+      event({ id: 'b', source: 'b', sources: ['b'], title: 'CAFFE CONCERTO' }),
+    ])
     expect(out).toHaveLength(1)
   })
 
@@ -314,7 +368,10 @@ describe('dedup', () => {
   describe('subtitled titles at the same instant (Il segreto di Francesco)', () => {
     const short = event({ id: 'a', title: 'Il segreto di Francesco', source: 'cultura', sources: ['cultura'] })
     const long = event({
-      id: 'b', title: 'Il segreto di Francesco. Lo spirito del Santo di Assisi, oggi', source: 'rovereto', sources: ['rovereto'],
+      id: 'b',
+      title: 'Il segreto di Francesco. Lo spirito del Santo di Assisi, oggi',
+      source: 'rovereto',
+      sources: ['rovereto'],
       venue: 'Teatro',
     })
 
@@ -337,7 +394,12 @@ describe('dedup', () => {
 
     it('does not fold at different times or for all-day events', () => {
       expect(dedup([short, { ...long, start: '2026-10-20T21:30:00+02:00' }])).toHaveLength(2)
-      expect(dedup([{ ...short, allDay: true }, { ...long, allDay: true }])).toHaveLength(2)
+      expect(
+        dedup([
+          { ...short, allDay: true },
+          { ...long, allDay: true },
+        ]),
+      ).toHaveLength(2)
     })
   })
 })

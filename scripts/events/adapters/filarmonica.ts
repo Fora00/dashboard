@@ -34,8 +34,25 @@ const MAX_VENUE_PAGES = 8
 
 // Towns the Filarmonica plays in (Vallagarina, Brentonico, the odd Verona
 // date); the address is "…, 38068 Rovereto TN" or just "piazzetta Scrinzi - Villa Lagarina".
-const TOWNS = ['Rovereto', 'Villa Lagarina', 'Isera', 'Calliano', 'Volano', 'Brentonico', 'Mori', 'Ala', 'Avio',
-  'Nomi', 'Pomarolo', 'Nogaredo', 'Besenello', 'Trento', 'Riva del Garda', 'Arco', 'Verona']
+const TOWNS = [
+  'Rovereto',
+  'Villa Lagarina',
+  'Isera',
+  'Calliano',
+  'Volano',
+  'Brentonico',
+  'Mori',
+  'Ala',
+  'Avio',
+  'Nomi',
+  'Pomarolo',
+  'Nogaredo',
+  'Besenello',
+  'Trento',
+  'Riva del Garda',
+  'Arco',
+  'Verona',
+]
 const TOWN_RE = new RegExp(`\\b(${TOWNS.join('|')})\\b`, 'i')
 
 function townOf(address: string): string {
@@ -68,9 +85,7 @@ const isSchool = (cats: string) => /concerti per le scuole/i.test(cats) && !/sta
 
 /** Page builder / WPBakery noise: shortcodes and the "INFO BIGLIETTI" button. */
 function cleanBody(html: string): string {
-  return html
-    .replace(/<a[^>]*vc_btn3[\s\S]*?<\/a>/gi, ' ')
-    .replace(/\[\/?[a-z_]+(?:\s[^\]]*)?\]/gi, ' ')
+  return html.replace(/<a[^>]*vc_btn3[\s\S]*?<\/a>/gi, ' ').replace(/\[\/?[a-z_]+(?:\s[^\]]*)?\]/gi, ' ')
 }
 
 function tag(item: string, name: string): string {
@@ -96,7 +111,9 @@ function fromFeed(xml: string): Map<string, Draft[]> {
     const timed = /^\d{1,2}:\d{2}$/.test(hour)
     const start = timed ? localToIso(day, hour) : dateToIso(day)
     const end = timed
-      ? (/^\d{1,2}:\d{2}$/.test(endHour) ? localToIso(endDay, endHour) : null)
+      ? /^\d{1,2}:\d{2}$/.test(endHour)
+        ? localToIso(endDay, endHour)
+        : null
       : dateToIso(endDay < day ? day : endDay)
     const link = decodeEntities(tag(item, 'link'))
     const address = decodeEntities(tag(item, 'mec:location'))
@@ -141,7 +158,9 @@ async function fromIcal(ctx: AdapterContext, post: string, link: string): Promis
       title: cleanTitle(unescapeText(ev.SUMMARY?.value ?? '')),
       start: s.iso,
       // All-day DTEND is exclusive in iCal → our inclusive last day.
-      end: s.allDay ? dateToIso(e ? (addDays(e.date, -1) < s.date ? s.date : addDays(e.date, -1)) : s.date) : (e?.iso ?? null),
+      end: s.allDay
+        ? dateToIso(e ? (addDays(e.date, -1) < s.date ? s.date : addDays(e.date, -1)) : s.date)
+        : (e?.iso ?? null),
       allDay: s.allDay,
       city: townOf(address),
       url,

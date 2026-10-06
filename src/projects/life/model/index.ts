@@ -12,13 +12,7 @@ export { dayKey, isDateKey, parseDayKey, isMondayKey, addDays, weekKey, weekDays
 export { parseWeekJson, validatePlan, type ParseResult } from './validate.ts'
 export { derivedCheckinId, withCheckinIds } from './checkinIds.ts'
 export { entryId, isEnergy, validateAnswer } from './entries.ts'
-export {
-  summarizeWeek,
-  nextCheckin,
-  type TrackerSummary,
-  type CheckinStatus,
-  type WeekSummary,
-} from './summary.ts'
+export { summarizeWeek, nextCheckin, type TrackerSummary, type CheckinStatus, type WeekSummary } from './summary.ts'
 export { diffPlans, type ListDiff, type PlanDiff } from './diff.ts'
 export {
   thingsItems,

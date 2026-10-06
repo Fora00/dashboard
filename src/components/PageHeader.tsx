@@ -11,7 +11,10 @@ interface Props {
 export function PageHeader({ emoji, title, subtitle, children }: Props) {
   return (
     <div className="mb-6">
-      <Link to="/" className="mb-3 inline-block text-sm text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200">
+      <Link
+        to="/"
+        className="mb-3 inline-block text-sm text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
+      >
         ← All projects
       </Link>
       <div className="flex flex-wrap items-center justify-between gap-3">

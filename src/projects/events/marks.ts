@@ -86,7 +86,10 @@ export function sanitizeSnapshot(raw: unknown): EventItem | null {
   const title = str(r.title, C.title)
   const start = str(r.start, C.short)
   if (!title || !start) return null
-  const occurrences = typeof r.occurrences === 'number' && Number.isFinite(r.occurrences) ? Math.max(1, Math.min(10_000, Math.round(r.occurrences))) : 1
+  const occurrences =
+    typeof r.occurrences === 'number' && Number.isFinite(r.occurrences)
+      ? Math.max(1, Math.min(10_000, Math.round(r.occurrences)))
+      : 1
   const out: EventItem = {
     id,
     title,

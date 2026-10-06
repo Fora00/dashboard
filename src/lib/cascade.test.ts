@@ -22,8 +22,7 @@ vi.mock('./sync', () => ({
 
 const settle = () => drain(async () => `${fake.calls.length}|${JSON.stringify(await db.outbox.toArray())}`)
 const pushed = () => fake.calls.filter((c) => c.op !== 'select').map((c) => `${c.op} ${c.table}`)
-const outboxOps = async () =>
-  (await db.outbox.orderBy('seq').toArray()).map((e) => `${e.op} ${e.table}`)
+const outboxOps = async () => (await db.outbox.orderBy('seq').toArray()).map((e) => `${e.op} ${e.table}`)
 
 beforeEach(async () => {
   await resetDb()

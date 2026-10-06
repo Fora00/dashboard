@@ -106,7 +106,10 @@ export function romeIso(date: string, time = '00:00'): string {
 
 /** Trim, collapse runs of spaces/tabs (keeps newlines), cap. */
 function clean(s: string, max: number): string {
-  return s.replace(/[ \t]+/g, ' ').trim().slice(0, max)
+  return s
+    .replace(/[ \t]+/g, ' ')
+    .trim()
+    .slice(0, max)
 }
 
 /** http(s) URL, a scheme added when missing; '' when empty or unusable. */
@@ -224,10 +227,58 @@ export function rowToForm(r: CustomEvent): CustomEventForm {
  */
 const TOWN_AREA: Record<string, string> = {}
 const TOWNS: Record<string, string[]> = {
-  'alto-adige': ['Bolzano', 'Bozen', 'Merano', 'Meran', 'Bressanone', 'Brixen', 'Brunico', 'Bruneck', 'Laives', 'Lana', 'Vipiteno', 'Chiusa', 'Egna', 'Appiano', 'Caldaro'],
-  'verona-garda': ['Verona', 'Malcesine', 'Bardolino', 'Lazise', 'Garda', 'Peschiera del Garda', 'Torri del Benaco', 'Bussolengo', 'Villafranca di Verona'],
-  veneto: ['Vicenza', 'Padova', 'Bassano del Grappa', 'Venezia', 'Treviso', 'Belluno', 'Rovigo', 'Schio', 'Thiene', 'Asiago'],
-  lombardia: ['Brescia', 'Mantova', 'Milano', 'Bergamo', 'Cremona', 'Sirmione', 'Desenzano del Garda', 'Salò', 'Limone sul Garda', 'Monza'],
+  'alto-adige': [
+    'Bolzano',
+    'Bozen',
+    'Merano',
+    'Meran',
+    'Bressanone',
+    'Brixen',
+    'Brunico',
+    'Bruneck',
+    'Laives',
+    'Lana',
+    'Vipiteno',
+    'Chiusa',
+    'Egna',
+    'Appiano',
+    'Caldaro',
+  ],
+  'verona-garda': [
+    'Verona',
+    'Malcesine',
+    'Bardolino',
+    'Lazise',
+    'Garda',
+    'Peschiera del Garda',
+    'Torri del Benaco',
+    'Bussolengo',
+    'Villafranca di Verona',
+  ],
+  veneto: [
+    'Vicenza',
+    'Padova',
+    'Bassano del Grappa',
+    'Venezia',
+    'Treviso',
+    'Belluno',
+    'Rovigo',
+    'Schio',
+    'Thiene',
+    'Asiago',
+  ],
+  lombardia: [
+    'Brescia',
+    'Mantova',
+    'Milano',
+    'Bergamo',
+    'Cremona',
+    'Sirmione',
+    'Desenzano del Garda',
+    'Salò',
+    'Limone sul Garda',
+    'Monza',
+  ],
   'emilia-romagna': ['Bologna', 'Modena', 'Parma', 'Reggio Emilia', 'Ferrara', 'Rimini', 'Ravenna'],
   piemonte: ['Torino'],
   toscana: ['Lucca', 'Firenze', 'Pisa'],
@@ -243,7 +294,11 @@ export function cityArea(city: string): string {
 
 /** First line of the note, at most ~300 chars (the card's one-line summary). */
 function summaryOf(note: string): string {
-  const first = note.split('\n').find((l) => l.trim())?.trim() ?? ''
+  const first =
+    note
+      .split('\n')
+      .find((l) => l.trim())
+      ?.trim() ?? ''
   return first.length <= 300 ? first : `${first.slice(0, 299).trimEnd()}…`
 }
 
@@ -296,7 +351,18 @@ export function mergeEvents(
 // --- Hash-query prefill (#/events?add=1&url=…&title=…) -------------------------
 
 /** Query keys the prefill reads; they are stripped from the URL after use. */
-export const PREFILL_KEYS = ['add', 'title', 'url', 'date', 'time', 'venue', 'city', 'note', 'text', 'category'] as const
+export const PREFILL_KEYS = [
+  'add',
+  'title',
+  'url',
+  'date',
+  'time',
+  'venue',
+  'city',
+  'note',
+  'text',
+  'category',
+] as const
 
 /**
  * Parse an "add event" deep link (e.g. from an iOS Shortcut). Returns null

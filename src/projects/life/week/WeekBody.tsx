@@ -113,7 +113,13 @@ export function WeekBody({ week, plan, entries, readOnly }: WeekBodyProps) {
         />
       )}
 
-      <FoodSection week={week} food={food} open={sections.food} onToggle={() => toggleSection('food')} readOnly={readOnly} />
+      <FoodSection
+        week={week}
+        food={food}
+        open={sections.food}
+        onToggle={() => toggleSection('food')}
+        readOnly={readOnly}
+      />
 
       <ExportSection
         plan={plan}

@@ -28,8 +28,7 @@ export function Layout() {
   // A guest who just redeemed a project invite (JoinProject navigates here
   // with state.joined) lands on the project with the PWA install tip on top.
   // (Home mounts its own hint, so skip it there.)
-  const justJoined =
-    location.pathname !== '/' && (location.state as { joined?: boolean } | null)?.joined === true
+  const justJoined = location.pathname !== '/' && (location.state as { joined?: boolean } | null)?.joined === true
 
   return (
     <div className="min-h-dvh bg-slate-50 text-slate-900 dark:bg-slate-900 dark:text-slate-100">

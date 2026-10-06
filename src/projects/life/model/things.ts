@@ -60,8 +60,7 @@ export function buildThingsUrl(tasks: readonly LifeTask[], opts: ThingsUrlOption
 
 /** True on iPhone/iPod/iPad, including iPadOS, which reports itself as a Mac. */
 export function isIosLike(
-  nav: { userAgent?: string; platform?: string; maxTouchPoints?: number } | undefined = typeof navigator ===
-  'undefined'
+  nav: { userAgent?: string; platform?: string; maxTouchPoints?: number } | undefined = typeof navigator === 'undefined'
     ? undefined
     : navigator,
 ): boolean {
@@ -79,8 +78,7 @@ export function isIosLike(
  * Mac, where the link reopens the browser the dashboard runs in).
  */
 export function canReturnFromThings(
-  nav: { userAgent?: string; platform?: string; maxTouchPoints?: number } | undefined = typeof navigator ===
-  'undefined'
+  nav: { userAgent?: string; platform?: string; maxTouchPoints?: number } | undefined = typeof navigator === 'undefined'
     ? undefined
     : navigator,
 ): boolean {
@@ -93,9 +91,6 @@ export function canReturnFromThings(
  * appends `?x-things-ids=…`, which HashRouter reads as the route's search
  * string, so the route still matches /life.
  */
-export function lifeReturnUrl(
-  loc: { origin: string; pathname: string } = window.location,
-  route = '/life',
-): string {
+export function lifeReturnUrl(loc: { origin: string; pathname: string } = window.location, route = '/life'): string {
   return `${loc.origin}${loc.pathname}#${route}`
 }
