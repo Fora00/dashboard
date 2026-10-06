@@ -4,5 +4,13 @@
   "semi": false,
   "printWidth": 120,
   "trailingComma": "all",
-  "ignorePatterns": ["dist", "node_modules", "public", "*.md", "supabase", "src/lib/database.types.ts"]
+  "ignorePatterns": [
+    "dist",
+    "node_modules",
+    "public",
+    "*.md",
+    "supabase",
+    "src/lib/database.types.ts",
+    "package-lock.json"
+  ]
 }

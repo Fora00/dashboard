@@ -1,15 +1,15 @@
 {
   "name": "dashboard",
-  "private": true,
   "version": "0.0.0",
+  "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "test": "vitest run",
-    "format": "oxfmt 'src/**/*.{ts,tsx,css}' 'scripts/**/*.{ts,mjs}'",
-    "format:check": "oxfmt --check 'src/**/*.{ts,tsx,css}' 'scripts/**/*.{ts,mjs}'",
+    "format": "oxfmt",
+    "format:check": "oxfmt --check",
     "check": "oxlint && npm run --silent format:check && tsc -b && vitest run",
     "roadmap": "node scripts/roadmap-open.mjs",
     "prepare": "git config core.hooksPath .githooks 2>/dev/null || true",
