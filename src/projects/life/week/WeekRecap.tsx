@@ -7,11 +7,13 @@ export function WeekRecap({
   trackers,
   checkins,
   tasks,
+  title = 'This week',
 }: {
   focus: [number, number]
   trackers: TrackerSummary[]
   checkins: [number, number]
   tasks: [number, number]
+  title?: string
 }) {
   const parts: { label: string; value: string; full: boolean }[] = []
   if (focus[1] > 0) parts.push({ label: 'Focus', value: `${focus[0]}/${focus[1]}`, full: focus[0] >= focus[1] })
@@ -22,7 +24,7 @@ export function WeekRecap({
 
   return (
     <div className="mb-3 space-y-2 rounded-xl bg-slate-100 px-4 py-3 text-sm dark:bg-slate-800/60">
-      <p className="text-xs font-medium text-slate-500 dark:text-slate-400">This week</p>
+      {title && <p className="text-xs font-medium text-slate-500 dark:text-slate-400">{title}</p>}
       {parts.length > 0 && (
         <div className="flex flex-wrap gap-x-4 gap-y-1">
           {parts.map((p) => (
