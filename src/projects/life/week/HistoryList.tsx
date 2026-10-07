@@ -21,30 +21,29 @@ export function HistoryList({
   onOpen: (week: string) => void
 }) {
   const entries = useLiveQuery(() => db.lifeEntries.toArray())
-  const past = weeks?.filter((w) => w.week !== currentWeek) ?? []
   return (
     <div>
-      <PageHeader emoji="🧭" title="History" subtitle="Past weeks, newest first.">
+      <PageHeader emoji="🧭" title="History" subtitle="This week and past weeks, newest first.">
         <Button variant="ghost" onClick={onBack}>
           ← This week
         </Button>
       </PageHeader>
       {weeks === undefined ? (
         <SkeletonList rows={4} rowClassName="h-12" />
-      ) : past.length === 0 ? (
-        <EmptyState emoji="🗓️" title="No past weeks yet" hint="Imported weeks show up here once a new week starts." />
+      ) : weeks.length === 0 ? (
+        <EmptyState emoji="🗓️" title="No weeks yet" hint="Import or create a week and it shows up here." />
       ) : (
         <>
           {entries && weeks && <ProgressChart weeks={weeks} entries={entries} currentWeek={currentWeek} />}
           <ul className="space-y-2">
-            {past.map((w) => (
+            {weeks.map((w) => (
               <li key={w.id} className="space-y-1">
                 <button
                   type="button"
-                  onClick={() => onOpen(w.week)}
+                  onClick={() => (w.week === currentWeek ? onBack() : onOpen(w.week))}
                   className="flex min-h-12 w-full items-center justify-between rounded-lg border border-slate-200 bg-white px-4 text-left text-sm transition-colors hover:border-slate-400 active:bg-slate-100 dark:border-slate-800 dark:bg-slate-800/50 dark:hover:border-slate-600 dark:active:bg-slate-800"
                 >
-                  <span className="font-medium">Week of {w.week}</span>
+                  <span className="font-medium">{w.week === currentWeek ? 'This week' : `Week of ${w.week}`}</span>
                   <span aria-hidden className="text-slate-400">
                     ›
                   </span>
