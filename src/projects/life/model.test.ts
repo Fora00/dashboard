@@ -588,6 +588,33 @@ describe('summarizeWeek', () => {
     expect(gym.atMax).toBe(true)
   })
 
+  it('keeps two weeks apart when all entries are passed in (History recap and chart)', () => {
+    const NEXT = '2026-10-05'
+    const nextPlan = { ...plan, week: NEXT }
+    const entries = [
+      // last week: one focus done, a task sent, gym x3, a check-in done
+      entry({ kind: 'focus', ref: 'f1', value: { done: true } }),
+      entry({ kind: 'sent', ref: 't1', value: { sent: true } }),
+      entry({ kind: 'checkin', ref: 'c1', value: { done: true } }),
+      ...[0, 1, 2].map(() => entry({ kind: 'tracker', ref: 'gym', day: '2026-09-30', value: {} })),
+      // this week: only a focus done on the other item, one gym session
+      entry({ kind: 'focus', ref: 'f2', week: NEXT, day: NEXT, value: { done: true } }),
+      entry({ kind: 'tracker', ref: 'gym', week: NEXT, day: NEXT, value: {} }),
+    ]
+    const last = summarizeWeek(plan, entries, '2026-10-04')
+    const cur = summarizeWeek(nextPlan, entries, '2026-10-06')
+    expect([...last.focusDone]).toEqual(['f1'])
+    expect([...cur.focusDone]).toEqual(['f2'])
+    expect(last.sentTaskIds.size).toBe(1)
+    expect(cur.sentTaskIds.size).toBe(0)
+    expect(last.checkins.filter((c) => c.done)).toHaveLength(1)
+    expect(cur.checkins.filter((c) => c.done)).toHaveLength(0)
+    expect(last.trackers[0]!.total).toBe(3)
+    expect(last.trackers[0]!.reachedTarget).toBe(true)
+    expect(cur.trackers[0]!.total).toBe(1)
+    expect(cur.trackers[0]!.reachedTarget).toBe(false)
+  })
+
   it('questions linked to a tracker are answered from the log and override stored answers', () => {
     const at = (ref: string) => entry({ kind: 'tracker', ref, day: '2026-09-29', value: {} })
     const s = summarizeWeek(
