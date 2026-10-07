@@ -17,6 +17,7 @@ const SERIES = [
     fill: 'fill-emerald-400',
     text: 'text-emerald-500',
   },
+  { key: 'habits', label: 'Habits', stroke: 'stroke-violet-400', fill: 'fill-violet-400', text: 'text-violet-500' },
   { key: 'tasks', label: 'Things sent', stroke: 'stroke-amber-400', fill: 'fill-amber-400', text: 'text-amber-500' },
 ] as const
 type Key = (typeof SERIES)[number]['key']
@@ -44,6 +45,11 @@ export function ProgressChart({
         current: w.week === currentWeek,
         focus: pct(s.focusDone.size, w.plan.focus.length),
         checkins: pct(s.checkins.filter((c) => c.done).length, s.checkins.length),
+        // habits = trackers with a target that reached it
+        habits: pct(
+          s.trackers.filter((t) => t.reachedTarget === true).length,
+          s.trackers.filter((t) => t.reachedTarget !== null).length,
+        ),
         tasks: pct(w.plan.tasks.filter((t) => s.sentTaskIds.has(t.id)).length, w.plan.tasks.length),
       } satisfies Record<Key, number | null> & { week: string; current: boolean }
     })
@@ -58,11 +64,18 @@ export function ProgressChart({
   return (
     <Card className="mb-4 space-y-2">
       <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Progress, % done per week</p>
+      <p className="flex flex-wrap gap-x-3 text-xs text-slate-600 dark:text-slate-300">
+        {SERIES.map((s) => (
+          <span key={s.key}>
+            <span className={s.text}>●</span> {s.label}
+          </span>
+        ))}
+      </p>
       <svg
         viewBox={`0 0 ${W} ${H + 14}`}
         className="w-full"
         role="img"
-        aria-label={`Percent of focus, check-ins and Things done over the last ${points.length} weeks`}
+        aria-label={`Percent of focus, check-ins, habits and Things done over the last ${points.length} weeks`}
       >
         {[0, 50, 100].map((v) => (
           <g key={v}>
@@ -107,11 +120,35 @@ export function ProgressChart({
                   r="3"
                   strokeWidth="1.5"
                   className={p.current ? `${s.stroke} fill-white dark:fill-slate-900` : `${s.fill} ${s.stroke}`}
-                />
+                >
+                  <title>{`${s.label} ${p.v}% · ${points[p.i]!.week}${p.current ? ' (in progress)' : ''}`}</title>
+                </circle>
               ))}
+              {active !== null && points[active]![s.key] !== null && (
+                <text
+                  x={x(active)}
+                  y={y(points[active]![s.key]!) - 6}
+                  textAnchor="middle"
+                  className={`${s.fill} stroke-white text-[9px] font-medium dark:stroke-slate-900`}
+                  strokeWidth="2.5"
+                  paintOrder="stroke"
+                >
+                  {points[active]![s.key]}%
+                </text>
+              )}
             </g>
           )
         })}
+        {active !== null && (
+          <line
+            x1={x(active)}
+            x2={x(active)}
+            y1={PAD_T}
+            y2={H}
+            className="stroke-slate-300 dark:stroke-slate-600"
+            strokeWidth="1"
+          />
+        )}
         {points.map((p, i) => {
           const slot = plotW / Math.max(points.length - 1, 1)
           return (
