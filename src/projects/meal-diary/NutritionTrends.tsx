@@ -13,6 +13,7 @@ const SEG = { protein: 'fill-rose-500', carbs: 'fill-amber-400', fat: 'fill-sky-
 export function NutritionTrends({ entries, now }: { entries: MealEntry[]; now: Date }) {
   const [open, setOpen] = useState(true)
   const [range, setRange] = useState<(typeof RANGES)[number]>(7)
+  const [active, setActive] = useState<string | null>(null)
   const points = useMemo(() => lastDays(entries, now, range, dayKey), [entries, now, range])
   const avg = averageOfLogged(points)
   if (!avg) return null
@@ -20,8 +21,14 @@ export function NutritionTrends({ entries, now }: { entries: MealEntry[]; now: D
   const max = Math.max(...points.map((p) => p.kcal), avg.kcal, 1)
   const slot = W / points.length
   const bar = Math.max(2, slot * 0.7)
-  const y = (kcal: number) => (kcal / max) * (H - 4)
+  const y = (kcal: number) => (kcal / max) * (H - 16)
   const split = macroSplit(avg)
+  const showTotals = points.length <= 14
+  const detail = (p: (typeof points)[number]) =>
+    p.counted === 0
+      ? `${p.day}: nothing logged`
+      : `${p.day}: ${p.approximate ? '≈ ' : ''}${p.kcal} kcal · ${MACRO_EMOJI.proteinG} ${p.proteinG} g (${Math.round(p.proteinG * 4)} kcal) · ${MACRO_EMOJI.carbsG} ${p.carbsG} g (${Math.round(p.carbsG * 4)} kcal) · ${MACRO_EMOJI.fatG} ${p.fatG} g (${Math.round(p.fatG * 9)} kcal)`
+  const activePoint = points.find((p) => p.day === active)
 
   return (
     <Card className="mb-6 space-y-3">
@@ -96,12 +103,8 @@ export function NutritionTrends({ entries, now }: { entries: MealEntry[]; now: D
               ] as const
               let top = H
               return (
-                <g key={p.day}>
-                  <title>
-                    {p.counted === 0
-                      ? `${p.day}: nothing logged`
-                      : `${p.day}: ${p.approximate ? '≈ ' : ''}${p.kcal} kcal · 🥩 ${p.proteinG} g · 🍞 ${p.carbsG} g · 🥑 ${p.fatG} g`}
-                  </title>
+                <g key={p.day} onPointerEnter={() => setActive(p.day)} onClick={() => setActive(p.day)}>
+                  <title>{detail(p)}</title>
                   {/* hit area so empty/short days are still hoverable */}
                   <rect x={i * slot} y={0} width={slot} height={H} className="fill-transparent" />
                   {p.counted > 0 &&
@@ -112,6 +115,16 @@ export function NutritionTrends({ entries, now }: { entries: MealEntry[]; now: D
                     })}
                   {p.counted > 0 && macroKcal === 0 && (
                     <rect x={x} y={H - h} width={bar} height={h} className="fill-slate-400" />
+                  )}
+                  {showTotals && p.counted > 0 && (
+                    <text
+                      x={i * slot + slot / 2}
+                      y={Math.max(9, H - h - 3)}
+                      textAnchor="middle"
+                      className="fill-slate-600 text-[9px] dark:fill-slate-300"
+                    >
+                      {p.kcal}
+                    </text>
                   )}
                 </g>
               )
@@ -124,6 +137,9 @@ export function NutritionTrends({ entries, now }: { entries: MealEntry[]; now: D
               {points[points.length - 1]!.day.slice(5)}
             </text>
           </svg>
+          <p className="min-h-4 text-xs text-slate-600 dark:text-slate-300">
+            {activePoint ? detail(activePoint) : 'Hover or tap a day for its numbers'}
+          </p>
 
           <div title="Share of calories from protein / carbs / fat in the average day">
             <div
