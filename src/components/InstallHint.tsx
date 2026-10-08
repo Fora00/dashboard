@@ -65,12 +65,12 @@ function isStandalone(): boolean {
 // Hidden entirely once installed, or once dismissed (persisted in localStorage).
 export function InstallHint() {
   const [dismissed, setDismissed] = useState(() => readDismissed())
-  const [eligible, setEligible] = useState<'ios' | 'android' | null>(null)
+  const [eligible] = useState<'ios' | 'android' | null>(() =>
+    isStandalone() ? null : isIosSafari() ? 'ios' : isAndroid() ? 'android' : null,
+  )
   const [, setTick] = useState(0)
 
   useEffect(() => {
-    if (isStandalone()) return setEligible(null)
-    setEligible(isIosSafari() ? 'ios' : isAndroid() ? 'android' : null)
     const rerender = () => setTick((n) => n + 1)
     promptListeners.add(rerender)
     return () => {

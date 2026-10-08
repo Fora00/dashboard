@@ -29,6 +29,7 @@ export function Habits() {
   const [name, setName] = useState('')
   const [emoji, setEmoji] = useState('')
 
+  // oxlint-disable-next-line react/purity -- the day must follow the wall clock across midnight
   const today = dayKey(new Date())
   const dotDays = lastDays(DOT_DAYS)
 

@@ -80,6 +80,7 @@ export function JoinProject() {
   }, [token])
 
   useEffect(() => {
+    // oxlint-disable-next-line react/set-state-in-effect -- fetch-on-mount: load() sets "loading" then syncs the invite lookup from the server
     void load()
   }, [load])
 

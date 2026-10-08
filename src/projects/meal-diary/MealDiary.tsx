@@ -23,6 +23,7 @@ const INPUT =
   'min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-indigo-300 dark:border-slate-700 dark:bg-slate-800'
 
 export function MealDiary() {
+  // oxlint-disable-next-line react/purity -- the day must follow the wall clock across midnight
   const now = new Date()
   const today = dayKey(now)
   const entries = useLiveQuery(() => db.meals.toArray())

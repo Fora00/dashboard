@@ -47,6 +47,7 @@ export function UpdateToast() {
 
   useEffect(() => {
     if (!consumeUpdatedFlag()) return
+    // oxlint-disable-next-line react/set-state-in-effect -- consumes a one-shot localStorage flag (external store) that must not be read during render
     setVisible(true)
     const timer = setTimeout(() => setVisible(false), 4000)
     return () => clearTimeout(timer)

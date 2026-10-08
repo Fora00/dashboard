@@ -81,6 +81,7 @@ export function Sharing() {
   }, [])
 
   useEffect(() => {
+    // oxlint-disable-next-line react/set-state-in-effect -- fetch-on-mount: syncs guest lists from the server once the owner is known
     if (owner) void load()
   }, [owner, load])
 

@@ -43,6 +43,7 @@ export function LocalTransfer() {
   }, [session, online])
 
   useEffect(() => {
+    // oxlint-disable-next-line react/set-state-in-effect -- fetch: syncs the cloud file list when session/online changes
     void refreshRemote()
   }, [refreshRemote])
 

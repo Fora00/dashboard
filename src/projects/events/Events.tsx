@@ -57,6 +57,7 @@ export function Events() {
   useEffect(() => {
     const prefill = parsePrefill(searchParams)
     if (!PREFILL_KEYS.some((k) => searchParams.has(k))) return
+    // oxlint-disable-next-line react/set-state-in-effect -- syncs the URL deep-link params into the add sheet, then strips them
     if (prefill) setEditor({ open: true, editing: null, prefill })
     const next = new URLSearchParams(searchParams)
     for (const k of PREFILL_KEYS) next.delete(k)

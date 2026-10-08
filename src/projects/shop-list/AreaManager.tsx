@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { db, type ShopArea } from '../../lib/db'
 import { supabase } from '../../lib/sync'
@@ -29,12 +29,16 @@ export function AreaManager({ area }: { area: ShopArea }) {
   const [confirmDelete, setConfirmDelete] = useState(false)
   const { pending, trigger, confirmUndo } = useUndoSnackbar()
 
-  useEffect(() => {
+  // Reset per-area UI when the selected area changes (adjusting state during
+  // render, not in an effect).
+  const [seenAreaId, setSeenAreaId] = useState(area.id)
+  if (seenAreaId !== area.id) {
+    setSeenAreaId(area.id)
     setShowMembers(false)
     setMembers(null)
     setConfirmDelete(false)
     setError(null)
-  }, [area.id])
+  }
 
   const isOwner = Boolean(session && owner)
   const localMode = session === null

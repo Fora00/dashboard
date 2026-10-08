@@ -83,6 +83,7 @@ export function LifeEditor() {
     if (existing === undefined) return
     if (existing) {
       const plan = existing.plan
+      // oxlint-disable-next-line react/set-state-in-effect -- one-shot prefill from the Dexie plan, guarded by `initialized`
       setFocus(plan.focus.map((f) => ({ id: f.id, title: f.title })))
       setRules(plan.rules.map((r) => ({ key: newKey(), text: r })))
       setTasks(plan.tasks.map(taskToRow))
