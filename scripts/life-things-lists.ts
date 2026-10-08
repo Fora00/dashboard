@@ -11,11 +11,7 @@
 // never guessed. A task with a project goes into the project, else the area.
 import { execFileSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
-
-interface ThingsList {
-  id: string
-  name: string
-}
+import { match, type ThingsList } from './life-things-match.ts'
 
 // Bulk property gets: one Apple Event per list instead of one per item.
 const SCRIPT = `
@@ -48,26 +44,12 @@ function readThings(): { areas: ThingsList[]; projects: ThingsList[] } {
   return { areas, projects }
 }
 
-function norm(s: string): string {
-  return s
-    .replace(/[^\p{L}\p{N}| ]/gu, '')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .toLowerCase()
+type Task = {
+  title?: string
+  area?: string | null
+  project?: string | null
+  listId?: string
 }
-
-function match(want: string, lists: ThingsList[]): { hit: ThingsList } | { error: string } {
-  const w = norm(want)
-  if (!w) return { error: 'empty after removing emoji' }
-  const exact = lists.filter((l) => norm(l.name) === w)
-  if (exact.length === 1) return { hit: exact[0]! }
-  const partial = exact.length > 1 ? exact : lists.filter((l) => norm(l.name).includes(w))
-  if (partial.length === 1) return { hit: partial[0]! }
-  if (partial.length === 0) return { error: 'no match' }
-  return { error: `ambiguous: ${partial.map((l) => l.name).join(', ')}` }
-}
-
-type Task = { title?: string; area?: string | null; project?: string | null; listId?: string }
 
 const file = process.argv[2]
 const week = JSON.parse(readFileSync(file ?? 0, 'utf8')) as { tasks?: Task[] }

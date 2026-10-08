@@ -11,41 +11,15 @@
 import { execFileSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import { extractJsonFence } from '../src/projects/life/model/fence.ts'
+import { BEFORE_MS, matchBatch, type Status, type Task, type ThingsTodo } from './life-things-match.ts'
 
-type Status = 'open' | 'completed' | 'canceled' | 'deleted'
-interface ThingsTodo {
-  id: string
-  name: string
-  status: Status
-  createdAt: number
-  completedAt: number | null
-}
-interface Task {
-  id: string
-  title: string
-}
 interface ExportJson {
   plan: { week: string; tasks: Task[] }
-  entries: { kind: string; ref: string; value: { sent?: boolean; sends?: number[] } }[]
-}
-
-// A Things batch lands within seconds of the tap; allow for phone/Mac clock
-// skew and a slow Things launch.
-const BEFORE_MS = 2 * 60_000
-const AFTER_MS = 5 * 60_000
-
-function words(s: string): Set<string> {
-  return new Set(
-    s
-      .toLowerCase()
-      .split(/[^\p{L}\p{N}]+/u)
-      .filter((w) => w.length > 2),
-  )
-}
-
-function sharedWords(a: string, b: string): number {
-  const wb = words(b)
-  return [...words(a)].filter((w) => wb.has(w)).length
+  entries: {
+    kind: string
+    ref: string
+    value: { sent?: boolean; sends?: number[] }
+  }[]
 }
 
 function readExport(text: string): ExportJson {
@@ -164,40 +138,10 @@ const unexplained: ThingsTodo[] = []
 const add = (taskId: string, todo: ThingsTodo) => found.set(taskId, [...(found.get(taskId) ?? []), todo])
 
 for (const [at, batchTasks] of [...batches.entries()].sort((a, b) => a[0] - b[0])) {
-  const pool = things
-    .filter((x) => x.createdAt >= at - BEFORE_MS && x.createdAt <= at + AFTER_MS)
-    .sort((a, b) => a.createdAt - b.createdAt)
-  const left = [...batchTasks]
-  for (const todo of [...pool]) {
-    const i = left.findIndex((t) => t.title.trim() === todo.name.trim())
-    if (i >= 0) {
-      add(left[i]!.id, todo)
-      left.splice(i, 1)
-      pool.splice(pool.indexOf(todo), 1)
-    }
-  }
-  // Renamed ones. A batch is created within the same second, so creation
-  // order can't tell them apart. One leftover on each side is a certain
-  // match. With more, pair by words shared with the original title, and only
-  // when each task's best candidate is unique. Anything else is reported.
-  if (left.length === 1 && pool.length === 1) {
-    add(left[0]!.id, pool.splice(0, 1)[0]!)
-    left.length = 0
-  } else {
-    for (const t of [...left]) {
-      const scored = pool
-        .map((todo) => ({ todo, score: sharedWords(t.title, todo.name) }))
-        .sort((a, b) => b.score - a.score)
-      const [best, second] = scored
-      if (best && best.score > 0 && (!second || second.score < best.score)) {
-        add(t.id, best.todo)
-        pool.splice(pool.indexOf(best.todo), 1)
-        left.splice(left.indexOf(t), 1)
-      }
-    }
-  }
-  unexplained.push(...pool)
-  for (const t of left) found.set(t.id, found.get(t.id) ?? [])
+  const r = matchBatch(batchTasks, things, at)
+  for (const [taskId, todo] of r.pairs) add(taskId, todo)
+  unexplained.push(...r.unexplained)
+  for (const t of r.unmatched) found.set(t.id, found.get(t.id) ?? [])
 }
 // Sends recorded before timestamps existed: title match anywhere in range.
 for (const t of noTimestamp) {
