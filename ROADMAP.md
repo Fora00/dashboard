@@ -955,7 +955,8 @@ better app icon and a small custom icon per project (projects get created
 over time, so it must be part of the registry, not hand work). Preview page
 with the options was built locally (not published).
 
-- [ ] **IC1 Per-project icon + colour in the registry** [sonnet, S] — add
+- [x] **IC1 Per-project icon + colour in the registry** [sonnet, S] — add
+      → done 2026-10-08 from the owner's picker choice (`scripts/icons/choice.json`): 5 areas with a base colour (utility grey, casa red, organizzazione green, sport sky, svago amber), per-project Lucide icon + sub-colour, `ProjectIcon` solid tile with the sub-colour dot, Home grouped by area (toggle `dashboard:home-grouped`, default on; starred in their own section on top), `new-project --area --icon --color`. Not yet looked at in a browser.
       `icon` (Lucide name, inlined SVG, ISC licence, no CDN, works offline) and
       `color` to `ProjectMeta`; `emoji` stays as the fallback and for shared
       text. A small `ProjectIcon` component (tinted tile) used by Home,
@@ -967,13 +968,16 @@ with the options was built locally (not published).
       circle-check, book-ideas book-open, boardgame-ideas dice-5, links link,
       trips plane, events map-pin, meal-diary utensils, life compass, settings
       settings, sharing users.
-- [ ] **IC2 New app icon** [owner decision, then sonnet XS] — pick one of the
+- [x] **IC2 New app icon** [owner decision, then sonnet XS] — pick one of the
+      → done 2026-10-08: owner picked B (Hub). SVG favicon, 192/512, dedicated maskable 512, full-bleed apple-touch-icon, 14 project tiles, manifest shortcuts (Events, Life, Todo, Shop List). Regenerate with `scripts/icons/build-icons.mjs` (README there).
       four drawn directions (A bento, B hub, C 3x3 grid with one lit tile, D
       tile monogram "D") or keep the current 2x2; export 192/512, maskable
       (dedicated safe-zone version), 180 apple-touch-icon, add to the manifest.
-- [ ] **IC3 Project colour as accent** [sonnet, M] — the project colour tints
+- [x] **IC3 Project colour as accent** [sonnet, M] — the project colour tints
+      → done 2026-10-08: `--accent` (area) / `--accent-2` (project) from Layout per route; header line, title marker, primary Button, selected Chip, focus rings; AA text colour per area colour (tested). Open follow-ups: inputs and Life/Events selected states still hardcode indigo; `--accent-soft` unused; sidebar tint waits for UI1.
       the header, primary buttons and the sidebar/tab entry (ties into UI1).
 - [ ] **IC4 Experiment: one home-screen icon per project** [opus, S] — iOS lets
+      → code done 2026-10-08, STILL AN EXPERIMENT until tested on a device: apple-touch-icon and app title follow the current project. Test on iPhone/iPad Safari: open `#/climbing`, Share > Add to Home Screen, check (1) icon = Climbing tile, (2) name = Climbing, (3) it opens Climbing not Home; repeat with `#/todo`; Home must still add as Dashboard. Record each result separately (icon, name and start page can fail independently). If Safari ignores it, delete `homeScreenMeta.ts` and its hook call (see ARCHITECTURE).
       a single page be added to the Home Screen; set `apple-touch-icon` per
       route and test with HashRouter (Safari may ignore it). Manifest
       `shortcuts` for Mac Chrome/Android long-press (iOS does not support them).
