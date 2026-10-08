@@ -939,11 +939,26 @@ sync already ignores stale updates (`ignore_stale_update` triggers on
       vite 8.3, dexie 4.4.6); run check/build; no majors (ts 7, pwa 2).
 - [x] **D4 Adopt the newer oxlint React rules** [sonnet, M] — bump oxlint past 1.72 and fix the ~15 `react/set-state-in-effect` and `react/purity` (Date during render) findings in UpdateToast, useOwner, InstallHint, LifeEditor, JoinProject, LocalTransfer, AreaManager, Sharing, Events, TrackersSection, MealDiary, useSections, Habits, TrackerRow; then unpin. Combine with LF2 (`useToday()`), which removes several `Date` calls from render.
       → done 2026-10-08: oxlint 1.87.0 pinned exact. 3 findings fixed properly (InstallHint, useOwner, AreaManager), 8 suppressed with a reason each (false positives for fetch-on-mount and wall-clock effects, or risky rewrites). `useOwner` and `AreaManager` changed logic and have no tests: add a render-test setup (UI1 smoke) when possible.
-- [ ] **D2 Hosted Supabase settings unverified** [orchestrator/owner] —
-      `config.toml` is local only (`config push` is forbidden). In the
-      dashboard check: OTP expiry (local 3600 s; 600 s is tighter), email rate
-      limit, signup + whitelist trigger live, MFA for the owner account,
-      `additional_redirect_urls` localhost entries.
+- [~] **D2 Hosted Supabase settings** [orchestrator/owner] — verified 2026-10-08 (read-only, no secrets
+      printed): all 21 migrations applied remotely; every public table has RLS; no write
+      policy without WITH CHECK; no SECURITY DEFINER function without a pinned search_path;
+      the realtime publication excludes `shop_area_tokens`, `project_invites`, `allowed_emails`;
+      as the anon key: every data table answers `[]`/401, `get_invite(random)` = null,
+      owner RPCs (`revoke_area_guest`, `rotate_area_token`, `area_share_token`) = permission
+      denied; `shop_areas` has no token column; trigger `before_user_created` active; 1 owner +
+      1 guest, both with an account (0 whitelisted emails without one). Public auth settings:
+      email provider only, signups open (gated by the whitelist trigger).
+      STILL UNVERIFIED (needs the dashboard, or the owner's OK to read the CLI token from the
+      macOS keychain): OTP expiry (local config says 3600 s, 600 s is tighter), email rate
+      limit, MFA on the owner account, redirect URLs.
+- [ ] **S1 Turn on "Confirm email" in the hosted Supabase Auth** [owner, dashboard, 1 click] — the public
+      auth settings report `mailer_autoconfirm = true`, so an email/password sign-up is confirmed
+      instantly and returns a session. With open signups gated only by the whitelist trigger, someone
+      who knows an invitee's email could sign up with a password before the invitee's first OTP login
+      and get that account (no hijack window is open today: every whitelisted email already has an
+      account). Fix: Authentication > Sign In / Providers > Email > Confirm email ON. The OTP-code login
+      keeps working. Do NOT use `config push` (project rule). Optional second layer: disable signups
+      once the people you want have accounts; re-enable only while inviting.
 - [x] **D3 PWA polish** [haiku, XS] — add apple-touch-icon to the manifest,
       → done 2026-10-08 except a dedicated maskable icon (needs a designed asset): apple-touch-icon in the manifest, `engines` node >=22, `.nvmrc`.
       a dedicated maskable icon, `engines`/`.nvmrc` (CI uses Node 22, Mac 24).
@@ -1027,7 +1042,8 @@ and offline unaffected; test at 375 / 820 / 1180 / 1440 px. Layout prefs
       habits due, next events, Life focus of the day (owner only), pending
       sync state; from `lg` the project grid goes to 3-4 columns. Pure Dexie
       reads, works offline.
-- [ ] **UI5 Mac pointer + keyboard** [sonnet, M] — `⌘K` jump to project /
+- [x] **UI5 Mac pointer + keyboard** [sonnet, M] — `⌘K` jump to project /
+      → done 2026-10-08: `useHotkey` + one list `shortcuts.ts`; `⌘K`/`Ctrl K` command palette (fuzzy, accent-aware, also a header button below lg), `?` help sheet, `[` collapses the sidebar, a hidden project you open shows in the sidebar; `/` focuses search and `n` adds on Events/Links/Todo/Shop List/Habits; Events `j`/`k` and shift-click range select; Local Transfer drops files anywhere on the page. Scripted browser checks at 1440 passed. Not done: drag-to-reorder Life tasks (they come from the imported plan: reordering would rewrite the plan, needs a decision), dark-mode shots of the page hints. Known nit: on `/todo` signed-out the email input autofocuses, so plain `?`/`[` are ignored there (`⌘K` still works); consider not autofocusing it. Follow-up: component tests need a render setup (UI palette, sidebar, Today panel).
       search events, `/` focus search, `n` new item, `j`/`k` list navigation,
       `Esc` closes (native `<dialog>` already does), hover affordances behind
       `hover: hover`; drag-and-drop files onto Local Transfer; shift-click
