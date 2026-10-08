@@ -8,8 +8,25 @@
 | `crawl.yml` | daily cron 04:23 UTC, manual dispatch | freshly crawled | minutes |
 | `_site.yml` | `workflow_call` only | `events: crawl` or `reuse` | shared steps |
 
-Shared steps (`_site.yml`): `npm ci`, `npm run lint`, `npm test --if-present`,
-events step, `npm run build`, upload + deploy Pages.
+Shared steps (`_site.yml`), split in two jobs (2026-10-08, audit E5):
+
+| job | permissions | steps |
+|---|---|---|
+| `build` | `contents: read` | checkout, setup-node, `npm ci`, `npm run lint`, `npm test --if-present`, events step (crawl or reuse), "Require events.json", `npm run build`, `upload-pages-artifact` (`dist`, artifact `github-pages`) |
+| `deploy` (`needs: build`, environment `github-pages`) | `pages: write`, `id-token: write` | `configure-pages`, `deploy-pages` |
+
+So nothing from npm, the repo or the crawled sites ever runs with a token
+that can publish the site. `deploy` has no checkout. The callers still grant
+`pages: write` + `id-token: write` (top level in `deploy.yml`, on the `site`
+job in `crawl.yml`): a called workflow can only narrow what its caller grants.
+The `crawl_health` output of `_site.yml` comes from `jobs.build`. A failing
+`build` skips `deploy` (nothing deployed, live site unchanged).
+
+- **Action pinning**: every action is pinned by full commit SHA with the
+  tag in a trailing comment (`uses: actions/checkout@<sha> # v7.0.1`).
+  Dependabot (`github-actions` ecosystem, weekly) understands this form and
+  bumps the SHA and the comment together. To bump by hand:
+  `git ls-remote --tags https://github.com/actions/<name>.git`.
 
 - **Concurrency**: both callers use group `pages` with `cancel-in-progress:
   false`. One Pages deploy at a time; a running crawl-deploy is never killed by
@@ -19,7 +36,12 @@ events step, `npm run build`, upload + deploy Pages.
 - **Reuse path**: `curl` of `https://fora00.github.io/dashboard/events.json`
   (3 retries), validated as schemaVersion 1 with a non-empty `events`. If that
   fails it falls back to a full crawl (never ships a site without events.json,
-  never ships an empty one).
+  never ships an empty one). **Stale warning**: the reused file's
+  `generatedAt` and age go to the job summary; over 3 days old (the daily
+  crawl has not published since) emits a `::warning::` "Reused events.json is
+  stale". Warning only: the deploy goes on and the file is shipped as is
+  (the Events page and the crawl health issue are unchanged). Missing or
+  unreadable `generatedAt` also warns, never fails.
 - **Crawl visibility**: per-source table in the job summary, `::warning::` per
   failed source, `::error::` (job still passes) if more than a third failed. A
   crawler crash fails the job and deploys nothing; the live site keeps its
@@ -35,13 +57,12 @@ events step, `npm run build`, upload + deploy Pages.
   failed, or a source has not succeeded for over 7 days (`degradedReasons` in
   `scripts/events/health.ts`; the crawler hands them over as the `health` step
   output, surfaced as the `crawl_health` output of `_site.yml`). The first
-  healthy run closes it. Only this job has `issues: write`; the deploy job
-  keeps `contents: read` + Pages rights (permissions are per job in
-  `crawl.yml`). If Issues are disabled on the repo, the job fails red after
+  healthy run closes it. Only this job has `issues: write`; inside `_site.yml` only the
+  `deploy` job has Pages rights (permissions are per job). If Issues are disabled on the repo, the job fails red after
   the deploy; nothing else is affected. `deploy.yml` (reuse path) has no such
   job.
-- **Timeouts**: the `_site.yml` job has `timeout-minutes: 30` (a normal crawl
-  takes minutes), the health job 5.
+- **Timeouts**: `_site.yml` `build` has `timeout-minutes: 30` (a normal crawl
+  takes minutes), `deploy` 10, the health job 5.
 - **Output gate**: "Require events.json" checks with node that the file is
   schemaVersion 1 with at least one event; a missing, invalid or
   `"events": []` file never deploys.

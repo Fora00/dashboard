@@ -1,5 +1,9 @@
 # Reusable: lint + test + build + deploy the Pages site. Not triggered directly.
 # Callers: deploy.yml (push, events: reuse) and crawl.yml (cron/manual, events: crawl).
+# Two jobs (docs/CI.md): `build` runs every npm/crawler step with only
+# `contents: read`; `deploy` holds the Pages-write + OIDC token and runs only
+# the two first-party Pages actions on the uploaded artifact. Third-party
+# actions are pinned by commit SHA (Dependabot github-actions bumps them).
 name: Build and deploy site
 
 on:
@@ -17,32 +21,34 @@ on:
     outputs:
       crawl_health:
         description: 'crawl only: degraded reasons from the crawler (one line, empty when healthy); read by crawl.yml'
-        value: ${{ jobs.deploy.outputs.crawl_health }}
+        value: ${{ jobs.build.outputs.crawl_health }}
     secrets:
       VITE_SUPABASE_URL:
         required: false
       VITE_SUPABASE_ANON_KEY:
         required: false
 
+# Per job below. The callers must still grant pages: write + id-token: write
+# (a called workflow can only narrow what its caller grants).
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
+    # No Pages or OIDC rights here: npm ci, lint, tests, the crawler (which
+    # fetches arbitrary third-party sites) and the build all run with a
+    # read-only token.
+    permissions:
+      contents: read
     # A normal crawl-deploy takes minutes; a hung source must not hold the
     # pages concurrency group for GitHub's default 6 hours.
     timeout-minutes: 30
     outputs:
       crawl_health: ${{ steps.crawl.outputs.health }}
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22
           cache: npm
@@ -78,6 +84,18 @@ jobs:
                -o public/events.json "https://fora00.github.io/dashboard/events.json" \
              && node -e "const d=JSON.parse(require('fs').readFileSync('public/events.json','utf8'));if(d.schemaVersion!==1||!Array.isArray(d.events)||!Array.isArray(d.sources)||d.events.length===0)process.exit(1)"; then
             echo "Reusing published events.json ($(node -p "JSON.parse(require('fs').readFileSync('public/events.json','utf8')).events.length") events)" | tee -a "$GITHUB_STEP_SUMMARY"
+            # Stale check (warning only, the deploy goes on): the reused file
+            # is as old as the last successful crawl-deploy. Over 3 days
+            # means the daily crawl.yml has not published since; the UI shows
+            # generatedAt as it always did, nothing is rewritten.
+            node -e "
+              const g=JSON.parse(require('fs').readFileSync('public/events.json','utf8')).generatedAt;
+              const t=Date.parse(g), days=(Date.now()-t)/864e5;
+              if(!Number.isFinite(t)){console.log('::warning title=Reused events.json has no generatedAt::cannot tell how old it is');process.exit(0)}
+              const line='events.json generatedAt '+g+' ('+days.toFixed(1)+' days old)';
+              console.log(line);require('fs').appendFileSync(process.env.GITHUB_STEP_SUMMARY,line+'\\n');
+              if(days>3)console.log('::warning title=Reused events.json is stale::'+line+'; the daily crawl (crawl.yml) has not published for over 3 days')" \
+              || echo '::warning title=events.json age check failed::could not read generatedAt'
           else
             echo "::warning title=events.json reuse failed::could not fetch a valid published events.json, falling back to a full crawl"
             rm -f public/events.json
@@ -96,9 +114,25 @@ jobs:
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
-      - uses: actions/configure-pages@v6
-      - uses: actions/upload-pages-artifact@v5
+      # Artifact named github-pages (the default), retained 1 day by the
+      # action; the deploy job below picks it up from this run.
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
           path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    # The only job with Pages rights. No checkout, no npm: it runs nothing
+    # from the repo or from the crawled sites.
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6.0.0
       - id: deployment
-        uses: actions/deploy-pages@v5
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
