@@ -29,8 +29,11 @@ dev-dist
 # env with Supabase keys
 .env.local
 
-# Claude Code worktrees/session data
-.claude/
+# Claude Code: track only the shared agents and commands; the rest is local
+# (settings.local.json, worktrees, session data)
+.claude/*
+!.claude/agents/
+!.claude/commands/
 
 # Events crawler output (built daily in CI, never committed)
 public/events.json
