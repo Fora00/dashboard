@@ -55,8 +55,9 @@ export interface TableSync<L extends { id: string } = { id: string }, R = unknow
   toRow: (local: L) => R
   /** Remote row → local row. */
   fromRow: (row: R) => L
-  /** Explicit column list for pull selects (never select('*') — avoids leaking
-   *  capability columns like share_token). */
+  /** Explicit column list for pull selects (never select('*') — keeps secret
+   *  or capability columns out of the client; e.g. the area share token lives
+   *  in the owner-only shop_area_tokens table, not on shop_areas). */
   columns: string
   /** Subscribe to realtime changes on this table. */
   realtime?: boolean

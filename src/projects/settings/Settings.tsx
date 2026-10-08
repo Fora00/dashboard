@@ -12,6 +12,7 @@ import { Card } from '../../components/Card'
 import { PageHeader } from '../../components/PageHeader'
 import { SyncCard } from '../../components/SyncCard'
 import { runSafe } from '../../lib/runSafe'
+import { clearPrivateData, privateDataSummary } from '../../lib/privateData'
 
 // Per-device settings: project visibility, storage usage, persistence, sync
 // status, local wipe.
@@ -69,6 +70,48 @@ function ProjectVisibility() {
         </ul>
       </Card>
     </section>
+  )
+}
+
+// Always available, enabled only while owner-only rows are on the device
+// (they stay after a sign-out). Warns about changes that never synced.
+function PrivateDataCard() {
+  const summary = useLiveQuery(() => privateDataSummary())
+  const has = (summary?.rows ?? 0) + (summary?.unsynced ?? 0) > 0
+
+  async function remove() {
+    const s = await privateDataSummary()
+    const lost =
+      s.unsynced > 0
+        ? `\n\n${s.unsynced} change${s.unsynced === 1 ? ' was' : 's were'} never synced and will be lost for good.`
+        : ''
+    const ok = window.confirm(
+      'Remove Life, Meal Diary and your events data from this device? The copy in the cloud is kept: ' +
+        `sign in again to get it back.${lost}`,
+    )
+    if (!ok) return
+    await clearPrivateData()
+  }
+
+  return (
+    <Card className="space-y-2 text-sm">
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-slate-500 dark:text-slate-400">
+          {has
+            ? 'Life, Meal Diary and your events are stored on this device. The cloud copy is kept.'
+            : 'No private data on this device.'}
+        </span>
+        <Button variant="danger" disabled={!has} onClick={() => void runSafe(remove, 'Could not remove data')()}>
+          Remove private data from this device
+        </Button>
+      </div>
+      {summary && summary.unsynced > 0 && (
+        <p className="text-rose-600 dark:text-rose-400">
+          ⚠️ {summary.unsynced} change{summary.unsynced === 1 ? ' has' : 's have'} not reached the cloud yet. Removing
+          deletes {summary.unsynced === 1 ? 'it' : 'them'} for good.
+        </p>
+      )}
+    </Card>
   )
 }
 
@@ -143,6 +186,9 @@ export function Settings() {
 
         <section>
           <h2 className="mb-2 text-sm font-medium text-slate-500 dark:text-slate-400">Danger zone</h2>
+          <div className="mb-3">
+            <PrivateDataCard />
+          </div>
           <Card className="flex items-center justify-between gap-3 text-sm">
             <span className="text-slate-500 dark:text-slate-400">
               Delete all data stored on this device.

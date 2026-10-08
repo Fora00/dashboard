@@ -6,6 +6,8 @@ import { useAuth } from '../../lib/useAuth'
 import { useOwner } from '../../lib/useOwner'
 import { useUndoSnackbar } from '../../lib/useUndoSnackbar'
 import { deleteArea, sync } from '../../lib/shopSync'
+import { shareOrCopy } from '../../lib/share'
+import { runSafe } from '../../lib/runSafe'
 import { Button } from '../../components/Button'
 import { Card } from '../../components/Card'
 import { Snackbar } from '../../components/Snackbar'
@@ -56,8 +58,7 @@ export function AreaManager({ area }: { area: ShopArea }) {
       if (!data) throw new Error('Could not get the share link.')
       const url = `${APP_URL}#/join/${data}`
       const text = `Join my "${area.name}" shopping list: ${url}`
-      if (navigator.share) await navigator.share({ text }).catch(() => {})
-      else await navigator.clipboard.writeText(text)
+      await shareOrCopy(text)
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err))
     } finally {
@@ -122,8 +123,7 @@ export function AreaManager({ area }: { area: ShopArea }) {
       if (!data) throw new Error('Could not reset the link.')
       const url = `${APP_URL}#/join/${data}`
       const text = `Join my "${area.name}" shopping list: ${url}`
-      if (navigator.share) await navigator.share({ text }).catch(() => {})
-      else await navigator.clipboard.writeText(text)
+      await shareOrCopy(text)
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err))
     } finally {
@@ -154,10 +154,18 @@ export function AreaManager({ area }: { area: ShopArea }) {
         <span className="mr-auto text-slate-500 dark:text-slate-400">Area settings</span>
         {isOwner && (
           <>
-            <Button variant="ghost" disabled={busy} onClick={() => void shareLink()}>
+            <Button
+              variant="ghost"
+              disabled={busy}
+              onClick={() => void runSafe(shareLink, 'Could not share the link')()}
+            >
               🔗 Share link
             </Button>
-            <Button variant="ghost" disabled={busy} onClick={() => void resetLink()}>
+            <Button
+              variant="ghost"
+              disabled={busy}
+              onClick={() => void runSafe(resetLink, 'Could not reset the link')()}
+            >
               ♻️ Reset link
             </Button>
             <Button

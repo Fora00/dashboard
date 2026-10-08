@@ -12,6 +12,14 @@ import { PageHeader } from '../../components/PageHeader'
 // area (redeem_invite RPC), then signs in with the emailed code. Someone
 // already signed in just joins directly.
 
+// Supabase errors are plain objects, not Error instances: read their message
+// so server texts like "This account is not invited any more." show as-is.
+function errorMessage(err: unknown): string {
+  if (err instanceof Error) return err.message
+  if (err && typeof err === 'object' && 'message' in err) return String(err.message)
+  return String(err)
+}
+
 export function JoinArea() {
   const { token } = useParams()
   const navigate = useNavigate()
@@ -59,7 +67,7 @@ export function JoinArea() {
       await requestLoginCode(guest)
       setStage('code')
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err))
+      setError(errorMessage(err))
     } finally {
       setBusy(false)
     }
@@ -73,7 +81,7 @@ export function JoinArea() {
       await verifyLoginCode(email.trim().toLowerCase(), code)
       // The session effect above joins and navigates once auth lands.
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err))
+      setError(errorMessage(err))
       setBusy(false)
     }
   }
@@ -106,7 +114,13 @@ export function JoinArea() {
     <div>
       <PageHeader emoji="🔗" title={`Join “${areaName}”`} subtitle="You've been invited to a shared shopping list." />
       {session ? (
-        <Card className="text-sm text-slate-500 dark:text-slate-400">Joining…</Card>
+        <Card className="text-sm">
+          {error ? (
+            <p className="text-rose-600 dark:text-rose-400">{error}</p>
+          ) : (
+            <p className="text-slate-500 dark:text-slate-400">Joining…</p>
+          )}
+        </Card>
       ) : (
         <Card className="space-y-3 text-sm">
           {stage === 'email' ? (

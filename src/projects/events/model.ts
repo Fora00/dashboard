@@ -125,7 +125,22 @@ export type FetchOutcome =
   | { kind: 'missing' } // 404 or not JSON (dev server SPA fallback)
   | { kind: 'offline' } // network failure / bad schema
 
-/** Fetches events.json; never throws. Only schemaVersion 1 is accepted. */
+/** Minimal shape check: a usable id, title and parseable start. */
+export function isValidEvent(e: unknown): e is EventItem {
+  if (!e || typeof e !== 'object') return false
+  const o = e as Record<string, unknown>
+  return (
+    typeof o.id === 'string' &&
+    o.id !== '' &&
+    typeof o.title === 'string' &&
+    o.title !== '' &&
+    typeof o.start === 'string' &&
+    !Number.isNaN(Date.parse(o.start))
+  )
+}
+
+/** Fetches events.json; never throws. Only schemaVersion 1 is accepted;
+ *  malformed events are dropped instead of crashing the page. */
 export async function fetchEventsFile(base: string = import.meta.env.BASE_URL): Promise<FetchOutcome> {
   let res: Response
   try {
@@ -140,7 +155,7 @@ export async function fetchEventsFile(base: string = import.meta.env.BASE_URL): 
     if (file.schemaVersion !== 1 || !Array.isArray(file.events) || !Array.isArray(file.sources)) {
       return { kind: 'offline' }
     }
-    return { kind: 'ok', file: file as EventsFile }
+    return { kind: 'ok', file: { ...(file as EventsFile), events: file.events.filter(isValidEvent) } }
   } catch {
     return { kind: 'missing' }
   }

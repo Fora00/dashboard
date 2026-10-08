@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { EventItem } from './types'
 import {
   areaLabel,
@@ -27,6 +27,8 @@ import {
   groupByWeek,
   isoWeekNumber,
   weekStart,
+  fetchEventsFile,
+  isValidEvent,
 } from './model'
 import type { DayGroup } from './model'
 
@@ -315,5 +317,26 @@ describe('weeks', () => {
       ['2026-10-12', 'Next week', 1],
       ['2026-10-19', 'Week 43 · 19 ott – 25 ott', 1],
     ])
+  })
+})
+
+describe('fetchEventsFile validation', () => {
+  afterEach(() => vi.unstubAllGlobals())
+  const respond = (body: unknown) =>
+    vi.stubGlobal('fetch', async () => new Response(JSON.stringify(body), { status: 200 }))
+
+  it('isValidEvent needs id, title and a parseable start', () => {
+    expect(isValidEvent(ev())).toBe(true)
+    expect(isValidEvent(ev({ id: '' }))).toBe(false)
+    expect(isValidEvent(ev({ start: 'nope' }))).toBe(false)
+    expect(isValidEvent({ id: 'x', title: 3, start: '2026-10-10' })).toBe(false)
+    expect(isValidEvent(null)).toBe(false)
+  })
+
+  it('drops malformed events and keeps the good ones', async () => {
+    respond({ schemaVersion: 1, sources: [], events: [ev(), null, { id: 'x' }, ev({ id: 'e2', start: 'bad' })] })
+    const out = await fetchEventsFile('/')
+    expect(out.kind).toBe('ok')
+    if (out.kind === 'ok') expect(out.file.events.map((e) => e.id)).toEqual(['e1'])
   })
 })

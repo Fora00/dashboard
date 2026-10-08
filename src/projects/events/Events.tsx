@@ -77,7 +77,10 @@ export function Events() {
     void (async () => {
       const out = await fetchEventsFile()
       if (cancelled) return
-      if (out.kind === 'ok') {
+      if (out.kind === 'ok' && out.file.events.length === 0) {
+        // An empty (or all-malformed) file never replaces the offline cache.
+        setFetchState('offline')
+      } else if (out.kind === 'ok') {
         await db.eventsCache.put({
           id: 'latest',
           file: out.file,

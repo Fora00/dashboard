@@ -255,6 +255,14 @@ export const useStatus = () => useSyncStatus(engine)
 export const startTodoSync = engine.start
 ```
 
+**Optional engine options.** `TableSync.uniqueViolationIsDone: true` — when a
+push hits a unique violation (23505) another device already created the same
+logical row (e.g. one habit check per habit and day), so the outbox entry is
+dropped as delivered instead of dead-lettered; the next pull brings the
+server's copy and removes the local duplicate. `SyncConfig.afterPull` — an
+async callback run inside the engine lock after every complete pull (e.g. a
+local dedupe); it must only touch Dexie, and an error is logged, never fatal.
+
 **Two-table projects (parent + child).** When a parent row's server-side
 `on delete cascade` also removes children, delete the parent with
 `engine.removeCascade`: ONE outbox tombstone for the parent plus a local-only
