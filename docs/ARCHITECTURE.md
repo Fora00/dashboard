@@ -64,6 +64,31 @@ a trigger. Owner plus per-project/per-area guests.
   pull on any error or if the session changes mid-pull, so local data is never
   replaced by a partial remote view. Realtime events run under the same lock.
 
+## Project accent and Home Screen icon
+
+- **Accent (IC3).** `Layout` matches the route to the registry
+  (`useProjectAccent()`, `src/lib/accent.ts`) and puts CSS variables on its
+  root: `--accent` (the AREA colour), `--accent-2` (the project's own colour),
+  `--accent-fg` (white or slate-900, picked by a tested WCAG contrast helper),
+  hover/pressed shades, and light/dark pairs for selected chips, borders,
+  focus rings (3:1 against the page) and a soft tint. `src/index.css` holds the
+  indigo defaults, so Home and join pages look exactly as before. Used by the
+  header accent line, the `PageHeader` title marker, primary `Button`,
+  `Chip`/`rowTone` selected state and the shared focus rings (`focus.ts`).
+- **Per-project Home Screen icon (IC4) is an EXPERIMENT.** `useHomeScreenMeta`
+  (`src/lib/homeScreenMeta.ts`) rewrites the single
+  `<link rel="apple-touch-icon">` to `icons/projects/<id>.png` and
+  `<meta name="apple-mobile-web-app-title">` to the project name on project
+  routes, and restores `icons/apple-touch-icon.png` / "Dashboard" elsewhere.
+  iOS reads these tags only when "Add to Home Screen" is tapped, and it may
+  prefer the manifest (name, icons, `start_url`) over them; the manifest is
+  deliberately unchanged. Test on iPhone and iPad Safari: open a project page,
+  Share, Add to Home Screen, check the icon and the proposed name, add it, then
+  launch it and check it opens that project, not the Home. If Safari ignores
+  it, delete `src/lib/homeScreenMeta.ts` (+ its test) and the
+  `useHomeScreenMeta` call in `Layout.tsx`; `public/icons/projects/` can stay
+  (the Home grid and manifest shortcuts may use it).
+
 ## Which doc for which job
 
 | If you are... | Read |

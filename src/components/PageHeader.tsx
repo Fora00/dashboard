@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import type { ReactNode } from 'react'
+import { useProjectAccent } from '../lib/useProjectAccent'
 
 interface Props {
   emoji: string
@@ -9,6 +10,8 @@ interface Props {
 }
 
 export function PageHeader({ emoji, title, subtitle, children }: Props) {
+  // Accent marker only on project pages; join pages keep the plain title.
+  const accent = useProjectAccent()
   return (
     <div className="mb-6">
       <Link
@@ -20,6 +23,13 @@ export function PageHeader({ emoji, title, subtitle, children }: Props) {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">
+            {accent && (
+              <span
+                aria-hidden="true"
+                className="mr-2.5 inline-block h-6 w-1 rounded-full align-[-0.2em]"
+                style={{ backgroundImage: 'linear-gradient(180deg, var(--accent), var(--accent-2))' }}
+              />
+            )}
             <span className="mr-2">{emoji}</span>
             {title}
           </h1>

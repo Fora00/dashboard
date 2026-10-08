@@ -8,7 +8,8 @@ import { rowTone } from './chipTone'
 
 const PILL_BASE =
   'min-h-10 shrink-0 rounded-full border-2 px-3.5 text-xs font-medium whitespace-nowrap transition-colors'
-const PILL_ON = 'border-indigo-700 bg-indigo-600 text-white dark:border-indigo-300 dark:bg-indigo-500 dark:text-white'
+// Accent vars (index.css): indigo-700/600 light, 300/500 dark off-project.
+const PILL_ON = 'border-(color:--accent-border) bg-(color:--accent-selected) text-(color:--accent-fg)'
 const PILL_OFF =
   'border-slate-200 bg-white text-slate-600 hover:bg-slate-100 active:bg-slate-200 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-300 dark:hover:bg-slate-800'
 

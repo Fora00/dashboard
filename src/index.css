@@ -18,3 +18,42 @@ body {
   /* Respect iPhone notch / home-indicator safe areas when installed as a PWA. */
   padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
+
+/* Project accent (IC3). Layout puts the raw per-project values inline on
+   .accent-scope (see src/lib/accent.ts); off-project routes and anything
+   rendered outside Layout inherit these indigo defaults, which reproduce the
+   pre-accent look exactly. The resolved names (no -light/-dark suffix) are
+   what components use. */
+:root {
+  --accent: var(--color-indigo-500);
+  --accent-2: var(--color-indigo-500);
+  --accent-fg: #ffffff;
+  --accent-hover: var(--color-indigo-400);
+  --accent-active: var(--color-indigo-600);
+  --accent-selected-light: var(--color-indigo-600);
+  --accent-selected-dark: var(--color-indigo-500);
+  --accent-border-light: var(--color-indigo-700);
+  --accent-border-dark: var(--color-indigo-300);
+  --accent-ring-light: var(--color-indigo-500);
+  --accent-ring-dark: var(--color-indigo-300);
+  --accent-soft-light: var(--color-indigo-50);
+  --accent-soft-dark: color-mix(in srgb, var(--color-indigo-500) 20%, #0f172a);
+}
+
+:root,
+.accent-scope {
+  --accent-selected: var(--accent-selected-light);
+  --accent-border: var(--accent-border-light);
+  --accent-ring: var(--accent-ring-light);
+  --accent-soft: var(--accent-soft-light);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root,
+  .accent-scope {
+    --accent-selected: var(--accent-selected-dark);
+    --accent-border: var(--accent-border-dark);
+    --accent-ring: var(--accent-ring-dark);
+    --accent-soft: var(--accent-soft-dark);
+  }
+}

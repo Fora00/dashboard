@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useRef } from 'react'
+import { Suspense, useEffect, useRef, type CSSProperties } from 'react'
 import { Link, Outlet, useLocation } from 'react-router-dom'
 import { ErrorBoundary } from './ErrorBoundary'
 import { InstallHint } from './InstallHint'
@@ -9,10 +9,16 @@ import { UpdateToast } from './UpdateToast'
 import { ErrorFlash } from './ErrorFlash'
 import { projects } from '../lib/projects'
 import { recordOpen } from '../lib/projectStats'
+import { useHomeScreenMeta } from '../lib/homeScreenMeta'
+import { useProjectAccent } from '../lib/useProjectAccent'
 
 export function Layout() {
   const location = useLocation()
   const lastCounted = useRef<string | null>(null)
+  // Project accent as CSS variables on the root (IC3), and the per-project
+  // Home Screen icon/name experiment (IC4). Off-project: indigo defaults.
+  const accent = useProjectAccent()
+  useHomeScreenMeta(location.pathname)
 
   // Count an "open" wherever the user arrives from — card tap, deep link,
   // back/forward navigation, and the PWA start URL all land here since every
@@ -32,7 +38,10 @@ export function Layout() {
   const justJoined = location.pathname !== '/' && (location.state as { joined?: boolean } | null)?.joined === true
 
   return (
-    <div className="min-h-dvh bg-slate-50 text-slate-900 dark:bg-slate-900 dark:text-slate-100">
+    <div
+      style={accent?.vars as CSSProperties | undefined}
+      className="accent-scope min-h-dvh bg-slate-50 text-slate-900 dark:bg-slate-900 dark:text-slate-100"
+    >
       <header className="sticky top-0 z-10 border-b border-slate-200 bg-white/90 backdrop-blur dark:border-slate-800 dark:bg-slate-900/90">
         <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-3">
           <Link to="/" className="text-lg font-semibold tracking-tight">
@@ -40,6 +49,13 @@ export function Layout() {
           </Link>
           <OnlineBadge />
         </div>
+        {accent && (
+          <div
+            aria-hidden="true"
+            className="absolute inset-x-0 -bottom-px h-0.5"
+            style={{ backgroundImage: 'linear-gradient(90deg, var(--accent), var(--accent-2))' }}
+          />
+        )}
       </header>
       <OfflineBanner />
       <main className="mx-auto max-w-3xl px-4 py-6 pb-16">
