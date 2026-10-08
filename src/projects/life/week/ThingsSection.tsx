@@ -118,7 +118,7 @@ export function ThingsSection({
                     onClick={() => toggleSelected(t.id)}
                     className={`flex size-10 shrink-0 items-center justify-center rounded-lg border text-sm ${
                       selectedTaskIds.has(t.id)
-                        ? 'border-indigo-500 bg-indigo-500 text-white'
+                        ? 'border-(color:--accent-border) bg-(color:--accent-selected) text-(color:--accent-fg)'
                         : 'border-slate-300 dark:border-slate-700'
                     }`}
                   >

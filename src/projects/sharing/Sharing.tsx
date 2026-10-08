@@ -349,7 +349,7 @@ export function Sharing() {
             aria-label="Guest email"
             autoComplete="off"
             required
-            className="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none dark:border-slate-700 dark:bg-slate-800"
+            className="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-(color:--accent-ring) focus:outline-none dark:border-slate-700 dark:bg-slate-800"
           />
           <Button type="submit" disabled={busy || !email.trim() || (selected.length === 0 && !shopOn)}>
             Invite

@@ -241,7 +241,7 @@ export function Links() {
               maxLength={300}
               aria-label={`Title of ${link.title}`}
               placeholder="Title…"
-              className="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-indigo-300 dark:border-slate-700 dark:bg-slate-800"
+              className="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm placeholder:text-slate-500 focus:border-(color:--accent-ring) focus:outline-none focus-visible:ring-2 focus-visible:ring-(color:--accent-ring) dark:border-slate-700 dark:bg-slate-800"
             />
             <textarea
               key={`notes-${link.id}`}
@@ -251,7 +251,7 @@ export function Links() {
               placeholder="Notes…"
               rows={3}
               maxLength={2000}
-              className="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-indigo-300 dark:border-slate-700 dark:bg-slate-800"
+              className="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm placeholder:text-slate-500 focus:border-(color:--accent-ring) focus:outline-none focus-visible:ring-2 focus-visible:ring-(color:--accent-ring) dark:border-slate-700 dark:bg-slate-800"
             />
             {/* Tag editor: current tags as removable chips + an add field. */}
             <div className="flex flex-wrap items-center gap-1.5">
@@ -290,7 +290,7 @@ export function Links() {
                   spellCheck={false}
                   enterKeyHint="done"
                   aria-label={`Add a tag to ${link.title}`}
-                  className="min-h-10 w-32 rounded-full border border-slate-300 bg-white px-3.5 text-xs placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-indigo-300 dark:border-slate-700 dark:bg-slate-800"
+                  className="min-h-10 w-32 rounded-full border border-slate-300 bg-white px-3.5 text-xs placeholder:text-slate-500 focus:border-(color:--accent-ring) focus:outline-none focus-visible:ring-2 focus-visible:ring-(color:--accent-ring) dark:border-slate-700 dark:bg-slate-800"
                 />
               )}
             </div>
@@ -329,7 +329,7 @@ export function Links() {
           maxLength={2000}
           aria-label="Link URL"
           placeholder="Paste a URL…"
-          className="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-indigo-300 dark:border-slate-700 dark:bg-slate-800"
+          className="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-(color:--accent-ring) focus:outline-none focus-visible:ring-2 focus-visible:ring-(color:--accent-ring) dark:border-slate-700 dark:bg-slate-800"
         />
         <Button type="submit" disabled={!canAdd}>
           Add

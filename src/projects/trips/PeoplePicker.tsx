@@ -17,7 +17,7 @@ interface Props {
 }
 
 const SEGMENT = `min-h-10 flex-1 border-2 px-3 text-sm font-medium transition-colors first:rounded-l-lg last:rounded-r-lg ${FOCUS_RING_INSET}`
-const SEGMENT_ON = 'border-indigo-700 bg-indigo-600 text-white dark:border-indigo-300 dark:bg-indigo-500'
+const SEGMENT_ON = 'border-(color:--accent-border) bg-(color:--accent-selected) text-(color:--accent-fg)'
 const SEGMENT_OFF =
   'border-slate-200 bg-white text-slate-600 hover:bg-slate-100 active:bg-slate-200 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-300 dark:hover:bg-slate-800'
 
@@ -112,7 +112,7 @@ export function PeoplePicker({ mode, onModeChange, companions, selected, onSelec
                   enterKeyHint="done"
                   aria-label="New person's name"
                   id={`${idPrefix}-new-person`}
-                  className="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-indigo-300 dark:border-slate-700 dark:bg-slate-800"
+                  className="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-(color:--accent-ring) focus:outline-none focus-visible:ring-2 focus-visible:ring-(color:--accent-ring) dark:border-slate-700 dark:bg-slate-800"
                 />
                 <Button type="button" onClick={() => void createPerson()}>
                   Add

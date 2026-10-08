@@ -45,7 +45,7 @@ export interface IdeaListConfig<T extends IdeaRow> {
 }
 
 const INPUT =
-  'min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none dark:border-slate-700 dark:bg-slate-800'
+  'min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-(color:--accent-ring) focus:outline-none dark:border-slate-700 dark:bg-slate-800'
 
 export function IdeaList<T extends IdeaRow>({ config }: { config: IdeaListConfig<T> }) {
   const session = useAuth()
@@ -117,7 +117,7 @@ export function IdeaList<T extends IdeaRow>({ config }: { config: IdeaListConfig
             aria-label={`Notes for ${idea.text}`}
             rows={4}
             maxLength={config.maxNotesLength}
-            className={`mt-2 w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none dark:border-slate-700 dark:bg-slate-800 ${FOCUS_RING_FIELD}`}
+            className={`mt-2 w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm placeholder:text-slate-500 focus:border-(color:--accent-ring) focus:outline-none dark:border-slate-700 dark:bg-slate-800 ${FOCUS_RING_FIELD}`}
           />
         )}
       </li>

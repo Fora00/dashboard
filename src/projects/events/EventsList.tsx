@@ -25,7 +25,7 @@ export function SelectionBar({
         <button
           type="button"
           onClick={onSelectAll}
-          className="flex min-h-10 min-w-10 items-center justify-center rounded-full px-3 text-indigo-600 dark:text-indigo-300"
+          className="flex min-h-10 min-w-10 items-center justify-center rounded-full px-3 text-(--accent-border)"
         >
           <ListChecksIcon />
           <span className="sr-only">Select all</span>
@@ -34,7 +34,7 @@ export function SelectionBar({
           type="button"
           disabled={count === 0}
           onClick={onHide}
-          className="flex min-h-10 min-w-12 items-center justify-center rounded-full bg-indigo-500 px-4 font-semibold text-white disabled:opacity-40"
+          className="flex min-h-10 min-w-12 items-center justify-center rounded-full bg-(color:--accent-selected) px-4 font-semibold text-(color:--accent-fg) disabled:opacity-40"
         >
           <EyeOffIcon />
           <span className="sr-only">Hide selected</span>

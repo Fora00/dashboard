@@ -22,7 +22,7 @@ export const chip = (on: boolean, accent: 'indigo' | 'emerald') =>
   `min-h-10 rounded-full border px-3.5 text-sm transition-colors ${
     on
       ? accent === 'indigo'
-        ? 'border-indigo-400 bg-indigo-500/20 text-indigo-600 dark:text-indigo-300'
+        ? 'border-(color:--accent-ring) bg-(color:--accent-soft) text-slate-900 dark:text-slate-100'
         : 'border-emerald-400 bg-emerald-500/15 text-emerald-600 dark:text-emerald-300'
       : 'border-slate-300 text-slate-500 dark:border-slate-700'
   }`

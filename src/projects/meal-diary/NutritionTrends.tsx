@@ -56,7 +56,7 @@ export function NutritionTrends({ entries, now }: { entries: MealEntry[]; now: D
                 aria-pressed={range === r}
                 title={`Last ${r} days`}
                 onClick={() => setRange(r)}
-                className={`min-h-10 min-w-10 rounded-lg px-2 text-xs ${range === r ? 'bg-indigo-600 text-white' : 'text-slate-600 dark:text-slate-300'}`}
+                className={`min-h-10 min-w-10 rounded-lg px-2 text-xs ${range === r ? 'bg-(color:--accent-selected) text-(color:--accent-fg)' : 'text-slate-600 dark:text-slate-300'}`}
               >
                 {r}d
               </button>

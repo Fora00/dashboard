@@ -138,7 +138,7 @@ export function Habits() {
           maxLength={MAX_EMOJI_LENGTH}
           autoComplete="off"
           aria-label="Habit emoji"
-          className="min-h-10 w-14 shrink-0 rounded-lg border border-slate-300 bg-white text-center text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none dark:border-slate-700 dark:bg-slate-800"
+          className="min-h-10 w-14 shrink-0 rounded-lg border border-slate-300 bg-white text-center text-sm placeholder:text-slate-500 focus:border-(color:--accent-ring) focus:outline-none dark:border-slate-700 dark:bg-slate-800"
         />
         <input
           value={name}
@@ -148,7 +148,7 @@ export function Habits() {
           autoComplete="off"
           enterKeyHint="done"
           aria-label="Habit name"
-          className="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none dark:border-slate-700 dark:bg-slate-800"
+          className="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-(color:--accent-ring) focus:outline-none dark:border-slate-700 dark:bg-slate-800"
         />
         <Button type="submit" disabled={!name.trim()}>
           Add

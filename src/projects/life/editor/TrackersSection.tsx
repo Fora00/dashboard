@@ -52,7 +52,7 @@ export function TrackersSection({
                     aria-pressed={tr.capMode === mode}
                     className={`min-h-10 px-3.5 text-sm font-medium capitalize transition-colors ${
                       tr.capMode === mode
-                        ? 'bg-indigo-500 text-white'
+                        ? 'bg-(color:--accent-selected) text-(color:--accent-fg)'
                         : 'bg-white text-slate-600 hover:bg-slate-100 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'
                     }`}
                   >
@@ -77,7 +77,7 @@ export function TrackersSection({
                 aria-pressed={tr.energy}
                 className={`flex min-h-10 items-center gap-1.5 rounded-lg border px-3.5 text-sm font-medium transition-colors ${
                   tr.energy
-                    ? 'border-indigo-500 bg-indigo-500 text-white'
+                    ? 'border-(color:--accent-border) bg-(color:--accent-selected) text-(color:--accent-fg)'
                     : 'border-slate-300 bg-white text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'
                 }`}
               >

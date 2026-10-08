@@ -13,7 +13,7 @@ const FIELDS: { key: NutritionField; label: string; unit: string }[] = [
 ]
 
 const BOX =
-  'min-h-10 w-full rounded-lg border border-slate-300 bg-white px-2 text-sm focus:border-indigo-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-indigo-300 dark:border-slate-700 dark:bg-slate-800'
+  'min-h-10 w-full rounded-lg border border-slate-300 bg-white px-2 text-sm focus:border-(color:--accent-ring) focus:outline-none focus-visible:ring-2 focus-visible:ring-(color:--accent-ring) dark:border-slate-700 dark:bg-slate-800'
 
 interface Props {
   value: NutritionForm

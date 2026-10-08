@@ -16,7 +16,7 @@ import { SyncCard } from '../../components/SyncCard'
 import { Skeleton } from '../../components/Skeleton'
 
 const inputClass =
-  'min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-indigo-300 dark:border-slate-700 dark:bg-slate-800'
+  'min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-(color:--accent-ring) focus:outline-none focus-visible:ring-2 focus-visible:ring-(color:--accent-ring) dark:border-slate-700 dark:bg-slate-800'
 
 const BAR_COLOR: Record<Discipline, string> = {
   boulder: 'bg-indigo-400/70',
@@ -107,7 +107,7 @@ export function Climbing() {
                   aria-pressed={d === discipline}
                   className={`min-h-10 rounded-full border px-3.5 text-sm transition-colors ${FOCUS_RING_INSET} ${
                     d === discipline
-                      ? 'border-indigo-400 bg-indigo-500/20 text-indigo-600 dark:text-indigo-300'
+                      ? 'border-(color:--accent-ring) bg-(color:--accent-soft) text-slate-900 dark:text-slate-100'
                       : 'border-slate-300 text-slate-500 dark:border-slate-700 dark:text-slate-400'
                   }`}
                 >

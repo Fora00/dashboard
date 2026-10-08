@@ -48,7 +48,7 @@ export function EnergyScale({
             aria-label={label ? `${label}: ${n} of 5` : `${n} of 5`}
             className={`flex size-10 items-center justify-center rounded-lg border text-sm font-medium transition-colors ${
               value === n
-                ? 'border-indigo-500 bg-indigo-500 text-white'
+                ? 'border-(color:--accent-border) bg-(color:--accent-selected) text-(color:--accent-fg)'
                 : 'border-slate-300 bg-white text-slate-600 hover:border-slate-400 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300'
             }`}
           >

@@ -315,7 +315,7 @@ export function Events() {
             onClick={() => toggles.setView(id)}
             className={`min-h-10 rounded-lg px-2 text-sm font-medium transition-colors ${FOCUS_RING} ${
               view === id
-                ? 'bg-indigo-500 text-white'
+                ? 'bg-(color:--accent-selected) text-(color:--accent-fg)'
                 : 'bg-slate-100 text-slate-800 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700'
             }`}
           >

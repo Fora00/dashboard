@@ -71,7 +71,10 @@ export const EventCard = memo(function EventCard({
   async function share() {
     const text = [e.title, formatRange(e), place].filter(Boolean).join('\n')
     try {
-      const outcome = await shareOrCopy(text, { title: e.title, ...(url ? { url } : {}) })
+      const outcome = await shareOrCopy(text, {
+        title: e.title,
+        ...(url ? { url } : {}),
+      })
       if (outcome === 'copied') flashCopied()
     } catch {
       // Share sheet dismissed or clipboard blocked: nothing to recover.
@@ -82,7 +85,7 @@ export const EventCard = memo(function EventCard({
     <li
       className={`overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-800/50 ${
         hidden ? 'opacity-60' : ''
-      } ${selected ? 'ring-2 ring-indigo-500' : ''}`}
+      } ${selected ? 'ring-2 ring-(color:--accent-ring)' : ''}`}
     >
       <button
         type="button"
@@ -95,7 +98,9 @@ export const EventCard = memo(function EventCard({
             <span
               aria-hidden
               className={`mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full border-2 text-sm ${
-                selected ? 'border-indigo-500 bg-indigo-500 text-white' : 'border-slate-300 dark:border-slate-600'
+                selected
+                  ? 'border-(color:--accent-border) bg-(color:--accent-selected) text-(color:--accent-fg)'
+                  : 'border-slate-300 dark:border-slate-600'
               }`}
             >
               {selected ? '✓' : ''}
@@ -133,7 +138,7 @@ export const EventCard = memo(function EventCard({
                   ⏳ {left === 0 ? 'Ultimo giorno' : left === 1 ? 'Finisce domani' : `In scadenza · ${left} giorni`}
                 </span>
               )}
-              <span className={`${BADGE} bg-indigo-100 text-indigo-800 dark:bg-indigo-500/20 dark:text-indigo-200`}>
+              <span className={`${BADGE} bg-(color:--accent-soft) text-slate-800 dark:text-slate-100`}>
                 {categoryLabel(categoryOf(e))}
               </span>
               {formats.map((id) => (
@@ -208,7 +213,7 @@ export const EventCard = memo(function EventCard({
             onClick={() => onToggleHide(e)}
             aria-label={hidden ? 'Unhide' : 'Hide'}
             title={hidden ? 'Unhide' : 'Hide'}
-            className={`${ICON} ${hidden ? 'text-indigo-600 dark:text-indigo-400' : ''}`}
+            className={`${ICON} ${hidden ? 'text-(--accent-border)' : ''}`}
           >
             {hidden ? <EyeIcon /> : <EyeOffIcon />}
             {hidden ? 'Unhide' : 'Hide'}
@@ -245,7 +250,7 @@ export const EventCard = memo(function EventCard({
               href={url}
               target="_blank"
               rel="noopener"
-              className={`inline-flex min-h-10 items-center text-sm text-indigo-600 underline dark:text-indigo-400 ${FOCUS_RING}`}
+              className={`inline-flex min-h-10 items-center text-sm text-(--accent-border) underline ${FOCUS_RING}`}
             >
               Open event page ↗
             </a>

@@ -25,7 +25,7 @@ type Lookup =
   | { state: 'error'; message: string }
 
 const inputClass =
-  'min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-base placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none sm:text-sm dark:border-slate-700 dark:bg-slate-800'
+  'min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-base placeholder:text-slate-500 focus:border-(color:--accent-ring) focus:outline-none sm:text-sm dark:border-slate-700 dark:bg-slate-800'
 
 function errorMessage(err: unknown): string {
   if (err instanceof Error) return err.message

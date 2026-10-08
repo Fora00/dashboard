@@ -154,7 +154,7 @@ export function LocalTransfer() {
         onDrop={onDrop}
         className={`mb-6 flex cursor-pointer flex-col items-center gap-1 rounded-xl border-2 border-dashed px-6 py-10 text-center transition-colors ${
           dragActive
-            ? 'border-indigo-400 bg-indigo-500/10'
+            ? 'border-(color:--accent-ring) bg-(color:--accent-soft)'
             : 'border-slate-300 hover:border-slate-400 dark:border-slate-700 dark:hover:border-slate-500'
         }`}
       >

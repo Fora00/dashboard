@@ -20,7 +20,7 @@ import { DayTotalsLine, WeighedToggle } from './MealParts'
 import { macros, toForm, toNutrition } from './mealFormat'
 
 const INPUT =
-  'min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-indigo-300 dark:border-slate-700 dark:bg-slate-800'
+  'min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-(color:--accent-ring) focus:outline-none focus-visible:ring-2 focus-visible:ring-(color:--accent-ring) dark:border-slate-700 dark:bg-slate-800'
 
 export function MealDiary() {
   // oxlint-disable-next-line react/purity -- the day must follow the wall clock across midnight
@@ -59,7 +59,11 @@ export function MealDiary() {
 
   async function saveEdit(entry: MealEntry) {
     if (!editing) return
-    await updateMeal(entry, { text: editing.text, weighed: editing.weighed, nutrition: toNutrition(editing.nutrition) })
+    await updateMeal(entry, {
+      text: editing.text,
+      weighed: editing.weighed,
+      nutrition: toNutrition(editing.nutrition),
+    })
     setEditing(null)
   }
 
@@ -121,11 +125,7 @@ export function MealDiary() {
             className="min-h-10 rounded-lg border border-slate-300 bg-white px-3 text-sm dark:border-slate-700 dark:bg-slate-800"
           />
           {day !== today && (
-            <button
-              type="button"
-              className="text-indigo-600 underline dark:text-indigo-300"
-              onClick={() => setDay(today)}
-            >
+            <button type="button" className="text-(--accent-border) underline" onClick={() => setDay(today)}>
               today
             </button>
           )}
@@ -182,7 +182,12 @@ export function MealDiary() {
                               <input
                                 autoFocus
                                 value={editing.text}
-                                onChange={(ev) => setEditing({ ...editing, text: ev.target.value })}
+                                onChange={(ev) =>
+                                  setEditing({
+                                    ...editing,
+                                    text: ev.target.value,
+                                  })
+                                }
                                 aria-label={`Edit ${entry.text}`}
                                 maxLength={MAX_TEXT_LENGTH}
                                 className={INPUT}

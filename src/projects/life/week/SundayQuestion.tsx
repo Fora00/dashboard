@@ -61,7 +61,7 @@ export function SundayQuestion({ week, question, value }: { week: string; questi
             const raw = e.target.value.trim()
             void save(raw === '' ? null : Number(raw))
           }}
-          className="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm focus:border-indigo-400 focus:outline-none dark:border-slate-700 dark:bg-slate-800"
+          className="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm focus:border-(color:--accent-ring) focus:outline-none dark:border-slate-700 dark:bg-slate-800"
         />
       )}
       {question.type === 'boolean' && (
@@ -87,7 +87,7 @@ export function SundayQuestion({ week, question, value }: { week: string; questi
           onBlur={(e) => void save(e.target.value)}
           rows={2}
           maxLength={2000}
-          className="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm focus:border-indigo-400 focus:outline-none dark:border-slate-700 dark:bg-slate-800"
+          className="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm focus:border-(color:--accent-ring) focus:outline-none dark:border-slate-700 dark:bg-slate-800"
         />
       )}
       {question.type === 'scale5' && (

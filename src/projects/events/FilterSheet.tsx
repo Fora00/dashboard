@@ -66,7 +66,7 @@ function Section({
       >
         <span className="min-w-0 truncate text-xs font-semibold tracking-wide text-slate-500 uppercase dark:text-slate-400">
           {title}
-          {summary && <span className="text-indigo-600 dark:text-indigo-400"> · {summary}</span>}
+          {summary && <span className="text-(--accent-border)"> · {summary}</span>}
         </span>
         <span aria-hidden className="text-slate-400">
           {open ? '▾' : '▸'}
@@ -113,7 +113,10 @@ function OptionGrid({
 }
 
 export function FilterSheet(p: Props) {
-  const cats = p.catOrder.map((id) => ({ id, count: p.catCounts.get(id) ?? 0 }))
+  const cats = p.catOrder.map((id) => ({
+    id,
+    count: p.catCounts.get(id) ?? 0,
+  }))
   const zeroLast = [...cats].sort((a, b) => Number(a.count === 0) - Number(b.count === 0))
 
   return (
@@ -143,7 +146,7 @@ export function FilterSheet(p: Props) {
             <button
               type="button"
               onClick={p.onClearAll}
-              className={`min-h-10 px-2 text-sm font-medium text-indigo-600 underline dark:text-indigo-400 ${FOCUS_RING_INSET} ${
+              className={`min-h-10 px-2 text-sm font-medium text-(--accent-border) underline ${FOCUS_RING_INSET} ${
                 p.canReset ? '' : 'invisible'
               }`}
               tabIndex={p.canReset ? 0 : -1}
@@ -221,7 +224,11 @@ export function FilterSheet(p: Props) {
             defaultOpen={p.selectedFormats.length > 0}
           >
             <OptionGrid
-              items={FORMAT_CHIPS.map(({ id, label }) => ({ id, label, count: p.formatCounts.get(id) ?? 0 }))}
+              items={FORMAT_CHIPS.map(({ id, label }) => ({
+                id,
+                label,
+                count: p.formatCounts.get(id) ?? 0,
+              }))}
               selected={p.selectedFormats}
               onToggle={p.onToggleFormat}
             />
