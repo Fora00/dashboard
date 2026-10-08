@@ -1,5 +1,6 @@
 import { shareable } from './shareable'
 import { Button } from '../../components/Button'
+import { ProjectIcon } from '../../components/ProjectIcon'
 import { Card } from '../../components/Card'
 import { chip, type Area, type Guest } from './shared'
 
@@ -52,7 +53,7 @@ export function GuestCard({
                 onClick={() => onToggleMembership(p.id)}
                 className={chip(on, 'emerald')}
               >
-                {p.emoji} {p.name} {on ? '✓' : ''}
+                <ProjectIcon project={p} size="sm" /> {p.name} {on ? '✓' : ''}
               </button>
             )
           })}

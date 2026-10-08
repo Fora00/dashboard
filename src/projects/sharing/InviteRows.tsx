@@ -1,10 +1,11 @@
 import { Button } from '../../components/Button'
+import { ProjectIcon } from '../../components/ProjectIcon'
 import type { ProjectMeta } from '../../lib/projects'
 
 function Label({ project, notice }: { project: ProjectMeta; notice: string | null }) {
   return (
     <span className="min-w-0 flex-1 truncate text-sm">
-      {project.emoji} {project.name}
+      <ProjectIcon project={project} size="sm" /> {project.name}
       {notice && <span className="ml-2 text-xs text-emerald-600 dark:text-emerald-400">{notice}</span>}
     </span>
   )

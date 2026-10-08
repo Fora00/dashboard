@@ -6,6 +6,7 @@
 // prints them as paste-ready TODOs instead of editing anything.
 //
 // Usage: npm run new-project -- <id> [--synced] [--name <Name>] [--emoji <emoji>]
+//   [--area <area>] [--icon <lucide-name>] [--color <#hex>]
 // (the "--" is required so npm forwards the flags instead of eating them)
 
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
@@ -17,6 +18,7 @@ const ROOT = join(__dirname, '..')
 
 function usage() {
   console.log(`Usage: npm run new-project -- <id> [--synced] [--name <Name>] [--emoji <emoji>]
+                         [--area <area>] [--icon <lucide-name>] [--color <#hex>]
 
   IMPORTANT: the "--" before <id> is required. Without it, npm itself
   swallows "--synced"/"--name"/"--emoji" as (unknown) npm config flags
@@ -27,6 +29,10 @@ function usage() {
   --synced    also generate a cloud-sync wrapper + SQL migration
   --name      override the derived PascalCase component name (default: derived from <id>)
   --emoji     override the default placeholder emoji (default: 📦)
+  --area      home section: utility | casa | organizzazione | sport | svago (default: utility)
+  --icon      Lucide icon name (default: folder); if missing from
+              src/components/projectIcons.ts it falls back to the emoji until added
+  --color     #rrggbb dot colour on the icon tile (default: #6366f1)
 
 Generates (never overwrites, never edits an existing file):
   src/projects/<id>/<Name>.tsx
@@ -44,6 +50,9 @@ function parseArgs(argv) {
   let synced = false
   let name = null
   let emoji = null
+  let area = null
+  let icon = null
+  let color = null
   const positional = []
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i]
@@ -53,6 +62,12 @@ function parseArgs(argv) {
       name = argv[++i]
     } else if (a === '--emoji') {
       emoji = argv[++i]
+    } else if (a === '--area') {
+      area = argv[++i]
+    } else if (a === '--icon') {
+      icon = argv[++i]
+    } else if (a === '--color') {
+      color = argv[++i]
     } else if (a.startsWith('--')) {
       console.error(`error: unknown flag "${a}"`)
       process.exit(1)
@@ -60,12 +75,30 @@ function parseArgs(argv) {
       positional.push(a)
     }
   }
-  return { id: positional[0], synced, name, emoji }
+  return { id: positional[0], synced, name, emoji, area, icon, color }
 }
 
 // --- naming helpers ----------------------------------------------------------
 
 const KEBAB_RE = /^[a-z][a-z0-9]*(-[a-z0-9]+)*$/
+
+export const AREAS = ['utility', 'casa', 'organizzazione', 'sport', 'svago']
+const HEX_RE = /^#[0-9a-fA-F]{6}$/
+
+// Validates --area/--color and fills the defaults. Returns { area, icon, color }
+// or { error }.
+export function resolveLook({ area, icon, color }) {
+  const a = area || 'utility'
+  if (!AREAS.includes(a))
+    return {
+      error: `"${a}" is not an area (expected one of: ${AREAS.join(', ')})`,
+    }
+  const c = color || '#6366f1'
+  if (!HEX_RE.test(c)) return { error: `"${c}" is not a #rrggbb colour` }
+  const i = icon || 'folder'
+  if (!/^[a-z][a-z0-9]*(-[a-z0-9]+)*$/.test(i)) return { error: `"${i}" is not a Lucide icon name (kebab-case)` }
+  return { area: a, icon: i, color: c }
+}
 
 function toPascalCase(id) {
   return id
@@ -431,16 +464,19 @@ function detectNextDbVersion(dbTsSource) {
   return highest + 1
 }
 
-function printTodos({ id, Name, emoji, synced, thingsCamel, remoteTable, nextVersion }) {
+function printTodos({ id, Name, emoji, area, icon, color, synced, thingsCamel, remoteTable, nextVersion }) {
   console.log(`
 Generated the files that are safe to generate. ${synced ? 3 : 1} manual edit${synced ? 's' : ''} left — existing files are never rewritten automatically (too fragile), so paste these in yourself:
 
-1. Registry entry — src/lib/projects.ts (add to the \`projects\` array):
+1. Registry entry — src/lib/projects.ts (add to the \`projects\` array; icon must exist in src/components/projectIcons.ts, copy its SVG elements from lucide.dev if not):
 
   {
     id: '${id}',
     name: '${Name}',
     emoji: '${emoji}',
+    area: '${area}',
+    icon: '${icon}',
+    color: '${color}',
     description: 'One line shown on the home card.',
     path: '/${id}',
     status: 'live',
@@ -515,7 +551,7 @@ Then: run \`npm run build\`.${synced ? '\nOwner runs `npx supabase db push` to a
 // --- main ---------------------------------------------------------------------
 
 function main() {
-  const { id, synced, name, emoji: emojiArg } = parseArgs(process.argv.slice(2))
+  const { id, synced, name, emoji: emojiArg, area, icon, color } = parseArgs(process.argv.slice(2))
 
   if (!id) {
     usage()
@@ -524,6 +560,12 @@ function main() {
 
   if (!KEBAB_RE.test(id)) {
     console.error(`error: "${id}" is not kebab-case (expected e.g. "reading", "meal-planner")`)
+    process.exit(1)
+  }
+
+  const look = resolveLook({ area, icon, color })
+  if (look.error) {
+    console.error(`error: ${look.error}`)
     process.exit(1)
   }
 
@@ -567,7 +609,18 @@ function main() {
   const dbTsPath = join(ROOT, 'src', 'lib', 'db.ts')
   const nextVersion = detectNextDbVersion(readFileSync(dbTsPath, 'utf8'))
 
-  printTodos({ id, Name, emoji, synced, thingsCamel, remoteTable, nextVersion })
+  printTodos({
+    id,
+    Name,
+    emoji,
+    area: look.area,
+    icon: look.icon,
+    color: look.color,
+    synced,
+    thingsCamel,
+    remoteTable,
+    nextVersion,
+  })
 }
 
-main()
+if (process.argv[1] === fileURLToPath(import.meta.url)) main()

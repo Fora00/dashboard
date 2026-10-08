@@ -8,7 +8,7 @@
 > `node scripts/new-project.mjs` with no args for usage.
 >
 > **The `--` before `<id>` is required.** Without it, `npm run` swallows
-> `--synced`/`--name`/`--emoji` as npm's own (unknown) config flags instead of
+> `--synced`/`--name`/`--emoji`/`--area`/`--icon`/`--color` as npm's own (unknown) config flags instead of
 > forwarding them to the script — you silently get a local-only page with the
 > default 📦 emoji and only an easy-to-miss `npm warn` as a clue.
 >
@@ -51,6 +51,9 @@ Add an object to the `projects` array. The home grid renders this list.
   id: '<id>',
   name: '<Name>',
   emoji: '📖',
+  area: 'svago',        // home section: utility | casa | organizzazione | sport | svago
+  icon: 'book-open',    // Lucide name, must exist in src/components/projectIcons.ts
+  color: '#6366f1',     // sub-colour: the small dot on the icon tile
   description: 'One line shown on the home card.',
   path: '/<id>',
   status: 'live',
@@ -58,6 +61,15 @@ Add an object to the `projects` array. The home grid renders this list.
   // public: true,      // local-only public data: no login, no invite link
 },
 ```
+
+**Picking the look.** `area` decides the home section and the tile colour (see
+`src/lib/areas.ts`); `color` is only the small dot, so pick one distinct from
+the area colour. `icon` is a [Lucide](https://lucide.dev) name (ISC licence).
+Icons are bundled as data, not imported from a package: if the name is not in
+`src/components/projectIcons.ts`, copy the SVG's `<path>/<circle>/<line>/<rect>`
+elements there as `[tag, { attrs }]` entries (same shape as the others). An
+unknown name just shows the emoji until you do. `emoji` stays as the text
+fallback (share messages). The scaffolder takes `--area`, `--icon`, `--color`.
 
 Every live project that isn't `ownerOnly`/`public` is offered on /sharing and
 gets a per-project invite link (`isInvitable()` in the same file). If the

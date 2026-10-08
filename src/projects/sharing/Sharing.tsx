@@ -6,6 +6,7 @@ import type { ProjectMeta } from '../../lib/projects'
 import { publicProjects, shareable } from './shareable'
 import { APP_URL, projectInviteUrl, projectUrl, shareOrCopy } from '../../lib/projectInvites'
 import { Button } from '../../components/Button'
+import { ProjectIcon } from '../../components/ProjectIcon'
 import { runSafe } from '../../lib/runSafe'
 import { GuestCard } from './GuestCard'
 import { ProjectInviteRow, PublicLinkRow } from './InviteRows'
@@ -367,7 +368,7 @@ export function Sharing() {
                 onClick={() => setSelected((s) => (on ? s.filter((id) => id !== p.id) : [...s, p.id]))}
                 className={chip(on, 'indigo')}
               >
-                {p.emoji} {p.name}
+                <ProjectIcon project={p} size="sm" /> {p.name}
               </button>
             )
           })}

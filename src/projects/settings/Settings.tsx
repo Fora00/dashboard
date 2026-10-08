@@ -8,6 +8,7 @@ import { syncEnabled } from '../../lib/sync'
 import { useAuth } from '../../lib/useAuth'
 import { useOwner } from '../../lib/useOwner'
 import { Button } from '../../components/Button'
+import { ProjectIcon } from '../../components/ProjectIcon'
 import { Card } from '../../components/Card'
 import { PageHeader } from '../../components/PageHeader'
 import { SyncCard } from '../../components/SyncCard'
@@ -47,9 +48,7 @@ function ProjectVisibility() {
                   onClick={() => void runSafe(setHidden, 'Could not save')(p.id, shown)}
                   className="flex min-h-11 w-full items-center gap-3 text-left"
                 >
-                  <span className="text-xl" aria-hidden="true">
-                    {p.emoji}
-                  </span>
+                  <ProjectIcon project={p} size="sm" />
                   <span className="flex-1 text-slate-800 dark:text-slate-200">{p.name}</span>
                   <span
                     aria-hidden="true"
@@ -107,8 +106,9 @@ function PrivateDataCard() {
       </div>
       {summary && summary.unsynced > 0 && (
         <p className="text-rose-600 dark:text-rose-400">
-          ⚠️ {summary.unsynced} change{summary.unsynced === 1 ? ' has' : 's have'} not reached the cloud yet. Removing
-          deletes {summary.unsynced === 1 ? 'it' : 'them'} for good.
+          ⚠️ {summary.unsynced} change
+          {summary.unsynced === 1 ? ' has' : 's have'} not reached the cloud yet. Removing deletes{' '}
+          {summary.unsynced === 1 ? 'it' : 'them'} for good.
         </p>
       )}
     </Card>

@@ -8,6 +8,8 @@ import { useOwner } from '../../lib/useOwner'
 import { usePersistedState, type Codec } from '../../lib/safeStorage'
 import { isHidden, toggleStar, useApplyHiddenDefaults } from '../../lib/projectStats'
 import { Card } from '../../components/Card'
+import { ProjectIcon } from '../../components/ProjectIcon'
+import { groupByArea } from '../../lib/groupByArea'
 import { FOCUS_RING_INSET } from '../../components/focus'
 import { InstallHint } from '../../components/InstallHint'
 import { runSafe } from '../../lib/runSafe'
@@ -54,6 +56,14 @@ const reversedCodec: Codec<boolean> = {
   serialize: (reversed) => (reversed ? 'true' : 'false'),
 }
 
+// Per-device toggle: sections by area (default) or the flat grid.
+const HOME_GROUPED_KEY = 'dashboard:home-grouped'
+
+const groupedCodec: Codec<boolean> = {
+  parse: (raw) => (raw === 'false' ? false : true),
+  serialize: (grouped) => (grouped ? 'true' : 'false'),
+}
+
 // The dashboard home is itself the first "project": the entry point that
 // surfaces every subproject and a live stat pulled from its data — an example
 // of one project reading another project's data through the shared db.
@@ -69,6 +79,8 @@ export function Home() {
   const hiddenCount = permitted.length - visible.length
   const [order, setOrder] = usePersistedState<HomeOrder>(HOME_ORDER_KEY, 'used', undefined, orderCodec)
   const [reversed, setReversed] = usePersistedState<boolean>(HOME_REVERSED_KEY, false, undefined, reversedCodec)
+
+  const [grouped, setGrouped] = usePersistedState<boolean>(HOME_GROUPED_KEY, true, undefined, groupedCodec)
 
   function handleOrderChange(e: ChangeEvent<HTMLSelectElement>) {
     const next = e.target.value
@@ -176,6 +188,48 @@ export function Home() {
     return null
   }
 
+  function renderCard(p: ProjectMeta) {
+    const starred = statsById.get(p.id)?.starred === 1
+    return (
+      <div key={p.id} className="relative">
+        <button
+          type="button"
+          onClick={() => void runSafe(toggleStar, 'Could not update star')(p.id)}
+          aria-pressed={starred}
+          aria-label={starred ? `Unstar ${p.name}` : `Star ${p.name}`}
+          className={`absolute right-1 top-1 z-10 flex h-10 w-10 items-center justify-center rounded-full text-xl text-slate-500 hover:bg-slate-200/60 active:bg-slate-300/60 dark:text-slate-400 dark:hover:bg-slate-700/60 dark:active:bg-slate-600/60 ${FOCUS_RING_INSET}`}
+        >
+          {starred ? <span className="text-amber-500 dark:text-amber-400">★</span> : '☆'}
+        </button>
+        <Link to={p.path} className="group">
+          <Card className="h-full transition-colors group-hover:border-slate-400 group-active:bg-slate-100 dark:group-hover:border-slate-600 dark:group-active:bg-slate-800">
+            <div className="mb-2 flex items-center justify-between pr-10">
+              <ProjectIcon project={p} />
+              {p.status === 'planned' ? (
+                <span className="rounded-full bg-slate-200 px-2.5 py-1 text-xs text-slate-500 dark:bg-slate-700/60 dark:text-slate-400">
+                  planned
+                </span>
+              ) : (
+                badgeFor(p.id) !== null && (
+                  <span className="rounded-full bg-indigo-500/20 px-2.5 py-1 text-xs font-medium text-indigo-600 dark:text-indigo-300">
+                    {badgeFor(p.id)}
+                  </span>
+                )
+              )}
+            </div>
+            <h2 className="font-semibold">{p.name}</h2>
+            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{p.description}</p>
+            {statFor(p.id) && (
+              <p className="mt-3 text-xs font-medium text-indigo-600 dark:text-indigo-400">{statFor(p.id)}</p>
+            )}
+          </Card>
+        </Link>
+      </div>
+    )
+  }
+
+  const sections = grouped ? groupByArea(ordered, (id) => statsById.get(id)?.starred === 1) : []
+
   return (
     <div>
       <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
@@ -194,6 +248,18 @@ export function Home() {
           </select>
           <button
             type="button"
+            onClick={() => setGrouped(!grouped)}
+            aria-pressed={grouped}
+            className={`min-h-10 rounded-lg border px-3 text-sm transition-colors ${FOCUS_RING_INSET} ${
+              grouped
+                ? 'border-indigo-400 bg-indigo-500/10 text-indigo-700 dark:text-indigo-300'
+                : 'border-slate-300 bg-white text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200'
+            }`}
+          >
+            Group by area
+          </button>
+          <button
+            type="button"
             onClick={handleReversedToggle}
             aria-pressed={reversed}
             aria-label={reversed ? 'Restore normal order' : 'Reverse order'}
@@ -207,47 +273,34 @@ export function Home() {
         Everything lives on this device and works offline. Sign in to sync across devices.
       </p>
       <InstallHint />
-      <div className="grid gap-4 sm:grid-cols-2">
-        {ordered.map((p) => {
-          const starred = statsById.get(p.id)?.starred === 1
-          return (
-            <div key={p.id} className="relative">
-              <button
-                type="button"
-                onClick={() => void runSafe(toggleStar, 'Could not update star')(p.id)}
-                aria-pressed={starred}
-                aria-label={starred ? `Unstar ${p.name}` : `Star ${p.name}`}
-                className={`absolute right-1 top-1 z-10 flex h-10 w-10 items-center justify-center rounded-full text-xl text-slate-500 hover:bg-slate-200/60 active:bg-slate-300/60 dark:text-slate-400 dark:hover:bg-slate-700/60 dark:active:bg-slate-600/60 ${FOCUS_RING_INSET}`}
+      {grouped ? (
+        <div className="space-y-6">
+          {sections.map((section) => (
+            <section key={section.id} aria-labelledby={`home-section-${section.id}`}>
+              <h2
+                id={`home-section-${section.id}`}
+                className="mb-3 flex min-h-6 items-center gap-2 text-sm font-semibold text-slate-600 dark:text-slate-300"
               >
-                {starred ? <span className="text-amber-500 dark:text-amber-400">★</span> : '☆'}
-              </button>
-              <Link to={p.path} className="group">
-                <Card className="h-full transition-colors group-hover:border-slate-400 group-active:bg-slate-100 dark:group-hover:border-slate-600 dark:group-active:bg-slate-800">
-                  <div className="mb-2 flex items-center justify-between pr-10">
-                    <span className="text-3xl">{p.emoji}</span>
-                    {p.status === 'planned' ? (
-                      <span className="rounded-full bg-slate-200 px-2.5 py-1 text-xs text-slate-500 dark:bg-slate-700/60 dark:text-slate-400">
-                        planned
-                      </span>
-                    ) : (
-                      badgeFor(p.id) !== null && (
-                        <span className="rounded-full bg-indigo-500/20 px-2.5 py-1 text-xs font-medium text-indigo-600 dark:text-indigo-300">
-                          {badgeFor(p.id)}
-                        </span>
-                      )
-                    )}
-                  </div>
-                  <h2 className="font-semibold">{p.name}</h2>
-                  <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{p.description}</p>
-                  {statFor(p.id) && (
-                    <p className="mt-3 text-xs font-medium text-indigo-600 dark:text-indigo-400">{statFor(p.id)}</p>
-                  )}
-                </Card>
-              </Link>
-            </div>
-          )
-        })}
-      </div>
+                {section.color === null ? (
+                  <span aria-hidden="true" className="text-amber-500 dark:text-amber-400">
+                    ★
+                  </span>
+                ) : (
+                  <span
+                    aria-hidden="true"
+                    className="h-2.5 w-2.5 shrink-0 rounded-full"
+                    style={{ backgroundColor: section.color }}
+                  />
+                )}
+                {section.title}
+              </h2>
+              <div className="grid gap-4 sm:grid-cols-2">{section.projects.map(renderCard)}</div>
+            </section>
+          ))}
+        </div>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2">{ordered.map(renderCard)}</div>
+      )}
       {hiddenCount > 0 && (
         <div className="mt-6 flex justify-center">
           <Link

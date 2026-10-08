@@ -2,10 +2,19 @@
 // To add a new project: add an entry here, create src/projects/<id>/,
 // and register its route in App.tsx.
 
+import type { AreaId } from './areas'
+
 export interface ProjectMeta {
   id: string
   name: string
+  // Plain-text fallback (share messages, unknown icon name).
   emoji: string
+  // Home section; see areas.ts.
+  area: AreaId
+  // Lucide icon name; must exist in components/projectIcons.ts.
+  icon: string
+  // Sub-colour dot on the icon tile (hex).
+  color: string
   description: string
   path: string
   status: 'live' | 'planned'
@@ -34,6 +43,9 @@ export const projects: ProjectMeta[] = [
     id: 'local-transfer',
     name: 'Local Transfer',
     emoji: '📁',
+    area: 'utility',
+    icon: 'folder-sync',
+    color: '#0ea5e9',
     description: 'Stash files on this device, offline. Share or sync when online.',
     path: '/local-transfer',
     status: 'live',
@@ -42,6 +54,9 @@ export const projects: ProjectMeta[] = [
     id: 'shop-list',
     name: 'Shop List',
     emoji: '🛒',
+    area: 'casa',
+    icon: 'shopping-cart',
+    color: '#f59e0b',
     description: 'Groceries todo list, sharable with whitelisted guests.',
     path: '/shop-list',
     status: 'live',
@@ -50,6 +65,9 @@ export const projects: ProjectMeta[] = [
     id: 'todo',
     name: 'Todo',
     emoji: '📝',
+    area: 'organizzazione',
+    icon: 'list-checks',
+    color: '#0ea5e9',
     description: 'Generic todo list. Works offline, syncs when signed in.',
     path: '/todo',
     status: 'live',
@@ -58,6 +76,9 @@ export const projects: ProjectMeta[] = [
     id: 'climbing',
     name: 'Climbing',
     emoji: '🧗',
+    area: 'sport',
+    icon: 'mountain-snow',
+    color: '#e11d48',
     description: 'Track climbing sessions, sends and grade progress.',
     path: '/climbing',
     status: 'live',
@@ -66,6 +87,9 @@ export const projects: ProjectMeta[] = [
     id: 'habits',
     name: 'Habits',
     emoji: '✅',
+    area: 'organizzazione',
+    icon: 'flame',
+    color: '#22c55e',
     description: 'Daily habit tracker with streaks. Works offline, syncs when signed in.',
     path: '/habits',
     status: 'live',
@@ -74,6 +98,9 @@ export const projects: ProjectMeta[] = [
     id: 'book-ideas',
     name: 'Book Ideas',
     emoji: '📖',
+    area: 'svago',
+    icon: 'book-open',
+    color: '#6366f1',
     description: 'Capture writing ideas for books, with room for notes.',
     path: '/book-ideas',
     status: 'live',
@@ -82,6 +109,9 @@ export const projects: ProjectMeta[] = [
     id: 'boardgame-ideas',
     name: 'Boardgame Ideas',
     emoji: '🎲',
+    area: 'svago',
+    icon: 'dice-5',
+    color: '#ef4444',
     description: 'Capture board game design ideas, with room for notes.',
     path: '/boardgame-ideas',
     status: 'live',
@@ -90,6 +120,9 @@ export const projects: ProjectMeta[] = [
     id: 'links',
     name: 'Links',
     emoji: '🔗',
+    area: 'utility',
+    icon: 'link',
+    color: '#3b82f6',
     description: 'Save links to read later, shared with whitelisted guests.',
     path: '/links',
     status: 'live',
@@ -98,6 +131,9 @@ export const projects: ProjectMeta[] = [
     id: 'trips',
     name: 'Trips',
     emoji: '✈️',
+    area: 'sport',
+    icon: 'plane',
+    color: '#3b82f6',
     description: 'Travel ideas — solo or with friends',
     path: '/trips',
     status: 'live',
@@ -106,6 +142,9 @@ export const projects: ProjectMeta[] = [
     id: 'events',
     name: 'Events',
     emoji: '📍',
+    area: 'sport',
+    icon: 'map-pin',
+    color: '#f59e0b',
     description: 'Public events around Trentino, Bolzano and Verona, tagged by interest.',
     path: '/events',
     status: 'live',
@@ -115,6 +154,9 @@ export const projects: ProjectMeta[] = [
     id: 'meal-diary',
     name: 'Meal Diary',
     emoji: '🍽️',
+    area: 'casa',
+    icon: 'apple',
+    color: '#ef4444',
     description: 'What you ate, day by day. Synced across your devices. Owner only.',
     path: '/meal-diary',
     status: 'live',
@@ -124,6 +166,9 @@ export const projects: ProjectMeta[] = [
     id: 'life',
     name: 'Life',
     emoji: '🧭',
+    area: 'organizzazione',
+    icon: 'compass',
+    color: '#a855f7',
     description: 'This week: focus, trackers, Sunday check. Owner only.',
     path: '/life',
     status: 'live',
@@ -133,6 +178,9 @@ export const projects: ProjectMeta[] = [
     id: 'settings',
     name: 'Settings',
     emoji: '⚙️',
+    area: 'utility',
+    icon: 'settings',
+    color: '#475569',
     description: 'Storage, sync status and device data.',
     path: '/settings',
     status: 'live',
@@ -141,6 +189,9 @@ export const projects: ProjectMeta[] = [
     id: 'sharing',
     name: 'Sharing',
     emoji: '👥',
+    area: 'utility',
+    icon: 'share-2',
+    color: '#14b8a6',
     description: 'Invite guests by email and choose which projects they can use.',
     path: '/sharing',
     status: 'live',
