@@ -848,33 +848,40 @@ sync already ignores stale updates (`ignore_stale_update` triggers on
       Only gate is `test -s` (`_site.yml:67`). Fix: retry `loadPrevious`; exit 1
       (no deploy) when no previous file AND a non-`mayBeEmpty` source failed;
       refuse to publish below ~50% of the previous total unless `EVENTS_FORCE=1`.
-- [ ] **E2 A broken source can publish 0 and look healthy** [sonnet S + opus S] —
+- [x] **E2 A broken source can publish 0 and look healthy** [sonnet S + opus S] —
+      → done 2026-10-08: markup checks throw in tcvi/padova/muse/filarmonica; `zeroSince`/`lastNonZero` in source status and a `suspiciousZeros` warning for sources that drop from >=5 events to 0.
       ~18 adapters are `mayBeEmpty`; `tcvi.ts:99`/`padova.ts:135` claim a markup
       throw that doesn't exist; `muse.ts:153` and `filarmonica.ts:142` return
       `[]` on a bad response. Add markup checks like `teatrogrande.ts:77` [sonnet];
       health warning when an ok source drops from >=5 events to 0 (persist
       `zeroSince`) [opus].
-- [ ] **E3 Dedup merges different showings on the same day** [opus, S] —
+- [x] **E3 Dedup merges different showings on the same day** [opus, S] —
+      → done 2026-10-08: timed events dedupe on title + exact start + city; an all-day record joins a timed one only when that day has exactly one showing. Follow-up: compare event counts after the next crawl (showings that used to merge are now separate).
       key = title + date + city (`pipeline.ts:148`); 17:00 and 21:00 collapse.
       Key timed events on the instant, keep the day key for all-day; add test.
-- [ ] **E4 Offset-less times depend on the runner's time zone** [sonnet, XS] —
+- [x] **E4 Offset-less times depend on the runner's time zone** [sonnet, XS] —
+      → done 2026-10-08: offset-less times read as Europe/Rome via `localToIso`; tests pass under TZ=UTC and TZ=Europe/Rome.
       `time.ts:86` `normalizeIso` uses `Date.parse` (UTC in CI, 2 h shift) for
       openpa, trentinospettacoli, padova. Use `localToIso`; set `TZ` in the script; test.
 - [ ] **E5 Deploy job holds Pages-write for the whole job** [opus, S] — split
       build (`contents: read`) from deploy; pin actions by SHA; Dependabot is on.
-- [ ] **E6 One bad carried-over record blocks every crawl** [sonnet, S] —
+- [x] **E6 One bad carried-over record blocks every crawl** [sonnet, S] —
+      → done 2026-10-08: `validPreviousEvents()` drops bad carried-over records with one warning.
       previous records aren't schema-checked (`schemas.ts:33`); a record without
       a title throws in `dedup` outside the per-source try. Validate and drop.
-- [ ] **E7 Degraded crawls are silent** [sonnet, S] — more than 1/3 sources failing
+- [x] **E7 Degraded crawls are silent** [sonnet, S] — more than 1/3 sources failing
+      → done 2026-10-08: `health` job in `crawl.yml` keeps one open issue "Events crawl needs attention" (needs Issues enabled on the repo; if not, that job goes red after the deploy, nothing else breaks). Per-job permissions.
       only prints `::error::`; open an issue or fail a separate step; also on
       sources stale for over 7 days.
 - [ ] **E8 Hardening, low** [sonnet, S each] — response size cap (~5 MB) in
+      → PARTLY done 2026-10-08: 5 MB body cap, refusal of non-http(s) and private/loopback/link-local hosts on every redirect hop (literal host only, no DNS), `absUrl` on url/image. Still open: client-side `model.ts:140` / `Events.tsx:80` (drop malformed events, never replace the offline cache with an empty file) [sonnet, S].
       `http.ts`; block private/link-local redirect targets and non-https in
       fetched URLs (`ogimage.ts:99`, filarmonica, muse); `absUrl` on url/image
       in `toEvents` (`pipeline.ts:132`); client: drop malformed events and don't
       overwrite the offline cache with an empty file (`model.ts:140`,
       `Events.tsx:80`).
 - [ ] **E9 Small** [haiku, XS] — retry image fetch network errors next run
+      → PARTLY done 2026-10-08: image network errors retried next run, `timeout-minutes: 30`, spot.json unique ids + known categories. Still open: warn when the reused `events.json` is over 3 days old [haiku, XS].
       (`ogimage.ts:107`); `timeout-minutes: 30` on workflows; warn when reused
       `events.json` is over 3 days old; `spot.json` unique ids + known categories
       (`pipeline.ts:101`, `spot.ts:39`).
@@ -889,20 +896,25 @@ sync already ignores stale updates (`ignore_stale_update` triggers on
       it in the default browser, and a syncing browser carries the plan off the
       Mac, against the owner's rule. Strip with `replace: true` after decoding;
       `settimana.md`: use a non-syncing browser or a paste-only fallback.
-- [ ] **LF2 Stale day after midnight** [sonnet, S] — `weekKey()`, tracker
+- [x] **LF2 Stale day after midnight** [sonnet, S] — `weekKey()`, tracker
+      → done 2026-10-08: `useToday()` (visibility/focus + midnight timer).
       `today`, `isMonday` computed at render only; an app left open overnight
       logs onto yesterday. `useToday()` hook (visibility + midnight timer).
-- [ ] **LF3 Re-import hides logged history silently** [sonnet, S] — warn "N
+- [x] **LF3 Re-import hides logged history silently** [sonnet, S] — warn "N
+      → done 2026-10-08: preview lists "N logged entries will be hidden" per removed tracker.
       logged entries will be hidden" per removed tracker id in the preview.
-- [ ] **LF4 History chart misreads future/missing weeks** [sonnet, S] —
+- [x] **LF4 History chart misreads future/missing weeks** [sonnet, S] —
+      → done 2026-10-08: `chartPoints.ts` (weeks <= current, x by elapsed weeks).
       `ProgressChart.tsx:38-60`: filter `week <= current`, x by weeks elapsed.
 - [ ] **LF5 Sunday answers can't be given late** [opus, S] — previous week is
       read-only; allow Sunday/check-in edits until exported or Tuesday.
-- [ ] **LF6 Parsing/export robustness** [sonnet, XS] — triple backticks in text
+- [x] **LF6 Parsing/export robustness** [sonnet, XS] — triple backticks in text
+      → done 2026-10-08: longer export fence + robust parser, control characters rejected, over-cap arrays short-circuit, 200 KB input cap.
       break the export fence/status script (`export.ts:152`,
       `life-things-status.ts:51`; use a longer fence); over-cap arrays still map
       every item (`validate.ts:218`, freeze); cap input before `JSON.parse`.
-- [ ] **LF7 Small** [haiku, XS] — Share button hands the food-included week to
+- [x] **LF7 Small** [haiku, XS] — Share button hands the food-included week to
+      → done 2026-10-08.
       any share target (warn or remove, `ExportSection.tsx:46`); unknown
       `meal` value gives a NaN sort (`meals.ts:33`).
 - [ ] **LF8 Life tests** [sonnet, S] — export round-trip incl. backticks,
@@ -923,8 +935,83 @@ sync already ignores stale updates (`ignore_stale_update` triggers on
       dashboard check: OTP expiry (local 3600 s; 600 s is tighter), email rate
       limit, signup + whitelist trigger live, MFA for the owner account,
       `additional_redirect_urls` localhost entries.
-- [ ] **D3 PWA polish** [haiku, XS] — add apple-touch-icon to the manifest,
+- [x] **D3 PWA polish** [haiku, XS] — add apple-touch-icon to the manifest,
+      → done 2026-10-08 except a dedicated maskable icon (needs a designed asset): apple-touch-icon in the manifest, `engines` node >=22, `.nvmrc`.
       a dedicated maskable icon, `engines`/`.nvmrc` (CI uses Node 22, Mac 24).
+
+## Adaptive layout: phone / iPad / Mac (analysis 2026-10-08)
+
+Analysis only, nothing built. Rule of thumb: **capture on the phone stays
+simple; planning and reading on iPad/Mac earns complexity.**
+
+State today: every page lives in one centred column (`max-w-3xl`, 768 px) on
+every device; only five `sm:` breakpoints exist (Home 2-col grid, Sheet turns
+from bottom sheet to centred panel); no `md`/`lg`/`xl`; keyboard handling in 4
+files; no hover/pointer-specific styling. On a Mac window or iPad landscape
+(1180 px+) that is a narrow strip with dead space, and every project is a
+round trip through Home.
+
+Principles: layout driven by **width, not device** (iPad Stage Manager and Mac
+windows resize; breakpoints md 768 / lg 1024 / xl 1280, container queries for
+components); one component adapts, no per-device forks; `hover: hover` /
+`pointer: fine` for hover and shortcuts; touch targets stay 40 px; local-first
+and offline unaffected; test at 375 / 820 / 1180 / 1440 px. Layout prefs
+(sidebar collapsed, view mode) persist per device like `dashboard:home-order`.
+
+### Worth it, in order of value per effort
+
+- [ ] **UI1 App shell** [sonnet, M] — from `lg`: persistent left sidebar
+      (starred projects first, then the rest, plus sync/online status), wider
+      content area; below `lg` the current header. Per-page max width: read /
+      capture pages (todo, shop-list, habits, climbing) stay narrow; dense
+      pages (events, life, meal-diary, sharing) use the full width. Phone: a
+      bottom tab bar with the starred projects so you stop going via Home
+      (decide with the owner). Benefits every project at once.
+- [ ] **UI2 Events master-detail** [sonnet, M-L] — the densest, most-used
+      list. `lg`+: filters as a permanent left rail (no sheet), list in the
+      middle, selected event detail (image, map link, add-to-calendar, marks)
+      on the right; optional week/month grid view. Phone: unchanged (list +
+      filter sheet). Reuse `EventsList`/`FilterSheet` content.
+- [ ] **UI3 Life week dashboard** [sonnet, M] — the owner's weekly ritual and
+      the richest data. `lg`+: 2-3 columns (focus + trackers | tasks + check-ins
+      | recap + History chart with hover readout); import screen shows plan
+      JSON and preview side by side. Phone stays one column (daily taps).
+- [ ] **UI4 Home "Today" panel** [sonnet, M] — a live summary above the grid:
+      habits due, next events, Life focus of the day (owner only), pending
+      sync state; from `lg` the project grid goes to 3-4 columns. Pure Dexie
+      reads, works offline.
+- [ ] **UI5 Mac pointer + keyboard** [sonnet, M] — `⌘K` jump to project /
+      search events, `/` focus search, `n` new item, `j`/`k` list navigation,
+      `Esc` closes (native `<dialog>` already does), hover affordances behind
+      `hover: hover`; drag-and-drop files onto Local Transfer; shift-click
+      multi-select in Events; drag to reorder Life tasks.
+- [ ] **UI6 Cheap grids** [sonnet, S] — Links, Trips, Book/Boardgame ideas:
+      `grid-cols-2/3` on `md`/`lg`; Sharing: guests | projects two columns;
+      Meal diary: day list beside the trends chart.
+
+### Not worth it
+
+shop-list, todo, habits, climbing logging and local-transfer are used one-
+handed on the phone, in a shop or at a crag: keep them single-column with big
+targets; at most centre them in the wider shell. No per-device code paths, no
+iPad-only gestures, no separate "desktop app".
+
+### Device view
+
+- **Phone:** capture and check, one hand, bottom sheets, FAB, safe areas.
+  Only change worth making: bottom tab bar (UI1).
+- **iPad:** portrait ≈ phone with more width (2-col grids), landscape = the
+  Mac layout. Keep 40 px touch targets because it is often touch-only; allow
+  Stage Manager window resizing (width-driven layout covers it).
+- **Mac:** installed from Safari (Add to Dock) or a browser tab; sidebar,
+  master-detail, keyboard, hover, drag and drop. Highest ceiling, lowest risk
+  to phone use because it sits behind `lg:`.
+
+Risk: more states to test and no React component-test setup exists. Add a
+Playwright/screenshot smoke at the four widths with UI1, or verify manually
+with the browser tooling. Order: UI1 -> UI2 -> UI4 -> UI3 -> UI5 -> UI6.
+Needs an owner answer first: which devices do you really use for Events
+and Life (desk Mac, iPad on the sofa)? That decides UI2/UI3 priority.
 
 ## Engineering quality (audit 2026-07-05)
 
