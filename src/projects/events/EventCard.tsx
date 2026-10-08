@@ -1,26 +1,12 @@
 import { memo, useState } from 'react'
-import { shareOrCopy } from '../../lib/share'
-import { useFlash } from '../../lib/useFlash'
 import type { EventItem } from './types'
-import { addToCalendar } from './ics'
 import { FOCUS_RING, FOCUS_RING_INSET } from '../../components/focus'
-import { CalendarPlusIcon, CheckIcon, EyeIcon, EyeOffIcon, PencilIcon, ShareIcon, StarIcon, ThingsIcon } from './icons'
 import { CategoryThumb } from './CategoryThumb'
 import { driveLabel } from './distance'
-import { endingInDays } from './filters'
-import { cleanFormats, formatLabel } from './format'
-import { isManual, isSafeImageDataUrl } from './custom'
-import {
-  buildThingsAddUrl,
-  categoryLabel,
-  categoryOf,
-  formatRange,
-  isSparseSeries,
-  isSpot,
-  listingDay,
-  safeHttpUrl,
-  shortDay,
-} from './model'
+import { EventActions } from './EventActions'
+import { EventBadges } from './EventBadges'
+import { eventImage, eventPlace } from './display'
+import { categoryOf, formatRange, isSparseSeries, listingDay, safeHttpUrl, shortDay } from './model'
 
 interface Props {
   event: EventItem
@@ -36,10 +22,14 @@ interface Props {
   selecting?: boolean
   selected?: boolean
   onSelect?: ((e: EventItem) => void) | undefined
+  /**
+   * Master-detail (lg+): tapping the card shows it in the detail panel
+   * (`onActivate`) instead of expanding it inline; `active` = the one shown.
+   */
+  master?: boolean
+  active?: boolean
+  onActivate?: ((e: EventItem) => void) | undefined
 }
-
-const BADGE = 'rounded-full px-2.5 py-1 text-xs font-medium'
-const ICON = `inline-flex min-h-10 min-w-10 flex-1 flex-col items-center justify-center gap-0.5 rounded-lg px-1 py-1 text-[10px] leading-none text-slate-700 transition-colors hover:bg-slate-100 active:bg-slate-200 dark:text-slate-200 dark:hover:bg-slate-700 dark:active:bg-slate-600 ${FOCUS_RING}`
 
 export const EventCard = memo(function EventCard({
   event: e,
@@ -52,45 +42,39 @@ export const EventCard = memo(function EventCard({
   selecting = false,
   selected = false,
   onSelect,
+  master = false,
+  active = false,
+  onActivate,
 }: Props) {
   const [open, setOpen] = useState(false)
   const [imgOk, setImgOk] = useState(true)
-  const [copied, flashCopied] = useFlash(2000)
   const drive = driveLabel(e.city)
-  const place = [e.venue, e.city].filter(Boolean).join(' · ')
+  const place = eventPlace(e)
   const url = safeHttpUrl(e.url)
-  const manual = isManual(e)
-  // Scraped images must be http(s); a hand-added one is an inline JPEG data URL.
-  const image = manual && isSafeImageDataUrl(e.image) ? e.image : safeHttpUrl(e.image)
+  const image = eventImage(e)
   const showImage = image !== null && imgOk
   const series = isSparseSeries(e)
-  const left = endingInDays(e, now)
-  const formats = cleanFormats(e.tags)
-
-  // Native share sheet where available (iOS/Android), else copy to clipboard.
-  async function share() {
-    const text = [e.title, formatRange(e), place].filter(Boolean).join('\n')
-    try {
-      const outcome = await shareOrCopy(text, {
-        title: e.title,
-        ...(url ? { url } : {}),
-      })
-      if (outcome === 'copied') flashCopied()
-    } catch {
-      // Share sheet dismissed or clipboard blocked: nothing to recover.
-    }
-  }
+  // In master mode the card never expands (the detail panel shows it all).
+  const expanded = open && !master && !selecting
+  const highlighted = master && active && !selecting
 
   return (
     <li
-      className={`overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-800/50 ${
-        hidden ? 'opacity-60' : ''
-      } ${selected ? 'ring-2 ring-(color:--accent-ring)' : ''}`}
+      className={`overflow-hidden rounded-xl border ${
+        highlighted
+          ? 'border-(color:--accent-border) bg-white ring-1 ring-(color:--accent-border) dark:bg-slate-800/50'
+          : 'border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-800/50'
+      } ${hidden ? 'opacity-60' : ''} ${selected ? 'ring-2 ring-(color:--accent-ring)' : ''}`}
     >
       <button
         type="button"
-        onClick={() => (selecting ? onSelect?.(e) : setOpen((v) => !v))}
-        {...(selecting ? { 'aria-pressed': selected } : { 'aria-expanded': open })}
+        data-event-id={e.id}
+        onClick={() => (selecting ? onSelect?.(e) : master ? onActivate?.(e) : setOpen((v) => !v))}
+        {...(selecting
+          ? { 'aria-pressed': selected }
+          : master
+            ? { 'aria-current': highlighted ? ('true' as const) : undefined }
+            : { 'aria-expanded': open })}
         className={`block min-h-10 w-full text-left transition-colors active:bg-slate-100 dark:active:bg-slate-800 ${FOCUS_RING_INSET}`}
       >
         <div className="flex items-start gap-3 px-3 py-3">
@@ -132,105 +116,31 @@ export const EventCard = memo(function EventCard({
                 {drive && <span className="whitespace-nowrap"> · 🚗 {drive}</span>}
               </p>
             )}
-            <div className="flex flex-wrap items-center gap-1.5 pt-1">
-              {left !== null && (
-                <span className={`${BADGE} bg-rose-100 text-rose-800 dark:bg-rose-500/20 dark:text-rose-200`}>
-                  ⏳ {left === 0 ? 'Ultimo giorno' : left === 1 ? 'Finisce domani' : `In scadenza · ${left} giorni`}
-                </span>
-              )}
-              <span className={`${BADGE} bg-(color:--accent-soft) text-slate-800 dark:text-slate-100`}>
-                {categoryLabel(categoryOf(e))}
-              </span>
-              {formats.map((id) => (
-                <span key={id} className={`${BADGE} bg-sky-100 text-sky-800 dark:bg-sky-500/20 dark:text-sky-200`}>
-                  {formatLabel(id)}
-                </span>
-              ))}
-              {manual && (
-                <span
-                  className={`${BADGE} bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-200`}
-                >
-                  Added by you
-                </span>
-              )}
-              {isSpot(e) && (
-                <span className={`${BADGE} bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-200`}>
-                  Spot
-                </span>
-              )}
-              {e.datesTentative && (
-                <span className={`${BADGE} bg-sky-100 text-sky-800 dark:bg-sky-500/20 dark:text-sky-200`}>
-                  Date da confermare
-                </span>
-              )}
-              {hidden && (
-                <span className={`${BADGE} bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200`}>
-                  Hidden
-                </span>
-              )}
-            </div>
+            <EventBadges event={e} hidden={hidden} now={now} />
             {e.occurrences > 1 && (
               <p className="text-xs text-slate-500 dark:text-slate-400">
                 {e.occurrences} dates
                 {series ? ` · next ≈ ${shortDay(listingDay(e, now))}` : ''}
               </p>
             )}
-            {e.summary && !open && (
+            {e.summary && !(open && !master) && (
               <p className="line-clamp-2 pt-1 text-sm text-slate-600 dark:text-slate-400">{e.summary}</p>
             )}
           </div>
         </div>
       </button>
       {selecting ? null : (
-        <div className="flex items-center justify-between gap-1 border-t border-slate-100 px-2 py-1 dark:border-slate-700/50">
-          <button
-            type="button"
-            onClick={() => onToggleSave(e)}
-            aria-pressed={saved}
-            aria-label={saved ? 'Remove from saved' : 'Save'}
-            title={saved ? 'Remove from saved' : 'Save'}
-            className={`${ICON} ${saved ? 'text-amber-500' : ''}`}
-          >
-            <StarIcon filled={saved} />
-            {saved ? 'Saved' : 'Save'}
-          </button>
-          <a href={buildThingsAddUrl(e)} aria-label="Add to Things" title="Add to Things" className={ICON}>
-            <ThingsIcon />
-            Things
-          </a>
-          <button
-            type="button"
-            onClick={() => void addToCalendar(e)}
-            aria-label="Add to calendar"
-            title="Add to calendar"
-            className={ICON}
-          >
-            <CalendarPlusIcon />
-            Calendar
-          </button>
-          <button
-            type="button"
-            onClick={() => onToggleHide(e)}
-            aria-label={hidden ? 'Unhide' : 'Hide'}
-            title={hidden ? 'Unhide' : 'Hide'}
-            className={`${ICON} ${hidden ? 'text-(--accent-border)' : ''}`}
-          >
-            {hidden ? <EyeIcon /> : <EyeOffIcon />}
-            {hidden ? 'Unhide' : 'Hide'}
-          </button>
-          <button type="button" onClick={() => void share()} aria-label="Share" title="Share" className={ICON}>
-            {copied ? <CheckIcon /> : <ShareIcon />}
-            {copied ? 'Copied' : 'Share'}
-          </button>
-          {manual && onEdit && (
-            <button type="button" onClick={() => onEdit(e)} aria-label="Edit" title="Edit" className={ICON}>
-              <PencilIcon />
-              Edit
-            </button>
-          )}
-        </div>
+        <EventActions
+          event={e}
+          saved={saved}
+          hidden={hidden}
+          onToggleSave={onToggleSave}
+          onToggleHide={onToggleHide}
+          onEdit={onEdit}
+          className="border-t border-slate-100 px-2 py-1 dark:border-slate-700/50"
+        />
       )}
-      {open && !selecting && (
+      {expanded && (
         <div className="space-y-3 border-t border-slate-200 px-4 py-3 dark:border-slate-800">
           {showImage && (
             <img

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useSearchParams } from 'react-router-dom'
 import { db, type CustomEvent, type EventMark } from '../../lib/db'
@@ -15,6 +15,10 @@ import { formatDate as formatDateLocal } from '../../lib/dates'
 import { useUndoSnackbar } from '../../lib/useUndoSnackbar'
 import { SkeletonList } from '../../components/Skeleton'
 import { FilterSheet } from './FilterSheet'
+import { FilterPanel, type FilterPanelProps } from './FilterPanel'
+import { EventDetail } from './EventDetail'
+import { isTypingTarget, listKeyAction, moveSelection, visibleOrder } from './selection'
+import { useWide } from './useWide'
 import { CustomEventSheet } from './CustomEventSheet'
 import { PREFILL_KEYS, mergeEvents, parsePrefill, type CustomEventForm } from './custom'
 import { DATE_CHIPS } from './filters'
@@ -134,6 +138,50 @@ export function Events() {
       if (!next.delete(k)) next.add(k)
       return next
     })
+
+  // Master-detail (lg+, UI2): the event shown in the detail panel. Local UI
+  // state only; below lg cards expand inline as before and this stays unused.
+  const wide = useWide()
+  const [activeId, setActiveId] = useState<string | null>(null)
+  const listRef = useRef<HTMLDivElement>(null)
+  const order = useMemo(() => visibleOrder(weeks, collapsedWeeks), [weeks, collapsedWeeks])
+  // The shown event, even after it leaves the list (hidden, filtered out) so
+  // Unhide/Save stay at hand; a saved one may only exist as its mark snapshot.
+  const activeEvent = useMemo(() => {
+    if (activeId === null) return null
+    return events.find((e) => e.id === activeId) ?? marksRaw?.find((m) => m.id === activeId)?.event ?? null
+  }, [activeId, events, marksRaw])
+  const onActivate = useCallback((e: EventItem) => {
+    setActiveId(e.id)
+    // Safari doesn't focus a clicked button: keep the keyboard on the list so
+    // the arrows work right after a click (no ring: the list has no outline).
+    const list = listRef.current
+    if (list && !list.contains(document.activeElement)) list.focus({ preventScroll: true })
+  }, [])
+  const focusCard = (id: string) => {
+    const btn = listRef.current?.querySelector<HTMLElement>(`[data-event-id="${CSS.escape(id)}"]`)
+    btn?.focus({ preventScroll: true })
+    btn?.scrollIntoView({ block: 'nearest' })
+  }
+  const onListKeyDown = (ev: KeyboardEvent<HTMLElement>) => {
+    if (ev.defaultPrevented || selecting || isTypingTarget(ev.target as HTMLElement)) return
+    const action = listKeyAction(ev)
+    if (!action) return
+    if (action.kind === 'clear') {
+      if (activeId === null) return
+      ev.preventDefault()
+      const prev = activeId
+      setActiveId(null)
+      // Focus was maybe inside the panel that is about to empty: back to the card.
+      if (!listRef.current?.contains(document.activeElement)) focusCard(prev)
+      return
+    }
+    const next = moveSelection(order, activeId, action.move)
+    if (next === null) return
+    ev.preventDefault()
+    setActiveId(next)
+    focusCard(next)
+  }
 
   // Stable across renders (they read the current mark from Dexie), so the
   // memoised EventCards only re-render when their own props change.
@@ -264,11 +312,29 @@ export function Events() {
     )
   }
 
-  return (
-    <div>
-      {header}
+  const filterProps: FilterPanelProps = {
+    catOrder: counts.catOrder,
+    catCounts: counts.catCounts,
+    activeCats,
+    favourites,
+    distanceCounts: counts.distanceCounts,
+    maxMin,
+    onToggleMaxMin: toggles.toggleMaxMin,
+    showHidden,
+    canShowHidden: view !== 'saved',
+    canReset: filtering || showHidden,
+    total,
+    onToggleCat: toggles.toggleCat,
+    onToggleFavourite: (id) => void toggles.toggleFavourite(id),
+    formatCounts: counts.formatCounts,
+    selectedFormats,
+    onToggleFormat: toggles.toggleFormat,
+    onShowHidden: toggles.setShowHidden,
+    onClearAll: toggles.clearAll,
+  }
 
-      {editorSheet}
+  const notices = (
+    <>
       {file && fetchState === 'offline' && (
         <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
           Offline — showing copy from {formatDateLocal(cache?.fetchedAt ?? 0, undefined, 'it-IT')}
@@ -296,7 +362,12 @@ export function Events() {
           )}
         </div>
       )}
+    </>
+  )
 
+  // View tabs, search, date chips: on top of the list in both layouts.
+  const controls = (
+    <>
       <div className="mb-3 grid grid-cols-3 gap-2">
         {(
           [
@@ -357,7 +428,113 @@ export function Events() {
           </Chip>
         ))}
       </div>
+    </>
+  )
 
+  const list = (
+    <>
+      {total === 0 ? (
+        <EmptyState
+          emoji={view === 'saved' ? '☆' : '🔎'}
+          title={view === 'saved' ? 'Nothing saved yet' : 'No events match'}
+          hint={
+            view === 'saved'
+              ? 'Open an event and tap Save to keep it here.'
+              : filtering || dateChip || nq
+                ? 'Try clearing the filters.'
+                : 'Nothing to show right now.'
+          }
+        />
+      ) : (
+        <div className="space-y-5">
+          <WeekSections
+            weeks={weeks}
+            collapsedWeeks={collapsedWeeks}
+            onToggleWeek={toggleWeek}
+            marks={marks}
+            now={now}
+            selecting={selecting}
+            selectedIds={selectedIds}
+            onToggleSave={onToggleSave}
+            onToggleHide={onToggleHide}
+            onEdit={onEdit}
+            onSelect={onSelect}
+            master={wide}
+            activeId={activeId}
+            onActivate={onActivate}
+          />
+          {limit < total && (
+            <div className="flex justify-center">
+              <Button variant="ghost" onClick={toggles.showMore}>
+                Show more ({total - limit} left)
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
+    </>
+  )
+
+  const bars = (
+    <>
+      {selecting && <SelectionBar count={selectedIds.size} onSelectAll={selectAllVisible} onHide={hideSelected} />}
+      {!selecting && pendingUndo && <Snackbar label={pendingUndo.label} onUndo={confirmUndo} />}
+    </>
+  )
+
+  if (wide) {
+    // lg+ (UI2): filter rail | list | detail panel. @container on our own
+    // wrapper (never on <main>, see docs/ARCHITECTURE.md); the fixed bars and
+    // the sheets stay outside it.
+    const sticky =
+      'sticky top-[calc(env(safe-area-inset-top)+1rem)] max-h-[calc(100dvh-env(safe-area-inset-top)-2rem)] overflow-y-auto overscroll-contain'
+    return (
+      <div>
+        {header}
+        {editorSheet}
+        {notices}
+        <div className="@container">
+          <div className="grid grid-cols-[12rem_minmax(0,1fr)_18rem] items-start gap-4 @min-[64rem]:grid-cols-[15rem_minmax(0,1fr)_22rem] @min-[64rem]:gap-6">
+            <aside aria-label="Filters" className={`${sticky} pr-1`}>
+              <FilterPanel variant="rail" {...filterProps} />
+            </aside>
+            {/* Arrow keys / Home / End / Esc move the selection while focus is in
+                the list or the panel (never in the search field). */}
+            <div ref={listRef} tabIndex={-1} onKeyDown={onListKeyDown} className="min-w-0 focus:outline-none">
+              {controls}
+              <div className="mt-4">{list}</div>
+              {hasCustom && (
+                <div className="mt-8">
+                  <SyncCard sync={customSync} />
+                </div>
+              )}
+            </div>
+            <aside aria-label="Event details" onKeyDown={onListKeyDown} className={sticky}>
+              <EventDetail
+                event={activeEvent}
+                saved={activeEvent ? marks.get(activeEvent.id)?.state === 'saved' : false}
+                hidden={activeEvent ? marks.get(activeEvent.id)?.state === 'hidden' : false}
+                now={now}
+                onToggleSave={onToggleSave}
+                onToggleHide={onToggleHide}
+                onEdit={onEdit}
+                onClose={() => setActiveId(null)}
+              />
+            </aside>
+          </div>
+        </div>
+        {bars}
+      </div>
+    )
+  }
+
+  return (
+    <div>
+      {header}
+
+      {editorSheet}
+      {notices}
+      {controls}
       <div className="-mx-4 mb-4 overflow-x-auto px-4 pb-1">
         <div className="flex w-max items-center gap-2">
           <Chip active={maxMin !== null} onClick={() => toggles.toggleMaxMin(maxMin ?? NEAR_MINUTES)}>
@@ -396,72 +573,15 @@ export function Events() {
         </div>
       </div>
 
-      <FilterSheet
-        open={sheetOpen}
-        onClose={() => setSheetOpen(false)}
-        catOrder={counts.catOrder}
-        catCounts={counts.catCounts}
-        activeCats={activeCats}
-        favourites={favourites}
-        distanceCounts={counts.distanceCounts}
-        maxMin={maxMin}
-        onToggleMaxMin={toggles.toggleMaxMin}
-        showHidden={showHidden}
-        canShowHidden={view !== 'saved'}
-        canReset={filtering || showHidden}
-        total={total}
-        onToggleCat={toggles.toggleCat}
-        onToggleFavourite={(id) => void toggles.toggleFavourite(id)}
-        formatCounts={counts.formatCounts}
-        selectedFormats={selectedFormats}
-        onToggleFormat={toggles.toggleFormat}
-        onShowHidden={toggles.setShowHidden}
-        onClearAll={toggles.clearAll}
-      />
+      <FilterSheet open={sheetOpen} onClose={() => setSheetOpen(false)} {...filterProps} />
 
-      {total === 0 ? (
-        <EmptyState
-          emoji={view === 'saved' ? '☆' : '🔎'}
-          title={view === 'saved' ? 'Nothing saved yet' : 'No events match'}
-          hint={
-            view === 'saved'
-              ? 'Open an event and tap Save to keep it here.'
-              : filtering || dateChip || nq
-                ? 'Try clearing the filters.'
-                : 'Nothing to show right now.'
-          }
-        />
-      ) : (
-        <div className="space-y-5">
-          <WeekSections
-            weeks={weeks}
-            collapsedWeeks={collapsedWeeks}
-            onToggleWeek={toggleWeek}
-            marks={marks}
-            now={now}
-            selecting={selecting}
-            selectedIds={selectedIds}
-            onToggleSave={onToggleSave}
-            onToggleHide={onToggleHide}
-            onEdit={onEdit}
-            onSelect={onSelect}
-          />
-          {limit < total && (
-            <div className="flex justify-center">
-              <Button variant="ghost" onClick={toggles.showMore}>
-                Show more ({total - limit} left)
-              </Button>
-            </div>
-          )}
-        </div>
-      )}
+      {list}
       {hasCustom && (
         <div className="mt-8">
           <SyncCard sync={customSync} />
         </div>
       )}
-      {selecting && <SelectionBar count={selectedIds.size} onSelectAll={selectAllVisible} onHide={hideSelected} />}
-      {!selecting && pendingUndo && <Snackbar label={pendingUndo.label} onUndo={confirmUndo} />}
+      {bars}
     </div>
   )
 }

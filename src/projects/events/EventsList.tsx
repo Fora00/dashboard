@@ -57,6 +57,9 @@ export function WeekSections({
   onToggleHide,
   onEdit,
   onSelect,
+  master = false,
+  activeId = null,
+  onActivate,
 }: {
   weeks: WeekGroup[]
   collapsedWeeks: ReadonlySet<string>
@@ -69,6 +72,10 @@ export function WeekSections({
   onToggleHide: (e: EventItem) => void
   onEdit: (e: EventItem) => void
   onSelect: (e: EventItem) => void
+  /** lg+ master-detail: a tap shows the event in the detail panel. */
+  master?: boolean
+  activeId?: string | null
+  onActivate?: (e: EventItem) => void
 }) {
   return (
     <>
@@ -119,6 +126,9 @@ export function WeekSections({
                           selecting={selecting}
                           selected={selectedIds.has(e.id)}
                           onSelect={onSelect}
+                          master={master}
+                          active={activeId === e.id}
+                          onActivate={onActivate}
                         />
                       ))}
                     </ul>

@@ -267,7 +267,7 @@ function Body({ onClose, editing, prefill, cities, onDelete, onSaved }: Props) {
         )}
         <div className="flex flex-wrap gap-2">
           <label
-            className={`inline-flex min-h-10 cursor-pointer items-center justify-center rounded-lg bg-slate-100 px-3.5 text-sm font-medium text-slate-800 hover:bg-slate-200 focus-within:ring-2 focus-within:ring-indigo-500 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700`}
+            className={`inline-flex min-h-10 cursor-pointer items-center justify-center rounded-lg bg-slate-100 px-3.5 text-sm font-medium text-slate-800 hover:bg-slate-200 focus-within:ring-2 focus-within:ring-(color:--accent-ring)dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700`}
           >
             {imageBusy ? 'Shrinking…' : form.image ? 'Change image' : '🖼 Add image'}
             <input

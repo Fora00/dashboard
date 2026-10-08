@@ -1,253 +1,31 @@
-import { useState, type ReactNode } from 'react'
 import { Sheet } from '../../components/Sheet'
 import { Button } from '../../components/Button'
-import { Chip } from '../../components/Chip'
-import { rowTone } from '../../components/chipTone'
-import { FOCUS_RING_INSET } from '../../components/focus'
-import { categoryLabel } from './model'
-import { DISTANCE_STEPS, NEAR_MINUTES, minutesLabel } from './distance'
-import { FORMAT_CHIPS, formatLabel } from './format'
+import { FilterPanel, type FilterPanelProps } from './FilterPanel'
 
-interface Props {
+interface Props extends FilterPanelProps {
   open: boolean
   onClose: () => void
-  catOrder: string[]
-  catCounts: Map<string, number>
-  activeCats: string[]
-  favourites: string[]
-  /** Events within each distance step (max driving minutes from Rovereto). */
-  distanceCounts: Map<number, number>
-  maxMin: number | null
-  onToggleMaxMin: (m: number) => void
-  formatCounts: Map<string, number>
-  selectedFormats: string[]
-  onToggleFormat: (id: string) => void
-  showHidden: boolean
-  canShowHidden: boolean
-  /** Any filter of the sheet is active: the Reset at the top is shown. */
-  canReset: boolean
-  total: number
-  onToggleCat: (id: string) => void
-  onToggleFavourite: (id: string) => void
-  onShowHidden: (v: boolean) => void
-  onClearAll: () => void
 }
 
-/** "Area" + " · Trentino" (one selected) or " · 2". Nothing when none. */
-function summarize(selected: string[], label: (id: string) => string): string {
-  if (selected.length === 0) return ''
-  return selected.length === 1 ? label(selected[0] ?? '') : String(selected.length)
-}
-
-/**
- * Collapsible sheet section. `defaultOpen` only seeds the state when the
- * sheet opens (the body is mounted per opening), so ticking something inside
- * never makes sections jump. New sections (e.g. "Come") are one more <Section>.
- */
-function Section({
-  title,
-  summary,
-  defaultOpen,
-  children,
-}: {
-  title: string
-  summary: string
-  defaultOpen: boolean
-  children: ReactNode
-}) {
-  const [open, setOpen] = useState(defaultOpen)
-  return (
-    <section className="mb-2 border-b border-slate-100 pb-2 last:border-b-0 dark:border-slate-800">
-      <button
-        type="button"
-        aria-expanded={open}
-        onClick={() => setOpen((v) => !v)}
-        className={`flex min-h-10 w-full items-center justify-between gap-2 text-left ${FOCUS_RING_INSET}`}
-      >
-        <span className="min-w-0 truncate text-xs font-semibold tracking-wide text-slate-500 uppercase dark:text-slate-400">
-          {title}
-          {summary && <span className="text-(--accent-border)"> · {summary}</span>}
-        </span>
-        <span aria-hidden className="text-slate-400">
-          {open ? '▾' : '▸'}
-        </span>
-      </button>
-      {open && <div className="pt-1 pb-1">{children}</div>}
-    </section>
-  )
-}
-
-/** Chip grid of `[id, label, count]` items; zero counts sort last and look disabled. */
-function OptionGrid({
-  items,
-  selected,
-  onToggle,
-}: {
-  items: { id: string; label: string; count: number }[]
-  selected: string[]
-  onToggle: (id: string) => void
-}) {
-  const sorted = [...items].sort((a, b) => Number(a.count === 0) - Number(b.count === 0))
-  return (
-    <ul className="grid grid-cols-1 gap-2 min-[400px]:grid-cols-2">
-      {sorted.map(({ id, label, count }) => {
-        const on = selected.includes(id)
-        const disabled = count === 0 && !on
-        return (
-          <li key={id}>
-            <Chip
-              shape="row"
-              active={on}
-              count={count}
-              disabled={disabled}
-              onClick={() => onToggle(id)}
-              className={count === 0 ? 'opacity-60' : ''}
-            >
-              {label}
-            </Chip>
-          </li>
-        )
-      })}
-    </ul>
-  )
-}
-
-export function FilterSheet(p: Props) {
-  const cats = p.catOrder.map((id) => ({
-    id,
-    count: p.catCounts.get(id) ?? 0,
-  }))
-  const zeroLast = [...cats].sort((a, b) => Number(a.count === 0) - Number(b.count === 0))
-
+/** Filters in a bottom sheet (below lg); the rail on wide screens renders the same FilterPanel inline. */
+export function FilterSheet({ open, onClose, ...p }: Props) {
   return (
     <Sheet
-      open={p.open}
-      onClose={p.onClose}
+      open={open}
+      onClose={onClose}
       title="Filters"
       footer={
         <div className="flex gap-2">
           <Button variant="ghost" onClick={p.onClearAll}>
             Clear all
           </Button>
-          <Button className="flex-1" onClick={p.onClose}>
+          <Button className="flex-1" onClick={onClose}>
             Show {p.total} {p.total === 1 ? 'event' : 'events'}
           </Button>
         </div>
       }
     >
-      {p.open && (
-        <>
-          {/* Sticky so Reset stays reachable while scrolling; the row is always
-              rendered (button hidden) so nothing shifts when a filter turns on. */}
-          <div className="sticky -top-3 z-10 -mx-4 -mt-3 mb-1 flex min-h-[3.25rem] items-center pt-3 justify-between bg-white px-4 dark:bg-slate-900">
-            <span className="text-sm text-slate-500 dark:text-slate-400">
-              {p.total} {p.total === 1 ? 'event' : 'events'}
-            </span>
-            <button
-              type="button"
-              onClick={p.onClearAll}
-              className={`min-h-10 px-2 text-sm font-medium text-(--accent-border) underline ${FOCUS_RING_INSET} ${
-                p.canReset ? '' : 'invisible'
-              }`}
-              tabIndex={p.canReset ? 0 : -1}
-            >
-              Reset
-            </button>
-          </div>
-
-          <Section
-            title="Distanza da Rovereto"
-            summary={p.maxMin === null ? '' : `entro ${minutesLabel(p.maxMin)}`}
-            defaultOpen
-          >
-            <ul className="grid grid-cols-1 gap-2 min-[400px]:grid-cols-2">
-              {DISTANCE_STEPS.map((m) => (
-                <li key={m}>
-                  <Chip
-                    shape="row"
-                    active={p.maxMin === m}
-                    count={p.distanceCounts.get(m) ?? 0}
-                    onClick={() => p.onToggleMaxMin(m)}
-                  >
-                    Entro {minutesLabel(m)}
-                    {m === NEAR_MINUTES ? ' · Vicino' : ''}
-                  </Chip>
-                </li>
-              ))}
-            </ul>
-          </Section>
-
-          <Section title="Categories" summary={summarize(p.activeCats, categoryLabel)} defaultOpen>
-            <ul className="grid grid-cols-1 gap-2 min-[400px]:grid-cols-2">
-              {zeroLast.map(({ id, count }) => {
-                const on = p.activeCats.includes(id)
-                const fav = p.favourites.includes(id)
-                const disabled = count === 0 && !on
-                return (
-                  <li
-                    key={id}
-                    className={`flex min-h-10 items-stretch overflow-hidden rounded-lg border-2 ${rowTone(on)} ${
-                      count === 0 ? 'opacity-60' : ''
-                    }`}
-                  >
-                    <button
-                      type="button"
-                      disabled={disabled}
-                      aria-pressed={on}
-                      onClick={() => p.onToggleCat(id)}
-                      className={`flex min-h-10 min-w-0 flex-1 items-center justify-between gap-2 px-3 text-left text-sm disabled:cursor-not-allowed ${FOCUS_RING_INSET}`}
-                    >
-                      <span className="truncate">
-                        {on ? '✓ ' : ''}
-                        {categoryLabel(id)}
-                      </span>
-                      <span className="text-xs opacity-70">{count}</span>
-                    </button>
-                    <button
-                      type="button"
-                      aria-pressed={fav}
-                      aria-label={`${fav ? 'Remove' : 'Add'} ${categoryLabel(id)} ${fav ? 'from' : 'to'} favourites`}
-                      onClick={() => p.onToggleFavourite(id)}
-                      className={`flex size-10 shrink-0 items-center justify-center text-base ${FOCUS_RING_INSET}`}
-                    >
-                      {fav ? '★' : '☆'}
-                    </button>
-                  </li>
-                )
-              })}
-            </ul>
-          </Section>
-
-          <Section
-            title="Come"
-            summary={summarize(p.selectedFormats, formatLabel)}
-            defaultOpen={p.selectedFormats.length > 0}
-          >
-            <OptionGrid
-              items={FORMAT_CHIPS.map(({ id, label }) => ({
-                id,
-                label,
-                count: p.formatCounts.get(id) ?? 0,
-              }))}
-              selected={p.selectedFormats}
-              onToggle={p.onToggleFormat}
-            />
-          </Section>
-
-          {p.canShowHidden && (
-            <label className="mt-2 flex min-h-10 items-center justify-between gap-2 text-sm text-slate-700 dark:text-slate-200">
-              Show hidden
-              <input
-                type="checkbox"
-                role="switch"
-                checked={p.showHidden}
-                onChange={(e) => p.onShowHidden(e.target.checked)}
-                className="size-5"
-              />
-            </label>
-          )}
-        </>
-      )}
+      {open && <FilterPanel variant="sheet" {...p} />}
     </Sheet>
   )
 }
