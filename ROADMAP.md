@@ -948,6 +948,36 @@ sync already ignores stale updates (`ignore_stale_update` triggers on
       → done 2026-10-08 except a dedicated maskable icon (needs a designed asset): apple-touch-icon in the manifest, `engines` node >=22, `.nvmrc`.
       a dedicated maskable icon, `engines`/`.nvmrc` (CI uses Node 22, Mac 24).
 
+## Icons: app icon and per-project icons (proposal 2026-10-08)
+
+The owner uses the app on iPhone, iPad and Mac for every project, wants a
+better app icon and a small custom icon per project (projects get created
+over time, so it must be part of the registry, not hand work). Preview page
+with the options was built locally (not published).
+
+- [ ] **IC1 Per-project icon + colour in the registry** [sonnet, S] — add
+      `icon` (Lucide name, inlined SVG, ISC licence, no CDN, works offline) and
+      `color` to `ProjectMeta`; `emoji` stays as the fallback and for shared
+      text. A small `ProjectIcon` component (tinted tile) used by Home,
+      Settings, Sharing; `scripts/new-project.mjs` + `docs/NEW_PROJECT.md` ask
+      for the icon and colour so new projects get one. Recommended style:
+      coloured icon on a light tile (b); solid tile with a white icon (c) for
+      per-project install icons. Mapping proposed: local-transfer folder-sync,
+      shop-list shopping-cart, todo list-checks, climbing mountain-snow, habits
+      circle-check, book-ideas book-open, boardgame-ideas dice-5, links link,
+      trips plane, events map-pin, meal-diary utensils, life compass, settings
+      settings, sharing users.
+- [ ] **IC2 New app icon** [owner decision, then sonnet XS] — pick one of the
+      four drawn directions (A bento, B hub, C 3x3 grid with one lit tile, D
+      tile monogram "D") or keep the current 2x2; export 192/512, maskable
+      (dedicated safe-zone version), 180 apple-touch-icon, add to the manifest.
+- [ ] **IC3 Project colour as accent** [sonnet, M] — the project colour tints
+      the header, primary buttons and the sidebar/tab entry (ties into UI1).
+- [ ] **IC4 Experiment: one home-screen icon per project** [opus, S] — iOS lets
+      a single page be added to the Home Screen; set `apple-touch-icon` per
+      route and test with HashRouter (Safari may ignore it). Manifest
+      `shortcuts` for Mac Chrome/Android long-press (iOS does not support them).
+
 ## Adaptive layout: phone / iPad / Mac (analysis 2026-10-08)
 
 Analysis only, nothing built. Rule of thumb: **capture on the phone stays
