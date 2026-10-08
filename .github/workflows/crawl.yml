@@ -12,10 +12,10 @@ on:
     # ~06:23 Rome; GitHub cron is UTC and may run late.
     - cron: '23 4 * * *'
 
+# Per job below: only the deploy gets Pages rights, only the health job may
+# write issues.
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 # Shared with deploy.yml, never cancelling: see the comment there. A crawl
 # queued behind a running deploy waits (seconds); a crawl that is running is
@@ -26,8 +26,55 @@ concurrency:
 
 jobs:
   site:
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
     uses: ./.github/workflows/_site.yml
     with:
       events: crawl
       events_force: ${{ inputs.force == true }}
     secrets: inherit
+
+  # Makes a degraded crawl visible without blocking the deploy (it runs after
+  # it): keeps ONE open issue titled below. Opened or commented when the
+  # crawl-deploy job did not succeed, more than a third of the sources failed,
+  # or a source has not succeeded for over 7 days (scripts/events/health.ts
+  # degradedReasons); closed by the first healthy run. docs/CI.md.
+  health:
+    needs: site
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      HEALTH: ${{ needs.site.outputs.crawl_health }}
+      RESULT: ${{ needs.site.result }}
+      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    steps:
+      - name: Open, update or close the crawl health issue
+        shell: bash
+        run: |
+          title='Events crawl needs attention'
+          reasons="$HEALTH"
+          if [ "$RESULT" != success ]; then
+            reasons="crawl-deploy job: $RESULT, nothing deployed${reasons:+; $reasons}"
+          fi
+          num=$(gh issue list --state open --limit 100 --json number,title \
+            --jq ".[] | select(.title == \"$title\") | .number" | head -n1)
+          if [ -n "$reasons" ]; then
+            body="$(date -u +%F): $reasons"$'\n\n'"Run: $RUN_URL"
+            if [ -n "$num" ]; then
+              gh issue comment "$num" --body "$body"
+            else
+              gh issue create --title "$title" --body "$body"
+            fi
+            echo "::warning title=Events crawl needs attention::$reasons"
+          elif [ -n "$num" ]; then
+            gh issue close "$num" --comment "Healthy again: $RUN_URL"
+          else
+            echo 'Crawl healthy, no open issue.'
+          fi

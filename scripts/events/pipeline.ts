@@ -5,7 +5,7 @@ import type { DropRule, TagId } from './tags.ts'
 import { CATEGORIES, classify, dropRule, finishTags } from './tags.ts'
 import { areaFor, closerRing, keepForRing } from './areas.ts'
 import { DAY, addDays, dateToIso } from './time.ts'
-import { clip, htmlToBlocks, normalize, snippet, stableId } from './text.ts'
+import { absUrl, clip, htmlToBlocks, normalize, snippet, stableId } from './text.ts'
 
 /** How far ahead events are kept (owner: nothing beyond 3 months, 2026-10-03), unless the adapter says otherwise. */
 export const HORIZON_DAYS = 90
@@ -69,10 +69,13 @@ function foldSeries(raws: RawEvent[]): (RawEvent & { occurrences: number })[] {
   return out
 }
 
-/** Events dropped by DROP RULES (tags.ts), per rule: logged in the crawl summary. */
-export type DropCounts = Map<DropRule, number>
+/** Not a DROP RULE: a record whose `url` is not an absolute http(s) URL. */
+export const INVALID_URL = 'invalid-url'
 
-function countDrop(drops: DropCounts | undefined, rule: DropRule): void {
+/** Events dropped by DROP RULES (tags.ts) or for an invalid url, per reason: logged in the crawl summary. */
+export type DropCounts = Map<DropRule | typeof INVALID_URL, number>
+
+function countDrop(drops: DropCounts | undefined, rule: DropRule | typeof INVALID_URL): void {
   drops?.set(rule, (drops.get(rule) ?? 0) + 1)
 }
 
@@ -100,6 +103,14 @@ export function toEvents(
     const id = stableId(adapter.id, r.nativeId)
     if (seen.has(id)) continue
     seen.add(id)
+    // Links and images must be absolute https (http is upgraded); a relative
+    // or javascript:/data: url drops the record, a bad image just goes. The
+    // url is its own base, so a relative one has no valid base and fails.
+    const url = absUrl(r.url, r.url?.trim() ?? '')
+    if (!url) {
+      countDrop(drops, INVALID_URL)
+      continue
+    }
     const description = clip(htmlToBlocks(r.description))
     const summary = snippet(htmlToBlocks(r.summary || description).replace(/\s+/g, ' '))
     const text = { title: r.title, summary, description, tagText: r.tagText ?? null }
@@ -129,14 +140,14 @@ export function toEvents(
       city,
       area: areaFor(city, adapter.area ?? 'trentino'),
       ring,
-      url: r.url,
+      url,
       source: adapter.id,
       sources: [adapter.id],
       category,
       tags,
       description,
       summary,
-      image: r.image ?? null,
+      image: absUrl(r.image, url),
       occurrences: r.occurrences,
       fetchedAt,
       ...(r.datesTentative ? { datesTentative: true as const } : {}),
@@ -145,7 +156,17 @@ export function toEvents(
   return events
 }
 
+/**
+ * Same showing: timed events key on the exact start instant (17:00 and 21:00
+ * of one show stay two events), all-day ones on the local start day.
+ */
 function dedupKey(e: Event): string {
+  const when = e.allDay ? e.start.slice(0, 10) : String(Date.parse(e.start))
+  return `${normalize(e.title)}|${when}|${normalize(e.city)}`
+}
+
+/** Title + local day + city: used to fold an all-day record into the one timed showing of that day. */
+function dayKey(e: Event): string {
   return `${normalize(e.title)}|${e.start.slice(0, 10)}|${normalize(e.city)}`
 }
 
@@ -187,7 +208,6 @@ export function withPlace(adapter: Adapter, events: Event[], drops?: DropCounts)
     .map((e) => ({ ...e, area: e.area ?? areaFor(e.city ?? '', adapter.area ?? 'trentino'), ring: e.ring ?? ring }))
 }
 
-/** Same normalised title + local start date + city = same event; keep the richer record. */
 /** Two records of one event → the richer one, its gaps filled from the other. */
 function merge(a: Event, b: Event): Event {
   const [keep, drop] = richness(b) > richness(a) ? [b, a] : [a, b]
@@ -254,6 +274,21 @@ export function dedup(events: Event[]): Event[] {
     const key = dedupKey(e)
     const prev = byKey.get(key)
     byKey.set(key, prev ? merge(prev, e) : e)
+  }
+  // An all-day record of a show that one source lists with its time: merge it
+  // into the timed one only when that day has exactly one showing (with two,
+  // which one it is cannot be told).
+  const timedByDay = new Map<string, string[]>()
+  for (const [key, e] of byKey) {
+    if (!e.allDay) timedByDay.set(dayKey(e), [...(timedByDay.get(dayKey(e)) ?? []), key])
+  }
+  for (const [key, e] of [...byKey]) {
+    if (!e.allDay) continue
+    const timed = timedByDay.get(dayKey(e))
+    if (timed?.length !== 1) continue
+    const target = timed[0] as string
+    byKey.set(target, merge(byKey.get(target) as Event, e))
+    byKey.delete(key)
   }
   return mergeSubtitled([...byKey.values()])
 }

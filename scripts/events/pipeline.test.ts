@@ -134,6 +134,28 @@ describe('toEvents', () => {
     expect(e?.end).toBeNull()
   })
 
+  it('makes url and image absolute https; a non-absolute url drops the record (E8)', () => {
+    const drops: DropCounts = new Map()
+    const out = toEvents(
+      adapter(),
+      [
+        raw({ nativeId: 'a', url: 'http://example.org/e/a', image: '/img/a.jpg' }),
+        raw({ nativeId: 'b', url: 'https://example.org/e/b', image: 'javascript:alert(1)' }),
+        raw({ nativeId: 'c', url: '/e/c' }),
+        raw({ nativeId: 'd', url: 'javascript:alert(1)' }),
+        raw({ nativeId: 'e', url: '' }),
+      ],
+      NOW,
+      FETCHED,
+      drops,
+    )
+    expect(out.map((e) => [e.url, e.image])).toEqual([
+      ['https://example.org/e/a', 'https://example.org/img/a.jpg'],
+      ['https://example.org/e/b', null],
+    ])
+    expect(drops.get('invalid-url')).toBe(3)
+  })
+
   it('keeps a valid end', () => {
     const [e] = toEvents(adapter(), [raw({ end: '2026-10-20T22:00:00+02:00' })], NOW, FETCHED)
     expect(e?.end).toBe('2026-10-20T22:00:00+02:00')
@@ -335,6 +357,44 @@ describe('dedup', () => {
       event({ id: 'b', source: 'b', sources: ['b'], title: 'Il segreto di Francesco' }),
     ])
     expect(out[0]?.title).toBe('Il segreto di Francesco')
+  })
+
+  it('two showings of one show on the same day stay apart (17:00 and 21:00, E3)', () => {
+    const out = dedup([
+      event({ id: 'early', start: '2026-10-20T17:00:00+02:00' }),
+      event({ id: 'late', start: '2026-10-20T21:00:00+02:00' }),
+      event({ id: 'late-b', source: 'b', sources: ['b'], start: '2026-10-20T21:00:00+02:00' }),
+    ])
+    expect(out.map((e) => e.start).sort()).toEqual(['2026-10-20T17:00:00+02:00', '2026-10-20T21:00:00+02:00'])
+    // The 21:00 showing listed by two sources is still one event.
+    expect(out.find((e) => e.start.includes('T21'))?.sources).toEqual(['a', 'b'])
+  })
+
+  it('the same instant written with a different offset is the same showing', () => {
+    expect(
+      dedup([
+        event({ id: 'a', start: '2026-10-20T21:00:00+02:00' }),
+        event({ id: 'b', source: 'b', sources: ['b'], start: '2026-10-20T19:00:00Z' }),
+      ]),
+    ).toHaveLength(1)
+  })
+
+  it('all-day records still match on the day', () => {
+    const day = { allDay: true, start: '2026-10-20T00:00:00+02:00' }
+    expect(dedup([event({ id: 'a', ...day }), event({ id: 'b', source: 'b', sources: ['b'], ...day })])).toHaveLength(1)
+  })
+
+  it('an all-day record folds into the one timed showing of that day, not into one of two', () => {
+    const allDay = event({ id: 'd', source: 'b', sources: ['b'], allDay: true, start: '2026-10-20T00:00:00+02:00' })
+    const one = dedup([event({ id: 't', start: '2026-10-20T21:00:00+02:00' }), allDay])
+    expect(one).toHaveLength(1)
+    expect(one[0]).toMatchObject({ id: 't', allDay: false, sources: ['a', 'b'] })
+    const two = dedup([
+      event({ id: 't1', start: '2026-10-20T17:00:00+02:00' }),
+      event({ id: 't2', start: '2026-10-20T21:00:00+02:00' }),
+      allDay,
+    ])
+    expect(two).toHaveLength(3)
   })
 
   it('different day or different city is a different event', () => {

@@ -126,6 +126,10 @@ export interface SourceStatus {
   count: number
   error?: string
   lastSuccess: string | null
+  /** Events of the last successful fetch that returned more than 0 (health check, health.ts). Optional, additive (2026-10-08). */
+  lastNonZero?: number
+  /** UTC ISO time of the first fetch, after a non-zero one, that returned 0 events; absent while the source delivers. Optional, additive (2026-10-08). */
+  zeroSince?: string
 }
 
 export interface EventsFile {

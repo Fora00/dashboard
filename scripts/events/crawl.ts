@@ -8,6 +8,8 @@
 //   EVENTS_OUT=path            output file (default public/events.json)
 //   EVENTS_FORCE=1             publish even when a guard below refuses (owner override)
 //   GITHUB_STEP_SUMMARY=path   set by GitHub Actions: the per-source table is appended to it
+//   GITHUB_OUTPUT=path         set by GitHub Actions: `health=` gets the degraded reasons
+//                              (one line, empty when healthy) for the issue job in crawl.yml
 //
 // Sources run one after another (politeness), each in its own try/catch. A
 // failing source — it throws, or returns 0 events when the previous run had
@@ -29,7 +31,15 @@ import { PoliteHttp } from './http.ts'
 import { OG_MAX_REQUESTS, enrichImages } from './ogimage.ts'
 import type { DropCounts } from './pipeline.ts'
 import { isBigDrop, loadPrevious, unprotectedSources } from './previous.ts'
-import { countDelta, staleSources, upcomingTentative } from './health.ts'
+import {
+  countDelta,
+  degradedReasons,
+  staleSources,
+  suspiciousZeros,
+  upcomingTentative,
+  zeroTracking,
+} from './health.ts'
+import { validPreviousEvents } from './schemas.ts'
 import { HORIZON_DAYS, dedup, inWindow, isOngoing, sortEvents, toEvents, withPlace } from './pipeline.ts'
 
 const DEFAULT_PREVIOUS = 'https://fora00.github.io/dashboard/events.json'
@@ -48,14 +58,12 @@ function envList(name: string): Set<string> | null {
     : null
 }
 
-function carryOver(previous: EventsFile | null, adapter: Adapter, now: number, drops: DropCounts): Event[] {
-  if (!previous) return []
+/** `previousEvents`: the previous file's records that passed validPreviousEvents. */
+function carryOver(previousEvents: readonly Event[], adapter: Adapter, now: number, drops: DropCounts): Event[] {
   return withPlace(
     adapter,
-    previous.events
-      .filter(
-        (e) => e && e.source === adapter.id && typeof e.start === 'string' && inWindow(e, now, adapter.horizonDays),
-      )
+    previousEvents
+      .filter((e) => e.source === adapter.id && inWindow(e, now, adapter.horizonDays))
       .map((e) => ({ ...e, ongoing: isOngoing(e, now) })),
     drops,
   )
@@ -91,6 +99,11 @@ async function report(
     console.log(
       `::warning title=Events source failed::${esc(`${s.id}: ${s.error ?? 'failed'} (kept ${s.count} previous events)`)}`,
     )
+  for (const z of suspiciousZeros(rows)) {
+    console.log(
+      `::warning title=Events source returns 0::${esc(`${z.id} has returned 0 events since ${z.since.slice(0, 10)} (it had ${z.had}): check that the adapter still parses the page`)}`,
+    )
+  }
   for (const st of staleSources(rows, now)) {
     console.log(
       `::warning title=Events source stale::${esc(`${st.id} has not succeeded for ${st.days === null ? 'ever (no lastSuccess)' : `${st.days} days`}: its events are aging`)}`,
@@ -103,6 +116,16 @@ async function report(
   }
   if (bad.length * 3 > ran) {
     console.log(`::error title=Events crawl degraded::${bad.length} of ${ran} sources failed`)
+  }
+  // For crawl.yml's issue job: >1/3 failed or a source stale over a week.
+  const output = process.env.GITHUB_OUTPUT?.trim()
+  if (output) {
+    const reasons = degradedReasons(rows, new Set(ms.keys()), now)
+    try {
+      await appendFile(output, `health=${reasons.join('; ').replace(/[\r\n]+/g, ' ')}\n`)
+    } catch (e) {
+      console.log(`cannot write step output: ${(e as Error).message}`)
+    }
   }
   const file = process.env.GITHUB_STEP_SUMMARY?.trim()
   if (!file) return
@@ -137,6 +160,13 @@ async function main(): Promise<void> {
   const loaded = await loadPrevious(process.env.EVENTS_PREVIOUS_URL?.trim() || DEFAULT_PREVIOUS)
   const previous = loaded.kind === 'ok' ? loaded.data : null
   const prevStatus = new Map((previous?.sources ?? []).map((s) => [s.id, s]))
+  // One malformed carried-over record must not crash dedup for everyone: drop it.
+  const checked = validPreviousEvents(previous?.events ?? [])
+  if (checked.dropped > 0)
+    console.log(
+      `::warning title=Previous events dropped::${checked.dropped} malformed record(s) in the previous events.json were not carried over (${checked.firstBad.replace(/[\r\n]+/g, ' ')})`,
+    )
+  const previousRecords = checked.events as unknown as Event[]
   const http = new PoliteHttp()
 
   const statuses: SourceStatus[] = []
@@ -150,7 +180,7 @@ async function main(): Promise<void> {
     const prev = prevStatus.get(adapter.id)
     // Drops among carried-over events count only when they are published instead of fresh ones.
     const carriedDrops: DropCounts = new Map()
-    const previousEvents = carryOver(previous, adapter, now, carriedDrops)
+    const previousEvents = carryOver(previousRecords, adapter, now, carriedDrops)
     const addDrops = (from: DropCounts) => {
       for (const [rule, n] of from) {
         const bySource = drops.get(rule) ?? new Map<string, number>()
@@ -168,8 +198,11 @@ async function main(): Promise<void> {
         count: previousEvents.length,
         error,
         lastSuccess: prev?.lastSuccess ?? null,
+        ...zeroTracking(prev, fresh, generatedAt),
       })
     }
+    /** Events the adapter returned this run; null when it threw. */
+    let fresh: number | null = null
 
     if (only && !only.has(adapter.id)) {
       // Not run this time (development): keep the previous state as it was.
@@ -201,13 +234,21 @@ async function main(): Promise<void> {
       const raws = await adapter.run(ctx)
       const freshDrops: DropCounts = new Map()
       const events = toEvents(adapter, raws, now, generatedAt, freshDrops)
+      fresh = events.length
       const prevCount = prev?.count ?? previousEvents.length
       if (events.length === 0 && prevCount > 0 && !adapter.mayBeEmpty) {
         keepPrevious(`0 events (previous run had ${prevCount}); keeping previous`)
       } else {
         all.push(...events)
         addDrops(freshDrops)
-        statuses.push({ id: adapter.id, name: adapter.name, ok: true, count: events.length, lastSuccess: generatedAt })
+        statuses.push({
+          id: adapter.id,
+          name: adapter.name,
+          ok: true,
+          count: events.length,
+          lastSuccess: generatedAt,
+          ...zeroTracking(prev, fresh, generatedAt),
+        })
       }
     } catch (e) {
       keepPrevious((e as Error).message)
@@ -277,7 +318,9 @@ async function main(): Promise<void> {
     const total = [...bySource.values()].reduce((a, b) => a + b, 0)
     return `  ${rule.padEnd(22)} ${String(total).padStart(4)}  (${[...bySource].map(([id, n]) => `${id} ${n}`).join(', ')})`
   })
-  console.log(`dropped by rule (tags.ts DROP RULES):${dropLines.length ? `\n${dropLines.join('\n')}` : ' none'}`)
+  console.log(
+    `dropped by rule (tags.ts DROP RULES, invalid-url):${dropLines.length ? `\n${dropLines.join('\n')}` : ' none'}`,
+  )
   console.log(`${http.requests} HTTP requests · ${((Date.now() - started) / 1000).toFixed(0)}s · wrote ${out}`)
 }
 

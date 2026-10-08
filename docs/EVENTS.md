@@ -39,6 +39,8 @@ unknown `category`/`tags` value like `other`. A breaking change bumps
 | `count` | number | Events this source contributed this run (before cross-source dedup). When `ok` is false: the previous events carried over. |
 | `error` | string? | Present only when `ok` is false. |
 | `lastSuccess` | string \| null | UTC ISO time of the last successful fetch; carried over from the previous file while failing. `null` if it never succeeded. |
+| `lastNonZero` | number? | Events of the last successful fetch that returned more than 0. Health check only (added 2026-10-08). |
+| `zeroSince` | string? | UTC ISO time of the first fetch, after a non-zero one, that returned 0 events; absent while the source delivers. Health check only (added 2026-10-08). |
 
 ### Event
 
@@ -123,8 +125,13 @@ effective end has passed.
 ### Dedup
 
 Across sources, two events are the same when **normalised title** (lowercase,
-accents stripped, punctuation/whitespace collapsed) + **local start date** +
-**normalised city** match. The richer record is kept (end time, venue, image,
+accents stripped, punctuation/whitespace collapsed) + **when** + **normalised
+city** match. *When* is the exact start instant for timed events (so the 17:00
+and 21:00 showings of one show on one day stay two events, while the 21:00
+showing listed by two sources merges) and the local start date for all-day
+ones (changed 2026-10-08; before, timed events keyed on the day too). An
+all-day record also folds into a timed one with the same title, day and city
+when that day has exactly one timed showing; with two or more it stays apart. The richer record is kept (end time, venue, image,
 timed rather than all-day, longer description), its missing fields are filled
 from the other, `tags` are unioned and `sources` lists both. The title
 comparison ignores case, so Arteven's capitals merge with TCVI's mixed case
@@ -417,7 +424,27 @@ previous events (re-filtered by the window, `ongoing` recomputed,
 deployed one — and reports `ok: false` with the error and the carried-over
 `lastSuccess`. Failed sources surface as `::warning::` annotations and a
 per-source table in the job summary (`::error::` if more than a third failed,
-job still green).
+job still green; in CI the `crawl.yml` health job also opens an issue then,
+docs/CI.md).
+
+**Zero watch** (added 2026-10-08). Each source status carries `lastNonZero`
+and `zeroSince` (`scripts/events/health.ts` `zeroTracking`). A source that
+is accepted as ok with 0 events (a `mayBeEmpty` source, or one whose carried
+events all aged out) although it delivered 5 or more before gets a
+`::warning title=Events source returns 0::` every run until it delivers
+again: a broken adapter that returns `[]` looks exactly like that.
+
+**Carried-over records** are validated first (`validPreviousEvents` in
+`scripts/events/schemas.ts`): a record without a string `id`, non-empty
+`title`, parseable `start` and `source` is dropped with one
+`::warning title=Previous events dropped::` (count + first problem) instead
+of crashing dedup for every source; missing optional fields (`city`, `tags`,
+`sources`, `end`, …) get safe defaults.
+
+**URLs** (added 2026-10-08): `url` and `image` go through `absUrl` in
+`toEvents` (http upgraded to https). A record whose `url` is not absolute
+http(s) is dropped and counted as `invalid-url` in the "dropped by rule"
+summary line; an image that is not becomes `null`.
 
 **Publish guards** (`scripts/events/previous.ts`). The previous file is fetched
 with 3 attempts (backoff 3 s, 10 s); a 404/410 or a missing local file means
@@ -503,8 +530,9 @@ add dates confirmed on the official site; if an event is certain to exist but
 its dates are only on aggregators (or conflict), add it with `"verified": false`:
 it is published with `datesTentative` and shown as "Date da confermare" until
 you verify it and drop the flag. The file is validated with zod
-(`scripts/events/schemas.ts`): a malformed entry fails the `spot` adapter with
-the entry named, the crawl carries the previous spot events over. Entries stay in the file and appear
+(`scripts/events/schemas.ts`): a malformed entry, a duplicate `id` or a
+`category` that is not a CATEGORIES id in `tags.ts` fails the `spot` adapter
+with the entry named, the crawl carries the previous spot events over. Entries stay in the file and appear
 when they come into the spot horizon (540 days, not the 90 of the crawled sources).
 Spot events get `ring: "spot"`; their `area` comes from the town map in
 `scripts/events/areas.ts`, so add a new town there (else it lands in

@@ -27,6 +27,21 @@ events step, `npm run build`, upload + deploy Pages.
   file, or previous file unreadable while a source failed; docs/EVENTS.md
   "Resilience"): override with the **force** input of a manual `crawl.yml`
   run (`EVENTS_FORCE=1`).
+- **Crawl health issue** (`crawl.yml` job `health`, added 2026-10-08): runs
+  after the crawl-deploy job (`needs: site`, `if: always()`), so it never
+  blocks or delays a deploy. It keeps **one** open issue titled "Events crawl
+  needs attention": opened (or commented on, if already open) when the
+  crawl-deploy job did not succeed, more than a third of the sources that ran
+  failed, or a source has not succeeded for over 7 days (`degradedReasons` in
+  `scripts/events/health.ts`; the crawler hands them over as the `health` step
+  output, surfaced as the `crawl_health` output of `_site.yml`). The first
+  healthy run closes it. Only this job has `issues: write`; the deploy job
+  keeps `contents: read` + Pages rights (permissions are per job in
+  `crawl.yml`). If Issues are disabled on the repo, the job fails red after
+  the deploy; nothing else is affected. `deploy.yml` (reuse path) has no such
+  job.
+- **Timeouts**: the `_site.yml` job has `timeout-minutes: 30` (a normal crawl
+  takes minutes), the health job 5.
 - **Output gate**: "Require events.json" checks with node that the file is
   schemaVersion 1 with at least one event; a missing, invalid or
   `"events": []` file never deploys.

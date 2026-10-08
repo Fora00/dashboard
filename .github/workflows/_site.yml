@@ -14,6 +14,10 @@ on:
         type: boolean
         required: false
         default: false
+    outputs:
+      crawl_health:
+        description: 'crawl only: degraded reasons from the crawler (one line, empty when healthy); read by crawl.yml'
+        value: ${{ jobs.deploy.outputs.crawl_health }}
     secrets:
       VITE_SUPABASE_URL:
         required: false
@@ -28,6 +32,11 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    # A normal crawl-deploy takes minutes; a hung source must not hold the
+    # pages concurrency group for GitHub's default 6 hours.
+    timeout-minutes: 30
+    outputs:
+      crawl_health: ${{ steps.crawl.outputs.health }}
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -49,6 +58,7 @@ jobs:
       # the total halves or the previous file is unreadable while a source
       # failed; events_force overrides that.
       - name: Crawl events
+        id: crawl
         if: inputs.events == 'crawl'
         run: npm run events:crawl
         env:

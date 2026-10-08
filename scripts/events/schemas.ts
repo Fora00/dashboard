@@ -3,6 +3,7 @@
 // its format now fails loudly with the adapter named, instead of returning
 // zero events or crashing on `undefined`.
 import { z } from 'zod'
+import { CATEGORIES } from './tags.ts'
 
 const DAY = /^\d{4}-\d{2}-\d{2}$/
 
@@ -27,7 +28,28 @@ export const SpotEntrySchema = z
 
 export type SpotEntry = z.infer<typeof SpotEntrySchema>
 
-export const SpotFileSchema = z.object({ events: z.array(SpotEntrySchema) })
+const CATEGORY_IDS = new Set<string>(CATEGORIES.map((c) => c.id))
+
+/** spot.json: entries as above, ids unique across the file, `category` one of tags.ts CATEGORIES. */
+export const SpotFileSchema = z.object({ events: z.array(SpotEntrySchema) }).superRefine((file, ctx) => {
+  const seen = new Map<string, number>()
+  file.events.forEach((e, i) => {
+    const first = seen.get(e.id)
+    if (first !== undefined)
+      ctx.addIssue({
+        code: 'custom',
+        message: `duplicate id "${e.id}" (also events.${first}): ids must be unique`,
+        path: ['events', i, 'id'],
+      })
+    else seen.set(e.id, i)
+    if (e.category !== undefined && !CATEGORY_IDS.has(e.category))
+      ctx.addIssue({
+        code: 'custom',
+        message: `unknown category "${e.category}" (known: ${[...CATEGORY_IDS].join(', ')})`,
+        path: ['events', i, 'category'],
+      })
+  })
+})
 
 /** Top-level shape of a previously published events.json (records are kept as-is). */
 export const PreviousFileSchema = z.looseObject({
@@ -36,6 +58,51 @@ export const PreviousFileSchema = z.looseObject({
   sources: z.array(z.unknown()),
   events: z.array(z.unknown()),
 })
+
+/**
+ * The minimum a carried-over record of the previous events.json needs for the
+ * pipeline (window, withPlace, dedup) not to crash on it. Missing optional
+ * bits get safe defaults; a record without id/title/start/source is dropped.
+ */
+export const PreviousEventSchema = z
+  .looseObject({
+    id: z.string().min(1),
+    title: z.string().trim().min(1),
+    start: z.string().refine((s) => !Number.isNaN(Date.parse(s)), 'start is not a date'),
+    source: z.string().min(1),
+    end: z
+      .string()
+      .refine((s) => !Number.isNaN(Date.parse(s)))
+      .nullable()
+      .catch(null),
+    allDay: z.boolean().catch(false),
+    city: z.string().catch(''),
+    sources: z.array(z.string()).optional().catch(undefined),
+    tags: z.array(z.string()).catch([]),
+    description: z.string().catch(''),
+    summary: z.string().catch(''),
+  })
+  .transform((e) => ({ ...e, sources: e.sources?.length ? e.sources : [e.source] }))
+
+/** Split the previous file's records into usable ones and a count of dropped ones (with the first problem). */
+export function validPreviousEvents(records: readonly unknown[]): {
+  events: z.infer<typeof PreviousEventSchema>[]
+  dropped: number
+  firstBad: string
+} {
+  const events: z.infer<typeof PreviousEventSchema>[] = []
+  let dropped = 0
+  let firstBad = ''
+  records.forEach((r, i) => {
+    const res = PreviousEventSchema.safeParse(r)
+    if (res.success) events.push(res.data)
+    else {
+      dropped++
+      firstBad ||= `events.${i}: ${describeIssues(res.error, 2)}`
+    }
+  })
+  return { events, dropped, firstBad }
+}
 
 /** Readable "path: message" lines for a failed parse. */
 export function describeIssues(error: z.ZodError, max = 5): string {
