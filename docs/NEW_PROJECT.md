@@ -57,6 +57,7 @@ Add an object to the `projects` array. The home grid renders this list.
   description: 'One line shown on the home card.',
   path: '/<id>',
   status: 'live',
+  layout: 'narrow',     // content width from 1024px up: 'narrow' (max-w-3xl) or 'wide' (max-w-6xl)
   // ownerOnly: true,   // only if the whole project is owner-only
   // public: true,      // local-only public data: no login, no invite link
 },

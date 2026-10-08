@@ -1,12 +1,12 @@
 import type { ChangeEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { db, type ProjectStat } from '../../lib/db'
-import { projects, type ProjectMeta } from '../../lib/projects'
+import { db } from '../../lib/db'
+import type { ProjectMeta } from '../../lib/projects'
 import { formatBytes } from '../../lib/format'
-import { useOwner } from '../../lib/useOwner'
 import { usePersistedState, type Codec } from '../../lib/safeStorage'
-import { isHidden, toggleStar, useApplyHiddenDefaults } from '../../lib/projectStats'
+import { toggleStar } from '../../lib/projectStats'
+import { useVisibleProjects } from '../../lib/useVisibleProjects'
 import { Card } from '../../components/Card'
 import { ProjectIcon } from '../../components/ProjectIcon'
 import { groupByArea } from '../../lib/groupByArea'
@@ -68,15 +68,8 @@ const groupedCodec: Codec<boolean> = {
 // surfaces every subproject and a live stat pulled from its data — an example
 // of one project reading another project's data through the shared db.
 export function Home() {
-  const owner = useOwner()
-  const applyDefaults = useApplyHiddenDefaults()
-  const stats = useLiveQuery(() => db.projectStats.toArray())
-  const statsById = new Map<string, ProjectStat>((stats ?? []).map((s) => [s.id, s]))
-  // Hidden projects drop out after the ownerOnly filter. While stats load,
-  // statsById is empty so only the defaults apply — no flash of every tile.
-  const permitted = projects.filter((p) => !p.ownerOnly || owner)
-  const visible = permitted.filter((p) => !isHidden(p.id, statsById.get(p.id), applyDefaults))
-  const hiddenCount = permitted.length - visible.length
+  // ownerOnly + hidden filtering, shared with the sidebar (useVisibleProjects).
+  const { stats, statsById, visible, hiddenCount } = useVisibleProjects()
   const [order, setOrder] = usePersistedState<HomeOrder>(HOME_ORDER_KEY, 'used', undefined, orderCodec)
   const [reversed, setReversed] = usePersistedState<boolean>(HOME_REVERSED_KEY, false, undefined, reversedCodec)
 

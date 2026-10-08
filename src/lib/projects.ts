@@ -4,6 +4,11 @@
 
 import type { AreaId } from './areas'
 
+// Content column width from lg (1024px) up; below lg every page is the same
+// single max-w-3xl column. narrow = max-w-3xl centred (capture pages used
+// one-handed), wide = up to max-w-6xl (dense / reading pages). See navModel.ts.
+export type ProjectLayout = 'narrow' | 'wide'
+
 export interface ProjectMeta {
   id: string
   name: string
@@ -23,6 +28,8 @@ export interface ProjectMeta {
   // Public: local-only public data, usable by anyone with the plain link — no
   // login, no invite. Never offered as a grantable project on /sharing.
   public?: boolean
+  // Content width at lg+ (see ProjectLayout). Omitted = 'narrow'.
+  layout?: ProjectLayout
 }
 
 // Projects that are never granted through project_members, for reasons the
@@ -49,6 +56,7 @@ export const projects: ProjectMeta[] = [
     description: 'Stash files on this device, offline. Share or sync when online.',
     path: '/local-transfer',
     status: 'live',
+    layout: 'narrow',
   },
   {
     id: 'shop-list',
@@ -60,6 +68,7 @@ export const projects: ProjectMeta[] = [
     description: 'Groceries todo list, sharable with whitelisted guests.',
     path: '/shop-list',
     status: 'live',
+    layout: 'narrow',
   },
   {
     id: 'todo',
@@ -71,6 +80,7 @@ export const projects: ProjectMeta[] = [
     description: 'Generic todo list. Works offline, syncs when signed in.',
     path: '/todo',
     status: 'live',
+    layout: 'narrow',
   },
   {
     id: 'climbing',
@@ -82,6 +92,7 @@ export const projects: ProjectMeta[] = [
     description: 'Track climbing sessions, sends and grade progress.',
     path: '/climbing',
     status: 'live',
+    layout: 'narrow',
   },
   {
     id: 'habits',
@@ -93,6 +104,7 @@ export const projects: ProjectMeta[] = [
     description: 'Daily habit tracker with streaks. Works offline, syncs when signed in.',
     path: '/habits',
     status: 'live',
+    layout: 'narrow',
   },
   {
     id: 'book-ideas',
@@ -104,6 +116,7 @@ export const projects: ProjectMeta[] = [
     description: 'Capture writing ideas for books, with room for notes.',
     path: '/book-ideas',
     status: 'live',
+    layout: 'wide',
   },
   {
     id: 'boardgame-ideas',
@@ -115,6 +128,7 @@ export const projects: ProjectMeta[] = [
     description: 'Capture board game design ideas, with room for notes.',
     path: '/boardgame-ideas',
     status: 'live',
+    layout: 'wide',
   },
   {
     id: 'links',
@@ -126,6 +140,7 @@ export const projects: ProjectMeta[] = [
     description: 'Save links to read later, shared with whitelisted guests.',
     path: '/links',
     status: 'live',
+    layout: 'wide',
   },
   {
     id: 'trips',
@@ -137,6 +152,7 @@ export const projects: ProjectMeta[] = [
     description: 'Travel ideas — solo or with friends',
     path: '/trips',
     status: 'live',
+    layout: 'wide',
   },
   {
     id: 'events',
@@ -148,6 +164,7 @@ export const projects: ProjectMeta[] = [
     description: 'Public events around Trentino, Bolzano and Verona, tagged by interest.',
     path: '/events',
     status: 'live',
+    layout: 'wide',
     public: true,
   },
   {
@@ -160,6 +177,7 @@ export const projects: ProjectMeta[] = [
     description: 'What you ate, day by day. Synced across your devices. Owner only.',
     path: '/meal-diary',
     status: 'live',
+    layout: 'wide',
     ownerOnly: true,
   },
   {
@@ -172,6 +190,7 @@ export const projects: ProjectMeta[] = [
     description: 'This week: focus, trackers, Sunday check. Owner only.',
     path: '/life',
     status: 'live',
+    layout: 'wide',
     ownerOnly: true,
   },
   {
@@ -184,6 +203,7 @@ export const projects: ProjectMeta[] = [
     description: 'Storage, sync status and device data.',
     path: '/settings',
     status: 'live',
+    layout: 'narrow',
   },
   {
     id: 'sharing',
@@ -195,6 +215,7 @@ export const projects: ProjectMeta[] = [
     description: 'Invite guests by email and choose which projects they can use.',
     path: '/sharing',
     status: 'live',
+    layout: 'wide',
     ownerOnly: true,
   },
 ]
