@@ -792,8 +792,10 @@ order. Tag = who implements. `db push` stays orchestrator-only.
       informative text; bump to slate-500/600. Add legend text to colour-only
       bars (`NutritionTrends.tsx:150`, `Climbing.tsx:181`).
 
-- [ ] **M7b AreaManager still has its own share/clipboard code** [sonnet, XS] — use `lib/share.ts` (`shareOrCopy`); the current `.catch(() => {})` swallows failed shares.
-- [ ] **F1 Follow-ups from the 2026-10-08 fixes** [sonnet, S] — SyncCard render test (no React test setup yet); "Remove private data" entry in Settings while signed out; show the new "not invited any more" error clearly in JoinArea/JoinProject; reword the `cloudSync.ts` `share_token` comment; `docs/NEW_PROJECT.md` mention `uniqueViolationIsDone` / `afterPull`.
+- [x] **M7b AreaManager still has its own share/clipboard code** [sonnet, XS] — use `lib/share.ts` (`shareOrCopy`); the current `.catch(() => {})` swallows failed shares.
+      → done 2026-10-08 (also fixed JoinArea showing "[object Object]" for Supabase errors).
+- [x] **F1 Follow-ups from the 2026-10-08 fixes** [sonnet, S] — SyncCard render test (no React test setup yet); "Remove private data" entry in Settings while signed out; show the new "not invited any more" error clearly in JoinArea/JoinProject; reword the `cloudSync.ts` `share_token` comment; `docs/NEW_PROJECT.md` mention `uniqueViolationIsDone` / `afterPull`.
+      → mostly done 2026-10-08: not-invited message, comment, NEW_PROJECT docs, Settings "Remove private data". Still open: SyncCard render test (no React test setup).
 - [ ] **F2 Verify on the hosted project** [orchestrator] — as a guest: `select share_token from shop_areas` fails, `shop_area_tokens` returns 0 rows; an old `#/join/<token>` link still resolves; phone check offline (owner tiles stay, habit toggles sync). L9 stays open (typing the two `any` in `cloudSync.ts` breaks ~18 `TableSync` declarations because Dexie `Table` is invariant).
 
 ### Low
@@ -863,7 +865,8 @@ sync already ignores stale updates (`ignore_stale_update` triggers on
       → done 2026-10-08: offset-less times read as Europe/Rome via `localToIso`; tests pass under TZ=UTC and TZ=Europe/Rome.
       `time.ts:86` `normalizeIso` uses `Date.parse` (UTC in CI, 2 h shift) for
       openpa, trentinospettacoli, padova. Use `localToIso`; set `TZ` in the script; test.
-- [ ] **E5 Deploy job holds Pages-write for the whole job** [opus, S] — split
+- [x] **E5 Deploy job holds Pages-write for the whole job** [opus, S] — split
+      → done 2026-10-08, NOT yet run on GitHub: `_site.yml` split into `build` (contents: read) and `deploy` (pages/id-token), actions pinned by SHA (setup-node v7.1.0 is from today). First-run watch list in docs/CI.md: deploy finds the artifact, `configure-pages` permissions, `github-pages` environment rules, health job still gets `crawl_health`.
       build (`contents: read`) from deploy; pin actions by SHA; Dependabot is on.
 - [x] **E6 One bad carried-over record blocks every crawl** [sonnet, S] —
       → done 2026-10-08: `validPreviousEvents()` drops bad carried-over records with one warning.
@@ -873,19 +876,22 @@ sync already ignores stale updates (`ignore_stale_update` triggers on
       → done 2026-10-08: `health` job in `crawl.yml` keeps one open issue "Events crawl needs attention" (needs Issues enabled on the repo; if not, that job goes red after the deploy, nothing else breaks). Per-job permissions.
       only prints `::error::`; open an issue or fail a separate step; also on
       sources stale for over 7 days.
-- [ ] **E8 Hardening, low** [sonnet, S each] — response size cap (~5 MB) in
+- [x] **E8 Hardening, low** [sonnet, S each] — response size cap (~5 MB) in
+      → client part done 2026-10-08: `isValidEvent` drops malformed events, a 0-event file never overwrites the Dexie cache.
       → PARTLY done 2026-10-08: 5 MB body cap, refusal of non-http(s) and private/loopback/link-local hosts on every redirect hop (literal host only, no DNS), `absUrl` on url/image. Still open: client-side `model.ts:140` / `Events.tsx:80` (drop malformed events, never replace the offline cache with an empty file) [sonnet, S].
       `http.ts`; block private/link-local redirect targets and non-https in
       fetched URLs (`ogimage.ts:99`, filarmonica, muse); `absUrl` on url/image
       in `toEvents` (`pipeline.ts:132`); client: drop malformed events and don't
       overwrite the offline cache with an empty file (`model.ts:140`,
       `Events.tsx:80`).
-- [ ] **E9 Small** [haiku, XS] — retry image fetch network errors next run
+- [x] **E9 Small** [haiku, XS] — retry image fetch network errors next run
+      → all done 2026-10-08: reused `events.json` older than 3 days emits a warning (never fails the deploy).
       → PARTLY done 2026-10-08: image network errors retried next run, `timeout-minutes: 30`, spot.json unique ids + known categories. Still open: warn when the reused `events.json` is over 3 days old [haiku, XS].
       (`ogimage.ts:107`); `timeout-minutes: 30` on workflows; warn when reused
       `events.json` is over 3 days old; `spot.json` unique ids + known categories
       (`pipeline.ts:101`, `spot.ts:39`).
-- [ ] **E10 Adapter tests** [sonnet, M] — fixtures for openpa, filarmonica,
+- [x] **E10 Adapter tests** [sonnet, M] — fixtures for openpa, filarmonica,
+      → done 2026-10-08: fixture tests for openpa, filarmonica, arteven, padova, ical (30 tests, pass under TZ=UTC and Europe/Rome); no adapter bugs found.
       arteven, padova, `adapters/ical.ts` (only muse/trentinospettacoli tested).
 
 ### Life
@@ -906,7 +912,8 @@ sync already ignores stale updates (`ignore_stale_update` triggers on
 - [x] **LF4 History chart misreads future/missing weeks** [sonnet, S] —
       → done 2026-10-08: `chartPoints.ts` (weeks <= current, x by elapsed weeks).
       `ProgressChart.tsx:38-60`: filter `week <= current`, x by weeks elapsed.
-- [ ] **LF5 Sunday answers can't be given late** [opus, S] — previous week is
+- [x] **LF5 Sunday answers can't be given late** [opus, S] — previous week is
+      → done 2026-10-08: last week takes Sunday answers/check-ins until Tuesday 23:59 or until exported. "Exported" is a per-device mark in localStorage (`dashboard:life-exported`) set by Export/Share; it does not sync (other device uses the Tuesday cutoff). Follow-ups: label History "until Tuesday", `docs/HANDOFF-life.md` §2.2.
       read-only; allow Sunday/check-in edits until exported or Tuesday.
 - [x] **LF6 Parsing/export robustness** [sonnet, XS] — triple backticks in text
       → done 2026-10-08: longer export fence + robust parser, control characters rejected, over-cap arrays short-circuit, 200 KB input cap.
@@ -917,7 +924,8 @@ sync already ignores stale updates (`ignore_stale_update` triggers on
       → done 2026-10-08.
       any share target (warn or remove, `ExportSection.tsx:46`); unknown
       `meal` value gives a NaN sort (`meals.ts:33`).
-- [ ] **LF8 Life tests** [sonnet, S] — export round-trip incl. backticks,
+- [x] **LF8 Life tests** [sonnet, S] — export round-trip incl. backticks,
+      → done 2026-10-08: `life-things-match.ts` extracted, `matchBatch` pure, 10 tests; export round-trip, chart and midnight tests were added earlier.
       `life-things-*` matchers (extract pure fns), `ProgressChart` point
       builder, midnight rollover.
 
