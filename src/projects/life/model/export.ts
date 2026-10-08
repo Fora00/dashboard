@@ -1,6 +1,7 @@
 import type { LifeAnswer, LifeEntry, LifePlan, LifeQuestion, MealEntry } from '../../../lib/db'
 import { withCheckinIds } from './checkinIds.ts'
 import { dayKey, weekDays } from './dates.ts'
+import { fenceFor } from './fence.ts'
 import { summarizeMealsWeek } from './meals.ts'
 import { summarizeWeek } from './summary.ts'
 
@@ -145,17 +146,9 @@ export function buildExportMarkdown(
         }
       : {}),
   }
-  out.push(
-    '<details>',
-    '<summary>JSON</summary>',
-    '',
-    '```json',
-    JSON.stringify(json, null, 2),
-    '```',
-    '',
-    '</details>',
-    '',
-  )
+  const jsonText = JSON.stringify(json, null, 2)
+  const fence = fenceFor(jsonText)
+  out.push('<details>', '<summary>JSON</summary>', '', `${fence}json`, jsonText, fence, '', '</details>', '')
   return out.join('\n')
 }
 

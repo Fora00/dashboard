@@ -15,6 +15,9 @@ import { isDateKey, isMondayKey } from './dates.ts'
 
 export type ParseResult = { ok: true; plan: LifePlan } | { ok: false; errors: string[] }
 
+/** Raw pasted text beyond this is rejected before JSON.parse. */
+const MAX_INPUT_CHARS = 200_000
+
 type Obj = Record<string, unknown>
 
 function isObj(v: unknown): v is Obj {
@@ -31,6 +34,9 @@ function utf8Bytes(s: string): number {
  * error found — never a partial plan.
  */
 export function parseWeekJson(text: string): ParseResult {
+  if (text.length > MAX_INPUT_CHARS) {
+    return { ok: false, errors: [`The input is too large (over ${MAX_INPUT_CHARS / 1000} KB) to be a week plan`] }
+  }
   let value: unknown
   try {
     value = JSON.parse(text)
@@ -73,6 +79,7 @@ export function validatePlan(value: unknown): ParseResult {
     const t = raw.trim()
     if (!t) err(`${p} must not be empty`)
     if (t.length > LIFE_CAPS.rule) err(`${p} is longer than ${LIFE_CAPS.rule} characters`)
+    if (hasControl(t, false)) err(`${p} must not contain line breaks or control characters`)
     return t
   })
 
@@ -107,7 +114,7 @@ export function validatePlan(value: unknown): ParseResult {
       area: nullableText(o, 'area', p, LIFE_CAPS.areaProject, err),
       project: nullableText(o, 'project', p, LIFE_CAPS.areaProject, err),
       tags,
-      notes: textField(o, 'notes', p, LIFE_CAPS.taskNotes, false, err),
+      notes: textField(o, 'notes', p, LIFE_CAPS.taskNotes, false, err, true),
     }
     const listId = o.listId
     if (listId !== undefined && listId !== null && listId !== '') {
@@ -215,7 +222,11 @@ function arrayField(o: Obj, key: string, cap: number, err: (m: string) => void):
     err(`${key} must be an array`)
     return []
   }
-  if (v.length > cap) err(`${key} has ${v.length} items (max ${cap})`)
+  if (v.length > cap) {
+    // Over the cap the plan is rejected anyway: don't map every item.
+    err(`${key} has ${v.length} items (max ${cap})`)
+    return []
+  }
   return v
 }
 
@@ -237,6 +248,16 @@ function idField(o: Obj, path: string, err: (m: string) => void): string {
   return id
 }
 
+/** True when `s` has a control character (C0/C1, DEL, line/paragraph separator); newlines and tabs are fine when `multiline`. */
+function hasControl(s: string, multiline: boolean): boolean {
+  for (let i = 0; i < s.length; i++) {
+    const c = s.charCodeAt(i)
+    if (multiline && (c === 0x09 || c === 0x0a || c === 0x0d)) continue
+    if (c < 0x20 || (c >= 0x7f && c <= 0x9f) || c === 0x2028 || c === 0x2029) return true
+  }
+  return false
+}
+
 function textField(
   o: Obj,
   key: string,
@@ -244,6 +265,7 @@ function textField(
   cap: number,
   required: boolean,
   err: (m: string) => void,
+  multiline = false,
 ): string {
   const v = o[key]
   if (v === undefined || v === null) {
@@ -255,6 +277,11 @@ function textField(
     return ''
   }
   const t = v.trim()
+  // Control characters (and raw newlines in one-line fields) corrupt the
+  // export's Markdown list lines and Things titles.
+  if (hasControl(t, multiline)) {
+    err(`${path}.${key} must not contain ${multiline ? 'control characters' : 'line breaks or control characters'}`)
+  }
   if (required && !t) err(`${path}.${key} must not be empty`)
   if (t.length > cap) err(`${path}.${key} is longer than ${cap} characters`)
   return t

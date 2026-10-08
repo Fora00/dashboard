@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
-import type { LifePlan } from '../../lib/db'
-import { diffPlans } from './model'
+import { useLiveQuery } from 'dexie-react-hooks'
+import { db, type LifePlan } from '../../lib/db'
+import { diffPlans, hiddenTrackerEntries } from './model'
 import { Button } from '../../components/Button'
 import { Card } from '../../components/Card'
 
@@ -30,6 +31,9 @@ export function PlanPreview({
   extraActions,
 }: PlanPreviewProps) {
   const diff = diffPlans(existingPlan, plan)
+  // Entries already logged this week: removing their tracker hides them.
+  const entries = useLiveQuery(() => db.lifeEntries.where('week').equals(plan.week).toArray(), [plan.week])
+  const hidden = hiddenTrackerEntries(diff.trackers.removed, entries ?? [], plan.week)
   return (
     <Card className="mb-4 space-y-3 text-sm">
       <p className="font-medium text-slate-800 dark:text-slate-100">Week of {plan.week}</p>
@@ -67,6 +71,16 @@ export function PlanPreview({
           </ul>
         )}
       </div>
+
+      {hidden.length > 0 && (
+        <ul className="list-disc space-y-0.5 pl-5 text-amber-700 dark:text-amber-400">
+          {hidden.map(({ tracker, count }) => (
+            <li key={tracker.id}>
+              {count} logged {count === 1 ? 'entry' : 'entries'} will be hidden ({tracker.label})
+            </li>
+          ))}
+        </ul>
+      )}
 
       {saveError && <p className="text-rose-600 dark:text-rose-400">{saveError}</p>}
 

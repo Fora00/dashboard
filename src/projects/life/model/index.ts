@@ -13,7 +13,7 @@ export { parseWeekJson, validatePlan, type ParseResult } from './validate.ts'
 export { derivedCheckinId, withCheckinIds } from './checkinIds.ts'
 export { entryId, isEnergy, validateAnswer } from './entries.ts'
 export { summarizeWeek, nextCheckin, type TrackerSummary, type CheckinStatus, type WeekSummary } from './summary.ts'
-export { diffPlans, type ListDiff, type PlanDiff } from './diff.ts'
+export { diffPlans, hiddenTrackerEntries, type ListDiff, type PlanDiff } from './diff.ts'
 export {
   thingsItems,
   buildThingsUrl,
@@ -24,5 +24,6 @@ export {
   type ThingsUrlOptions,
 } from './things.ts'
 export { buildExportMarkdown } from './export.ts'
+export { fenceFor, extractJsonFence } from './fence.ts'
 export { summarizeMealsWeek, type MealsWeek, type MealsDay } from './meals.ts'
 export { LIFE_IMPORT_BASE, encodeImportLink, decodeImportParam } from './importLink.ts'

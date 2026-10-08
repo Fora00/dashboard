@@ -3,7 +3,8 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db, type LifeTrackerEntry } from '../../../lib/db'
 import { removeTrackerEntry, restoreEntry } from '../../../lib/lifeSync'
 import { trackersSummary } from '../format'
-import { addDays, dayKey, type TrackerSummary } from '../model'
+import { addDays, type TrackerSummary } from '../model'
+import { useToday } from '../useToday'
 import { CollapsibleSection } from './CollapsibleSection'
 import { TrackerRow, type LastSunday } from './TrackerRow'
 import { runSafe } from '../../../lib/runSafe'
@@ -29,7 +30,8 @@ export function TrackersSection({
   // On Monday, yesterday belongs to last week: habits can still mark last
   // Sunday, written to last week's entries under last week's tracker (same
   // id, e.g. via "Copy last week", else same label).
-  const isMonday = !readOnly && dayKey(new Date()) === week
+  const today = useToday()
+  const isMonday = !readOnly && today === week
   const prevWeek = addDays(week, -7)
   const prev = useLiveQuery(async () => {
     if (!isMonday) return null

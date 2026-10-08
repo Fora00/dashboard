@@ -52,6 +52,8 @@ export function ExportSection({
     }
   }
 
+  const canShare = typeof navigator !== 'undefined' && 'share' in navigator
+
   return (
     <CollapsibleSection title="Export" open={open} onToggle={onToggle} readOnly={readOnly}>
       <p className="mb-3 text-sm text-slate-500 dark:text-slate-400">
@@ -63,12 +65,17 @@ export function ExportSection({
           <Button onClick={() => void doExport()}>
             {copied && fallbackText === null ? 'Copied ✓' : '📋 Export week'}
           </Button>
-          {typeof navigator !== 'undefined' && 'share' in navigator && (
+          {canShare && (
             <Button variant="ghost" onClick={() => void doShare()}>
               Share
             </Button>
           )}
         </div>
+        {canShare && (
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            Sharing sends this week, food included, outside the app.
+          </p>
+        )}
         {fallbackText !== null && (
           <textarea
             readOnly

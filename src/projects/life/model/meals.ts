@@ -23,14 +23,19 @@ export interface MealsWeek {
   approximate: boolean
 }
 
-const MEAL_ORDER = { breakfast: 0, lunch: 1, dinner: 2, snack: 3 } as const
+const MEAL_ORDER: Readonly<Record<string, number>> = { breakfast: 0, lunch: 1, dinner: 2, snack: 3 }
+
+// Unknown meal values sort after the known ones (never NaN, so the sort stays stable).
+function mealRank(meal: string): number {
+  return MEAL_ORDER[meal] ?? 99
+}
 
 export function summarizeMealsWeek(meals: readonly MealEntry[], week: string): MealsWeek {
   const days: MealsDay[] = []
   for (const day of weekDays(week)) {
     const entries = meals
       .filter((m) => m.day === day)
-      .sort((a, b) => MEAL_ORDER[a.meal] - MEAL_ORDER[b.meal] || a.createdAt - b.createdAt)
+      .sort((a, b) => mealRank(a.meal) - mealRank(b.meal) || a.createdAt - b.createdAt)
     if (entries.length) days.push({ day, entries, totals: dayTotals(entries) })
   }
   const counted = days.filter((d) => d.totals.counted > 0)

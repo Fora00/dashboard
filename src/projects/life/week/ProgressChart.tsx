@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { LifeEntry, LifeWeek } from '../../../lib/db'
 import { Card } from '../../../components/Card'
-import { summarizeWeek } from '../model'
+import { buildChartPoints } from './chartPoints'
 
 const W = 320
 const H = 130
@@ -20,9 +20,6 @@ const SERIES = [
   { key: 'habits', label: 'Habits', stroke: 'stroke-violet-400', fill: 'fill-violet-400', text: 'text-violet-500' },
   { key: 'tasks', label: 'Things sent', stroke: 'stroke-amber-400', fill: 'fill-amber-400', text: 'text-amber-500' },
 ] as const
-type Key = (typeof SERIES)[number]['key']
-
-const pct = (done: number, total: number) => (total > 0 ? Math.round((done / total) * 100) : null)
 
 /** Percent of focus / check-ins / Things done per week, one line each, oldest to newest. The current week is the hollow dotted end point. Plain SVG. */
 export function ProgressChart({
@@ -35,29 +32,12 @@ export function ProgressChart({
   currentWeek: string
 }) {
   const [active, setActive] = useState<number | null>(null)
-  const points = weeks
-    .slice(0, MAX_WEEKS)
-    .reverse()
-    .map((w) => {
-      const s = summarizeWeek(w.plan, entries)
-      return {
-        week: w.week,
-        current: w.week === currentWeek,
-        focus: pct(s.focusDone.size, w.plan.focus.length),
-        checkins: pct(s.checkins.filter((c) => c.done).length, s.checkins.length),
-        // habits = trackers with a target that reached it
-        habits: pct(
-          s.trackers.filter((t) => t.reachedTarget === true).length,
-          s.trackers.filter((t) => t.reachedTarget !== null).length,
-        ),
-        tasks: pct(w.plan.tasks.filter((t) => s.sentTaskIds.has(t.id)).length, w.plan.tasks.length),
-      } satisfies Record<Key, number | null> & { week: string; current: boolean }
-    })
+  const points = buildChartPoints(weeks, entries, currentWeek, MAX_WEEKS)
   if (points.length < 2) return null
 
   const plotW = W - PAD_L - 6
   const plotH = H - PAD_T
-  const x = (i: number) => PAD_L + (points.length === 1 ? 0 : (i / (points.length - 1)) * plotW)
+  const x = (i: number) => PAD_L + points[i]!.at * plotW
   const y = (v: number) => PAD_T + plotH - (v / 100) * plotH
   const shown = active !== null ? points[active] : undefined
 
@@ -150,13 +130,17 @@ export function ProgressChart({
           />
         )}
         {points.map((p, i) => {
-          const slot = plotW / Math.max(points.length - 1, 1)
+          const prevAt = points[i - 1]?.at
+          const nextAt = points[i + 1]?.at
+          // Hit area: half the gap to each neighbour (mirrored at the ends), so uneven spacing stays tappable.
+          const left = ((prevAt === undefined ? nextAt! - p.at : p.at - prevAt) / 2) * plotW
+          const right = ((nextAt === undefined ? p.at - prevAt! : nextAt - p.at) / 2) * plotW
           return (
             <rect
               key={p.week}
-              x={x(i) - slot / 2}
+              x={x(i) - left}
               y={0}
-              width={slot}
+              width={left + right}
               height={H}
               className="fill-transparent"
               onPointerEnter={() => setActive(i)}

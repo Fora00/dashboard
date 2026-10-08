@@ -2,7 +2,8 @@ import { useState } from 'react'
 import type { LifeTrackerEntry } from '../../../lib/db'
 import { logTracker } from '../../../lib/lifeSync'
 import { describeEnergy, weekdayShort } from '../format'
-import { dayKey, weekDays, type TrackerSummary } from '../model'
+import { weekDays, type TrackerSummary } from '../model'
+import { useToday } from '../useToday'
 import { EnergyPicker } from './EnergyScale'
 
 const DAY_LABELS = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
@@ -42,7 +43,7 @@ export function TrackerRow({
   const limit = tracker.target ?? tracker.max
   const goal = limit !== null ? `${total}/${limit}` : total > 0 ? `${total}` : ''
   const activeEntry = energyPromptId ? entries.find((e) => e.id === energyPromptId) : undefined
-  const today = dayKey(new Date())
+  const today = useToday()
   const doneToday = entries.some((e) => e.day === today)
   const days = weekDays(week)
 

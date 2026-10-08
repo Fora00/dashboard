@@ -1,4 +1,4 @@
-import type { LifeCheckin, LifeFocus, LifePlan, LifeQuestion, LifeTask, LifeTracker } from '../../../lib/db'
+import type { LifeCheckin, LifeEntry, LifeFocus, LifePlan, LifeQuestion, LifeTask, LifeTracker } from '../../../lib/db'
 import { withCheckinIds } from './checkinIds.ts'
 
 // --- Import preview diff -------------------------------------------------------
@@ -84,4 +84,21 @@ export function diffPlans(prev: LifePlan | null, next: LifePlan): PlanDiff {
   // Same items, different order: still worth saying before the owner saves.
   if (!unchanged && summary.length === 0) summary.push('order changed')
   return { firstImport: prev === null, ...d, summary: unchanged ? [] : summary, unchanged }
+}
+
+/** Removed trackers that already have logged entries in `week`: re-importing
+ *  hides those entries (they stay stored but leave the plan). */
+export function hiddenTrackerEntries(
+  removed: readonly LifeTracker[],
+  entries: readonly LifeEntry[],
+  week: string,
+): { tracker: LifeTracker; count: number }[] {
+  const counts = new Map<string, number>()
+  for (const e of entries) {
+    if (e.kind === 'tracker' && e.week === week) counts.set(e.ref, (counts.get(e.ref) ?? 0) + 1)
+  }
+  return removed.flatMap((tracker) => {
+    const count = counts.get(tracker.id) ?? 0
+    return count > 0 ? [{ tracker, count }] : []
+  })
 }

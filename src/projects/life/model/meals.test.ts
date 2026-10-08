@@ -57,6 +57,17 @@ describe('summarizeMealsWeek', () => {
     expect(w.average).toEqual({ kcal: 900, proteinG: 15, carbsG: 30, fatG: 8 })
     expect(w.approximate).toBe(true)
   })
+  it('sorts an unknown meal value after the known ones instead of NaN', () => {
+    const w = summarizeMealsWeek(
+      [
+        m('2026-10-06', 'snack', 'Food E', 100),
+        m('2026-10-06', 'brunch' as MealEntry['meal'], 'Food F', 100),
+        m('2026-10-06', 'breakfast', 'Food G', 100),
+      ],
+      WEEK,
+    )
+    expect(w.days[0]?.entries.map((e) => e.text)).toEqual(['Food G', 'Food E', 'Food F'])
+  })
   it('is empty with no entries, and has no average when nothing has values', () => {
     expect(summarizeMealsWeek([], WEEK)).toEqual({ days: [], loggedDays: 0, average: null, approximate: false })
     expect(summarizeMealsWeek([m('2026-10-06', 'lunch', 'Food A', null)], WEEK).average).toBeNull()

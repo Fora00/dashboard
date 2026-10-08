@@ -3,7 +3,8 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { Link, useSearchParams } from 'react-router-dom'
 import { db } from '../../lib/db'
 import { sync } from '../../lib/lifeSync'
-import { weekKey } from './model'
+import { parseDayKey, weekKey } from './model'
+import { useToday } from './useToday'
 import { Button } from '../../components/Button'
 import { PageHeader } from '../../components/PageHeader'
 import { EmptyState } from '../../components/EmptyState'
@@ -21,7 +22,8 @@ import { WeekBody } from './week/WeekBody'
 type View = { tab: 'week' } | { tab: 'history' } | { tab: 'past'; week: string }
 
 export function Life() {
-  const week = weekKey()
+  const today = useToday()
+  const week = weekKey(parseDayKey(today))
   const [view, setView] = useState<View>({ tab: 'week' })
   const [searchParams, setSearchParams] = useSearchParams()
 

@@ -10,6 +10,7 @@
 // a batch in array order). Anything uncertain is reported, never guessed.
 import { execFileSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
+import { extractJsonFence } from '../src/projects/life/model/fence.ts'
 
 type Status = 'open' | 'completed' | 'canceled' | 'deleted'
 interface ThingsTodo {
@@ -48,9 +49,9 @@ function sharedWords(a: string, b: string): number {
 }
 
 function readExport(text: string): ExportJson {
-  const m = text.match(/```json\s*([\s\S]*?)```/)
-  if (!m?.[1]) throw new Error('No Life export on the input: tap "Export week" first.')
-  return JSON.parse(m[1]) as ExportJson
+  const json = extractJsonFence(text)
+  if (!json) throw new Error('No Life export on the input: tap "Export week" first.')
+  return JSON.parse(json) as ExportJson
 }
 
 // Seconds-ago rather than absolute dates: AppleScript date <-> epoch

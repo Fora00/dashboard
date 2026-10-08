@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { readJSON, writeJSON } from '../../../lib/safeStorage'
+import { parseDayKey } from '../model'
+import { useToday } from '../useToday'
 
 // --- Collapsible sections (per-device UI preference, guarded localStorage) --
 // Every section except Rules starts open; Rules keeps its pre-existing
@@ -74,7 +76,7 @@ export function useSections(week: string, readOnly: boolean) {
     })
   }
 
-  const dow = new Date().getDay()
+  const dow = parseDayKey(useToday()).getDay()
   const isWeekendToday = dow === 0 || dow === 6
   // Only an explicit choice made THIS week overrides the day-of-week default.
   const sundayOpen = readOnly ? true : sections.sundayWeek === week ? sections.sundayOpen : isWeekendToday
