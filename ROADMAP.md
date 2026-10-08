@@ -832,6 +832,96 @@ order. Tag = who implements. `db push` stays orchestrator-only.
 Done in this audit: `docs/ARCHITECTURE.md` brought in sync (meal-diary,
 `projectInvites`, `trip_*`/`habit_checks` tables, owner-only list, db-push policy).
 
+## Full audit, round 2 (2026-10-08: events crawler + CI, Life, config/deps)
+
+Opus audited the crawler/CI and Life, Haiku the config and dependencies. Not
+yet fixed; ranked. One Opus finding was **rejected as a false positive**: Life
+sync already ignores stale updates (`ignore_stale_update` triggers on
+`life_weeks`/`life_entries`, migration `20260930160000_sync_hardening.sql:73-78`).
+
+### Crawler / CI
+
+- [ ] **E1 Good events lost for good when the previous file can't be fetched** [opus, S] —
+      `crawl.ts` `loadPrevious` is one 20 s fetch, null on any error; a failing
+      source then publishes 0 events and the next run accepts 0 (`prevCount` 0).
+      Only gate is `test -s` (`_site.yml:67`). Fix: retry `loadPrevious`; exit 1
+      (no deploy) when no previous file AND a non-`mayBeEmpty` source failed;
+      refuse to publish below ~50% of the previous total unless `EVENTS_FORCE=1`.
+- [ ] **E2 A broken source can publish 0 and look healthy** [sonnet S + opus S] —
+      ~18 adapters are `mayBeEmpty`; `tcvi.ts:99`/`padova.ts:135` claim a markup
+      throw that doesn't exist; `muse.ts:153` and `filarmonica.ts:142` return
+      `[]` on a bad response. Add markup checks like `teatrogrande.ts:77` [sonnet];
+      health warning when an ok source drops from >=5 events to 0 (persist
+      `zeroSince`) [opus].
+- [ ] **E3 Dedup merges different showings on the same day** [opus, S] —
+      key = title + date + city (`pipeline.ts:148`); 17:00 and 21:00 collapse.
+      Key timed events on the instant, keep the day key for all-day; add test.
+- [ ] **E4 Offset-less times depend on the runner's time zone** [sonnet, XS] —
+      `time.ts:86` `normalizeIso` uses `Date.parse` (UTC in CI, 2 h shift) for
+      openpa, trentinospettacoli, padova. Use `localToIso`; set `TZ` in the script; test.
+- [ ] **E5 Deploy job holds Pages-write for the whole job** [opus, S] — split
+      build (`contents: read`) from deploy; pin actions by SHA; Dependabot is on.
+- [ ] **E6 One bad carried-over record blocks every crawl** [sonnet, S] —
+      previous records aren't schema-checked (`schemas.ts:33`); a record without
+      a title throws in `dedup` outside the per-source try. Validate and drop.
+- [ ] **E7 Degraded crawls are silent** [sonnet, S] — more than 1/3 sources failing
+      only prints `::error::`; open an issue or fail a separate step; also on
+      sources stale for over 7 days.
+- [ ] **E8 Hardening, low** [sonnet, S each] — response size cap (~5 MB) in
+      `http.ts`; block private/link-local redirect targets and non-https in
+      fetched URLs (`ogimage.ts:99`, filarmonica, muse); `absUrl` on url/image
+      in `toEvents` (`pipeline.ts:132`); client: drop malformed events and don't
+      overwrite the offline cache with an empty file (`model.ts:140`,
+      `Events.tsx:80`).
+- [ ] **E9 Small** [haiku, XS] — retry image fetch network errors next run
+      (`ogimage.ts:107`); `timeout-minutes: 30` on workflows; warn when reused
+      `events.json` is over 3 days old; `spot.json` unique ids + known categories
+      (`pipeline.ts:101`, `spot.ts:39`).
+- [ ] **E10 Adapter tests** [sonnet, M] — fixtures for openpa, filarmonica,
+      arteven, padova, `adapters/ical.ts` (only muse/trentinospettacoli tested).
+
+### Life
+
+- [ ] **LF1 Import link leaves the whole plan in browser history** [sonnet, XS] —
+      `LifeImport.tsx:27-54` reads `?d=` and never strips it; `/settimana` opens
+      it in the default browser, and a syncing browser carries the plan off the
+      Mac, against the owner's rule. Strip with `replace: true` after decoding;
+      `settimana.md`: use a non-syncing browser or a paste-only fallback.
+- [ ] **LF2 Stale day after midnight** [sonnet, S] — `weekKey()`, tracker
+      `today`, `isMonday` computed at render only; an app left open overnight
+      logs onto yesterday. `useToday()` hook (visibility + midnight timer).
+- [ ] **LF3 Re-import hides logged history silently** [sonnet, S] — warn "N
+      logged entries will be hidden" per removed tracker id in the preview.
+- [ ] **LF4 History chart misreads future/missing weeks** [sonnet, S] —
+      `ProgressChart.tsx:38-60`: filter `week <= current`, x by weeks elapsed.
+- [ ] **LF5 Sunday answers can't be given late** [opus, S] — previous week is
+      read-only; allow Sunday/check-in edits until exported or Tuesday.
+- [ ] **LF6 Parsing/export robustness** [sonnet, XS] — triple backticks in text
+      break the export fence/status script (`export.ts:152`,
+      `life-things-status.ts:51`; use a longer fence); over-cap arrays still map
+      every item (`validate.ts:218`, freeze); cap input before `JSON.parse`.
+- [ ] **LF7 Small** [haiku, XS] — Share button hands the food-included week to
+      any share target (warn or remove, `ExportSection.tsx:46`); unknown
+      `meal` value gives a NaN sort (`meals.ts:33`).
+- [ ] **LF8 Life tests** [sonnet, S] — export round-trip incl. backticks,
+      `life-things-*` matchers (extract pure fns), `ProgressChart` point
+      builder, midnight rollover.
+
+### Dependencies / config
+
+- [ ] **D1 `npm audit`: 9 vulns (8 high)** [sonnet, XS] — transitive build-time
+      (postcss, source-map-js, browserslist, nanoid, brace-expansion, fast-uri)
+      plus `react-router-dom` (RSC-mode CSRF; this SPA doesn't use RSC mode).
+      `npm audit fix` + `npm outdated` bumps (supabase-js 2.117, react 19.3,
+      vite 8.3, dexie 4.4.6); run check/build; no majors (ts 7, pwa 2).
+- [ ] **D2 Hosted Supabase settings unverified** [orchestrator/owner] —
+      `config.toml` is local only (`config push` is forbidden). In the
+      dashboard check: OTP expiry (local 3600 s; 600 s is tighter), email rate
+      limit, signup + whitelist trigger live, MFA for the owner account,
+      `additional_redirect_urls` localhost entries.
+- [ ] **D3 PWA polish** [haiku, XS] — add apple-touch-icon to the manifest,
+      a dedicated maskable icon, `engines`/`.nvmrc` (CI uses Node 22, Mac 24).
+
 ## Engineering quality (audit 2026-07-05)
 
 Not new features — gaps found while auditing the current codebase against
