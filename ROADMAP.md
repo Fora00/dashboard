@@ -866,7 +866,7 @@ sync already ignores stale updates (`ignore_stale_update` triggers on
       `time.ts:86` `normalizeIso` uses `Date.parse` (UTC in CI, 2 h shift) for
       openpa, trentinospettacoli, padova. Use `localToIso`; set `TZ` in the script; test.
 - [x] **E5 Deploy job holds Pages-write for the whole job** [opus, S] — split
-      → done 2026-10-08, NOT yet run on GitHub: `_site.yml` split into `build` (contents: read) and `deploy` (pages/id-token), actions pinned by SHA (setup-node v7.1.0 is from today). First-run watch list in docs/CI.md: deploy finds the artifact, `configure-pages` permissions, `github-pages` environment rules, health job still gets `crawl_health`.
+      → done 2026-10-08, FIRST REAL RUN OK (push 07f65ad, run 37771240842: build 46 s, deploy 10 s; deploy found the artifact, `configure-pages` worked with only pages/id-token, the reuse path and the events.json gate passed, live site/manifest/icons verified). Still to observe: the next scheduled crawl (04:23 UTC) or a manual `crawl.yml` run, which exercises the new crawler guards and the `health` job (summary only, no issues). Original: `_site.yml` split into `build` (contents: read) and `deploy` (pages/id-token), actions pinned by SHA (setup-node v7.1.0 is from today). First-run watch list in docs/CI.md: deploy finds the artifact, `configure-pages` permissions, `github-pages` environment rules, health job still gets `crawl_health`.
       build (`contents: read`) from deploy; pin actions by SHA; Dependabot is on.
 - [x] **E6 One bad carried-over record blocks every crawl** [sonnet, S] —
       → done 2026-10-08: `validPreviousEvents()` drops bad carried-over records with one warning.
