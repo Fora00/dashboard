@@ -87,56 +87,64 @@ export function LifeImport() {
         </Link>
       </div>
 
-      <textarea
-        value={text}
-        onChange={(e) => {
-          setText(e.target.value)
-          setLinkErrors(null)
-        }}
-        placeholder={
-          '{ "version": 1, "week": "2026-01-05", "focus": [], "rules": [], "tasks": [], "trackers": [], "sundayCheck": [], "checkins": [] }'
-        }
-        aria-label="Week JSON"
-        rows={10}
-        spellCheck={false}
-        autoCapitalize="off"
-        autoCorrect="off"
-        className="mb-4 w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2 font-mono text-xs placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-(color:--accent-ring) focus:outline-none dark:border-slate-700 dark:bg-slate-800"
-      />
+      {/* From lg: the JSON on the left, the preview (or errors) beside it. */}
+      <div className="lg:grid lg:grid-cols-2 lg:items-start lg:gap-6">
+        <div>
+          <textarea
+            value={text}
+            onChange={(e) => {
+              setText(e.target.value)
+              setLinkErrors(null)
+            }}
+            placeholder={
+              '{ "version": 1, "week": "2026-01-05", "focus": [], "rules": [], "tasks": [], "trackers": [], "sundayCheck": [], "checkins": [] }'
+            }
+            aria-label="Week JSON"
+            rows={10}
+            spellCheck={false}
+            autoCapitalize="off"
+            autoCorrect="off"
+            className="mb-4 w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2 font-mono lg:h-[28rem] text-xs placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-(color:--accent-ring) focus:outline-none dark:border-slate-700 dark:bg-slate-800"
+          />
 
-      {text.length > MAX_INPUT_CHARS && <p className="mb-4 text-sm text-rose-600 dark:text-rose-400">{TOO_LARGE}</p>}
+          {text.length > MAX_INPUT_CHARS && (
+            <p className="mb-4 text-sm text-rose-600 dark:text-rose-400">{TOO_LARGE}</p>
+          )}
+        </div>
+        <div>
+          {linkErrors && !text.trim() && (
+            <Card className="mb-4 space-y-1 text-sm">
+              <p className="font-medium text-rose-600 dark:text-rose-400">The import link couldn't be read:</p>
+              <ul className="list-disc space-y-0.5 pl-5 text-rose-600 dark:text-rose-400">
+                {linkErrors.map((e, i) => (
+                  <li key={i}>{e}</li>
+                ))}
+              </ul>
+            </Card>
+          )}
 
-      {linkErrors && !text.trim() && (
-        <Card className="mb-4 space-y-1 text-sm">
-          <p className="font-medium text-rose-600 dark:text-rose-400">The import link couldn't be read:</p>
-          <ul className="list-disc space-y-0.5 pl-5 text-rose-600 dark:text-rose-400">
-            {linkErrors.map((e, i) => (
-              <li key={i}>{e}</li>
-            ))}
-          </ul>
-        </Card>
-      )}
+          {result && !result.ok && (
+            <Card className="mb-4 space-y-1 text-sm">
+              <p className="font-medium text-rose-600 dark:text-rose-400">This isn't a valid week:</p>
+              <ul className="list-disc space-y-0.5 pl-5 text-rose-600 dark:text-rose-400">
+                {result.errors.map((e, i) => (
+                  <li key={i}>{e}</li>
+                ))}
+              </ul>
+            </Card>
+          )}
 
-      {result && !result.ok && (
-        <Card className="mb-4 space-y-1 text-sm">
-          <p className="font-medium text-rose-600 dark:text-rose-400">This isn't a valid week:</p>
-          <ul className="list-disc space-y-0.5 pl-5 text-rose-600 dark:text-rose-400">
-            {result.errors.map((e, i) => (
-              <li key={i}>{e}</li>
-            ))}
-          </ul>
-        </Card>
-      )}
-
-      {result?.ok && (
-        <PlanPreview
-          plan={result.plan}
-          existingPlan={existing?.plan ?? null}
-          saving={saving}
-          saveError={saveError}
-          onConfirm={() => void save()}
-        />
-      )}
+          {result?.ok && (
+            <PlanPreview
+              plan={result.plan}
+              existingPlan={existing?.plan ?? null}
+              saving={saving}
+              saveError={saveError}
+              onConfirm={() => void save()}
+            />
+          )}
+        </div>
+      </div>
     </div>
   )
 }

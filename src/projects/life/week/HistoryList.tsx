@@ -33,8 +33,10 @@ export function HistoryList({
       ) : weeks.length === 0 ? (
         <EmptyState emoji="🗓️" title="No weeks yet" hint="Import or create a week and it shows up here." />
       ) : (
-        <>
-          {entries && weeks && <ProgressChart weeks={weeks} entries={entries} currentWeek={currentWeek} />}
+        <div className="lg:grid lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:items-start lg:gap-6">
+          <div className="lg:sticky lg:top-4">
+            {entries && weeks && <ProgressChart weeks={weeks} entries={entries} currentWeek={currentWeek} />}
+          </div>
           <ul className="space-y-2">
             {weeks.map((w) => (
               <li key={w.id} className="space-y-1">
@@ -52,7 +54,7 @@ export function HistoryList({
               </li>
             ))}
           </ul>
-        </>
+        </div>
       )}
     </div>
   )
