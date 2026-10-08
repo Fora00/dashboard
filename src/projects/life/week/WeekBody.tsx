@@ -23,15 +23,20 @@ interface WeekBodyProps {
   plan: LifePlan
   entries: LifeEntry[]
   readOnly: boolean
+  /** On a read-only past week: the Sunday check and check-ins still take
+   *  answers (last week, until Tuesday — see lateEdit.ts). */
+  lateEdit?: boolean
 }
 
-export function WeekBody({ week, plan, entries, readOnly }: WeekBodyProps) {
+export function WeekBody({ week, plan, entries, readOnly, lateEdit = false }: WeekBodyProps) {
   const summary = useMemo(() => summarizeWeek(plan, entries), [plan, entries])
   // The meal diary's entries for this week (read-only here), live.
   const meals = useLiveQuery(() => db.meals.where('day').between(week, addDays(week, 6), true, true).toArray(), [week])
   const food = useMemo(() => summarizeMealsWeek(meals ?? [], week), [meals, week])
   const { pending, trigger, confirmUndo } = useUndoSnackbar()
   const { sections, sundayOpen, toggleSection, toggleSunday } = useSections(week, readOnly)
+  // Sunday answers and check-ins: editable on the live week, or late.
+  const answersReadOnly = readOnly && !lateEdit
   const sentCount = plan.tasks.filter((t) => summary.sentTaskIds.has(t.id)).length
 
   return (
@@ -84,7 +89,7 @@ export function WeekBody({ week, plan, entries, readOnly }: WeekBodyProps) {
         >
           <ul className="space-y-2">
             {summary.checkins.map((cs) => (
-              <CheckinRow key={cs.checkin.id} week={week} status={cs} readOnly={readOnly} />
+              <CheckinRow key={cs.checkin.id} week={week} status={cs} readOnly={answersReadOnly} />
             ))}
           </ul>
         </CollapsibleSection>
@@ -99,6 +104,7 @@ export function WeekBody({ week, plan, entries, readOnly }: WeekBodyProps) {
           open={sundayOpen}
           onToggle={toggleSunday}
           readOnly={readOnly}
+          editable={!answersReadOnly}
         />
       )}
 

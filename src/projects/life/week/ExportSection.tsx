@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { LifeEntry, LifePlan, MealEntry } from '../../../lib/db'
 import { buildExportMarkdown } from '../model'
+import { markExported } from '../lateEdit'
 import { shareOrCopy } from '../../../lib/share'
 import { useFlash } from '../../../lib/useFlash'
 import { Button } from '../../../components/Button'
@@ -32,6 +33,7 @@ export function ExportSection({
     if (navigator.clipboard) {
       try {
         await navigator.clipboard.writeText(md)
+        markExported(plan.week)
         setFallbackText(null)
         flashCopied()
         return
@@ -39,6 +41,7 @@ export function ExportSection({
         // fall through to the textarea fallback below
       }
     }
+    markExported(plan.week)
     setFallbackText(md)
   }
 
@@ -46,6 +49,7 @@ export function ExportSection({
     const md = buildExportMarkdown(plan, entries, undefined, meals)
     try {
       const outcome = await shareOrCopy(md, { title: `Week of ${plan.week}` })
+      if (outcome !== 'cancelled') markExported(plan.week)
       if (outcome === 'copied') flashCopied()
     } catch {
       // cancelled or unavailable — nothing to do
@@ -58,7 +62,7 @@ export function ExportSection({
     <CollapsibleSection title="Export" open={open} onToggle={onToggle} readOnly={readOnly}>
       <p className="mb-3 text-sm text-slate-500 dark:text-slate-400">
         Copies a summary of this week — focus, trackers with energy, Sunday answers, check-ins, tasks, food — to paste
-        into /settimana on your Mac.
+        into /settimana on your Mac. Exporting on or after Sunday also closes this week's late answers on this device.
       </p>
       <Card className="space-y-3 text-sm">
         <div className="flex flex-wrap gap-2">

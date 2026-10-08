@@ -16,6 +16,7 @@ export function SundaySection({
   open,
   onToggle,
   readOnly,
+  editable = !readOnly,
 }: {
   week: string
   plan: LifePlan
@@ -25,6 +26,9 @@ export function SundaySection({
   open: boolean
   onToggle: () => void
   readOnly: boolean
+  /** Answers can be given. Defaults to !readOnly; true on a read-only past
+   *  week inside its late window (lateEdit.ts). */
+  editable?: boolean
 }) {
   const [sundayEditing, setSundayEditing] = useState(false)
   // Questions linked to a habit answer themselves; only the rest need typing.
@@ -45,7 +49,7 @@ export function SundaySection({
         checkins={[summary.checkins.filter((c) => c.done).length, summary.checkins.length]}
         tasks={[tasksSent, plan.tasks.length]}
       />
-      {readOnly ? (
+      {!editable ? (
         <Card className="space-y-2 text-sm">
           {plan.sundayCheck.map((q) => (
             <div key={q.id} className="flex items-center justify-between gap-3">

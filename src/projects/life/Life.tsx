@@ -11,6 +11,7 @@ import { EmptyState } from '../../components/EmptyState'
 import { SyncCard } from '../../components/SyncCard'
 import { SkeletonList } from '../../components/Skeleton'
 import { HistoryList } from './week/HistoryList'
+import { LastWeekCard } from './week/LastWeekCard'
 import { PastWeek } from './week/PastWeek'
 import { WeekBody } from './week/WeekBody'
 
@@ -19,7 +20,7 @@ import { WeekBody } from './week/WeekBody'
 // offline and signed out. Mutations go through src/lib/lifeSync.ts only. The
 // page shell lives here; everything below it is in ./week/.
 
-type View = { tab: 'week' } | { tab: 'history' } | { tab: 'past'; week: string }
+type View = { tab: 'week' } | { tab: 'history' } | { tab: 'past'; week: string; from: 'week' | 'history' }
 
 export function Life() {
   const today = useToday()
@@ -50,14 +51,22 @@ export function Life() {
         weeks={pastWeeks}
         currentWeek={week}
         onBack={() => setView({ tab: 'week' })}
-        onOpen={(w) => setView({ tab: 'past', week: w })}
+        onOpen={(w) => setView({ tab: 'past', week: w, from: 'history' })}
       />
     )
   }
 
   if (view.tab === 'past') {
-    return <PastWeek weekKeyValue={view.week} onBack={() => setView({ tab: 'history' })} />
+    return (
+      <PastWeek
+        weekKeyValue={view.week}
+        onBack={() => setView({ tab: view.from })}
+        backLabel={view.from === 'week' ? '← This week' : '← History'}
+      />
+    )
   }
+
+  const lastWeek = <LastWeekCard week={week} onOpen={(w) => setView({ tab: 'past', week: w, from: 'week' })} />
 
   const header = (
     <PageHeader emoji="🧭" title="Life" subtitle="This week: focus, habits, Sunday check. Owner only.">
@@ -88,6 +97,7 @@ export function Life() {
     return (
       <div>
         {header}
+        {lastWeek}
         <EmptyState
           emoji="🧭"
           title="No plan for this week"
@@ -111,6 +121,7 @@ export function Life() {
   return (
     <div>
       {header}
+      {lastWeek}
       <WeekBody week={week} plan={weekRow.plan} entries={entries} readOnly={false} />
       <div className="mt-6">
         <SyncCard sync={sync} />
