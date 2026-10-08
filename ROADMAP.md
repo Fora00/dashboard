@@ -873,7 +873,7 @@ sync already ignores stale updates (`ignore_stale_update` triggers on
       previous records aren't schema-checked (`schemas.ts:33`); a record without
       a title throws in `dedup` outside the per-source try. Validate and drop.
 - [x] **E7 Degraded crawls are silent** [sonnet, S] — more than 1/3 sources failing
-      → done 2026-10-08: `health` job in `crawl.yml` keeps one open issue "Events crawl needs attention" (needs Issues enabled on the repo; if not, that job goes red after the deploy, nothing else breaks). Per-job permissions.
+      → done 2026-10-08, changed the same day on the owner's rule that everything stays local: the `health` job in `crawl.yml` only writes a `::warning::` and a run summary (no permissions, no GitHub issues). Per-job permissions.
       only prints `::error::`; open an issue or fail a separate step; also on
       sources stale for over 7 days.
 - [x] **E8 Hardening, low** [sonnet, S each] — response size cap (~5 MB) in

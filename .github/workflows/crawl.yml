@@ -36,45 +36,31 @@ jobs:
       events_force: ${{ inputs.force == true }}
     secrets: inherit
 
-  # Makes a degraded crawl visible without blocking the deploy (it runs after
-  # it): keeps ONE open issue titled below. Opened or commented when the
-  # crawl-deploy job did not succeed, more than a third of the sources failed,
-  # or a source has not succeeded for over 7 days (scripts/events/health.ts
-  # degradedReasons); closed by the first healthy run. docs/CI.md.
+  # Surfaces a degraded crawl in the run itself (annotation + job summary). It
+  # deliberately creates nothing on GitHub (no issues, no notifications): the
+  # owner wants everything to stay local. Reasons come from
+  # scripts/events/health.ts degradedReasons; docs/CI.md.
   health:
     needs: site
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    permissions:
-      issues: write
+    permissions: {}
     env:
-      GH_TOKEN: ${{ github.token }}
-      GH_REPO: ${{ github.repository }}
       HEALTH: ${{ needs.site.outputs.crawl_health }}
       RESULT: ${{ needs.site.result }}
-      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
     steps:
-      - name: Open, update or close the crawl health issue
+      - name: Summarise crawl health
         shell: bash
         run: |
-          title='Events crawl needs attention'
           reasons="$HEALTH"
           if [ "$RESULT" != success ]; then
             reasons="crawl-deploy job: $RESULT, nothing deployed${reasons:+; $reasons}"
           fi
-          num=$(gh issue list --state open --limit 100 --json number,title \
-            --jq ".[] | select(.title == \"$title\") | .number" | head -n1)
           if [ -n "$reasons" ]; then
-            body="$(date -u +%F): $reasons"$'\n\n'"Run: $RUN_URL"
-            if [ -n "$num" ]; then
-              gh issue comment "$num" --body "$body"
-            else
-              gh issue create --title "$title" --body "$body"
-            fi
             echo "::warning title=Events crawl needs attention::$reasons"
-          elif [ -n "$num" ]; then
-            gh issue close "$num" --comment "Healthy again: $RUN_URL"
+            echo "### Events crawl needs attention" >> "$GITHUB_STEP_SUMMARY"
+            echo "$reasons" >> "$GITHUB_STEP_SUMMARY"
           else
-            echo 'Crawl healthy, no open issue.'
+            echo "Crawl healthy." >> "$GITHUB_STEP_SUMMARY"
           fi

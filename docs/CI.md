@@ -49,18 +49,18 @@ The `crawl_health` output of `_site.yml` comes from `jobs.build`. A failing
   file, or previous file unreadable while a source failed; docs/EVENTS.md
   "Resilience"): override with the **force** input of a manual `crawl.yml`
   run (`EVENTS_FORCE=1`).
-- **Crawl health issue** (`crawl.yml` job `health`, added 2026-10-08): runs
-  after the crawl-deploy job (`needs: site`, `if: always()`), so it never
-  blocks or delays a deploy. It keeps **one** open issue titled "Events crawl
-  needs attention": opened (or commented on, if already open) when the
-  crawl-deploy job did not succeed, more than a third of the sources that ran
-  failed, or a source has not succeeded for over 7 days (`degradedReasons` in
-  `scripts/events/health.ts`; the crawler hands them over as the `health` step
-  output, surfaced as the `crawl_health` output of `_site.yml`). The first
-  healthy run closes it. Only this job has `issues: write`; inside `_site.yml` only the
-  `deploy` job has Pages rights (permissions are per job). If Issues are disabled on the repo, the job fails red after
-  the deploy; nothing else is affected. `deploy.yml` (reuse path) has no such
-  job.
+- **Crawl health summary** (`crawl.yml` job `health`): runs after the
+  crawl-deploy job (`needs: site`, `if: always()`), so it never blocks or
+  delays a deploy. When the crawl-deploy job did not succeed, more than a third
+  of the sources that ran failed, or a source has not succeeded for over 7 days
+  (`degradedReasons` in `scripts/events/health.ts`; the crawler hands them over
+  as the `health` step output, surfaced as the `crawl_health` output of
+  `_site.yml`), it writes a `::warning::` annotation and a job summary on the
+  run. It has **no permissions** and creates nothing on GitHub: no issues, no
+  notifications (owner decision 2026-10-08: everything stays local). Inside
+  `_site.yml` only the `deploy` job has Pages rights (permissions are per job).
+  `deploy.yml` (reuse path) has no such job. To be told about a bad crawl, look
+  at the run or run `npm run events:crawl` locally.
 - **Timeouts**: `_site.yml` `build` has `timeout-minutes: 30` (a normal crawl
   takes minutes), `deploy` 10, the health job 5.
 - **Output gate**: "Require events.json" checks with node that the file is
