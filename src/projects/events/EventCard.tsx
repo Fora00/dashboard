@@ -1,4 +1,5 @@
 import { memo, useState } from 'react'
+import { shareOrCopy } from '../../lib/share'
 import { useFlash } from '../../lib/useFlash'
 import type { EventItem } from './types'
 import { addToCalendar } from './ics'
@@ -70,16 +71,8 @@ export const EventCard = memo(function EventCard({
   async function share() {
     const text = [e.title, formatRange(e), place].filter(Boolean).join('\n')
     try {
-      if (typeof navigator.share === 'function') {
-        await navigator.share({
-          title: e.title,
-          text,
-          ...(url ? { url } : {}),
-        })
-        return
-      }
-      await navigator.clipboard.writeText(url ? `${text}\n${url}` : text)
-      flashCopied()
+      const outcome = await shareOrCopy(text, { title: e.title, ...(url ? { url } : {}) })
+      if (outcome === 'copied') flashCopied()
     } catch {
       // Share sheet dismissed or clipboard blocked: nothing to recover.
     }

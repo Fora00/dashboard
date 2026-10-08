@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { LifeEntry, LifePlan, MealEntry } from '../../../lib/db'
 import { buildExportMarkdown } from '../model'
+import { shareOrCopy } from '../../../lib/share'
 import { useFlash } from '../../../lib/useFlash'
 import { Button } from '../../../components/Button'
 import { Card } from '../../../components/Card'
@@ -44,7 +45,8 @@ export function ExportSection({
   async function doShare() {
     const md = buildExportMarkdown(plan, entries, undefined, meals)
     try {
-      await navigator.share({ title: `Week of ${plan.week}`, text: md })
+      const outcome = await shareOrCopy(md, { title: `Week of ${plan.week}` })
+      if (outcome === 'copied') flashCopied()
     } catch {
       // cancelled or unavailable — nothing to do
     }

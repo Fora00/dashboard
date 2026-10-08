@@ -10,6 +10,7 @@ import { PageHeader } from '../../components/PageHeader'
 import { EmptyState } from '../../components/EmptyState'
 import { addSession, MAX_LOCATION_LENGTH, MAX_NOTES_LENGTH, sync } from '../../lib/climbSync'
 import { DISCIPLINES, DISCIPLINE_LABEL, gradeFraction, gradeIndex } from './grades'
+import { formatDate as formatDateLocal } from '../../lib/dates'
 import { SessionCard } from './SessionCard'
 import { SyncCard } from '../../components/SyncCard'
 import { Skeleton } from '../../components/Skeleton'
@@ -28,7 +29,7 @@ function today(): string {
 }
 
 function formatMonth(month: string): string {
-  return new Date(`${month}-01T00:00:00`).toLocaleDateString(undefined, {
+  return formatDateLocal(month, {
     month: 'short',
     year: 'numeric',
   })
@@ -75,7 +76,12 @@ export function Climbing() {
     e.preventDefault()
     const trimmed = location.trim()
     if (!trimmed || !date) return
-    await addSession({ date, location: trimmed, discipline, notes: notes.trim() })
+    await addSession({
+      date,
+      location: trimmed,
+      discipline,
+      notes: notes.trim(),
+    })
     setLocation('')
     setNotes('')
     setShowForm(false)
@@ -164,7 +170,9 @@ export function Climbing() {
 
           {monthly.length > 0 && (
             <div className="mt-4 space-y-3 border-t border-slate-200 pt-3 dark:border-slate-800">
-              <p className="text-xs text-slate-500">Hardest send per month</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Hardest send per month (bar = grade vs. hardest possible)
+              </p>
               {monthly.map(({ month, best }) => (
                 <div key={month}>
                   <p className="mb-1 text-xs text-slate-500 dark:text-slate-400">{formatMonth(month)}</p>
@@ -174,14 +182,18 @@ export function Climbing() {
                       if (!grade) return null
                       return (
                         <div key={d} className="flex items-center gap-2">
-                          <span className="w-14 shrink-0 text-xs text-slate-500">{DISCIPLINE_LABEL[d]}</span>
+                          <span className="w-14 shrink-0 text-xs text-slate-500 dark:text-slate-400">
+                            {DISCIPLINE_LABEL[d]}
+                          </span>
                           <div className="h-3 flex-1 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800">
                             <div
                               className={`h-full rounded-full ${BAR_COLOR[d]}`}
-                              style={{ width: `${gradeFraction(d, grade) * 100}%` }}
+                              style={{
+                                width: `${gradeFraction(d, grade) * 100}%`,
+                              }}
                             />
                           </div>
-                          <span className="w-8 shrink-0 text-right text-xs font-semibold text-slate-800 dark:text-slate-200">
+                          <span className="min-w-8 shrink-0 text-right text-xs font-semibold text-slate-800 dark:text-slate-200">
                             {grade}
                           </span>
                         </div>
@@ -197,7 +209,8 @@ export function Climbing() {
 
       <section>
         <h2 className="mb-2 text-sm font-medium text-slate-500 dark:text-slate-400">
-          Sessions{sessions && sessions.length > 0 ? ` · ${sessions.length}` : ''}
+          Sessions
+          {sessions && sessions.length > 0 ? ` · ${sessions.length}` : ''}
         </h2>
         {sessions === undefined ? (
           <div className="space-y-3">

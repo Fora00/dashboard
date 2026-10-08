@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState, type DragEvent } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, requestPersistentStorage, type TransferFile } from '../../lib/db'
 import { formatBytes, formatDate } from '../../lib/format'
+import { shareFile, shareOrCopy } from '../../lib/share'
 import { useOnline } from '../../lib/useOnline'
 import { useAuth } from '../../lib/useAuth'
 import { useUndoSnackbar } from '../../lib/useUndoSnackbar'
@@ -81,23 +82,14 @@ export function LocalTransfer() {
 
   async function share(f: TransferFile) {
     const file = new File([f.blob], f.name, { type: f.type })
-    if (navigator.canShare?.({ files: [file] })) {
-      try {
-        await navigator.share({ files: [file], title: f.name })
-      } catch {
-        // user cancelled the share sheet — nothing to do
-      }
-    } else {
-      download(f)
-    }
+    if ((await shareFile(file, f.name)) === 'unsupported') download(f)
   }
 
   async function copyLink(f: TransferFile) {
     setBusy(true)
     try {
       const url = await signedLink(f)
-      if (navigator.share) await navigator.share({ url }).catch(() => {})
-      else await navigator.clipboard.writeText(url)
+      await shareOrCopy(url)
     } catch {
       // not uploaded yet or offline
     } finally {

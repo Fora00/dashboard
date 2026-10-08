@@ -6,6 +6,16 @@ import { VitePWA } from 'vite-plugin-pwa'
 // Served from https://<user>.github.io/dashboard/ — keep `base` in sync with the repo name.
 export default defineConfig({
   base: '/dashboard/',
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules/@supabase')) return 'vendor-supabase'
+          if (id.includes('node_modules/dexie')) return 'vendor-dexie'
+        },
+      },
+    },
+  },
   plugins: [
     react(),
     tailwindcss(),

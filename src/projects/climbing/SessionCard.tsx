@@ -5,13 +5,14 @@ import { Button } from '../../components/Button'
 import { Card } from '../../components/Card'
 import { FOCUS_RING_INSET } from '../../components/focus'
 import { addClimb, deleteClimb, deleteSession, toggleClimbSent } from '../../lib/climbSync'
+import { formatDate as formatDateLocal } from '../../lib/dates'
 import { DISCIPLINE_LABEL, GRADES } from './grades'
 
 const inputClass =
   'min-h-10 rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-indigo-300 dark:border-slate-700 dark:bg-slate-800'
 
 function formatDate(date: string): string {
-  return new Date(`${date}T00:00:00`).toLocaleDateString(undefined, {
+  return formatDateLocal(date, {
     weekday: 'short',
     day: 'numeric',
     month: 'short',

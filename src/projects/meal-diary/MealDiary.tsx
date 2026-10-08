@@ -12,61 +12,12 @@ import { Snackbar } from '../../components/Snackbar'
 import { SkeletonList } from '../../components/Skeleton'
 import { SyncCard } from '../../components/SyncCard'
 import { MEALS, dayLabel, defaultMeal, groupByDay, mealMeta } from './model'
-import { MACRO_EMOJI, dayTotals, parseAmount, type Nutrition, type NutritionForm } from './nutrition'
+import type { NutritionForm } from './nutrition'
 import { NutritionFields } from './NutritionFields'
 import { NutritionTrends } from './NutritionTrends'
 
-function toNutrition(f: NutritionForm): Nutrition {
-  return {
-    grams: parseAmount(f.grams, 'grams'),
-    kcal: parseAmount(f.kcal, 'kcal'),
-    proteinG: parseAmount(f.proteinG, 'proteinG'),
-    carbsG: parseAmount(f.carbsG, 'carbsG'),
-    fatG: parseAmount(f.fatG, 'fatG'),
-    estimated: f.estimated,
-  }
-}
-
-function toForm(e: MealEntry): NutritionForm {
-  const s = (n: number | null) => (n === null ? '' : String(n))
-  return {
-    grams: s(e.grams),
-    kcal: s(e.kcal),
-    proteinG: s(e.proteinG),
-    carbsG: s(e.carbsG),
-    fatG: s(e.fatG),
-    estimated: e.estimated,
-  }
-}
-
-function macros(e: Pick<MealEntry, 'grams' | 'kcal' | 'proteinG' | 'carbsG' | 'fatG' | 'estimated'>): {
-  text: string
-  hint: string
-} {
-  const parts: string[] = []
-  const hints: string[] = []
-  if (e.grams !== null) {
-    parts.push(`${e.grams} g`)
-    hints.push(`${e.grams} g total`)
-  }
-  if (e.kcal !== null) {
-    parts.push(`${MACRO_EMOJI.kcal} ${e.estimated ? '≈ ' : ''}${e.kcal}`)
-    hints.push(`${e.kcal} kcal${e.estimated ? ' (AI estimate)' : ''}`)
-  }
-  if (e.proteinG !== null) {
-    parts.push(`${MACRO_EMOJI.proteinG} ${e.proteinG}`)
-    hints.push(`${e.proteinG} g protein`)
-  }
-  if (e.carbsG !== null) {
-    parts.push(`${MACRO_EMOJI.carbsG} ${e.carbsG}`)
-    hints.push(`${e.carbsG} g carbs`)
-  }
-  if (e.fatG !== null) {
-    parts.push(`${MACRO_EMOJI.fatG} ${e.fatG}`)
-    hints.push(`${e.fatG} g fat`)
-  }
-  return { text: parts.join(' · '), hint: hints.join(' · ') }
-}
+import { DayTotalsLine, WeighedToggle } from './MealParts'
+import { macros, toForm, toNutrition } from './mealFormat'
 
 const INPUT =
   'min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-indigo-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-indigo-300 dark:border-slate-700 dark:bg-slate-800'
@@ -316,39 +267,5 @@ export function MealDiary() {
 
       {pending && <Snackbar label={pending.label} onUndo={confirmUndo} />}
     </div>
-  )
-}
-
-function DayTotalsLine({ entries }: { entries: MealEntry[] }) {
-  const t = dayTotals(entries)
-  if (t.counted === 0) return null
-  return (
-    <p
-      className="text-xs text-slate-500 dark:text-slate-400"
-      title={`${t.approximate ? 'About ' : ''}${t.kcal} kcal · ${t.proteinG} g protein · ${t.carbsG} g carbs · ${t.fatG} g fat${t.uncounted > 0 ? ` · ${t.uncounted} entries without values` : ''}`}
-    >
-      {MACRO_EMOJI.kcal} {t.approximate ? '≈ ' : ''}
-      {t.kcal} · {MACRO_EMOJI.proteinG} {t.proteinG} · {MACRO_EMOJI.carbsG} {t.carbsG} · {MACRO_EMOJI.fatG} {t.fatG}
-      {t.uncounted > 0 && ` · ❔ ${t.uncounted}`}
-    </p>
-  )
-}
-
-// ⚖️ weighed on a scale vs 👁️ by eye: a hint for the AI estimate, which trusts a
-// written quantity when weighed and applies the owner's habits when not.
-function WeighedToggle({ weighed, onChange }: { weighed: boolean; onChange: (next: boolean) => void }) {
-  const label = weighed ? 'Weighed on a scale (tap for by eye)' : 'By eye (tap for weighed)'
-  return (
-    <Button
-      type="button"
-      variant="ghost"
-      aria-pressed={weighed}
-      aria-label={label}
-      title={label}
-      onClick={() => onChange(!weighed)}
-      className="min-w-10 px-2"
-    >
-      {weighed ? '⚖️' : '👁️'}
-    </Button>
   )
 }

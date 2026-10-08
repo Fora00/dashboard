@@ -9,3 +9,22 @@ export function dayKey(date: Date): string {
   const d = String(date.getDate()).padStart(2, '0')
   return `${y}-${m}-${d}`
 }
+
+/**
+ * Locale date string. A 'YYYY-MM-DD' or 'YYYY-MM' string is read as local
+ * midnight (no UTC drift); a number is an epoch in ms. `locale` undefined =
+ * the device locale.
+ */
+export function formatDate(
+  value: Date | number | string,
+  options?: Intl.DateTimeFormatOptions,
+  locale?: string,
+): string {
+  let d: Date
+  if (typeof value === 'string') {
+    d = new Date(/^\d{4}-\d{2}$/.test(value) ? `${value}-01T00:00:00` : `${value}T00:00:00`)
+  } else {
+    d = new Date(value)
+  }
+  return d.toLocaleDateString(locale, options)
+}

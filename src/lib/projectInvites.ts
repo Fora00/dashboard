@@ -20,25 +20,7 @@ export function projectUrl(path: string): string {
   return `${APP_URL}#${path}`
 }
 
-/**
- * Native share sheet when available, clipboard otherwise. Resolves to what
- * happened so the caller can confirm it ("Copied"); a dismissed share sheet
- * is 'cancelled', never an error.
- */
-export async function shareOrCopy(text: string): Promise<'shared' | 'copied' | 'cancelled'> {
-  if (navigator.share) {
-    try {
-      await navigator.share({ text })
-      return 'shared'
-    } catch (err) {
-      if (err instanceof DOMException && err.name === 'AbortError') return 'cancelled'
-      // Share unavailable in this context (e.g. no user activation left) —
-      // fall through to the clipboard.
-    }
-  }
-  await navigator.clipboard.writeText(text)
-  return 'copied'
-}
+export { shareOrCopy } from './share'
 
 // Engines to kick right after a guest joins a project, so the newly visible
 // rows arrive without waiting for the next reconnect/foreground. The engine's

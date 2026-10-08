@@ -18,8 +18,6 @@ import { useAuth } from '../../lib/useAuth'
 import { useOwner } from '../../lib/useOwner'
 import { useUndoSnackbar } from '../../lib/useUndoSnackbar'
 import { Button } from '../../components/Button'
-import { Chip } from '../../components/Chip'
-import { FOCUS_RING_INSET } from '../../components/focus'
 import { ListRow } from '../../components/ListRow'
 import { PageHeader } from '../../components/PageHeader'
 import { EmptyState } from '../../components/EmptyState'
@@ -27,6 +25,7 @@ import { SyncCard } from '../../components/SyncCard'
 import { Snackbar } from '../../components/Snackbar'
 import { SwipeableRow } from '../../components/SwipeableRow'
 import { SkeletonList } from '../../components/Skeleton'
+import { TagFilterBar } from './TagFilterBar'
 import { ManageTagsSheet } from './ManageTagsSheet'
 
 // Mirrors MAX_TAGS in linksSync.ts / the links_tags_max_count SQL constraint —
@@ -349,36 +348,14 @@ export function Links() {
           chips don't clip on a phone; Clear sits first so it never scrolls
           out of reach. Rendered while a selection exists even if its tags
           are gone, otherwise the filter could get stuck on with no way out. */}
-      {(allTags.length > 0 || filtering) && (
-        <div className="-mx-4 mb-4 overflow-x-auto px-4 pb-1">
-          <div className="flex w-max items-center gap-2">
-            {filtering && (
-              <Chip toggle={false} active={false} onClick={clearFilters}>
-                ✕ Clear
-              </Chip>
-            )}
-            {allTags.map((tag) => (
-              <Chip
-                key={tag}
-                active={selectedTags.includes(tag)}
-                onClick={() => toggleTagFilter(tag)}
-                className="max-w-48 truncate"
-              >
-                {tag}
-              </Chip>
-            ))}
-            {allTags.length > 0 && (
-              <button
-                type="button"
-                onClick={() => setManageOpen(true)}
-                className={`min-h-10 shrink-0 rounded-full px-3 text-xs whitespace-nowrap text-slate-500 underline-offset-2 hover:underline dark:text-slate-400 ${FOCUS_RING_INSET}`}
-              >
-                Manage tags
-              </button>
-            )}
-          </div>
-        </div>
-      )}
+      <TagFilterBar
+        allTags={allTags}
+        selectedTags={selectedTags}
+        filtering={filtering}
+        onToggle={toggleTagFilter}
+        onClear={clearFilters}
+        onManage={() => setManageOpen(true)}
+      />
 
       <ManageTagsSheet
         open={manageOpen}

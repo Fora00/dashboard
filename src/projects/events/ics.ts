@@ -1,3 +1,4 @@
+import { shareFile } from '../../lib/share'
 import type { EventItem } from './types'
 import { TZ, localDay, safeHttpUrl } from './model'
 
@@ -163,17 +164,10 @@ export async function addToCalendar(e: EventItem): Promise<void> {
     const name = icsFileName(e)
     const blob = new Blob([buildIcs(e)], { type: 'text/calendar;charset=utf-8' })
 
-    if (typeof File !== 'undefined' && typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
+    if (typeof File !== 'undefined') {
       const file = new File([blob], name, { type: 'text/calendar' })
-      if (typeof navigator.canShare === 'function' && navigator.canShare({ files: [file] })) {
-        try {
-          await navigator.share({ files: [file], title: e.title })
-          return
-        } catch (err) {
-          if (err instanceof DOMException && err.name === 'AbortError') return // user dismissed
-          // Otherwise fall through to the download.
-        }
-      }
+      const outcome = await shareFile(file, e.title)
+      if (outcome !== 'unsupported') return // shared, or the user dismissed the sheet
     }
 
     if (typeof URL === 'undefined' || typeof URL.createObjectURL !== 'function' || typeof document === 'undefined')

@@ -11,6 +11,7 @@ import { Button } from '../../components/Button'
 import { Chip } from '../../components/Chip'
 import { FOCUS_RING, FOCUS_RING_INSET } from '../../components/focus'
 import { Snackbar } from '../../components/Snackbar'
+import { formatDate as formatDateLocal } from '../../lib/dates'
 import { useUndoSnackbar } from '../../lib/useUndoSnackbar'
 import { SkeletonList } from '../../components/Skeleton'
 import { FilterSheet } from './FilterSheet'
@@ -19,8 +20,8 @@ import { PREFILL_KEYS, mergeEvents, parsePrefill, type CustomEventForm } from '.
 import { DATE_CHIPS } from './filters'
 import { NEAR_MINUTES, minutesLabel } from './distance'
 import { formatLabel } from './format'
-import { EventCard } from './EventCard'
-import { EyeOffIcon, ListChecksIcon, PlusIcon, XIcon } from './icons'
+import { SelectionBar, WeekSections } from './EventsList'
+import { ListChecksIcon, PlusIcon, XIcon } from './icons'
 import { useEventFilters, type View } from './useEventFilters'
 import type { EventItem } from './types'
 import { categoryLabel, fetchEventsFile, groupByWeek, isKidsEvent, relativeTime } from './model'
@@ -266,7 +267,7 @@ export function Events() {
       {editorSheet}
       {file && fetchState === 'offline' && (
         <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
-          Offline — showing copy from {new Date(cache?.fetchedAt ?? 0).toLocaleDateString('it-IT')}
+          Offline — showing copy from {formatDateLocal(cache?.fetchedAt ?? 0, undefined, 'it-IT')}
         </p>
       )}
       {failed.length > 0 && (
@@ -331,7 +332,7 @@ export function Events() {
           placeholder="Search title, venue, city…"
           value={query}
           onChange={(e) => toggles.setQuery(e.target.value)}
-          className="h-10 w-full rounded-lg border-2 border-slate-200 bg-white pr-10 pl-3 text-base text-slate-900 placeholder:text-slate-400 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-100"
+          className="h-10 w-full rounded-lg border-2 border-slate-200 bg-white pr-10 pl-3 text-base text-slate-900 placeholder:text-slate-500 dark:placeholder:text-slate-400 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-100"
         />
         <button
           type="button"
@@ -428,66 +429,19 @@ export function Events() {
         />
       ) : (
         <div className="space-y-5">
-          {weeks.map((w) => {
-            const isOpenNow = w.key === 'open-now'
-            const folded = !isOpenNow && collapsedWeeks.has(w.key)
-            return (
-              <section key={w.key} aria-label={w.label}>
-                <h2 className="mb-2 text-sm font-semibold text-slate-600 dark:text-slate-300">
-                  {isOpenNow ? (
-                    w.label
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => toggleWeek(w.key)}
-                      aria-expanded={!folded}
-                      title={folded ? 'Show this week' : 'Hide this week'}
-                      className={`flex min-h-10 w-full items-center gap-1.5 rounded-lg text-left ${FOCUS_RING}`}
-                    >
-                      <span aria-hidden="true" className="text-xs">
-                        {folded ? '▸' : '▾'}
-                      </span>
-                      {w.label}
-                      <span
-                        className="text-xs font-normal text-slate-500 dark:text-slate-400"
-                        title={`${w.count} events`}
-                      >
-                        · {w.count} 📍
-                      </span>
-                    </button>
-                  )}
-                </h2>
-                {!folded && (
-                  <div className="space-y-5">
-                    {w.days.map((g) => (
-                      <div key={g.key}>
-                        {w.key !== 'open-now' && (
-                          <h3 className="mb-2 text-sm font-semibold text-slate-500 dark:text-slate-400">{g.label}</h3>
-                        )}
-                        <ul className="space-y-2">
-                          {g.events.map((e) => (
-                            <EventCard
-                              key={`${g.key}-${e.id}`}
-                              event={e}
-                              saved={marks.get(e.id)?.state === 'saved'}
-                              hidden={marks.get(e.id)?.state === 'hidden'}
-                              now={now}
-                              onToggleSave={onToggleSave}
-                              onToggleHide={onToggleHide}
-                              onEdit={onEdit}
-                              selecting={selecting}
-                              selected={selectedIds.has(e.id)}
-                              onSelect={onSelect}
-                            />
-                          ))}
-                        </ul>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </section>
-            )
-          })}
+          <WeekSections
+            weeks={weeks}
+            collapsedWeeks={collapsedWeeks}
+            onToggleWeek={toggleWeek}
+            marks={marks}
+            now={now}
+            selecting={selecting}
+            selectedIds={selectedIds}
+            onToggleSave={onToggleSave}
+            onToggleHide={onToggleHide}
+            onEdit={onEdit}
+            onSelect={onSelect}
+          />
           {limit < total && (
             <div className="flex justify-center">
               <Button variant="ghost" onClick={toggles.showMore}>
@@ -502,33 +456,7 @@ export function Events() {
           <SyncCard sync={customSync} />
         </div>
       )}
-      {selecting && (
-        <div
-          className="fixed inset-x-0 z-20 flex justify-center px-4"
-          style={{ bottom: 'calc(env(safe-area-inset-bottom) + 1rem)' }}
-        >
-          <div className="flex items-center gap-1 rounded-full bg-white py-2 pl-4 pr-2 text-sm font-medium text-slate-900 shadow-lg ring-1 ring-slate-200 dark:bg-slate-800 dark:text-slate-100 dark:ring-slate-700">
-            <span className="shrink-0">{selectedIds.size} selected</span>
-            <button
-              type="button"
-              onClick={selectAllVisible}
-              className="flex min-h-10 min-w-10 items-center justify-center rounded-full px-3 text-indigo-600 dark:text-indigo-300"
-            >
-              <ListChecksIcon />
-              <span className="sr-only">Select all</span>
-            </button>
-            <button
-              type="button"
-              disabled={selectedIds.size === 0}
-              onClick={hideSelected}
-              className="flex min-h-10 min-w-12 items-center justify-center rounded-full bg-indigo-500 px-4 font-semibold text-white disabled:opacity-40"
-            >
-              <EyeOffIcon />
-              <span className="sr-only">Hide selected</span>
-            </button>
-          </div>
-        </div>
-      )}
+      {selecting && <SelectionBar count={selectedIds.size} onSelectAll={selectAllVisible} onHide={hideSelected} />}
       {!selecting && pendingUndo && <Snackbar label={pendingUndo.label} onUndo={confirmUndo} />}
     </div>
   )
