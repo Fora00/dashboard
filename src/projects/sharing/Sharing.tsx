@@ -339,113 +339,118 @@ export function Sharing() {
     <div>
       {header}
 
-      <form onSubmit={invite} className="mb-6 space-y-3">
-        <div className="flex gap-2">
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="guest@example.com"
-            aria-label="Guest email"
-            autoComplete="off"
-            required
-            className="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-(color:--accent-ring) focus:outline-none dark:border-slate-700 dark:bg-slate-800"
-          />
-          <Button type="submit" disabled={busy || !email.trim() || (selected.length === 0 && !shopOn)}>
-            Invite
-          </Button>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <button type="button" onClick={() => setShopOn((s) => !s)} className={chip(shopOn, 'indigo')}>
-            🛒 Shop List
-          </button>
-          {shareable.map((p) => {
-            const on = selected.includes(p.id)
-            return (
-              <button
-                key={p.id}
-                type="button"
-                onClick={() => setSelected((s) => (on ? s.filter((id) => id !== p.id) : [...s, p.id]))}
-                className={chip(on, 'indigo')}
-              >
-                <ProjectIcon project={p} size="sm" /> {p.name}
-              </button>
-            )
-          })}
-        </div>
-      </form>
-
-      {error && <p className="mb-4 text-sm text-rose-600 dark:text-rose-400">{error}</p>}
-
-      {guests === null ? null : guests.length === 0 ? (
-        <EmptyState
-          emoji="🫥"
-          title="No guests yet"
-          hint="Invite someone above, then send them the app link — they sign in with their email and a code."
-        />
-      ) : (
-        <ul className="space-y-3">
-          {guests.map((g) => (
-            <GuestCard
-              key={g.email}
-              guest={g}
-              areas={areas}
-              busy={busy}
-              onRemove={() => void runSafe(removeGuest)(g)}
-              onToggleShop={(on) => void runSafe(toggleShop)(g, on)}
-              onToggleMembership={(pid) => void runSafe(toggleMembership)(g, pid)}
-              onToggleArea={(aid) => void runSafe(toggleArea)(g, aid)}
-            />
-          ))}
-        </ul>
-      )}
-
-      <section className="mt-6">
-        <h2 className="mb-1 text-sm font-semibold">Invite links</h2>
-        <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
-          One link per project. Whoever opens it enters their email and gets that project only. Removing a guest resets
-          the link; Reset kills links you already sent. Shop areas have their own links in the Shop List.
-        </p>
-        <div className={listBox}>
-          {shareable.map((p) => (
-            <ProjectInviteRow
-              key={p.id}
-              project={p}
-              notice={notice?.id === p.id ? notice.text : null}
-              busy={busy}
-              armed={armedReset === p.id}
-              onReset={() => void runSafe(resetInvite)(p)}
-              onInvite={() => void runSafe(shareInvite)(p)}
-            />
-          ))}
-        </div>
-      </section>
-
-      {publicProjects.length > 0 && (
-        <section className="mt-6">
-          <h2 className="mb-1 text-sm font-semibold">Public — no invite needed</h2>
-          <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
-            Anyone with the plain link can use these, no sign-in.
-          </p>
-          <div className={listBox}>
-            {publicProjects.map((p) => (
-              <PublicLinkRow
-                key={p.id}
-                project={p}
-                notice={notice?.id === p.id ? notice.text : null}
-                onShare={() => void runSafe(sharePublic)(p)}
+      <div className="lg:grid lg:grid-cols-2 lg:items-start lg:gap-8">
+        <div className="min-w-0">
+          <form onSubmit={invite} className="mb-6 space-y-3">
+            <div className="flex gap-2">
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="guest@example.com"
+                aria-label="Guest email"
+                autoComplete="off"
+                required
+                className="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-(color:--accent-ring) focus:outline-none dark:border-slate-700 dark:bg-slate-800"
               />
-            ))}
-          </div>
-        </section>
-      )}
+              <Button type="submit" disabled={busy || !email.trim() || (selected.length === 0 && !shopOn)}>
+                Invite
+              </Button>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button type="button" onClick={() => setShopOn((s) => !s)} className={chip(shopOn, 'indigo')}>
+                🛒 Shop List
+              </button>
+              {shareable.map((p) => {
+                const on = selected.includes(p.id)
+                return (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => setSelected((s) => (on ? s.filter((id) => id !== p.id) : [...s, p.id]))}
+                    className={chip(on, 'indigo')}
+                  >
+                    <ProjectIcon project={p} size="sm" /> {p.name}
+                  </button>
+                )
+              })}
+            </div>
+          </form>
 
-      <Card className="mt-6 flex items-center justify-between gap-3 text-sm text-slate-500 dark:text-slate-400">
-        <span>Send guests the app link — they sign in with their email.</span>
-        <Button variant="ghost" onClick={() => void runSafe(shareAppLink)()}>
-          Share link
-        </Button>
-      </Card>
+          {error && <p className="mb-4 text-sm text-rose-600 dark:text-rose-400">{error}</p>}
+
+          {guests === null ? null : guests.length === 0 ? (
+            <EmptyState
+              emoji="🫥"
+              title="No guests yet"
+              hint="Invite someone above, then send them the app link — they sign in with their email and a code."
+            />
+          ) : (
+            <ul className="space-y-3">
+              {guests.map((g) => (
+                <GuestCard
+                  key={g.email}
+                  guest={g}
+                  areas={areas}
+                  busy={busy}
+                  onRemove={() => void runSafe(removeGuest)(g)}
+                  onToggleShop={(on) => void runSafe(toggleShop)(g, on)}
+                  onToggleMembership={(pid) => void runSafe(toggleMembership)(g, pid)}
+                  onToggleArea={(aid) => void runSafe(toggleArea)(g, aid)}
+                />
+              ))}
+            </ul>
+          )}
+        </div>
+        <div className="min-w-0">
+          <section className="mt-6 lg:mt-0 lg:mb-6">
+            <h2 className="mb-1 text-sm font-semibold">Invite links</h2>
+            <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
+              One link per project. Whoever opens it enters their email and gets that project only. Removing a guest
+              resets the link; Reset kills links you already sent. Shop areas have their own links in the Shop List.
+            </p>
+            <div className={listBox}>
+              {shareable.map((p) => (
+                <ProjectInviteRow
+                  key={p.id}
+                  project={p}
+                  notice={notice?.id === p.id ? notice.text : null}
+                  busy={busy}
+                  armed={armedReset === p.id}
+                  onReset={() => void runSafe(resetInvite)(p)}
+                  onInvite={() => void runSafe(shareInvite)(p)}
+                />
+              ))}
+            </div>
+          </section>
+
+          {publicProjects.length > 0 && (
+            <section className="mt-6 lg:mt-0 lg:mb-6">
+              <h2 className="mb-1 text-sm font-semibold">Public — no invite needed</h2>
+              <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
+                Anyone with the plain link can use these, no sign-in.
+              </p>
+              <div className={listBox}>
+                {publicProjects.map((p) => (
+                  <PublicLinkRow
+                    key={p.id}
+                    project={p}
+                    notice={notice?.id === p.id ? notice.text : null}
+                    onShare={() => void runSafe(sharePublic)(p)}
+                  />
+                ))}
+              </div>
+            </section>
+          )}
+
+          <Card className="mt-6 flex items-center justify-between gap-3 text-sm text-slate-500 dark:text-slate-400">
+            <span>Send guests the app link — they sign in with their email.</span>
+            <Button variant="ghost" onClick={() => void runSafe(shareAppLink)()}>
+              Share link
+            </Button>
+          </Card>
+        </div>
+      </div>
     </div>
   )
 }

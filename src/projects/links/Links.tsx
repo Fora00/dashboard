@@ -391,7 +391,7 @@ export function Links() {
           </div>
         </div>
       ) : (
-        <ul className="space-y-2">{visible.map(renderLink)}</ul>
+        <ul className="grid grid-cols-1 items-start gap-2 lg:grid-cols-2 xl:grid-cols-3">{visible.map(renderLink)}</ul>
       )}
 
       {pending && <Snackbar label={pending.label} onUndo={confirmUndo} />}

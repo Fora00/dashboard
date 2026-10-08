@@ -132,144 +132,147 @@ export function MealDiary() {
         </label>
       </form>
 
-      {entries === undefined ? (
-        <SkeletonList rows={4} rowClassName="h-12" />
-      ) : groups.length === 0 ? (
-        <EmptyState emoji="🍽️" title="Nothing logged yet" hint="Pick a meal, write what you ate and tap Add." />
-      ) : (
-        <div className="space-y-5">
-          {groups.map((g) => (
-            <section key={g.day} aria-label={dayLabel(g.day, now)}>
-              <div className="mb-2 flex flex-wrap items-baseline justify-between gap-x-3">
-                <h2 className="text-sm font-medium text-slate-500 dark:text-slate-400">
-                  <button
-                    type="button"
-                    onClick={() => toggleDay(g.day)}
-                    aria-expanded={!collapsed.has(g.day)}
-                    title={collapsed.has(g.day) ? 'Show this day' : 'Hide this day'}
-                    className="flex min-h-10 items-center gap-1.5"
-                  >
-                    <span aria-hidden="true" className="text-xs">
-                      {collapsed.has(g.day) ? '▸' : '▾'}
-                    </span>
-                    {dayLabel(g.day, now)}
-                    {collapsed.has(g.day) && <span className="text-xs">({g.entries.length})</span>}
-                  </button>
-                </h2>
-                <DayTotalsLine entries={g.entries} />
-              </div>
-              {!collapsed.has(g.day) && (
-                <Card className="divide-y divide-slate-100 p-0 dark:divide-slate-800">
-                  <ul>
-                    {g.entries.map((entry) => (
-                      <li key={entry.id} className="flex items-start gap-3 px-4 py-2.5">
-                        <span
-                          className="mt-0.5 shrink-0 text-lg"
-                          title={mealMeta(entry.meal).label}
-                          aria-label={mealMeta(entry.meal).label}
-                        >
-                          {mealMeta(entry.meal).emoji}
+      <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_22rem] lg:items-start lg:gap-6 xl:grid-cols-[minmax(0,1fr)_26rem]">
+        <div className="min-w-0">
+          {entries === undefined ? (
+            <SkeletonList rows={4} rowClassName="h-12" />
+          ) : groups.length === 0 ? (
+            <EmptyState emoji="🍽️" title="Nothing logged yet" hint="Pick a meal, write what you ate and tap Add." />
+          ) : (
+            <div className="space-y-5">
+              {groups.map((g) => (
+                <section key={g.day} aria-label={dayLabel(g.day, now)}>
+                  <div className="mb-2 flex flex-wrap items-baseline justify-between gap-x-3">
+                    <h2 className="text-sm font-medium text-slate-500 dark:text-slate-400">
+                      <button
+                        type="button"
+                        onClick={() => toggleDay(g.day)}
+                        aria-expanded={!collapsed.has(g.day)}
+                        title={collapsed.has(g.day) ? 'Show this day' : 'Hide this day'}
+                        className="flex min-h-10 items-center gap-1.5"
+                      >
+                        <span aria-hidden="true" className="text-xs">
+                          {collapsed.has(g.day) ? '▸' : '▾'}
                         </span>
-                        {editing?.id === entry.id ? (
-                          <form
-                            className="min-w-0 flex-1 space-y-2"
-                            onSubmit={(ev) => {
-                              ev.preventDefault()
-                              void saveEdit(entry)
-                            }}
-                          >
-                            <div className="flex gap-2">
-                              <input
-                                autoFocus
-                                value={editing.text}
-                                onChange={(ev) =>
-                                  setEditing({
-                                    ...editing,
-                                    text: ev.target.value,
-                                  })
-                                }
-                                aria-label={`Edit ${entry.text}`}
-                                maxLength={MAX_TEXT_LENGTH}
-                                className={INPUT}
-                              />
-                              <WeighedToggle
-                                weighed={editing.weighed}
-                                onChange={(w) => setEditing({ ...editing, weighed: w })}
-                              />
-                              <Button type="submit" disabled={!editing.text.trim()}>
-                                Save
-                              </Button>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                aria-label="Cancel"
-                                title="Cancel"
-                                onClick={() => setEditing(null)}
+                        {dayLabel(g.day, now)}
+                        {collapsed.has(g.day) && <span className="text-xs">({g.entries.length})</span>}
+                      </button>
+                    </h2>
+                    <DayTotalsLine entries={g.entries} />
+                  </div>
+                  {!collapsed.has(g.day) && (
+                    <Card className="divide-y divide-slate-100 p-0 dark:divide-slate-800">
+                      <ul>
+                        {g.entries.map((entry) => (
+                          <li key={entry.id} className="flex items-start gap-3 px-4 py-2.5">
+                            <span
+                              className="mt-0.5 shrink-0 text-lg"
+                              title={mealMeta(entry.meal).label}
+                              aria-label={mealMeta(entry.meal).label}
+                            >
+                              {mealMeta(entry.meal).emoji}
+                            </span>
+                            {editing?.id === entry.id ? (
+                              <form
+                                className="min-w-0 flex-1 space-y-2"
+                                onSubmit={(ev) => {
+                                  ev.preventDefault()
+                                  void saveEdit(entry)
+                                }}
                               >
-                                ✕
-                              </Button>
-                            </div>
-                            <NutritionFields
-                              value={editing.nutrition}
-                              onChange={(n) => setEditing({ ...editing, nutrition: n })}
-                            />
-                          </form>
-                        ) : (
-                          <>
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setEditing({
-                                  id: entry.id,
-                                  text: entry.text,
-                                  weighed: entry.weighed === true,
-                                  nutrition: toForm(entry),
-                                })
-                              }
-                              aria-label={`Edit ${entry.text}`}
-                              className="min-h-10 min-w-0 flex-1 break-words text-left text-sm"
-                            >
-                              {entry.text}
-                              <span className="block text-xs text-slate-500 dark:text-slate-400">
-                                <span
-                                  title={entry.weighed ? 'Weighed' : 'By eye'}
-                                  aria-label={entry.weighed ? 'Weighed' : 'By eye'}
+                                <div className="flex gap-2">
+                                  <input
+                                    autoFocus
+                                    value={editing.text}
+                                    onChange={(ev) =>
+                                      setEditing({
+                                        ...editing,
+                                        text: ev.target.value,
+                                      })
+                                    }
+                                    aria-label={`Edit ${entry.text}`}
+                                    maxLength={MAX_TEXT_LENGTH}
+                                    className={INPUT}
+                                  />
+                                  <WeighedToggle
+                                    weighed={editing.weighed}
+                                    onChange={(w) => setEditing({ ...editing, weighed: w })}
+                                  />
+                                  <Button type="submit" disabled={!editing.text.trim()}>
+                                    Save
+                                  </Button>
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    aria-label="Cancel"
+                                    title="Cancel"
+                                    onClick={() => setEditing(null)}
+                                  >
+                                    ✕
+                                  </Button>
+                                </div>
+                                <NutritionFields
+                                  value={editing.nutrition}
+                                  onChange={(n) => setEditing({ ...editing, nutrition: n })}
+                                />
+                              </form>
+                            ) : (
+                              <>
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setEditing({
+                                      id: entry.id,
+                                      text: entry.text,
+                                      weighed: entry.weighed === true,
+                                      nutrition: toForm(entry),
+                                    })
+                                  }
+                                  aria-label={`Edit ${entry.text}`}
+                                  className="min-h-10 min-w-0 flex-1 break-words text-left text-sm"
                                 >
-                                  {entry.weighed ? '⚖️' : '👁️'}
-                                </span>
-                                {macros(entry).text && (
-                                  <span title={macros(entry).hint} aria-label={macros(entry).hint}>
-                                    {` ${macros(entry).text}`}
+                                  {entry.text}
+                                  <span className="block text-xs text-slate-500 dark:text-slate-400">
+                                    <span
+                                      title={entry.weighed ? 'Weighed' : 'By eye'}
+                                      aria-label={entry.weighed ? 'Weighed' : 'By eye'}
+                                    >
+                                      {entry.weighed ? '⚖️' : '👁️'}
+                                    </span>
+                                    {macros(entry).text && (
+                                      <span title={macros(entry).hint} aria-label={macros(entry).hint}>
+                                        {` ${macros(entry).text}`}
+                                      </span>
+                                    )}
                                   </span>
-                                )}
-                              </span>
-                            </button>
-                            <Button
-                              variant="danger"
-                              onClick={() => void remove(entry)}
-                              aria-label={`Delete ${entry.text}`}
-                              title="Delete"
-                              className="min-w-10"
-                            >
-                              ✕
-                            </Button>
-                          </>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
-                </Card>
-              )}
-            </section>
-          ))}
+                                </button>
+                                <Button
+                                  variant="danger"
+                                  onClick={() => void remove(entry)}
+                                  aria-label={`Delete ${entry.text}`}
+                                  title="Delete"
+                                  className="min-w-10"
+                                >
+                                  ✕
+                                </Button>
+                              </>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    </Card>
+                  )}
+                </section>
+              ))}
+            </div>
+          )}
         </div>
-      )}
-
-      {entries !== undefined && (
-        <div className="mt-6">
-          <NutritionTrends entries={entries} now={now} />
-        </div>
-      )}
+        {entries !== undefined && (
+          <div className="mt-6 lg:sticky lg:top-6 lg:mt-0 lg:order-last">
+            <NutritionTrends entries={entries} now={now} />
+          </div>
+        )}
+      </div>
 
       {pending && <Snackbar label={pending.label} onUndo={confirmUndo} />}
     </div>
