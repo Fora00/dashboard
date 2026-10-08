@@ -31,7 +31,7 @@ interface Props {
 }
 
 const INPUT =
-  'h-10 w-full rounded-lg border-2 border-slate-200 bg-white px-3 text-base text-slate-900 placeholder:text-slate-400 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-100'
+  'h-10 w-full rounded-lg border-2 border-slate-200 bg-white px-3 text-base text-slate-900 placeholder:text-slate-500 dark:placeholder:text-slate-400 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-100'
 
 function Field({
   label,

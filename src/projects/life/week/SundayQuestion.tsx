@@ -22,7 +22,7 @@ export function AutoAnswer({
       <div className="min-w-0">
         <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{question.label}</p>
         {t && (
-          <p className="text-xs text-slate-400 dark:text-slate-500">
+          <p className="text-xs text-slate-500 dark:text-slate-400">
             Auto, from {t.emoji ? `${t.emoji} ` : ''}
             {t.label}
           </p>

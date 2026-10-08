@@ -105,7 +105,7 @@ export function TasksSection({ tasks, setTasks }: { tasks: TaskRow[]; setTasks: 
             </div>
 
             {t.listId && (
-              <p className="text-xs text-slate-400 dark:text-slate-500">
+              <p className="text-xs text-slate-500 dark:text-slate-400">
                 🔗 Linked to Things: stays in the right list even if you rename it there.
               </p>
             )}

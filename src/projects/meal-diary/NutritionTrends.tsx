@@ -152,8 +152,8 @@ export function NutritionTrends({ entries, now }: { entries: MealEntry[]; now: D
               <div className="bg-sky-500" style={{ width: `${split.fat}%` }} />
             </div>
             <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-              {MACRO_EMOJI.proteinG} {split.protein}% · {MACRO_EMOJI.carbsG} {split.carbs}% · {MACRO_EMOJI.fatG}{' '}
-              {split.fat}%
+              {MACRO_EMOJI.proteinG} Protein {split.protein}% · {MACRO_EMOJI.carbsG} Carbs {split.carbs}% ·{' '}
+              {MACRO_EMOJI.fatG} Fat {split.fat}%
             </p>
           </div>
         </>

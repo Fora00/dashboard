@@ -89,7 +89,7 @@ export function LifeImport() {
         spellCheck={false}
         autoCapitalize="off"
         autoCorrect="off"
-        className="mb-4 w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2 font-mono text-xs placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none dark:border-slate-700 dark:bg-slate-800"
+        className="mb-4 w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2 font-mono text-xs placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none dark:border-slate-700 dark:bg-slate-800"
       />
 
       {linkErrors && !text.trim() && (

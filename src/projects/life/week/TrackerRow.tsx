@@ -104,7 +104,7 @@ export function TrackerRow({
           <span className="min-w-0 flex-1 truncate">{tracker.label}</span>
           {goal && (
             <span
-              className={`shrink-0 text-xs font-normal ${atMax ? 'text-amber-600 dark:text-amber-400' : 'text-slate-400 dark:text-slate-500'}`}
+              className={`shrink-0 text-xs font-normal ${atMax ? 'text-amber-600 dark:text-amber-400' : 'text-slate-500 dark:text-slate-400'}`}
             >
               {goal}
             </span>
@@ -132,7 +132,7 @@ export function TrackerRow({
                 className={`mr-1.5 flex h-10 flex-1 items-center justify-center rounded border border-dashed text-xs font-medium ${
                   lastSunday.entries.length > 0
                     ? 'border-emerald-400/60 bg-emerald-400/20 text-emerald-700 dark:text-emerald-300'
-                    : 'border-slate-300 text-slate-400 dark:border-slate-700 dark:text-slate-500'
+                    : 'border-slate-300 text-slate-500 dark:border-slate-700 dark:text-slate-400'
                 }`}
               >
                 {lastSunday.entries.length > 0 ? lastSunday.entries.length : 'S'}
@@ -162,7 +162,7 @@ export function TrackerRow({
             })}
           </div>
           {!readOnly && (
-            <p className="text-xs text-slate-400 dark:text-slate-500">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
               Tap a day to mark or unmark it.{lastSunday && ' The dashed one is last Sunday.'}
             </p>
           )}
