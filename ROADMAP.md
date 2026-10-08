@@ -841,7 +841,8 @@ sync already ignores stale updates (`ignore_stale_update` triggers on
 
 ### Crawler / CI
 
-- [ ] **E1 Good events lost for good when the previous file can't be fetched** [opus, S] —
+- [x] **E1 Good events lost for good when the previous file can't be fetched** [opus, S] —
+      → done 2026-10-08: `scripts/events/previous.ts` (3 tries with backoff, 404 = first run), exit 1 without writing when the previous file is unreadable and a source has nothing to fall back on, or the total falls under 50% (`EVENTS_FORCE=1` / workflow `force` input overrides); `_site.yml` gate rejects invalid or 0-event files. E2 can reuse `unprotectedSources`.
       `crawl.ts` `loadPrevious` is one 20 s fetch, null on any error; a failing
       source then publishes 0 events and the next run accepts 0 (`prevCount` 0).
       Only gate is `test -s` (`_site.yml:67`). Fix: retry `loadPrevious`; exit 1
@@ -882,7 +883,8 @@ sync already ignores stale updates (`ignore_stale_update` triggers on
 
 ### Life
 
-- [ ] **LF1 Import link leaves the whole plan in browser history** [sonnet, XS] —
+- [x] **LF1 Import link leaves the whole plan in browser history** [sonnet, XS] —
+      → done 2026-10-08: `?d=` stripped with a replace navigation after decoding, save uses replace, 200 KB input cap, `settimana.md` says to use a non-syncing browser or paste. Limit: a syncing browser may have recorded the URL at first load, so the settimana instruction is the real protection.
       `LifeImport.tsx:27-54` reads `?d=` and never strips it; `/settimana` opens
       it in the default browser, and a syncing browser carries the plan off the
       Mac, against the owner's rule. Strip with `replace: true` after decoding;
