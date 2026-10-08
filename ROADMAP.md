@@ -911,11 +911,13 @@ sync already ignores stale updates (`ignore_stale_update` triggers on
 
 ### Dependencies / config
 
-- [ ] **D1 `npm audit`: 9 vulns (8 high)** [sonnet, XS] — transitive build-time
+- [x] **D1 `npm audit`: 9 vulns (8 high)** [sonnet, XS] — transitive build-time
+      → done 2026-10-08: `npm update` + `npm audit fix` (0 vulnerabilities, 960 KiB precache, 557 tests). `oxlint` is pinned to 1.72.0: 1.87 adds React-compiler rules (`set-state-in-effect`, `purity`) that fail in ~15 existing places (see D4).
       (postcss, source-map-js, browserslist, nanoid, brace-expansion, fast-uri)
       plus `react-router-dom` (RSC-mode CSRF; this SPA doesn't use RSC mode).
       `npm audit fix` + `npm outdated` bumps (supabase-js 2.117, react 19.3,
       vite 8.3, dexie 4.4.6); run check/build; no majors (ts 7, pwa 2).
+- [ ] **D4 Adopt the newer oxlint React rules** [sonnet, M] — bump oxlint past 1.72 and fix the ~15 `react/set-state-in-effect` and `react/purity` (Date during render) findings in UpdateToast, useOwner, InstallHint, LifeEditor, JoinProject, LocalTransfer, AreaManager, Sharing, Events, TrackersSection, MealDiary, useSections, Habits, TrackerRow; then unpin. Combine with LF2 (`useToday()`), which removes several `Date` calls from render.
 - [ ] **D2 Hosted Supabase settings unverified** [orchestrator/owner] —
       `config.toml` is local only (`config push` is forbidden). In the
       dashboard check: OTP expiry (local 3600 s; 600 s is tighter), email rate
