@@ -6,6 +6,7 @@ import { buildThingsUrl, canReturnFromThings, isIosLike, lifeReturnUrl, type Wee
 import { Button } from '../../../components/Button'
 import { Card } from '../../../components/Card'
 import { CollapsibleSection } from './CollapsibleSection'
+import { runSafe } from '../../../lib/runSafe'
 
 export function ThingsSection({
   week,
@@ -79,7 +80,7 @@ export function ThingsSection({
       <Card className="space-y-3 text-sm">
         {unsent.length > 0 ? (
           <>
-            <Button onClick={() => void sendAll()}>
+            <Button onClick={() => void runSafe(sendAll, 'Could not send')()}>
               Send {unsent.length} task{unsent.length === 1 ? '' : 's'} to Things
             </Button>
             {isIosLike() && (
@@ -91,7 +92,7 @@ export function ThingsSection({
               {unsent.map((t) => (
                 <li key={t.id} className="flex items-center justify-between gap-2">
                   <span className="min-w-0 flex-1 truncate">{t.title}</span>
-                  <span className="shrink-0 text-xs text-slate-400 dark:text-slate-500">{t.when ?? '—'}</span>
+                  <span className="shrink-0 text-xs text-slate-500 dark:text-slate-400">{t.when ?? '—'}</span>
                 </li>
               ))}
             </ul>
@@ -138,7 +139,11 @@ export function ThingsSection({
                 </li>
               ))}
             </ul>
-            <Button variant="ghost" disabled={selectedTaskIds.size === 0} onClick={() => void resendSelected()}>
+            <Button
+              variant="ghost"
+              disabled={selectedTaskIds.size === 0}
+              onClick={() => void runSafe(resendSelected, 'Could not send')()}
+            >
               Resend selected
             </Button>
           </div>

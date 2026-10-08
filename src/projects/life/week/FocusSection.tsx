@@ -1,6 +1,7 @@
 import type { LifeFocus } from '../../../lib/db'
 import { toggleFocus } from '../../../lib/lifeSync'
 import { CollapsibleSection } from './CollapsibleSection'
+import { runSafe } from '../../../lib/runSafe'
 
 export function FocusSection({
   week,
@@ -34,7 +35,7 @@ export function FocusSection({
                 type="button"
                 disabled={readOnly}
                 aria-pressed={done}
-                onClick={() => void toggleFocus(week, f.id)}
+                onClick={() => void runSafe(toggleFocus, 'Could not save')(week, f.id)}
                 className={`flex min-h-16 w-full items-center gap-3 rounded-xl border px-4 py-3 text-left text-base font-medium transition-colors ${
                   readOnly ? '' : 'active:bg-slate-100 dark:active:bg-slate-800'
                 } ${

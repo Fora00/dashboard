@@ -6,6 +6,7 @@ import { trackersSummary } from '../format'
 import { addDays, dayKey, type TrackerSummary } from '../model'
 import { CollapsibleSection } from './CollapsibleSection'
 import { TrackerRow, type LastSunday } from './TrackerRow'
+import { runSafe } from '../../../lib/runSafe'
 
 export function TrackersSection({
   week,
@@ -75,7 +76,7 @@ export function TrackersSection({
             onLogged={(entry) => trigger(`✓ ${ts.tracker.label}`, () => removeTrackerEntry(entry.id))}
             onRemove={(entry) => {
               if (energyPromptId === entry.id) setEnergyPromptId(null)
-              void removeTrackerEntry(entry.id)
+              void runSafe(removeTrackerEntry, 'Could not remove')(entry.id)
               trigger(`Removed ${ts.tracker.label}`, () => restoreEntry(entry))
             }}
           />

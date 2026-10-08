@@ -18,6 +18,7 @@ import {
   toggleCheck,
 } from '../../lib/habitSync'
 import { dayKey, lastDays, streak } from './habitStore'
+import { runSafe } from '../../lib/runSafe'
 
 const DOT_DAYS = 14
 
@@ -58,7 +59,7 @@ export function Habits() {
 
   function removeHabit(habit: Habit) {
     if (window.confirm(`Delete “${habit.name}” and its whole history?`)) {
-      void deleteHabit(habit)
+      void runSafe(deleteHabit, 'Could not delete habit')(habit)
     }
   }
 
@@ -70,7 +71,7 @@ export function Habits() {
       <li key={habit.id} className="flex items-stretch gap-2">
         <button
           type="button"
-          onClick={() => void toggleCheck(habit.id, today)}
+          onClick={() => void runSafe(toggleCheck, 'Could not save')(habit.id, today)}
           aria-pressed={done}
           className={`min-h-16 w-full min-w-0 flex-1 rounded-xl border px-4 py-3 text-left transition-colors active:bg-slate-100 dark:active:bg-slate-800 ${
             done
@@ -111,7 +112,7 @@ export function Habits() {
         </button>
         <Button
           variant="ghost"
-          onClick={() => void setArchived(habit, true)}
+          onClick={() => void runSafe(setArchived, 'Could not archive')(habit, true)}
           title={`Archive ${habit.name}`}
           aria-label={`Archive ${habit.name}`}
           className="min-w-10"
@@ -191,7 +192,10 @@ export function Habits() {
                       <span className="mr-2">{habit.emoji}</span>
                       {habit.name}
                     </span>
-                    <Button variant="ghost" onClick={() => void setArchived(habit, false)}>
+                    <Button
+                      variant="ghost"
+                      onClick={() => void runSafe(setArchived, 'Could not restore')(habit, false)}
+                    >
                       Restore
                     </Button>
                     <Button variant="danger" onClick={() => removeHabit(habit)}>

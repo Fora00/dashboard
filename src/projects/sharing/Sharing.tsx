@@ -2,9 +2,14 @@ import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { supabase, syncEnabled } from '../../lib/sync'
 import { useAuth } from '../../lib/useAuth'
 import { useOwner } from '../../lib/useOwner'
-import { isInvitable, projects, type ProjectMeta } from '../../lib/projects'
+import type { ProjectMeta } from '../../lib/projects'
+import { publicProjects, shareable } from './shareable'
 import { APP_URL, projectInviteUrl, projectUrl, shareOrCopy } from '../../lib/projectInvites'
 import { Button } from '../../components/Button'
+import { runSafe } from '../../lib/runSafe'
+import { GuestCard } from './GuestCard'
+import { ProjectInviteRow, PublicLinkRow } from './InviteRows'
+import { chip, listBox, type Area, type Guest } from './shared'
 import { Card } from '../../components/Card'
 import { PageHeader } from '../../components/PageHeader'
 import { EmptyState } from '../../components/EmptyState'
@@ -24,29 +29,6 @@ import { SyncCard } from '../../components/SyncCard'
 // The fixed-id default area created by the shop_areas migration (matches the
 // id the client uses when migrating pre-area local data).
 const DEFAULT_AREA_ID = '00000000-0000-0000-0000-000000000001'
-// Generic project chips (project_members) and per-project invite links. Shop
-// List is handled separately via area membership below; public projects
-// (events) need no grant at all and get a plain link instead; settings is
-// device-only. isInvitable() mirrors public.shareable_projects in SQL.
-const shareable = projects.filter(isInvitable)
-const publicProjects = projects.filter((p) => p.public && p.status === 'live')
-// Card look without Card's padding, for divided row lists.
-const listBox =
-  'divide-y divide-slate-200 rounded-xl border border-slate-200 bg-white dark:divide-slate-800 dark:border-slate-800 dark:bg-slate-800/50'
-
-interface Area {
-  id: string
-  name: string
-}
-
-interface Guest {
-  email: string
-  // Generic project_members rows (excludes the vestigial shop-list one, which
-  // we keep in sync with area membership but drive UI off `areas`).
-  memberships: string[]
-  // shop_area_members the guest belongs to (area ids).
-  areas: string[]
-}
 
 export function Sharing() {
   const session = useAuth()
@@ -75,7 +57,12 @@ export function Sharing() {
       setError((allowed.error ?? members.error ?? areaRows.error ?? areaMembers.error)!.message)
       return
     }
-    setAreas(areaRows.data.map((a) => ({ id: a.id as string, name: a.name as string })))
+    setAreas(
+      areaRows.data.map((a) => ({
+        id: a.id as string,
+        name: a.name as string,
+      })),
+    )
     const proj = new Map<string, string[]>()
     const area = new Map<string, string[]>()
     for (const g of allowed.data) {
@@ -127,14 +114,21 @@ export function Sharing() {
   // Remove ALL shop access for a guest: every area membership plus the
   // project_members row. This is what "disable shop-list" must do, otherwise
   // area RLS would still let the guest in.
-  async function revokeAllShop(guest: string) {
-    const { error: e1 } = await supabase!.from('shop_area_members').delete().eq('email', guest)
-    if (e1) throw e1
+  // Each area goes through revoke_area_guest (rotates that area's invite link
+  // and cleans up an invite-created whitelist row), not a direct delete.
+  async function revokeAllShop(guest: Guest) {
+    for (const aid of guest.areas) {
+      const { error: e1 } = await supabase!.rpc('revoke_area_guest', {
+        aid,
+        guest_email: guest.email,
+      })
+      if (e1) throw e1
+    }
     const { error: e2 } = await supabase!
       .from('project_members')
       .delete()
       .eq('project_id', 'shop-list')
-      .eq('email', guest)
+      .eq('email', guest.email)
     if (e2) throw e2
   }
 
@@ -148,10 +142,14 @@ export function Sharing() {
         .upsert({ email: guest, role: 'guest' }, { onConflict: 'email', ignoreDuplicates: true })
       if (e1) throw e1
       if (selected.length > 0) {
-        const rows = selected.map((project_id) => ({ project_id, email: guest }))
-        const { error: e2 } = await supabase!
-          .from('project_members')
-          .upsert(rows, { onConflict: 'project_id,email', ignoreDuplicates: true })
+        const rows = selected.map((project_id) => ({
+          project_id,
+          email: guest,
+        }))
+        const { error: e2 } = await supabase!.from('project_members').upsert(rows, {
+          onConflict: 'project_id,email',
+          ignoreDuplicates: true,
+        })
         if (e2) throw e2
       }
       // Shop List access = area membership (default-grant Groceries).
@@ -167,7 +165,10 @@ export function Sharing() {
       // invite-created whitelist row when no access is left, and rotates the
       // project's invite link so the old one can't re-add the guest.
       const { error: err } = has
-        ? await supabase!.rpc('revoke_project_guest', { pid: projectId, guest_email: guest.email })
+        ? await supabase!.rpc('revoke_project_guest', {
+            pid: projectId,
+            guest_email: guest.email,
+          })
         : await supabase!.from('project_members').insert({ project_id: projectId, email: guest.email })
       if (err) throw err
     })
@@ -176,7 +177,7 @@ export function Sharing() {
   // Master Shop List toggle: on = grant default area, off = revoke everything.
   async function toggleShop(guest: Guest, on: boolean) {
     await run(async () => {
-      if (on) await revokeAllShop(guest.email)
+      if (on) await revokeAllShop(guest)
       else {
         const fallback = areas.find((a) => a.id === DEFAULT_AREA_ID) ?? areas[0]
         if (!fallback) throw new Error('No shop areas exist yet — create one in the Shop List first.')
@@ -189,11 +190,10 @@ export function Sharing() {
     await run(async () => {
       const has = guest.areas.includes(areaId)
       if (has) {
-        const { error: err } = await supabase!
-          .from('shop_area_members')
-          .delete()
-          .eq('area_id', areaId)
-          .eq('email', guest.email)
+        const { error: err } = await supabase!.rpc('revoke_area_guest', {
+          aid: areaId,
+          guest_email: guest.email,
+        })
         if (err) throw err
         // Last area removed → drop the project_members['shop-list'] row too.
         if (guest.areas.length === 1) {
@@ -253,7 +253,9 @@ export function Sharing() {
   async function shareInvite(p: ProjectMeta) {
     setArmedReset(null)
     await run(async () => {
-      const { data, error: err } = await supabase!.rpc('project_invite_token', { pid: p.id })
+      const { data, error: err } = await supabase!.rpc('project_invite_token', {
+        pid: p.id,
+      })
       if (err) throw err
       if (!data) throw new Error('Could not get the invite link.')
       await shareFor(
@@ -331,15 +333,6 @@ export function Sharing() {
 
   if (owner === undefined) return <div>{header}</div>
 
-  const chip = (on: boolean, accent: 'indigo' | 'emerald') =>
-    `min-h-10 rounded-full border px-3.5 text-sm transition-colors ${
-      on
-        ? accent === 'indigo'
-          ? 'border-indigo-400 bg-indigo-500/20 text-indigo-600 dark:text-indigo-300'
-          : 'border-emerald-400 bg-emerald-500/15 text-emerald-600 dark:text-emerald-300'
-        : 'border-slate-300 text-slate-500 dark:border-slate-700'
-    }`
-
   return (
     <div>
       {header}
@@ -390,71 +383,18 @@ export function Sharing() {
         />
       ) : (
         <ul className="space-y-3">
-          {guests.map((g) => {
-            const shopEnabled = g.areas.length > 0 || g.memberships.includes('shop-list')
-            return (
-              <li key={g.email}>
-                <Card className="space-y-3">
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="min-w-0 truncate text-sm">{g.email}</span>
-                    <Button variant="danger" disabled={busy} onClick={() => void removeGuest(g)}>
-                      Remove
-                    </Button>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <button
-                      type="button"
-                      disabled={busy}
-                      onClick={() => void toggleShop(g, shopEnabled)}
-                      className={chip(shopEnabled, 'emerald')}
-                    >
-                      🛒 Shop List {shopEnabled ? '✓' : ''}
-                    </button>
-                    {shareable.map((p) => {
-                      const on = g.memberships.includes(p.id)
-                      return (
-                        <button
-                          key={p.id}
-                          type="button"
-                          disabled={busy}
-                          onClick={() => void toggleMembership(g, p.id)}
-                          className={chip(on, 'emerald')}
-                        >
-                          {p.emoji} {p.name} {on ? '✓' : ''}
-                        </button>
-                      )
-                    })}
-                  </div>
-                  {shopEnabled && areas.length > 0 && (
-                    <div className="space-y-2 border-t border-slate-200 pt-3 dark:border-slate-800">
-                      <p className="text-xs text-slate-500">Shop areas this guest can use</p>
-                      <div className="flex flex-wrap gap-2">
-                        {areas.map((a) => {
-                          const on = g.areas.includes(a.id)
-                          return (
-                            <button
-                              key={a.id}
-                              type="button"
-                              disabled={busy}
-                              onClick={() => void toggleArea(g, a.id)}
-                              className={chip(on, 'emerald')}
-                            >
-                              {a.name} {on ? '✓' : ''}
-                            </button>
-                          )
-                        })}
-                      </div>
-                      {g.areas.length === 0 && (
-                        <p className="text-xs text-amber-700 dark:text-amber-400">
-                          No area granted yet — tap one above so this guest can see items.
-                        </p>
-                      )}
-                    </div>
-                  )}
-                </Card>
-              </li>
-            )
-          })}
+          {guests.map((g) => (
+            <GuestCard
+              key={g.email}
+              guest={g}
+              areas={areas}
+              busy={busy}
+              onRemove={() => void runSafe(removeGuest)(g)}
+              onToggleShop={(on) => void runSafe(toggleShop)(g, on)}
+              onToggleMembership={(pid) => void runSafe(toggleMembership)(g, pid)}
+              onToggleArea={(aid) => void runSafe(toggleArea)(g, aid)}
+            />
+          ))}
         </ul>
       )}
 
@@ -466,31 +406,15 @@ export function Sharing() {
         </p>
         <div className={listBox}>
           {shareable.map((p) => (
-            <div key={p.id} className="flex items-center gap-2 px-4 py-2">
-              <span className="min-w-0 flex-1 truncate text-sm">
-                {p.emoji} {p.name}
-                {notice?.id === p.id && (
-                  <span className="ml-2 text-xs text-emerald-600 dark:text-emerald-400">{notice.text}</span>
-                )}
-              </span>
-              <Button
-                variant="ghost"
-                disabled={busy}
-                onClick={() => void resetInvite(p)}
-                aria-label={`Reset ${p.name} invite link`}
-                className={armedReset === p.id ? 'text-rose-600 dark:text-rose-400' : ''}
-              >
-                {armedReset === p.id ? 'Reset?' : '♻️'}
-              </Button>
-              <Button
-                variant="ghost"
-                disabled={busy}
-                onClick={() => void shareInvite(p)}
-                aria-label={`Share ${p.name} invite link`}
-              >
-                🔗 Invite
-              </Button>
-            </div>
+            <ProjectInviteRow
+              key={p.id}
+              project={p}
+              notice={notice?.id === p.id ? notice.text : null}
+              busy={busy}
+              armed={armedReset === p.id}
+              onReset={() => void runSafe(resetInvite)(p)}
+              onInvite={() => void runSafe(shareInvite)(p)}
+            />
           ))}
         </div>
       </section>
@@ -503,17 +427,12 @@ export function Sharing() {
           </p>
           <div className={listBox}>
             {publicProjects.map((p) => (
-              <div key={p.id} className="flex items-center gap-2 px-4 py-2">
-                <span className="min-w-0 flex-1 truncate text-sm">
-                  {p.emoji} {p.name}
-                  {notice?.id === p.id && (
-                    <span className="ml-2 text-xs text-emerald-600 dark:text-emerald-400">{notice.text}</span>
-                  )}
-                </span>
-                <Button variant="ghost" onClick={() => void sharePublic(p)} aria-label={`Share ${p.name} link`}>
-                  🔗 Link
-                </Button>
-              </div>
+              <PublicLinkRow
+                key={p.id}
+                project={p}
+                notice={notice?.id === p.id ? notice.text : null}
+                onShare={() => void runSafe(sharePublic)(p)}
+              />
             ))}
           </div>
         </section>
@@ -521,7 +440,7 @@ export function Sharing() {
 
       <Card className="mt-6 flex items-center justify-between gap-3 text-sm text-slate-500 dark:text-slate-400">
         <span>Send guests the app link — they sign in with their email.</span>
-        <Button variant="ghost" onClick={() => void shareAppLink()}>
+        <Button variant="ghost" onClick={() => void runSafe(shareAppLink)()}>
           Share link
         </Button>
       </Card>

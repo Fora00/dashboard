@@ -11,6 +11,7 @@ import { Button } from '../../components/Button'
 import { Card } from '../../components/Card'
 import { PageHeader } from '../../components/PageHeader'
 import { SyncCard } from '../../components/SyncCard'
+import { runSafe } from '../../lib/runSafe'
 
 // Per-device settings: project visibility, storage usage, persistence, sync
 // status, local wipe.
@@ -42,7 +43,7 @@ function ProjectVisibility() {
                   role="switch"
                   aria-checked={shown}
                   aria-label={`Show ${p.name} on home`}
-                  onClick={() => void setHidden(p.id, shown)}
+                  onClick={() => void runSafe(setHidden, 'Could not save')(p.id, shown)}
                   className="flex min-h-11 w-full items-center gap-3 text-left"
                 >
                   <span className="text-xl" aria-hidden="true">
@@ -128,7 +129,11 @@ export function Settings() {
                 {persisted === null ? '…' : persisted ? 'yes ✅' : 'no'}
               </span>
               {persisted === false && (
-                <Button variant="ghost" className="ml-3" onClick={() => void requestPersist()}>
+                <Button
+                  variant="ghost"
+                  className="ml-3"
+                  onClick={() => void runSafe(requestPersist, 'Could not request persistence')()}
+                >
                   Request
                 </Button>
               )}
@@ -143,7 +148,7 @@ export function Settings() {
               Delete all data stored on this device.
               {session && ' Synced data in the cloud is kept.'}
             </span>
-            <Button variant="danger" onClick={() => void wipeLocal()}>
+            <Button variant="danger" onClick={() => void runSafe(wipeLocal, 'Could not wipe data')()}>
               {confirmWipe ? 'Really wipe?' : 'Wipe device data'}
             </Button>
           </Card>

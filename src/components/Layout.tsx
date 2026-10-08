@@ -6,6 +6,7 @@ import { OnlineBadge } from './OnlineBadge'
 import { OfflineBanner } from './OfflineBanner'
 import { SkeletonList } from './Skeleton'
 import { UpdateToast } from './UpdateToast'
+import { ErrorFlash } from './ErrorFlash'
 import { projects } from '../lib/projects'
 import { recordOpen } from '../lib/projectStats'
 
@@ -50,6 +51,7 @@ export function Layout() {
         </ErrorBoundary>
       </main>
       <UpdateToast />
+      <ErrorFlash />
     </div>
   )
 }

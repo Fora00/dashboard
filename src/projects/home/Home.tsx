@@ -10,6 +10,7 @@ import { isHidden, toggleStar, useApplyHiddenDefaults } from '../../lib/projectS
 import { Card } from '../../components/Card'
 import { FOCUS_RING_INSET } from '../../components/focus'
 import { InstallHint } from '../../components/InstallHint'
+import { runSafe } from '../../lib/runSafe'
 
 // Local calendar-day key, matching the Habits project's own day boundary
 // ('YYYY-MM-DD' in device local time — see habits/habitStore.ts).
@@ -213,10 +214,10 @@ export function Home() {
             <div key={p.id} className="relative">
               <button
                 type="button"
-                onClick={() => void toggleStar(p.id)}
+                onClick={() => void runSafe(toggleStar, 'Could not update star')(p.id)}
                 aria-pressed={starred}
                 aria-label={starred ? `Unstar ${p.name}` : `Star ${p.name}`}
-                className={`absolute right-1 top-1 z-10 flex h-10 w-10 items-center justify-center rounded-full text-xl text-slate-400 hover:bg-slate-200/60 active:bg-slate-300/60 dark:text-slate-500 dark:hover:bg-slate-700/60 dark:active:bg-slate-600/60 ${FOCUS_RING_INSET}`}
+                className={`absolute right-1 top-1 z-10 flex h-10 w-10 items-center justify-center rounded-full text-xl text-slate-500 hover:bg-slate-200/60 active:bg-slate-300/60 dark:text-slate-400 dark:hover:bg-slate-700/60 dark:active:bg-slate-600/60 ${FOCUS_RING_INSET}`}
               >
                 {starred ? <span className="text-amber-500 dark:text-amber-400">★</span> : '☆'}
               </button>

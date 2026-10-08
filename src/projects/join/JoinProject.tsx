@@ -8,6 +8,7 @@ import { Button } from '../../components/Button'
 import { Card } from '../../components/Card'
 import { InstallHint } from '../../components/InstallHint'
 import { PageHeader } from '../../components/PageHeader'
+import { runSafe } from '../../lib/runSafe'
 
 // Landing page for a per-project invite link (…#/join/p/<token>), the
 // project-level twin of shop-list/JoinArea.tsx. The link IS the invitation:
@@ -63,7 +64,9 @@ export function JoinProject() {
     if (!supabase || !token) return
     setLookup({ state: 'loading' })
     try {
-      const { data, error: err } = await supabase.rpc('get_project_invite', { token })
+      const { data, error: err } = await supabase.rpc('get_project_invite', {
+        token,
+      })
       if (err) {
         // A malformed token is a dead link, not an outage (22P02 = bad uuid).
         if (err.code === '22P02') setLookup({ state: 'invalid' })
@@ -85,17 +88,23 @@ export function JoinProject() {
   useEffect(() => {
     if (!supabase || !session || !projectId || !token || joining.current) return
     joining.current = true
-    void supabase.rpc('join_project', { token }).then(({ error: err }) => {
-      if (err) {
+    void Promise.resolve(supabase.rpc('join_project', { token }))
+      .then(({ error: err }) => {
+        if (err) {
+          joining.current = false
+          setBusy(false)
+          setError(friendly(err.message))
+          return
+        }
+        syncProjectAfterJoin(projectId)
+        const path = projects.find((p) => p.id === projectId)?.path ?? '/'
+        void navigate(path, { replace: true, state: { joined: true } })
+      })
+      .catch((err: unknown) => {
         joining.current = false
         setBusy(false)
-        setError(friendly(err.message))
-        return
-      }
-      syncProjectAfterJoin(projectId)
-      const path = projects.find((p) => p.id === projectId)?.path ?? '/'
-      void navigate(path, { replace: true, state: { joined: true } })
-    })
+        setError(friendly(errorMessage(err)))
+      })
   }, [session, projectId, token, navigate, attempt])
 
   async function redeem(e: FormEvent) {
@@ -158,7 +167,7 @@ export function JoinProject() {
         {header}
         <Card className="space-y-3 text-sm">
           <p className="text-slate-500 dark:text-slate-400">📡 {lookup.message}</p>
-          <Button variant="ghost" onClick={() => void load()}>
+          <Button variant="ghost" onClick={() => void runSafe(load)()}>
             Try again
           </Button>
         </Card>
