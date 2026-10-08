@@ -937,7 +937,8 @@ sync already ignores stale updates (`ignore_stale_update` triggers on
       plus `react-router-dom` (RSC-mode CSRF; this SPA doesn't use RSC mode).
       `npm audit fix` + `npm outdated` bumps (supabase-js 2.117, react 19.3,
       vite 8.3, dexie 4.4.6); run check/build; no majors (ts 7, pwa 2).
-- [ ] **D4 Adopt the newer oxlint React rules** [sonnet, M] — bump oxlint past 1.72 and fix the ~15 `react/set-state-in-effect` and `react/purity` (Date during render) findings in UpdateToast, useOwner, InstallHint, LifeEditor, JoinProject, LocalTransfer, AreaManager, Sharing, Events, TrackersSection, MealDiary, useSections, Habits, TrackerRow; then unpin. Combine with LF2 (`useToday()`), which removes several `Date` calls from render.
+- [x] **D4 Adopt the newer oxlint React rules** [sonnet, M] — bump oxlint past 1.72 and fix the ~15 `react/set-state-in-effect` and `react/purity` (Date during render) findings in UpdateToast, useOwner, InstallHint, LifeEditor, JoinProject, LocalTransfer, AreaManager, Sharing, Events, TrackersSection, MealDiary, useSections, Habits, TrackerRow; then unpin. Combine with LF2 (`useToday()`), which removes several `Date` calls from render.
+      → done 2026-10-08: oxlint 1.87.0 pinned exact. 3 findings fixed properly (InstallHint, useOwner, AreaManager), 8 suppressed with a reason each (false positives for fetch-on-mount and wall-clock effects, or risky rewrites). `useOwner` and `AreaManager` changed logic and have no tests: add a render-test setup (UI1 smoke) when possible.
 - [ ] **D2 Hosted Supabase settings unverified** [orchestrator/owner] —
       `config.toml` is local only (`config push` is forbidden). In the
       dashboard check: OTP expiry (local 3600 s; 600 s is tighter), email rate
