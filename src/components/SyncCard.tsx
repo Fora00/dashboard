@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { syncEnabled, requestLoginCode, verifyLoginCode, signOut } from '../lib/sync'
 import type { CloudSync } from '../lib/cloudSync'
 import { useSyncStatus } from '../lib/useSyncStatus'
+import { clearPrivateData, privateDataSummary, type PrivateDataSummary } from '../lib/privateData'
 import { useAuth } from '../lib/useAuth'
 import { Button } from './Button'
 import { Card } from './Card'
@@ -15,6 +16,11 @@ import { Card } from './Card'
 // with Retry (requeue the rejected changes) and Discard (drop them, take the
 // server's version — confirmed first). Without the prop the card behaves
 // exactly as before.
+//
+// Right after a sign-out from this card, if owner-only data (Life, Meal Diary,
+// the owner's events) is still on the device, the signed-out card offers to
+// remove it, warning first about changes that never reached the server. It is
+// only ever an offer: nothing is removed without the user's explicit tap.
 
 interface SyncCardProps {
   sync?: CloudSync
@@ -41,6 +47,10 @@ export function SyncCard({ sync }: SyncCardProps) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [deadBusy, setDeadBusy] = useState(false)
+  // Set right after a sign-out that left private data on this device.
+  const [privateOffer, setPrivateOffer] = useState<PrivateDataSummary | null>(null)
+  const [privateBusy, setPrivateBusy] = useState(false)
+  const [privateRemoved, setPrivateRemoved] = useState(false)
   const codeInput = useRef<HTMLInputElement>(null)
 
   // Move focus to the code field the moment the code step appears so iOS can
@@ -67,7 +77,7 @@ export function SyncCard({ sync }: SyncCardProps) {
           <span className="min-w-0 truncate text-slate-500 dark:text-slate-400">
             ☁️ Syncing as <span className="text-slate-800 dark:text-slate-200">{session.user.email}</span>
           </span>
-          <Button variant="ghost" onClick={() => void signOut()}>
+          <Button variant="ghost" onClick={() => void handleSignOut()}>
             Sign out
           </Button>
         </Card>
@@ -80,7 +90,7 @@ export function SyncCard({ sync }: SyncCardProps) {
           <span className="min-w-0 truncate text-slate-500 dark:text-slate-400">
             ☁️ Syncing as <span className="text-slate-800 dark:text-slate-200">{session.user.email}</span>
           </span>
-          <Button variant="ghost" onClick={() => void signOut()}>
+          <Button variant="ghost" onClick={() => void handleSignOut()}>
             Sign out
           </Button>
         </div>
@@ -115,6 +125,42 @@ export function SyncCard({ sync }: SyncCardProps) {
         )}
       </Card>
     )
+  }
+
+  async function handleSignOut() {
+    setPrivateRemoved(false)
+    try {
+      await signOut()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err))
+      return
+    }
+    // Best effort: if the count fails, simply don't offer.
+    const summary = await privateDataSummary().catch(() => null)
+    if (summary && summary.rows + summary.unsynced > 0) setPrivateOffer(summary)
+  }
+
+  async function removePrivateData(summary: PrivateDataSummary) {
+    const lost =
+      summary.unsynced > 0
+        ? `\n\n${summary.unsynced} change${summary.unsynced === 1 ? ' was' : 's were'} never synced and will be lost for good.`
+        : ''
+    const ok = window.confirm(
+      'Remove Life, Meal Diary and your events data from this device? The copy in the cloud is kept: ' +
+        `sign in again to get it back.${lost}`,
+    )
+    if (!ok) return
+    setPrivateBusy(true)
+    setError(null)
+    try {
+      await clearPrivateData()
+      setPrivateOffer(null)
+      setPrivateRemoved(true)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err))
+    } finally {
+      setPrivateBusy(false)
+    }
   }
 
   async function retryDead(engine: CloudSync) {
@@ -161,6 +207,8 @@ export function SyncCard({ sync }: SyncCardProps) {
     setError(null)
     try {
       await verifyLoginCode(email.trim(), code)
+      setPrivateOffer(null)
+      setPrivateRemoved(false)
       setStage('email')
       setCode('')
     } catch (err) {
@@ -172,6 +220,33 @@ export function SyncCard({ sync }: SyncCardProps) {
 
   return (
     <Card className="mb-6 space-y-3 text-sm">
+      {privateOffer && (
+        <div className="space-y-2 rounded-lg border border-amber-500/40 bg-amber-500/10 p-3">
+          <p className="text-slate-700 dark:text-slate-200">
+            Your private data (Life, Meal Diary, your events) is still on this device. Anyone using it can read it.
+          </p>
+          {privateOffer.unsynced > 0 && (
+            <p className="text-rose-600 dark:text-rose-400">
+              ⚠️ {privateOffer.unsynced} change{privateOffer.unsynced === 1 ? ' has' : 's have'} not reached the cloud
+              yet. Removing deletes {privateOffer.unsynced === 1 ? 'it' : 'them'} for good: sign in again first to keep{' '}
+              {privateOffer.unsynced === 1 ? 'it' : 'them'}.
+            </p>
+          )}
+          <div className="flex flex-wrap gap-2">
+            <Button variant="danger" disabled={privateBusy} onClick={() => void removePrivateData(privateOffer)}>
+              Remove private data from this device
+            </Button>
+            <Button variant="ghost" disabled={privateBusy} onClick={() => setPrivateOffer(null)}>
+              Keep it
+            </Button>
+          </div>
+        </div>
+      )}
+      {privateRemoved && (
+        <p className="text-slate-600 dark:text-slate-300">
+          Private data removed from this device. The cloud copy is kept.
+        </p>
+      )}
       <p className="text-slate-500 dark:text-slate-400">☁️ Sign in to sync this list across devices and share it.</p>
       {stage === 'email' ? (
         <form onSubmit={sendCode} className="flex gap-2">

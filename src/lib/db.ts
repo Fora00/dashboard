@@ -741,7 +741,8 @@ db.version(15)
     if (entries.length > 0) await tx.table('outbox').bulkAdd(entries)
   })
 
-// v16: meal diary (local-only). New table only; nothing is migrated or removed.
+// v16: meal diary (synced owner-only since, via mealDiarySync.ts; no schema
+// change was needed for that). New table only; nothing is migrated or removed.
 db.version(16).stores({
   files: 'id, name, createdAt, synced',
   shopItems: 'id, done, createdAt, areaId',

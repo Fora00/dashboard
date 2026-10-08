@@ -28,6 +28,10 @@ import { supabase } from './sync'
 //   * Realtime is last-writer-wins by updated_at and skips rows with pending
 //     outbox entries.
 //   * Malformed remote rows are skipped and counted, never crash a pull.
+//   * Pull pages every table past PostgREST's 1000-row cap (keyset paging by
+//     id, so a row deleted between pages can't shift another out of view) and
+//     aborts if the session ended or changed user while its selects ran.
+//   * Realtime events apply under the same lock, never inside a pull.
 
 /** Remote tables whose outbox payload is exactly L. Falls back to every table
  *  for a row type not in OutboxMap yet (a freshly generated scaffold before its
@@ -59,10 +63,18 @@ export interface TableSync<L extends { id: string } = { id: string }, R = unknow
   /** Extract the row's updated_at (ms) for last-writer-wins. Omit for
    *  insert/delete-only tables that have no updated_at column. */
   updatedAt?: (local: L) => number
+  /** A unique violation (23505) on push means another device already created
+   *  the same logical row (e.g. one habit check per habit and day): drop the
+   *  outbox entry as delivered instead of dead-lettering it. The next pull
+   *  brings the server's copy and removes the local duplicate. */
+  uniqueViolationIsDone?: boolean
 }
 
 // Erased variant for heterogeneous config lists (each entry keeps its own L/R
-// internally; the engine only relies on rows having an `id`).
+// internally; the engine only relies on rows having an `id`). Stays `any`:
+// Dexie's Table is invariant in its row type, so no TableSync<Todo, …> is
+// assignable to a TableSync<{ id: string }, unknown> without casting every
+// project's table() — more churn than the lint is worth.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type AnyTableSync = TableSync<any, any>
 
@@ -70,6 +82,9 @@ export interface SyncConfig {
   /** Project id (matches src/lib/projects.ts and is_member('<id>')). */
   projectId: string
   tables: AnyTableSync[]
+  /** Runs inside the engine lock after every complete pull (e.g. a local
+   *  dedupe). Must only touch Dexie; an error is logged, never fatal. */
+  afterPull?: () => Promise<void>
 }
 
 /** Live, observable sync state for one engine instance (one project). */
@@ -132,6 +147,10 @@ export interface CloudSync {
 // queue forever (and its row stays shielded from pull deletion).
 const MAX_TRIES = 8
 
+// Page size for pull selects. Must not exceed PostgREST's max_rows
+// (supabase/config.toml, 1000): a page shorter than this ends the table.
+const PULL_PAGE = 1000
+
 /** A push the server (or the transport) refused. `status` 0 = no response. */
 class PushError extends Error {
   code: string
@@ -165,8 +184,13 @@ function classify(err: unknown): ErrorClass {
   // True denials that a retry can never fix:
   //   42501 = RLS / insufficient privilege (guest pushing data she can't write)
   //   23xxx = integrity constraint (unique, FK, not-null, check) violations
+  //   22xxx = data exception (bad date/uuid/number format, value too long…)
+  //   42703 / PGRST204 = column the server doesn't have (client ahead of the
+  //   schema): only a migration fixes it, retrying 8x just delays the signal
   if (code === '42501') return 'poison'
   if (code.startsWith('23')) return 'poison'
+  if (code.startsWith('22')) return 'poison'
+  if (code === '42703' || code === 'PGRST204') return 'poison'
   // PGRST30x = JWT missing/expired/invalid; 401 without a code is the same.
   if (code.startsWith('PGRST30') || (status === 401 && code === '')) return 'auth'
   return 'retry'
@@ -263,10 +287,11 @@ export function createCloudSync(config: SyncConfig): CloudSync {
     setStatus({ pending, dead, lastError: dead > 0 ? deadMessage(dead) : null })
   }
 
-  async function signedIn(): Promise<boolean> {
-    if (!supabase) return false
+  /** The signed-in user's id, or null when signed out. */
+  async function sessionUserId(): Promise<string | null> {
+    if (!supabase) return null
     const { data } = await supabase.auth.getSession()
-    return !!data.session
+    return data.session?.user.id ?? null
   }
 
   async function pushEntry(entry: OutboxEntry): Promise<void> {
@@ -292,6 +317,11 @@ export function createCloudSync(config: SyncConfig): CloudSync {
       try {
         await pushEntry(entry)
       } catch (err) {
+        // Same logical row already on the server (see uniqueViolationIsDone).
+        if (err instanceof PushError && err.code === '23505' && byRemote.get(entry.table)?.uniqueViolationIsDone) {
+          await db.outbox.delete(entry.seq!)
+          continue
+        }
         const kind = classify(err)
         // No server answer / needs re-auth: stop WITHOUT counting a try, so
         // any number of offline edits can queue up and none is ever falsely
@@ -337,7 +367,7 @@ export function createCloudSync(config: SyncConfig): CloudSync {
       flushQueued = null
       flushing = true
       try {
-        if (!(await signedIn())) return
+        if (!(await sessionUserId())) return
         setStatus({ syncing: true })
         do {
           rerun = false
@@ -368,16 +398,47 @@ export function createCloudSync(config: SyncConfig): CloudSync {
     }
   }
 
+  /** Every row of one remote table, fetched in pages of PULL_PAGE ordered by
+   *  id (PostgREST silently caps a select at max_rows = 1000, so an unpaged
+   *  select would look like "the server lost every row past 1000" and pull
+   *  would delete them locally). Keyset paging (id > last id seen), not
+   *  offsets: a row deleted between two pages would shift the next page by
+   *  one and skip a row that still exists. null if ANY page fails: the caller
+   *  must then abort, never act on a partial view. */
+  async function selectAll(tc: AnyTableSync): Promise<unknown[] | null> {
+    const all: unknown[] = []
+    let lastId: string | null = null
+    for (;;) {
+      const base = supabase!.from(tc.remote).select(tc.columns)
+      const page: { data: unknown; error: unknown } = await (lastId === null ? base : base.gt('id', lastId))
+        .order('id')
+        .limit(PULL_PAGE)
+      const data = page.data
+      if (page.error || !Array.isArray(data)) return null
+      for (const raw of data as unknown[]) all.push(raw)
+      if (data.length < PULL_PAGE) return all
+      const last: unknown = (data[data.length - 1] as { id?: unknown } | null)?.id
+      // No usable id to continue from: refuse a view we can't complete.
+      if (typeof last !== 'string') return null
+      lastId = last
+    }
+  }
+
   function pull(): Promise<boolean> {
     return exclusive(async () => {
       if (!supabase || isOffline()) return false
       // Signed out, RLS answers every select with zero rows — treating that
       // as "the server has nothing" would wipe local data. Never pull then.
-      if (!(await signedIn())) return false
-      const results = await Promise.all(config.tables.map((tc) => supabase!.from(tc.remote).select(tc.columns)))
-      // If any table errored, abort the whole pull — never partial-delete based
-      // on an incomplete remote view.
-      if (results.some((r) => r.error || !Array.isArray(r.data))) return false
+      const userId = await sessionUserId()
+      if (!userId) return false
+      const results = await Promise.all(config.tables.map(selectAll))
+      // If any table (or any page of it) errored, abort the whole pull — never
+      // partial-delete based on an incomplete remote view.
+      if (results.some((r) => r === null)) return false
+      // The session may have ended or switched user while the selects were in
+      // flight (sign-out mid-pull): the rows then belong to another view of
+      // RLS, possibly empty. Abort without touching Dexie.
+      if ((await sessionUserId()) !== userId) return false
 
       let skipped = 0
       const dexieTables = config.tables.map((t) => t.table())
@@ -393,7 +454,7 @@ export function createCloudSync(config: SyncConfig): CloudSync {
           // Every id the server reported, malformed or not: a local row whose
           // remote copy is merely unreadable must not be deleted.
           const remoteIds = new Set<string>()
-          for (const raw of result.data as unknown[]) {
+          for (const raw of result) {
             const rawId = (raw as { id?: unknown } | null)?.id
             if (typeof rawId === 'string') remoteIds.add(rawId)
             const row = mapRow(tc, raw)
@@ -409,6 +470,15 @@ export function createCloudSync(config: SyncConfig): CloudSync {
         console.warn(`cloudSync(${config.projectId}): skipped ${skipped} malformed remote row(s)`)
       }
       setStatus({ skipped })
+      if (config.afterPull) {
+        try {
+          await config.afterPull()
+        } catch (err) {
+          console.warn(`cloudSync(${config.projectId}): afterPull failed`, err)
+        }
+        // It may have dropped outbox entries (e.g. a duplicate's dead-letter).
+        await refreshCounts()
+      }
       return true
     })
   }
@@ -473,15 +543,20 @@ export function createCloudSync(config: SyncConfig): CloudSync {
           .on(
             'postgres_changes',
             { event: '*', schema: 'public', table: tc.remote },
+            // Under the engine lock: an event applied while a pull is between
+            // its select and its write would be overwritten by that pull's
+            // older snapshot. Queued behind it, the event lands last and wins.
             (payload) =>
-              void onRealtime(
-                tc,
-                payload as unknown as {
-                  eventType: string
-                  new: unknown
-                  old: unknown
-                },
-              ),
+              void exclusive(() =>
+                onRealtime(
+                  tc,
+                  payload as unknown as {
+                    eventType: string
+                    new: unknown
+                    old: unknown
+                  },
+                ),
+              ).catch((err: unknown) => console.warn(`cloudSync(${config.projectId}): realtime event failed`, err)),
           )
           .subscribe(),
       )

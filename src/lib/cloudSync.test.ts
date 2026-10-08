@@ -165,6 +165,40 @@ describe('server-answered failures', () => {
     expect(e?.tries ?? 0).toBe(0)
   })
 
+  it.each([
+    ['22P02', 'invalid uuid'],
+    ['22007', 'invalid date'],
+    ['42703', 'column does not exist'],
+    ['PGRST204', 'column not in schema cache'],
+  ])('a data/schema error (%s) dead-letters at once, never retried', async (code, message) => {
+    fake.rejectWith((_t, _op, id) => (id === 'bad' ? { code, message, status: 400 } : null))
+    await eng.upsert('todos', todo('bad'))
+    await eng.upsert('todos', todo('good'))
+    await settle()
+    const bad = await db.outbox.where('rowId').equals('bad').first()
+    expect(bad?.dead).toBe(1)
+    expect(bad?.tries).toBe(1)
+    expect(serverRows().map((r) => r.id)).toEqual(['good'])
+  })
+
+  it('uniqueViolationIsDone: a 23505 drops the entry as delivered, not dead', async () => {
+    const eng2 = createCloudSync({ projectId: 'todo', tables: [{ ...todosTable, uniqueViolationIsDone: true }] })
+    fake.rejectWith((_t, _op, id) => (id === 'dup' ? { code: '23505', message: 'duplicate key', status: 409 } : null))
+    await eng2.upsert('todos', todo('dup'))
+    await eng2.upsert('todos', todo('after'))
+    await drain(async () => `${fake.calls.length}|${await db.outbox.count()}`)
+    expect(await db.outbox.count()).toBe(0)
+    expect(eng2.getStatus().dead).toBe(0)
+    expect(serverRows().map((r) => r.id)).toEqual(['after'])
+  })
+
+  it('without the flag a 23505 still dead-letters', async () => {
+    fake.rejectWith(() => ({ code: '23505', message: 'duplicate key', status: 409 }))
+    await eng.upsert('todos', todo('dup'))
+    await settle()
+    expect((await db.outbox.toArray())[0]?.dead).toBe(1)
+  })
+
   it('a bare 401 without a code is also an auth wait, not a try', async () => {
     fake.rejectWith(() => ({ message: 'unauthorized', status: 401 }))
     await eng.upsert('todos', todo('u401'))
@@ -335,6 +369,102 @@ describe('pull shield and remote rows', () => {
     expect(eng.getStatus().lastSyncedAt).toBeNull()
   })
 
+  it('a table past the 1000-row cap is fully pulled and no local row is deleted', async () => {
+    const ids = Array.from({ length: 2500 }, (_, i) => `p${String(i).padStart(4, '0')}`)
+    // Local copies on both sides of the 1000-row cap: an unpaged select would
+    // only return p0000..p0999 and pull would delete the other three. (Few
+    // local rows on purpose: overwriting thousands is slow on fake-indexeddb.)
+    const atRisk = ['p1000', 'p1999', 'p2499']
+    await db.todos.bulkPut(['p0000', ...atRisk].map((id) => todo(id, 'local')))
+    fake.remote.todos = ids.map((id) => row(todo(id, 'server')))
+    await eng.syncNow()
+    await settle()
+    expect(await db.todos.count()).toBe(2500)
+    for (const id of atRisk) expect((await db.todos.get(id))?.text).toBe('server')
+    expect(fake.calls.filter((c) => c.op === 'select')).toHaveLength(3)
+    expect(eng.getStatus().lastSyncedAt).not.toBeNull()
+  })
+
+  it('a page error mid-way aborts the pull without deleting anything', async () => {
+    const ids = Array.from({ length: 2500 }, (_, i) => `q${String(i).padStart(4, '0')}`)
+    await db.todos.bulkPut(ids.map((id) => todo(id, 'local')))
+    await db.todos.put(todo('zz-local-only'))
+    fake.remote.todos = ids.map((id) => row(todo(id, 'server')))
+    let selects = 0
+    fake.rejectWith((_t, op) => (op === 'select' && ++selects === 2 ? { message: 'down', status: 500 } : null))
+    await eng.syncNow()
+    await settle()
+    expect(await db.todos.count()).toBe(2501)
+    expect((await db.todos.get('q0000'))?.text).toBe('local')
+    expect(eng.getStatus().lastSyncedAt).toBeNull()
+  })
+
+  it('keyset paging: a row deleted on the server between two pages skips nothing', async () => {
+    const ids = Array.from({ length: 2500 }, (_, i) => `k${String(i).padStart(4, '0')}`)
+    // k1000 is the first row of page 2. With offset paging (range 1000..1999)
+    // deleting a page-1 row before page 2 shifts k1000 into offset 999 and it
+    // is never returned: pull would then delete the local copy.
+    await db.todos.bulkPut(['k1000', 'k2000'].map((id) => todo(id, 'local')))
+    fake.remote.todos = ids.map((id) => row(todo(id, 'server')))
+    let selects = 0
+    fake.rejectWith((_t, op) => {
+      if (op === 'select' && ++selects === 2)
+        fake.remote.todos = (fake.remote.todos ?? []).filter((r) => r.id !== 'k0005')
+      return null
+    })
+    await eng.syncNow()
+    await settle()
+    expect((await db.todos.get('k1000'))?.text).toBe('server')
+    expect((await db.todos.get('k2000'))?.text).toBe('server')
+    expect(await db.todos.count()).toBe(2500) // k0005 was read on page 1; the next pull drops it
+    const pages = fake.calls.filter((c) => c.op === 'select')
+    expect(pages).toHaveLength(3)
+  })
+
+  it('afterPull runs after a complete pull only', async () => {
+    let runs = 0
+    const eng2 = createCloudSync({
+      projectId: 'todo',
+      tables: [todosTable],
+      afterPull: async () => {
+        runs++
+      },
+    })
+    await eng2.syncNow()
+    expect(runs).toBe(1)
+    fake.failNext('select', { message: 'down', status: 500 })
+    await eng2.syncNow()
+    expect(runs).toBe(1)
+  })
+
+  it('sign-out during the selects aborts the pull without touching local rows', async () => {
+    await db.todos.put(todo('local1'))
+    const release = fake.holdSelects()
+    const cycle = eng.syncNow()
+    await until(() => fake.calls.some((c) => c.op === 'select'))
+    fake.signOut()
+    release()
+    await cycle
+    await settle()
+    expect(await db.todos.get('local1')).toBeDefined()
+    expect(eng.getStatus().lastSyncedAt).toBeNull()
+  })
+
+  it('a user switch during the selects aborts the pull without touching local rows', async () => {
+    await db.todos.put(todo('local1', 'mine'))
+    fake.remote.todos = [row(todo('other'))]
+    const release = fake.holdSelects()
+    const cycle = eng.syncNow()
+    await until(() => fake.calls.some((c) => c.op === 'select'))
+    fake.signIn('someone-else')
+    release()
+    await cycle
+    await settle()
+    expect((await db.todos.get('local1'))?.text).toBe('mine')
+    expect(await db.todos.get('other')).toBeUndefined()
+    expect(eng.getStatus().lastSyncedAt).toBeNull()
+  })
+
   it('signed-out syncNow never deletes local rows and makes no request', async () => {
     await db.todos.put(todo('local1'))
     fake.signOut()
@@ -404,6 +534,20 @@ describe('realtime (last-writer-wins)', () => {
     event('DELETE', null, { id: 'r' })
     await realtimeSettle()
     expect((await db.todos.get('r'))?.text).toBe('mine')
+  })
+
+  it('an event arriving during a pull is applied after it, not overwritten by its stale snapshot', async () => {
+    const release = fake.holdSelects()
+    const cycle = eng.syncNow()
+    await until(() => fake.calls.filter((c) => c.op === 'select').length >= 2)
+    // The pull's snapshot still says 'local' @10; the event is newer.
+    event('UPDATE', todo('r', 'newer', 20))
+    await realtimeSettle()
+    expect((await db.todos.get('r'))?.text).toBe('local') // queued behind the pull
+    release()
+    await cycle
+    await realtimeSettle()
+    expect((await db.todos.get('r'))?.text).toBe('newer')
   })
 
   it('a malformed event is ignored', async () => {

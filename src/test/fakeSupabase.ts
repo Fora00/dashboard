@@ -14,6 +14,9 @@
 //   fake.rejectWith((t, op, id) => ...)  // persistent per-call rejection (returns a FakeError or null)
 //   const release = fake.holdSelects()   // selects snapshot NOW, deliver on release() (pull race)
 //   fake.selectOverride.todos = [...]    // raw rows select() returns, malformed ones included
+//   select(cols).gt('id', x).order('id').limit(n) // keyset paging, honoured (as is .range(a, b));
+//                                        // any response is capped at fake.limits.maxRows (1000)
+//   fake.signIn('other-user')            // switch the session's user
 //   fake.emit('todos', { eventType: 'UPDATE', new: row, old: null })  // a realtime event
 // Responses carry `status` like supabase-js (201/204/200; errors default to 400).
 export interface FakeError {
@@ -47,6 +50,8 @@ export function createFakeSupabase() {
   let selectGate: Promise<void> | null = null
   const selectOverride: Record<string, unknown[]> = {}
   const handlers: Record<string, ((payload: unknown) => void)[]> = {}
+  /** PostgREST max_rows: the most rows one select response can carry. */
+  const limits = { maxRows: 1000 }
 
   function failure(op: FakeOp, table: string, id: string): FakeError | null {
     if (network === 'down') return NETWORK_ERROR
@@ -88,14 +93,62 @@ export function createFakeSupabase() {
             return { error: null, status: 204 }
           },
         }),
-        select: async (columns: string) => {
+        // A PostgREST-like query builder: chain .gt(col, v) / .order(col) /
+        // .range(from, to) / .limit(n), then await it. Like the real server, a response never carries more
+        // than `limits.maxRows` rows (PostgREST max_rows), so an unpaged select
+        // of a big table is silently truncated.
+        select: (columns: string) => {
           calls.push({ table, op: 'select', arg: columns })
-          const error = failure('select', table, '')
-          if (error) return { data: null, ...fail(error) }
-          // Snapshot at request time, deliver after the gate (like a real round trip).
-          const snapshot = selectOverride[table] ?? (remote[table] ?? []).map((r) => ({ ...r }))
-          if (selectGate) await selectGate
-          return { data: [...snapshot], error: null, status: 200 }
+          let orderBy: string | null = null
+          let win: [number, number] | null = null
+          let max: number | null = null
+          const above: [string, string][] = []
+          const cell = (r: unknown, col: string) => {
+            const v = (r as Record<string, unknown> | null)?.[col]
+            return typeof v === 'string' || typeof v === 'number' ? String(v) : ''
+          }
+          const run = async () => {
+            const error = failure('select', table, '')
+            if (error) return { data: null, ...fail(error) }
+            // Snapshot at request time, deliver after the gate (like a real round trip).
+            let snapshot: unknown[] = selectOverride[table] ?? (remote[table] ?? []).map((r) => ({ ...r }))
+            for (const [col, v] of above) snapshot = snapshot.filter((r) => cell(r, col) > v)
+            if (orderBy) {
+              const col = orderBy
+              const key = (r: unknown) => cell(r, col)
+              snapshot = [...snapshot].sort((a, b) => (key(a) < key(b) ? -1 : key(a) > key(b) ? 1 : 0))
+            }
+            if (win) snapshot = snapshot.slice(win[0], win[1] + 1)
+            if (max !== null) snapshot = snapshot.slice(0, max)
+            snapshot = snapshot.slice(0, limits.maxRows)
+            if (selectGate) await selectGate
+            return { data: [...snapshot], error: null, status: 200 }
+          }
+          const query = {
+            gt(col: string, value: string) {
+              above.push([col, value])
+              return query
+            },
+            limit(n: number) {
+              max = n
+              return query
+            },
+            order(col: string) {
+              orderBy = col
+              return query
+            },
+            range(from: number, to: number) {
+              win = [from, to]
+              return query
+            },
+            then<T1, T2 = never>(
+              ok?: ((v: Awaited<ReturnType<typeof run>>) => T1 | PromiseLike<T1>) | null,
+              ko?: ((e: unknown) => T2 | PromiseLike<T2>) | null,
+            ) {
+              return run().then(ok, ko)
+            },
+          }
+          return query
         },
       }
     },
@@ -119,6 +172,8 @@ export function createFakeSupabase() {
     remote,
     channels,
     selectOverride,
+    /** Mutable server limits (maxRows = PostgREST max_rows, default 1000). */
+    limits,
     /** Deliver a realtime postgres_changes payload to the engine's handler(s) for `table`. */
     emit(table: string, payload: { eventType: string; new: unknown; old: unknown }) {
       for (const cb of handlers[table] ?? []) cb(payload)
@@ -146,8 +201,9 @@ export function createFakeSupabase() {
     signOut() {
       session = null
     },
-    signIn() {
-      session = { user: { id: 'test-user' } }
+    /** Sign in (optionally as another user, to simulate a user switch). */
+    signIn(userId = 'test-user') {
+      session = { user: { id: userId } }
     },
     /** getSession() throws (the engine must still release its lock). */
     setSessionThrows(v: boolean) {
@@ -165,6 +221,7 @@ export function createFakeSupabase() {
       selectGate = null
       session = { user: { id: 'test-user' } }
       sessionThrows = false
+      limits.maxRows = 1000
     },
   }
 }

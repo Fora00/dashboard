@@ -49,6 +49,14 @@ describe('fakeSupabase', () => {
     expect((await fake.client.from('b').select('id')).error?.message).toBe('down')
   })
 
+  it('select honours order/range and caps a response at maxRows', async () => {
+    const fake = createFakeSupabase()
+    fake.remote.t = [{ id: 'c' }, { id: 'a' }, { id: 'b' }]
+    expect((await fake.client.from('t').select('id').order('id').range(1, 5)).data).toEqual([{ id: 'b' }, { id: 'c' }])
+    fake.limits.maxRows = 2
+    expect((await fake.client.from('t').select('id')).data).toHaveLength(2)
+  })
+
   it('session can be absent or throw', async () => {
     const fake = createFakeSupabase()
     expect((await fake.client.auth.getSession()).data.session).not.toBeNull()
