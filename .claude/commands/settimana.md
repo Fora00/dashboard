@@ -65,5 +65,9 @@ Paths: dashboard = `~/Dev/personal/dashboard`, notes = `~/life`.
    the preview; the owner reviews and taps Save. Sync carries it to the
    phone. Never open the link on iOS (Safari's storage is separate from the
    installed PWA).
+   Open it in a browser that does not sync history/tabs (not Chrome/Safari
+   signed in to a sync account), or skip the link: copy the plan JSON and paste
+   it in the Import screen. Why: Life data never leaves the Mac except via
+   owner-only Supabase, and a synced history entry would leak it.
 5. Remind the owner, if the plan has tasks: "Send to Things" from the Life
    page.

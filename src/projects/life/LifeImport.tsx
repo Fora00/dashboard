@@ -15,10 +15,14 @@ import { PageHeader } from '../../components/PageHeader'
 // — the link never auto-saves, it only prefills the same preview-then-Save
 // flow. Nothing is written until the owner taps Save.
 
+// Hard cap on pasted/linked input, checked before decode and JSON.parse.
+const MAX_INPUT_CHARS = 200_000
+const TOO_LARGE = 'That input is too large (over 200 KB) to be a week plan.'
+
 export function LifeImport() {
   const navigate = useNavigate()
   const session = useAuth()
-  const [searchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [text, setText] = useState('')
   const [linkErrors, setLinkErrors] = useState<string[] | null>(null)
   const [saving, setSaving] = useState(false)
@@ -29,7 +33,11 @@ export function LifeImport() {
   // Prefill from an import link, once, whenever `d` changes.
   useEffect(() => {
     if (!linkParam) return
-    const decoded = decodeImportParam(linkParam)
+    const decoded =
+      linkParam.length > MAX_INPUT_CHARS ? { ok: false as const, errors: [TOO_LARGE] } : decodeImportParam(linkParam)
+    // Strip the plan from the URL (replace, not push) so it doesn't linger in
+    // browser history / synced tabs. The decoded text lives in state only.
+    setSearchParams({}, { replace: true })
     if (decoded.ok) {
       setText(decoded.text)
       setLinkErrors(null)
@@ -39,9 +47,13 @@ export function LifeImport() {
       setText('')
       setLinkErrors(decoded.errors)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [linkParam])
 
-  const result = useMemo<ParseResult | null>(() => (text.trim() ? parseWeekJson(text) : null), [text])
+  const result = useMemo<ParseResult | null>(
+    () => (text.trim() && text.length <= MAX_INPUT_CHARS ? parseWeekJson(text) : null),
+    [text],
+  )
   const planWeek = result?.ok ? result.plan.week : null
   const existing = useLiveQuery(() => (planWeek ? db.lifeWeeks.get(planWeek).then((w) => w ?? null) : null), [planWeek])
 
@@ -51,7 +63,7 @@ export function LifeImport() {
     setSaveError(null)
     try {
       await importWeek(result.plan)
-      await navigate('/life')
+      await navigate('/life', { replace: true })
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : String(err))
     } finally {
@@ -91,6 +103,8 @@ export function LifeImport() {
         autoCorrect="off"
         className="mb-4 w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2 font-mono text-xs placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:border-indigo-400 focus:outline-none dark:border-slate-700 dark:bg-slate-800"
       />
+
+      {text.length > MAX_INPUT_CHARS && <p className="mb-4 text-sm text-rose-600 dark:text-rose-400">{TOO_LARGE}</p>}
 
       {linkErrors && !text.trim() && (
         <Card className="mb-4 space-y-1 text-sm">
