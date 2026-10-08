@@ -9,6 +9,11 @@ on:
         description: 'crawl = run the crawler; reuse = keep the events.json currently published'
         type: string
         required: true
+      events_force:
+        description: 'crawl only: publish even when the crawler guards refuse (EVENTS_FORCE=1)'
+        type: boolean
+        required: false
+        default: false
     secrets:
       VITE_SUPABASE_URL:
         required: false
@@ -39,10 +44,15 @@ jobs:
       # crawl: writes public/events.json (copied into dist by the build). A
       # crashing crawler fails this job on purpose: nothing is deployed and the
       # live site keeps its previous events.json. Failing *sources* do not crash
-      # it; they keep their previous events and show up as warnings.
+      # it; they keep their previous events and show up as warnings. The
+      # crawler also exits 1 on purpose (publish guards, docs/EVENTS.md) when
+      # the total halves or the previous file is unreadable while a source
+      # failed; events_force overrides that.
       - name: Crawl events
         if: inputs.events == 'crawl'
         run: npm run events:crawl
+        env:
+          EVENTS_FORCE: ${{ inputs.events_force && '1' || '' }}
 
       # reuse: take the currently published file so a UI deploy never waits for
       # the crawler and never regresses the events. If it cannot be fetched or
@@ -64,8 +74,13 @@ jobs:
             npm run events:crawl
           fi
 
+      # Never deploy a missing, invalid or empty events.json.
       - name: Require events.json
-        run: test -s public/events.json
+        run: >-
+          node -e "const d=JSON.parse(require('fs').readFileSync('public/events.json','utf8'));
+          if(d.schemaVersion!==1||!Array.isArray(d.events)||!Array.isArray(d.sources)||d.events.length===0){
+          console.error('::error title=events.json rejected::missing, not schemaVersion 1, or 0 events');process.exit(1)}
+          console.log(d.events.length+' events')"
 
       - run: npm run build
         env:

@@ -23,7 +23,13 @@ events step, `npm run build`, upload + deploy Pages.
 - **Crawl visibility**: per-source table in the job summary, `::warning::` per
   failed source, `::error::` (job still passes) if more than a third failed. A
   crawler crash fails the job and deploys nothing; the live site keeps its
-  events.
+  events. So do the crawler's publish guards (total below 50% of the previous
+  file, or previous file unreadable while a source failed; docs/EVENTS.md
+  "Resilience"): override with the **force** input of a manual `crawl.yml`
+  run (`EVENTS_FORCE=1`).
+- **Output gate**: "Require events.json" checks with node that the file is
+  schemaVersion 1 with at least one event; a missing, invalid or
+  `"events": []` file never deploys.
 
 ## PWA update flow
 

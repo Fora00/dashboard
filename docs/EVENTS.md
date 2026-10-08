@@ -415,9 +415,21 @@ had some (unless it is flagged `mayBeEmpty`). A failing source keeps its
 previous events (re-filtered by the window, `ongoing` recomputed,
 `fetchedAt` unchanged) from the previous `events.json` — by default the
 deployed one — and reports `ok: false` with the error and the carried-over
-`lastSuccess`. The script exits 0 unless it cannot write the output file, and
-failed sources surface as `::warning::` annotations and a per-source table in
-the job summary (`::error::` if more than a third failed, job still green).
+`lastSuccess`. Failed sources surface as `::warning::` annotations and a
+per-source table in the job summary (`::error::` if more than a third failed,
+job still green).
+
+**Publish guards** (`scripts/events/previous.ts`). The previous file is fetched
+with 3 attempts (backoff 3 s, 10 s); a 404/410 or a missing local file means
+"first run" and is fine, anything else that still fails is "unreadable". The
+crawler then exits 1 **without writing** (so CI deploys nothing and the live
+file stays the next run's previous) when (a) the previous file was unreadable
+and any source that ran, not flagged `mayBeEmpty`, failed or returned 0 (its
+events would be lost for good), or (b) the new total is below 50% of the
+previous file's total (both numbers are logged). `EVENTS_FORCE=1` publishes
+anyway (`::warning::` instead); in CI run `crawl.yml` by hand with **force**
+ticked, e.g. after a real seasonal drop. Otherwise the script exits 0 unless it
+cannot write the output file.
 
 ## Running locally
 
@@ -430,8 +442,9 @@ EVENTS_ONLY=mart,verona npm run events:crawl   # only these (others keep previou
 |---|---|
 | `EVENTS_ONLY=id,id` | Run only these sources; the others keep their previous events and status. |
 | `EVENTS_FAIL=id,id` | Simulate a failure of these sources (resilience testing). |
-| `EVENTS_PREVIOUS_URL=…` | Previous file: `https://…`, `file://…` or a local path. Default: the deployed file. A 404 or garbage is tolerated. |
+| `EVENTS_PREVIOUS_URL=…` | Previous file: `https://…`, `file://…` or a local path. Default: the deployed file. A 404 is a first run; garbage or a network failure trips the publish guard if a source also fails. |
 | `EVENTS_OUT=path` | Output path (default `public/events.json`). |
+| `EVENTS_FORCE=1` | Publish even when a publish guard refuses (see Resilience). |
 
 Resilience check: run once, copy the output aside, then
 `EVENTS_PREVIOUS_URL=/tmp/prev.json EVENTS_FAIL=mart npm run events:crawl`

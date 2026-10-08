@@ -6,14 +6,21 @@
 //   EVENTS_PREVIOUS_URL=…      previous events.json: http(s) URL, file:// URL or local path
 //                              (default: the deployed https://fora00.github.io/dashboard/events.json)
 //   EVENTS_OUT=path            output file (default public/events.json)
+//   EVENTS_FORCE=1             publish even when a guard below refuses (owner override)
 //   GITHUB_STEP_SUMMARY=path   set by GitHub Actions: the per-source table is appended to it
 //
 // Sources run one after another (politeness), each in its own try/catch. A
 // failing source — it throws, or returns 0 events when the previous run had
 // some and it isn't flagged mayBeEmpty — keeps its previous events (re-
-// filtered by the window) and is reported ok:false. The script exits 0 unless
-// it cannot write the output file.
-import { appendFile, mkdir, readFile, writeFile } from 'node:fs/promises'
+// filtered by the window) and is reported ok:false.
+//
+// Publish guards (exit 1, nothing written, so CI deploys nothing and the live
+// file stays the "previous" of the next run); EVENTS_FORCE=1 overrides both:
+//   - the previous file exists but could not be loaded (after retries) and a
+//     non-mayBeEmpty source failed or yielded 0: its events would be lost;
+//   - the new total is below half of the previous total.
+// Otherwise the script exits 0 unless it cannot write the output file.
+import { appendFile, mkdir, writeFile } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import type { Adapter, Event, EventsFile, SourceStatus } from './types.ts'
@@ -21,7 +28,7 @@ import { ADAPTERS } from './adapters/index.ts'
 import { PoliteHttp } from './http.ts'
 import { OG_MAX_REQUESTS, enrichImages } from './ogimage.ts'
 import type { DropCounts } from './pipeline.ts'
-import { PreviousFileSchema, describeIssues } from './schemas.ts'
+import { isBigDrop, loadPrevious, unprotectedSources } from './previous.ts'
 import { countDelta, staleSources, upcomingTentative } from './health.ts'
 import { HORIZON_DAYS, dedup, inWindow, isOngoing, sortEvents, toEvents, withPlace } from './pipeline.ts'
 
@@ -39,28 +46,6 @@ function envList(name: string): Set<string> | null {
           .filter(Boolean),
       )
     : null
-}
-
-async function loadPrevious(): Promise<EventsFile | null> {
-  const where = process.env.EVENTS_PREVIOUS_URL?.trim() || DEFAULT_PREVIOUS
-  try {
-    let text: string
-    if (/^https?:\/\//.test(where)) {
-      const res = await fetch(where, { signal: AbortSignal.timeout(20_000), headers: { 'Cache-Control': 'no-cache' } })
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
-      text = await res.text()
-    } else {
-      text = await readFile(where.startsWith('file:') ? fileURLToPath(where) : resolve(where), 'utf8')
-    }
-    const parsed = PreviousFileSchema.safeParse(JSON.parse(text))
-    if (!parsed.success) throw new Error(`not a schemaVersion 1 events.json (${describeIssues(parsed.error, 2)})`)
-    const data = parsed.data
-    console.log(`previous: ${data.events.length} events from ${where} (generated ${data.generatedAt ?? '?'})`)
-    return data as unknown as EventsFile
-  } catch (e) {
-    console.log(`previous: none usable at ${where} (${(e as Error).message})`)
-    return null
-  }
 }
 
 function carryOver(previous: EventsFile | null, adapter: Adapter, now: number, drops: DropCounts): Event[] {
@@ -148,7 +133,9 @@ async function main(): Promise<void> {
   const generatedAt = new Date(now).toISOString()
   const only = envList('EVENTS_ONLY')
   const failing = envList('EVENTS_FAIL') ?? new Set<string>()
-  const previous = await loadPrevious()
+  const force = process.env.EVENTS_FORCE === '1'
+  const loaded = await loadPrevious(process.env.EVENTS_PREVIOUS_URL?.trim() || DEFAULT_PREVIOUS)
+  const previous = loaded.kind === 'ok' ? loaded.data : null
   const prevStatus = new Map((previous?.sources ?? []).map((s) => [s.id, s]))
   const http = new PoliteHttp()
 
@@ -229,6 +216,26 @@ async function main(): Promise<void> {
   }
 
   const events = sortEvents(dedup(all))
+
+  const refuse = (reason: string) => {
+    const why = reason.replace(/\s+/g, ' ') // one annotation line
+    if (force) {
+      console.log(`::warning title=Events guard overridden::${why} (EVENTS_FORCE=1: publishing anyway)`)
+      return
+    }
+    console.log(table(statuses, timings, prevStatus))
+    console.log(`::error title=Events not published::${why}. Nothing written; set EVENTS_FORCE=1 to publish anyway.`)
+    process.exit(1)
+  }
+  if (loaded.kind === 'failed') {
+    const bad = unprotectedSources(statuses, ADAPTERS, new Set(timings.keys()))
+    if (bad.length)
+      refuse(
+        `previous events.json could not be loaded (${loaded.reason}) and ${bad.length} source(s) failed or returned 0 with nothing to fall back on: ${bad.join(', ')}`,
+      )
+  }
+  if (previous && isBigDrop(previous.events.length, events.length))
+    refuse(`only ${events.length} events against ${previous.events.length} in the previous file (below 50%)`)
   // A partial run (EVENTS_ONLY) skips the slow og:image pass (up to 8 minutes) and keeps
   // what was found before; set EVENTS_OG=1 to run it anyway.
   const skipOg = only !== null && process.env.EVENTS_OG !== '1'
