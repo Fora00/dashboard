@@ -151,7 +151,7 @@ helpers made a copy cleaner than a stamp-and-edit).
 
 Follow-ups this project surfaced:
 
-- [ ] **Bake length caps into the new-project templates** [sonnet] — the
+- [x] **Bake length caps into the new-project templates** [sonnet] — already done (found 2026-10-07): `scripts/new-project.mjs` and `docs/NEW_PROJECT.md` carry `maxLength` + `char_length <= 300`. Original: — the
       `links` migration and page carry `maxLength` + `char_length` checks,
       but `docs/NEW_PROJECT.md`'s SQL template and
       `scripts/new-project.mjs` still stamp uncapped `text` columns and
@@ -718,6 +718,119 @@ sync can come later).
 - [ ] Later: more categories, one at a time (SAT/hikes, climbing,
       art/ceramics, the owner's Sunday sources: ViviRovereto, Visit
       Rovereto, Roveretogiovani).
+
+## Full audit (2026-10-07: opus security/sync, sonnet quality, haiku docs)
+
+Baseline: `npm run check` green (464 tests), `npm run build` green. Findings
+verified by reading code; C1 re-verified by the orchestrator. Ranked; do in
+order. Tag = who implements. `db push` stays orchestrator-only.
+
+### Critical / High (data loss, security)
+
+- [x] **C1 Pull deletes local rows once a table passes 1000 rows** [opus, S] — done 2026-10-08: `selectAll()` pages every table (`.order('id').range()`), any page error aborts the pull; 4 engine tests + fake supabase honours order/range/maxRows. Original:
+      `cloudSync.ts` `pull()` selects with no `.range()`/order; PostgREST caps
+      at `max_rows = 1000` and `bulkDelete` then removes every local id the
+      server "didn't return". Hits `habit_checks` (~1800/yr), `life_entries`,
+      `meal_entries` (~1000 in 200 days) first. Fix: page each table with
+      `.order('id').range(i, i+999)` until a short page; abort pull on any page
+      error; test with >1000 rows. Do this first.
+- [x] **C1b Pull paging by offset can skip a row if another row is deleted between pages** [sonnet, XS] — switch `selectAll` to keyset paging (`.gt('id', lastId).order('id').limit(1000)`) + a test that deletes a row between pages; also make `flush()` use `sessionUserId()` and drop `signedIn()`. Low risk: a skipped row is re-pulled next time.
+      → done 2026-10-08: keyset paging (`.gt(id).order.limit`), flush uses `sessionUserId()`.
+- [x] **H1 Shop-area guests can read `shop_areas.share_token`** [opus, M] —
+      → done 2026-10-08: `shop_area_tokens` owner-only table, RPCs rewritten, column dropped; migration `20261008100000_area_tokens.sql` pushed. Owner reads the token via `area_share_token`; areas created after have no link until first Share/Reset.
+      column-level revoke is ineffective while table SELECT is granted, and
+      realtime broadcasts the full row. A guest can re-share the invite.
+      Fix: move token to an owner-only table (like `project_invites`).
+      First confirm on the hosted project. Needs migration + `db push`.
+- [x] **H2 Same habit checked offline on two devices → stuck error + duplicates** [opus, S] —
+      → done 2026-10-08: deterministic UUIDv5 ids (`uuidV5.ts`), `uniqueViolationIsDone` + `afterPull` engine options, `dedupeChecks()`.
+      random uuid vs `unique (habit_id, day)` → 23505 dead-letter, then
+      duplicate local rows. Fix: deterministic id from habitId+day; treat 23505
+      as already done.
+- [x] **H3 Offline, the owner is treated as a guest** [sonnet, S] —
+      → done 2026-10-08: `ownerCache.ts` + `useOwner.ts` (cache per user id, never on error). Not exercised offline in a browser.
+      `useOwner.ts` `Boolean(null)`; Life/Meal/Sharing tiles vanish offline.
+      Fix: cache last `is_owner` per user id in `safeStorage`, use on error.
+      Violates local-first.
+
+### Medium
+
+- [x] **M1 Removing a guest from a shop area doesn't rotate the area token** [sonnet, S] —
+      → done 2026-10-08: `revoke_area_guest` RPC per area.
+      `Sharing.tsx` `toggleArea`/`revokeAllShop` delete rows directly; call
+      `revoke_area_guest` RPC instead.
+- [x] **M2 Removed guests can still sign in and rejoin** [opus, S] — join RPCs
+      → done 2026-10-08: join RPCs require an `allowed_emails` row; pushed (`20261008110000`).
+      (`join_project`, `join_area`) don't require an `allowed_emails` row.
+- [x] **M3 Sign-out mid-pull can wipe local data** [opus, XS] — done 2026-10-08 together with C1 (`sessionUserId()` re-checked after the selects). Original: re-check
+      session user id after the selects, abort if changed.
+- [x] **M4 Sign-out leaves owner-only data readable on device** [opus, S] —
+      → done 2026-10-08: `privateData.ts` + SyncCard offer after sign-out (manual, warns on unsynced).
+      offer "remove private data from this device" (warn on unsynced outbox).
+- [x] **M5 Unhandled rejections in fire-and-forget handlers** [sonnet, S] —
+      → done 2026-10-08: `runSafe.ts` + `ErrorFlash` toast applied to the listed handlers.
+      `void fn()` without catch: `Sharing.tsx` 400-524, `Settings.tsx` (incl.
+      destructive `wipeLocal`), `Habits.tsx`, `Home.tsx:216`, life/week/*,
+      `JoinProject.tsx:161`. Add a shared `runSafe()` helper → Snackbar error.
+- [x] **M6 Test gaps on risky code** — [opus, M] `db.ts` upgrade-path tests
+      → partly done 2026-10-08: db upgrade-path tests (v2/v4/v14), tests for todo/climb/shop/life sync, projectInvites, format, safeStorage, habit, uuidV5, privateData. Still no tests for Sharing actions (needs mocked supabase) [opus, M] and component-level tests.
+      (fake-indexeddb); [opus, M] Sharing actions with mocked supabase;
+      [sonnet, S] `dates.ts`, `projectInvites.ts`, `shopSync.ts`, `lifeSync.ts`,
+      pure logic of climbing grades / habit streaks. Zero-test projects:
+      sharing, shop-list, trips, links, climbing, habits, todo, home, settings.
+- [x] **M7 Duplicated share/copy logic** [sonnet, S] — move
+      → done 2026-10-08 except `shop-list/AreaManager.tsx` (two copies of share/clipboard left): new small [sonnet] task below.
+      `projectInvites.shareOrCopy` to `lib/share.ts`; replace the copies in
+      `AreaManager.tsx` (swallows errors), `LocalTransfer.tsx`, `EventCard.tsx`,
+      `events/ics.ts`, `life/week/ExportSection.tsx`.
+- [x] **M8 Split oversized files** [sonnet, M each] — `Sharing.tsx` (530, one
+      → done 2026-10-08 for Sharing, Events, Links, Trips, MealDiary, `events/custom.ts` (towns split). Not split: `events/model.ts`, `db.ts` (no clean seam).
+      component), `Events.tsx` (535), `Links.tsx`, `Trips.tsx`, `MealDiary.tsx`,
+      `db.ts` (776: row types vs schema versions), `events/custom.ts`.
+- [x] **M9 Contrast: ~138 `text-slate-400`** [sonnet, S] — fails AA for
+      → done 2026-10-08: ~25 weak `text-slate-400` fixed (the rest were already 500/dark:400), bar legends, grade label no longer clips. SVG axis labels in NutritionTrends have no dark variant (open, XS).
+      informative text; bump to slate-500/600. Add legend text to colour-only
+      bars (`NutritionTrends.tsx:150`, `Climbing.tsx:181`).
+
+- [ ] **M7b AreaManager still has its own share/clipboard code** [sonnet, XS] — use `lib/share.ts` (`shareOrCopy`); the current `.catch(() => {})` swallows failed shares.
+- [ ] **F1 Follow-ups from the 2026-10-08 fixes** [sonnet, S] — SyncCard render test (no React test setup yet); "Remove private data" entry in Settings while signed out; show the new "not invited any more" error clearly in JoinArea/JoinProject; reword the `cloudSync.ts` `share_token` comment; `docs/NEW_PROJECT.md` mention `uniqueViolationIsDone` / `afterPull`.
+- [ ] **F2 Verify on the hosted project** [orchestrator] — as a guest: `select share_token from shop_areas` fails, `shop_area_tokens` returns 0 rows; an old `#/join/<token>` link still resolves; phone check offline (owner tiles stay, habit toggles sync). L9 stays open (typing the two `any` in `cloudSync.ts` breaks ~18 `TableSync` declarations because Dexie `Table` is invariant).
+
+### Low
+
+- [x] **L1 Un-retryable errors retried 8×** [sonnet, XS] — classify 22xxx and
+      → done 2026-10-08.
+      42703/PGRST204 as poison (`cloudSync.ts:158`).
+- [x] **L2 Realtime handler doesn't take the engine lock** [opus, XS].
+      → done 2026-10-08.
+- [x] **L3 Guest's first sign-in pushes pre-sign-in local rows into the
+      → done 2026-10-08: documented in ARCHITECTURE "Known behaviours".
+      owner's shared table** [haiku, XS] — document, or confirm before push.
+- [x] **L4 Date columns lack format check** [sonnet, XS] — `climb_sessions.date`,
+      → done 2026-10-08 (pushed).
+      `climbs.date`, `habit_checks.day`; `NOT VALID` regex, new migration.
+- [x] **L5 `jwt_email()` search_path not pinned** [haiku, XS] — new migration.
+      → done 2026-10-08 (pushed).
+- [x] **L6 `join_area` adds owner as member; stale `db.ts:744` comment** [haiku, XS].
+      → done 2026-10-08 (db.ts comment + join_area owner skip).
+- [x] **L7 Bundle: `Card-*.js` 359 KB is supabase+dexie vendor chunk** [sonnet, S] —
+      → done 2026-10-08: `vendor-supabase` 204 KB + `vendor-dexie` 104 KB; lazy supabase import not done.
+      `manualChunks` for supabase/dexie; lazy supabase import [opus, M] optional.
+- [x] **L8 Date formatting duplicated** (`toLocaleDateString('it-IT')` in
+      → done 2026-10-08.
+      Climbing/SessionCard/Events) [haiku, XS] → helper in `lib/dates.ts`.
+- [ ] **L9 `cloudSync.ts:48,66` `no-explicit-any`** [opus, S, optional].
+- [ ] **L10 Spot-checks** [haiku, XS] — empty/loading states in `LifeImport`,
+      `TrackersSection`; `w-8` grade label clipping; try `npx knip` for dead exports.
+- [x] **L11 Docs hygiene** [haiku, XS] — README (19 lines) lacks Supabase
+      → mostly done 2026-10-08: README + scripts table + NEW_PROJECT placeholder; `.claude/` tracking is still an owner decision.
+      setup + events crawler; document `format`, `preview`, `prepare`,
+      `life:*`, `db:types`; `.claude/` is git-ignored (agents/commands exist
+      only on the owner's Mac): decide whether to track `.claude/agents` and
+      `.claude/commands` so a fresh clone works (owner decision).
+
+Done in this audit: `docs/ARCHITECTURE.md` brought in sync (meal-diary,
+`projectInvites`, `trip_*`/`habit_checks` tables, owner-only list, db-push policy).
 
 ## Engineering quality (audit 2026-07-05)
 

@@ -287,7 +287,9 @@ that transaction commits.
 ## 5. SQL migration — `supabase/migrations/`
 
 Create a **new datestamped file** `supabase/migrations/<YYYYMMDDHHMMSS>_<id>.sql`
-(e.g. `20260705093000_reading.sql`). Copy the shape from
+(placeholder: `<YYYYMMDDHHMMSS>_<id>.sql`, where the timestamp is the current
+UTC time and `<id>` is your project id; pick a timestamp later than the newest
+file in `supabase/migrations/`). Copy the shape from
 `20260704160000_sync_parity.sql`. Timestamps are `bigint` (epoch ms) to match
 the client. RLS is per-project via `is_member('<id>')`, with a `with check` so
 guests can't write rows they can't read.
