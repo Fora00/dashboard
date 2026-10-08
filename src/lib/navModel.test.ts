@@ -19,6 +19,27 @@ describe('navSections', () => {
   })
 })
 
+describe('navSections with a current page that is not listed', () => {
+  const visible = ['todo', 'links'].map(byId)
+
+  it('adds it at the top of its existing area section', () => {
+    const s = navSections(visible, () => false, byId('habits'))
+    expect(s.find((x) => x.id === 'organizzazione')?.projects.map((p) => p.id)).toEqual(['habits', 'todo'])
+  })
+
+  it('creates the area section in areas.ts order when it would be empty', () => {
+    const s = navSections(visible, () => false, byId('climbing'))
+    expect(s.map((x) => x.id)).toEqual(['utility', 'organizzazione', byId('climbing').area])
+    expect(s[s.length - 1]?.projects.map((p) => p.id)).toEqual(['climbing'])
+  })
+
+  it('does nothing when the page is already listed or there is none', () => {
+    const plain = navSections(visible, () => false)
+    expect(navSections(visible, () => false, byId('todo'))).toEqual(plain)
+    expect(navSections(visible, () => false, null)).toEqual(plain)
+  })
+})
+
 describe('activeProjectId', () => {
   it('matches a project route and its sub-pages', () => {
     expect(activeProjectId('/climbing')).toBe('climbing')

@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useRef, type CSSProperties } from 'react'
+import { Suspense, useEffect, useRef, useState, type CSSProperties } from 'react'
 import { Link, Outlet, useLocation } from 'react-router-dom'
 import { ErrorBoundary } from './ErrorBoundary'
 import { InstallHint } from './InstallHint'
@@ -14,6 +14,10 @@ import { useProjectAccent } from '../lib/useProjectAccent'
 import { contentWidthClass, layoutForPath } from '../lib/navModel'
 import { Sidebar } from './Sidebar'
 import { FOCUS_RING } from './focus'
+import { CommandPalette } from './CommandPalette'
+import { ShortcutsSheet } from './ShortcutsSheet'
+import { useHotkey } from '../lib/useHotkey'
+import { toggleSidebarCollapsed } from '../lib/useSidebarCollapsed'
 
 export function Layout() {
   const location = useLocation()
@@ -44,6 +48,27 @@ export function Layout() {
   const layout = layoutForPath(location.pathname)
   const mainRef = useRef<HTMLElement>(null)
 
+  // Global shortcuts (lib/shortcuts.ts): palette, help, sidebar.
+  const [paletteOpen, setPaletteOpen] = useState(false)
+  const [helpOpen, setHelpOpen] = useState(false)
+  const closePalette = () => setPaletteOpen(false)
+  const openHelp = () => setHelpOpen(true)
+  useHotkey(
+    'mod+k',
+    (e) => {
+      e.preventDefault()
+      setHelpOpen(false)
+      setPaletteOpen((o) => !o)
+    },
+    { allowInInput: true },
+  )
+  useHotkey('?', () => setHelpOpen(true), {
+    enabled: !paletteOpen && !helpOpen,
+  })
+  useHotkey('[', () => toggleSidebarCollapsed(), {
+    enabled: !paletteOpen && !helpOpen,
+  })
+
   return (
     <div
       style={accent?.vars as CSSProperties | undefined}
@@ -65,20 +90,44 @@ export function Layout() {
           from lg a persistent sidebar (Sidebar hides itself below lg) and the
           content area beside it. Width-driven only, no device sniffing. */}
       <div className="lg:flex">
-        <Sidebar />
+        <Sidebar onOpenPalette={() => setPaletteOpen(true)} onOpenHelp={openHelp} />
         <div className="min-w-0 flex-1">
           <header className="sticky top-0 z-10 border-b border-slate-200 bg-white/90 backdrop-blur lg:hidden dark:border-slate-800 dark:bg-slate-900/90">
             <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-3">
               <Link to="/" className="text-lg font-semibold tracking-tight">
                 <span className="mr-2">🏠</span>Dashboard
               </Link>
-              <OnlineBadge />
+              <div className="flex items-center gap-1">
+                <OnlineBadge />
+                <button
+                  type="button"
+                  onClick={() => setPaletteOpen(true)}
+                  aria-label="Search and commands"
+                  className={`flex size-10 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-200/60 active:bg-slate-300/60 dark:text-slate-400 dark:hover:bg-slate-800 dark:active:bg-slate-700 ${FOCUS_RING}`}
+                >
+                  <svg
+                    aria-hidden="true"
+                    viewBox="0 0 24 24"
+                    width={20}
+                    height={20}
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                    strokeLinecap="round"
+                  >
+                    <circle cx="11" cy="11" r="7" />
+                    <path d="m20 20-3.5-3.5" />
+                  </svg>
+                </button>
+              </div>
             </div>
             {accent && (
               <div
                 aria-hidden="true"
                 className="absolute inset-x-0 -bottom-px h-0.5"
-                style={{ backgroundImage: 'linear-gradient(90deg, var(--accent), var(--accent-2))' }}
+                style={{
+                  backgroundImage: 'linear-gradient(90deg, var(--accent), var(--accent-2))',
+                }}
               />
             )}
           </header>
@@ -105,7 +154,9 @@ export function Layout() {
             tabIndex={-1}
             data-layout={layout}
             style={
-              { '--content-max': layout === 'wide' ? 'var(--container-6xl)' : 'var(--container-3xl)' } as CSSProperties
+              {
+                '--content-max': layout === 'wide' ? 'var(--container-6xl)' : 'var(--container-3xl)',
+              } as CSSProperties
             }
             className={`layout-${layout} mx-auto w-full px-4 py-6 pb-16 focus:outline-none ${contentWidthClass(layout)}`}
           >
@@ -118,6 +169,8 @@ export function Layout() {
           </main>
         </div>
       </div>
+      <CommandPalette open={paletteOpen} onClose={closePalette} onShowShortcuts={openHelp} />
+      <ShortcutsSheet open={helpOpen} onClose={() => setHelpOpen(false)} />
       <UpdateToast />
       <ErrorFlash />
     </div>

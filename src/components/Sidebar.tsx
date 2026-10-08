@@ -1,8 +1,9 @@
 import { Link, useLocation } from 'react-router-dom'
 import type { ProjectMeta } from '../lib/projects'
 import { activeProjectId, isHomePath, navSections } from '../lib/navModel'
-import { usePersistedState, type Codec } from '../lib/safeStorage'
+import { setSidebarCollapsed, useSidebarCollapsed } from '../lib/useSidebarCollapsed'
 import { useVisibleProjects } from '../lib/useVisibleProjects'
+import { comboLabel } from '../lib/useHotkey'
 import { FOCUS_RING_INSET } from './focus'
 import { OnlineBadge } from './OnlineBadge'
 import { ProjectIcon } from './ProjectIcon'
@@ -10,18 +11,13 @@ import { ProjectIcon } from './ProjectIcon'
 // App shell sidebar (UI1). Rendered only from lg (1024px) up — Layout hides it
 // with CSS below that, so phones and iPad portrait keep the plain header. The
 // list is Home's (useVisibleProjects + groupByArea), in registry order.
-// Collapsed = icon-only rail, a per-device preference.
-const COLLAPSED_KEY = 'dashboard:sidebar-collapsed'
-
-const collapsedCodec: Codec<boolean> = {
-  parse: (raw) => raw === 'true',
-  serialize: (collapsed) => (collapsed ? 'true' : 'false'),
-}
-
+// Collapsed = icon-only rail, a per-device preference (shared state, so the
+// `[` hotkey and the button agree: lib/useSidebarCollapsed.ts).
 const ITEM =
   'relative flex min-h-10 items-center gap-3 rounded-lg text-sm transition-colors hover:bg-slate-200/60 active:bg-slate-300/60 dark:hover:bg-slate-800 dark:active:bg-slate-700'
 const ITEM_ACTIVE =
   'bg-(--accent-soft) font-semibold text-slate-900 hover:bg-(--accent-soft) dark:text-white dark:hover:bg-(--accent-soft)'
+const FOOT_BTN = `flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-200/60 active:bg-slate-300/60 dark:text-slate-400 dark:hover:bg-slate-800 dark:active:bg-slate-700 ${FOCUS_RING_INSET}`
 const ITEM_IDLE = 'text-slate-700 dark:text-slate-300'
 
 // Accent bar on the left edge of the active entry (the route's area colour
@@ -31,17 +27,21 @@ function ActiveBar() {
     <span
       aria-hidden="true"
       className="absolute inset-y-1.5 left-0 w-1 rounded-full"
-      style={{ backgroundImage: 'linear-gradient(180deg, var(--accent), var(--accent-2))' }}
+      style={{
+        backgroundImage: 'linear-gradient(180deg, var(--accent), var(--accent-2))',
+      }}
     />
   )
 }
 
-export function Sidebar() {
+export function Sidebar({ onOpenPalette, onOpenHelp }: { onOpenPalette: () => void; onOpenHelp: () => void }) {
   const { pathname } = useLocation()
-  const { visible, isStarred } = useVisibleProjects()
-  const [collapsed, setCollapsed] = usePersistedState<boolean>(COLLAPSED_KEY, false, undefined, collapsedCodec)
-  const sections = navSections(visible, isStarred)
+  const { visible, permitted, isStarred } = useVisibleProjects()
+  const collapsed = useSidebarCollapsed()
   const activeId = activeProjectId(pathname)
+  // A permitted but hidden project you are on still shows (extra entry).
+  const current = permitted.find((p) => p.id === activeId) ?? null
+  const sections = navSections(visible, isStarred, current)
   const homeActive = isHomePath(pathname)
 
   function renderItem(p: ProjectMeta) {
@@ -93,7 +93,7 @@ export function Sidebar() {
         </Link>
         <button
           type="button"
-          onClick={() => setCollapsed(!collapsed)}
+          onClick={() => setSidebarCollapsed(!collapsed)}
           aria-pressed={collapsed}
           aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
@@ -160,8 +160,43 @@ export function Sidebar() {
         })}
       </nav>
 
-      <div className={`flex border-t border-slate-200 p-3 dark:border-slate-800 ${collapsed ? 'justify-center' : ''}`}>
+      <div
+        className={`flex items-center gap-1 border-t border-slate-200 p-2 dark:border-slate-800 ${collapsed ? 'flex-col' : ''}`}
+      >
         <OnlineBadge compact={collapsed} />
+        <span className={collapsed ? '' : 'flex-1'} />
+        <button
+          type="button"
+          onClick={onOpenPalette}
+          aria-label="Search and commands"
+          title={`Search and commands (${comboLabel('mod+k')})`}
+          className={FOOT_BTN}
+        >
+          <svg
+            aria-hidden="true"
+            viewBox="0 0 24 24"
+            width={18}
+            height={18}
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            strokeLinecap="round"
+          >
+            <circle cx="11" cy="11" r="7" />
+            <path d="m20 20-3.5-3.5" />
+          </svg>
+        </button>
+        <button
+          type="button"
+          onClick={onOpenHelp}
+          aria-label="Keyboard shortcuts"
+          title="Keyboard shortcuts (?)"
+          className={FOOT_BTN}
+        >
+          <span aria-hidden="true" className="text-base font-semibold">
+            ?
+          </span>
+        </button>
       </div>
     </aside>
   )

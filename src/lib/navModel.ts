@@ -1,4 +1,5 @@
 import { projectForPath } from './accent'
+import { areaIds, areas } from './areas'
 import { groupByArea, type HomeSection } from './groupByArea'
 import type { ProjectLayout, ProjectMeta } from './projects'
 
@@ -14,8 +15,31 @@ import type { ProjectLayout, ProjectMeta } from './projects'
  * open, which is fine for a grid you scan but bad for a nav you click by
  * position.
  */
-export function navSections(visible: ProjectMeta[], isStarred: (id: string) => boolean): HomeSection[] {
-  return groupByArea(visible, isStarred)
+export function navSections(
+  visible: ProjectMeta[],
+  isStarred: (id: string) => boolean,
+  current?: ProjectMeta | null,
+): HomeSection[] {
+  const sections = groupByArea(visible, isStarred)
+  // The page you are on stays in the nav even when it is not in the list (a
+  // hidden project, opened by link or from the palette): an extra entry at
+  // the top of its area section (the section is created if it would be empty).
+  if (!current || visible.some((p) => p.id === current.id)) return sections
+  const section = sections.find((s) => s.id === current.area)
+  if (section) {
+    section.projects = [current, ...section.projects]
+    return sections
+  }
+  const created: HomeSection = {
+    id: current.area,
+    title: areas[current.area].name,
+    color: areas[current.area].color,
+    projects: [current],
+  }
+  const rank = (s: HomeSection) => (s.id === 'starred' ? -1 : areaIds.indexOf(s.id))
+  const at = sections.findIndex((s) => rank(s) > rank(created))
+  sections.splice(at < 0 ? sections.length : at, 0, created)
+  return sections
 }
 
 /** Id of the project the route belongs to (sub-pages included, e.g. /life/edit), or null (Home, join, unknown). */

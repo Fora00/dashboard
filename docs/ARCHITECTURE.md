@@ -83,6 +83,13 @@ a trigger. Owner plus per-project/per-area guests.
   A skip link ("Skip to content") focuses `<main id="main-content">` (it
   doesn't use the hash: HashRouter owns it). Pure model + tests:
   `src/lib/navModel.ts`.
+- **Palette, help, collapse (UI5).** `mod+k` opens `CommandPalette` (every
+  permitted project, hidden ones included, plus Home / Toggle sidebar / Show
+  shortcuts; matcher in `src/lib/fuzzy.ts`); `?` opens `ShortcutsSheet` (renders
+  `shortcuts.ts`); `[` toggles the sidebar via the shared store
+  `src/lib/useSidebarCollapsed.ts`. All mounted once in `Layout`; below lg a
+  search button in the header opens the palette. A permitted-but-hidden project
+  you are on is shown as an extra entry in its area (`navSections` third arg).
 - **Content width.** `ProjectMeta.layout`: `'narrow'` (default; capture pages:
   todo, shop-list, habits, climbing, local-transfer, settings; also join and
   unknown routes) stays `max-w-3xl`, centred; `'wide'` (Home, events, life,

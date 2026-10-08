@@ -8,6 +8,8 @@ export interface VisibleProjects {
   /** Raw per-device stats; undefined while the first Dexie read is loading. */
   stats: ProjectStat[] | undefined
   statsById: Map<string, ProjectStat>
+  /** Registry order, ownerOnly-filtered, hidden ones INCLUDED (palette, current-page entry). */
+  permitted: ProjectMeta[]
   /** Registry order, ownerOnly-filtered, hidden projects removed. */
   visible: ProjectMeta[]
   /** Permitted projects the user hid (Home's "N hidden · manage"). */
@@ -30,6 +32,7 @@ export function useVisibleProjects(): VisibleProjects {
   return {
     stats,
     statsById,
+    permitted,
     visible,
     hiddenCount: permitted.length - visible.length,
     isStarred: (id) => statsById.get(id)?.starred === 1,
