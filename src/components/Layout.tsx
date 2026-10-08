@@ -15,6 +15,7 @@ import { contentWidthClass, layoutForPath } from '../lib/navModel'
 import { Sidebar } from './Sidebar'
 import { FOCUS_RING } from './focus'
 import { CommandPalette } from './CommandPalette'
+import { HelpButton } from './HelpButton'
 import { ShortcutsSheet } from './ShortcutsSheet'
 import { useHotkey } from '../lib/useHotkey'
 import { toggleSidebarCollapsed } from '../lib/useSidebarCollapsed'
@@ -99,6 +100,7 @@ export function Layout() {
               </Link>
               <div className="flex items-center gap-1">
                 <OnlineBadge />
+                <HelpButton onClick={openHelp} />
                 <button
                   type="button"
                   onClick={() => setPaletteOpen(true)}

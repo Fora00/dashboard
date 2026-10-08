@@ -5,6 +5,7 @@ import { setSidebarCollapsed, useSidebarCollapsed } from '../lib/useSidebarColla
 import { useVisibleProjects } from '../lib/useVisibleProjects'
 import { comboLabel } from '../lib/useHotkey'
 import { FOCUS_RING_INSET } from './focus'
+import { HelpButton } from './HelpButton'
 import { OnlineBadge } from './OnlineBadge'
 import { ProjectIcon } from './ProjectIcon'
 
@@ -186,17 +187,7 @@ export function Sidebar({ onOpenPalette, onOpenHelp }: { onOpenPalette: () => vo
             <path d="m20 20-3.5-3.5" />
           </svg>
         </button>
-        <button
-          type="button"
-          onClick={onOpenHelp}
-          aria-label="Keyboard shortcuts"
-          title="Keyboard shortcuts (?)"
-          className={FOOT_BTN}
-        >
-          <span aria-hidden="true" className="text-base font-semibold">
-            ?
-          </span>
-        </button>
+        <HelpButton onClick={onOpenHelp} placement={collapsed ? 'above-start' : 'above'} />
       </div>
     </aside>
   )

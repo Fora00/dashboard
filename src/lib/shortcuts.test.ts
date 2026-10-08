@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { scopeTitles, shortcutFor, shortcuts } from './shortcuts'
+import { gestures, scopeTitles, shortcutFor, shortcuts } from './shortcuts'
 
 describe('shortcuts', () => {
   it('has unique ids and no two shortcuts on the same combo within a scope', () => {
@@ -16,6 +16,11 @@ describe('shortcuts', () => {
     for (const s of shortcuts) expect(scopeTitles[s.scope]).toBeTruthy()
     expect(shortcutFor('palette').combo).toBe('mod+k')
     expect(() => shortcutFor('nope')).toThrow()
+  })
+
+  it('every shortcut and gesture has a description', () => {
+    for (const s of shortcuts) expect(s.description.trim()).not.toBe('')
+    for (const g of gestures) expect(g.description.trim()).not.toBe('')
   })
 
   it('does not bind a plain key that collides with a global one on a page', () => {

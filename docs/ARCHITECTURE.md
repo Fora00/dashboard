@@ -86,7 +86,8 @@ a trigger. Owner plus per-project/per-area guests.
 - **Palette, help, collapse (UI5).** `mod+k` opens `CommandPalette` (every
   permitted project, hidden ones included, plus Home / Toggle sidebar / Show
   shortcuts; matcher in `src/lib/fuzzy.ts`); `?` opens `ShortcutsSheet` (renders
-  `shortcuts.ts`); `[` toggles the sidebar via the shared store
+  `shortcuts.ts`: keyboard, touch gestures, layout tips; a `HelpButton` "?" with
+  tooltip sits in the header below lg and in the sidebar footer); `[` toggles the sidebar via the shared store
   `src/lib/useSidebarCollapsed.ts`. All mounted once in `Layout`; below lg a
   search button in the header opens the palette. A permitted-but-hidden project
   you are on is shown as an extra entry in its area (`navSections` third arg).
