@@ -536,24 +536,47 @@ export type Database = {
           },
         ]
       }
+      shop_area_tokens: {
+        Row: {
+          area_id: string
+          created_at: string
+          share_token: string
+        }
+        Insert: {
+          area_id: string
+          created_at?: string
+          share_token?: string
+        }
+        Update: {
+          area_id?: string
+          created_at?: string
+          share_token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_area_tokens_area_id_fkey"
+            columns: ["area_id"]
+            isOneToOne: true
+            referencedRelation: "shop_areas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       shop_areas: {
         Row: {
           created_at: number
           id: string
           name: string
-          share_token: string
         }
         Insert: {
           created_at?: number
           id?: string
           name: string
-          share_token?: string
         }
         Update: {
           created_at?: number
           id?: string
           name?: string
-          share_token?: string
         }
         Relationships: []
       }

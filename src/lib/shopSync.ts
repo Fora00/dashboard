@@ -53,7 +53,8 @@ const itemsTable: TableSync<ShopItem, ShopItemRow> = {
 const areasTable: TableSync<ShopArea, ShopAreaRow> = {
   remote: 'shop_areas',
   table: () => db.shopAreas,
-  // share_token is deliberately not selectable — never use select('*') here.
+  // The invite token lives in the owner-only shop_area_tokens table (never
+  // synced or broadcast); the owner reads it via the area_share_token RPC.
   columns: 'id, name, created_at',
   realtime: true,
   toRow: (a) => ({ id: a.id, name: a.name, created_at: a.createdAt }),
