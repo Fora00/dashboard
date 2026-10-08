@@ -1003,23 +1003,27 @@ and offline unaffected; test at 375 / 820 / 1180 / 1440 px. Layout prefs
 
 ### Worth it, in order of value per effort
 
-- [ ] **UI1 App shell** [sonnet, M] — from `lg`: persistent left sidebar
+- [x] **UI1 App shell** [sonnet, M] — from `lg`: persistent left sidebar
+      → done 2026-10-08: sidebar from lg (1024px), collapsible rail (`dashboard:sidebar-collapsed`), narrow/wide content per project, skip link, nav landmark; seen in screenshots at 375/820/1180/1440. Owner choices still open: sidebar keeps the fixed registry order (not "most used"), and a hidden project you open shows no sidebar entry. Not built: phone bottom tab bar (not requested). Follow-ups: `new-project` should emit `layout`/`--layout`; sidebar sync-pending indicator.
       (starred projects first, then the rest, plus sync/online status), wider
       content area; below `lg` the current header. Per-page max width: read /
       capture pages (todo, shop-list, habits, climbing) stay narrow; dense
       pages (events, life, meal-diary, sharing) use the full width. Phone: a
       bottom tab bar with the starred projects so you stop going via Home
       (decide with the owner). Benefits every project at once.
-- [ ] **UI2 Events master-detail** [sonnet, M-L] — the densest, most-used
+- [x] **UI2 Events master-detail** [sonnet, M-L] — the densest, most-used
+      → done 2026-10-08: lg+ filter rail | list | sticky detail panel, keyboard Arrow/Home/End/Esc, shared FilterPanel/EventActions/EventBadges; below lg unchanged. Screenshot-checked with a real crawl fixture at 375/820/1180/1440 + dark; not tested on a real iPad/Safari. Open: week/month grid view, `/` to focus search and shift-click multi-select (UI5), some rail labels truncate at 1180.
       list. `lg`+: filters as a permanent left rail (no sheet), list in the
       middle, selected event detail (image, map link, add-to-calendar, marks)
       on the right; optional week/month grid view. Phone: unchanged (list +
       filter sheet). Reuse `EventsList`/`FilterSheet` content.
-- [ ] **UI3 Life week dashboard** [sonnet, M] — the owner's weekly ritual and
+- [x] **UI3 Life week dashboard** [sonnet, M] — the owner's weekly ritual and
+      → done 2026-10-08: week 2 cols at lg / 3 at xl, chart aside, import side by side, History chart beside list. Not seen: the Food section with meals, narrow widths of Import/History at 820/1440 only generated. No separate recap card (WeekRecap stays in Sunday/History).
       the richest data. `lg`+: 2-3 columns (focus + trackers | tasks + check-ins
       | recap + History chart with hover readout); import screen shows plan
       JSON and preview side by side. Phone stays one column (daily taps).
-- [ ] **UI4 Home "Today" panel** [sonnet, M] — a live summary above the grid:
+- [x] **UI4 Home "Today" panel** [sonnet, M] — a live summary above the grid:
+      → done 2026-10-08: `TodayPanel` (habits, todos, next 3 cached events, Life for the owner, pending sync from `db.outbox`), toggle `dashboard:home-today`, grid 2/3/4 columns. Not seen on screen: the owner-only Life card and the Sync card (no session).
       habits due, next events, Life focus of the day (owner only), pending
       sync state; from `lg` the project grid goes to 3-4 columns. Pure Dexie
       reads, works offline.
@@ -1028,7 +1032,8 @@ and offline unaffected; test at 375 / 820 / 1180 / 1440 px. Layout prefs
       `Esc` closes (native `<dialog>` already does), hover affordances behind
       `hover: hover`; drag-and-drop files onto Local Transfer; shift-click
       multi-select in Events; drag to reorder Life tasks.
-- [ ] **UI6 Cheap grids** [sonnet, S] — Links, Trips, Book/Boardgame ideas:
+- [x] **UI6 Cheap grids** [sonnet, S] — Links, Trips, Book/Boardgame ideas:
+      → done 2026-10-08: Links/Trips/ideas 2-3 columns, Meal Diary sticky trends beside the list, Sharing two columns. Not seen: the Sharing owner layout (needs a session), an expanded row inside a grid cell, ragged idea-card heights.
       `grid-cols-2/3` on `md`/`lg`; Sharing: guests | projects two columns;
       Meal diary: day list beside the trends chart.
 
