@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useRef, useState, type FormEvent } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, type Habit } from '../../lib/db'
 import { useAuth } from '../../lib/useAuth'
@@ -18,11 +18,17 @@ import {
   toggleCheck,
 } from '../../lib/habitSync'
 import { dayKey, lastDays, streak } from './habitStore'
+import { Kbd } from '../../components/Kbd'
+import { useListHotkeys } from '../../lib/useListHotkeys'
 import { runSafe } from '../../lib/runSafe'
 
 const DOT_DAYS = 14
 
 export function Habits() {
+  const nameRef = useRef<HTMLInputElement>(null)
+  // No search here: '/' and 'n' both jump to the new-habit name field.
+  const focusName = () => nameRef.current?.focus()
+  useListHotkeys({ onSearch: focusName, onNew: focusName })
   const session = useAuth()
   const owner = useOwner()
   const isGuestViewer = Boolean(session) && owner === false
@@ -140,16 +146,20 @@ export function Habits() {
           aria-label="Habit emoji"
           className="min-h-10 w-14 shrink-0 rounded-lg border border-slate-300 bg-white text-center text-sm placeholder:text-slate-500 focus:border-(color:--accent-ring) focus:outline-none dark:border-slate-700 dark:bg-slate-800"
         />
-        <input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="New habit, e.g. Stretch"
-          maxLength={MAX_NAME_LENGTH}
-          autoComplete="off"
-          enterKeyHint="done"
-          aria-label="Habit name"
-          className="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-(color:--accent-ring) focus:outline-none dark:border-slate-700 dark:bg-slate-800"
-        />
+        <div className="relative min-w-0 flex-1">
+          <input
+            ref={nameRef}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="New habit, e.g. Stretch"
+            maxLength={MAX_NAME_LENGTH}
+            autoComplete="off"
+            enterKeyHint="done"
+            aria-label="Habit name"
+            className="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-(color:--accent-ring) focus:outline-none dark:border-slate-700 dark:bg-slate-800"
+          />
+          {!name && <Kbd>/</Kbd>}
+        </div>
         <Button type="submit" disabled={!name.trim()}>
           Add
         </Button>

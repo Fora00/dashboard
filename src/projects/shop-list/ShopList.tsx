@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, type ShopItem } from '../../lib/db'
 import {
@@ -24,6 +24,8 @@ import { SyncCard } from '../../components/SyncCard'
 import { Snackbar } from '../../components/Snackbar'
 import { SwipeableRow } from '../../components/SwipeableRow'
 import { Skeleton, SkeletonList } from '../../components/Skeleton'
+import { Kbd } from '../../components/Kbd'
+import { useListHotkeys } from '../../lib/useListHotkeys'
 import { AreaManager } from './AreaManager'
 
 const AREA_KEY = 'shop-list.selected-area'
@@ -62,6 +64,14 @@ export function ShopList() {
 
   // Guests can't create areas; locally-unsynced users and the owner can.
   const canManageAreas = session === null || owner === true
+
+  // '/' and 'n' jump to the add-item field; with no area yet, 'n' starts one.
+  const itemRef = useRef<HTMLInputElement>(null)
+  const focusItem = () => itemRef.current?.focus()
+  useListHotkeys({
+    onSearch: focusItem,
+    onNew: () => (area ? focusItem() : canManageAreas && setAddingArea(true)),
+  })
   // Signed-in, non-owner viewer — used to swap empty-state copy to an
   // invite-aware message instead of a generic "nothing here" one.
   const isGuestViewer = Boolean(session) && owner === false
@@ -209,16 +219,20 @@ export function ShopList() {
       ) : (
         <>
           <form onSubmit={addItem} className="mb-6 flex gap-2">
-            <input
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              aria-label={`Add to ${area.name}`}
-              placeholder={`Add to ${area.name}…`}
-              maxLength={MAX_ITEM_LENGTH}
-              autoComplete="off"
-              enterKeyHint="done"
-              className="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-(color:--accent-ring) focus:outline-none focus-visible:ring-2 focus-visible:ring-(color:--accent-ring) dark:border-slate-700 dark:bg-slate-800"
-            />
+            <div className="relative min-w-0 flex-1">
+              <input
+                ref={itemRef}
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                aria-label={`Add to ${area.name}`}
+                placeholder={`Add to ${area.name}…`}
+                maxLength={MAX_ITEM_LENGTH}
+                autoComplete="off"
+                enterKeyHint="done"
+                className="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-(color:--accent-ring) focus:outline-none focus-visible:ring-2 focus-visible:ring-(color:--accent-ring) dark:border-slate-700 dark:bg-slate-800"
+              />
+              {!text && <Kbd>/</Kbd>}
+            </div>
             <Button type="submit" disabled={!text.trim()}>
               Add
             </Button>

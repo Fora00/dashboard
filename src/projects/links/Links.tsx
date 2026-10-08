@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useRef, useState, type FormEvent } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, type LinkItem } from '../../lib/db'
 import {
@@ -17,6 +17,8 @@ import { useFlash } from '../../lib/useFlash'
 import { useAuth } from '../../lib/useAuth'
 import { useOwner } from '../../lib/useOwner'
 import { useUndoSnackbar } from '../../lib/useUndoSnackbar'
+import { Kbd } from '../../components/Kbd'
+import { useListHotkeys } from '../../lib/useListHotkeys'
 import { Button } from '../../components/Button'
 import { ListRow } from '../../components/ListRow'
 import { PageHeader } from '../../components/PageHeader'
@@ -50,6 +52,10 @@ export function Links() {
   const owner = useOwner()
   const isGuestViewer = Boolean(session) && owner === false
   const [text, setText] = useState('')
+  const addRef = useRef<HTMLInputElement>(null)
+  // No search here: '/' and 'n' both jump to the add field.
+  const focusAdd = () => addRef.current?.focus()
+  useListHotkeys({ onSearch: focusAdd, onNew: focusAdd })
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [copiedId, flashCopied] = useFlash<string>(1500)
   // Filter selection is deliberately component state — never persisted.
@@ -317,20 +323,24 @@ export function Links() {
       <SyncCard sync={sync} />
 
       <form onSubmit={handleAdd} className="mb-6 flex gap-2">
-        <input
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          type="text"
-          inputMode="url"
-          autoComplete="off"
-          autoCapitalize="off"
-          spellCheck={false}
-          enterKeyHint="done"
-          maxLength={2000}
-          aria-label="Link URL"
-          placeholder="Paste a URL…"
-          className="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-(color:--accent-ring) focus:outline-none focus-visible:ring-2 focus-visible:ring-(color:--accent-ring) dark:border-slate-700 dark:bg-slate-800"
-        />
+        <div className="relative min-w-0 flex-1">
+          <input
+            ref={addRef}
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            type="text"
+            inputMode="url"
+            autoComplete="off"
+            autoCapitalize="off"
+            spellCheck={false}
+            enterKeyHint="done"
+            maxLength={2000}
+            aria-label="Link URL"
+            placeholder="Paste a URL…"
+            className="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-(color:--accent-ring) focus:outline-none focus-visible:ring-2 focus-visible:ring-(color:--accent-ring) dark:border-slate-700 dark:bg-slate-800"
+          />
+          {!text && <Kbd>/</Kbd>}
+        </div>
         <Button type="submit" disabled={!canAdd}>
           Add
         </Button>

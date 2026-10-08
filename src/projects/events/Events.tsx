@@ -4,6 +4,8 @@ import { useSearchParams } from 'react-router-dom'
 import { db, type CustomEvent, type EventMark } from '../../lib/db'
 import { deleteCustomEvent, pruneCustomEvents, sync as customSync } from '../../lib/customEventsSync'
 import { hideEvents, pruneEventMarks, restoreEventMark, toggleEventMark } from '../../lib/eventMarksSync'
+import { Kbd } from '../../components/Kbd'
+import { useListHotkeys } from '../../lib/useListHotkeys'
 import { SyncCard } from '../../components/SyncCard'
 import { PageHeader } from '../../components/PageHeader'
 import { EmptyState } from '../../components/EmptyState'
@@ -17,7 +19,7 @@ import { SkeletonList } from '../../components/Skeleton'
 import { FilterSheet } from './FilterSheet'
 import { FilterPanel, type FilterPanelProps } from './FilterPanel'
 import { EventDetail } from './EventDetail'
-import { isTypingTarget, listKeyAction, moveSelection, visibleOrder } from './selection'
+import { isTypingTarget, listKeyAction, moveSelection, rangeBetween, visibleOrder } from './selection'
 import { useWide } from './useWide'
 import { CustomEventSheet } from './CustomEventSheet'
 import { PREFILL_KEYS, mergeEvents, parsePrefill, type CustomEventForm } from './custom'
@@ -200,14 +202,26 @@ export function Events() {
   )
   const onToggleSave = useCallback((e: EventItem) => void setMark(e, 'saved'), [setMark])
   const onToggleHide = useCallback((e: EventItem) => void setMark(e, 'hidden'), [setMark])
-  const onSelect = useCallback((e: EventItem) => {
+  // Shift-click range select: the last card picked is the anchor; the list
+  // order is read through a ref so onSelect stays stable for the memoised cards.
+  const orderRef = useRef(order)
+  useEffect(() => {
+    orderRef.current = order
+  })
+  const anchorRef = useRef<string | null>(null)
+  const onSelect = useCallback((e: EventItem, range = false) => {
+    const from = anchorRef.current
+    anchorRef.current = e.id
     setSelectedIds((prev) => {
       const next = new Set(prev)
-      if (!next.delete(e.id)) next.add(e.id)
+      if (range && from !== null) {
+        for (const id of rangeBetween(orderRef.current, from, e.id)) next.add(id)
+      } else if (!next.delete(e.id)) next.add(e.id)
       return next
     })
   }, [])
   const exitSelect = () => {
+    anchorRef.current = null
     setSelecting(false)
     setSelectedIds(new Set())
   }
@@ -217,6 +231,12 @@ export function Events() {
     })
   }, [])
   const openAdd = () => setEditor({ open: true, editing: null, prefill: null })
+  const searchRef = useRef<HTMLInputElement>(null)
+  // '/' focuses the search field, 'n' opens the add-event sheet.
+  useListHotkeys({
+    onSearch: () => searchRef.current?.focus(),
+    onNew: openAdd,
+  })
   const closeEditor = () => setEditor({ open: false })
   const onDeleteCustom = (row: CustomEvent) => {
     closeEditor()
@@ -397,6 +417,7 @@ export function Events() {
 
       <div className="relative mb-2">
         <input
+          ref={searchRef}
           type="text"
           inputMode="search"
           enterKeyHint="search"
@@ -409,6 +430,7 @@ export function Events() {
           onChange={(e) => toggles.setQuery(e.target.value)}
           className="h-10 w-full rounded-lg border-2 border-slate-200 bg-white pr-10 pl-3 text-base text-slate-900 placeholder:text-slate-500 dark:placeholder:text-slate-400 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-100"
         />
+        {!query && <Kbd>/</Kbd>}
         <button
           type="button"
           aria-label="Clear search"

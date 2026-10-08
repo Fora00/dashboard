@@ -71,7 +71,7 @@ export function WeekSections({
   onToggleSave: (e: EventItem) => void
   onToggleHide: (e: EventItem) => void
   onEdit: (e: EventItem) => void
-  onSelect: (e: EventItem) => void
+  onSelect: (e: EventItem, range?: boolean) => void
   /** lg+ master-detail: a tap shows the event in the detail panel. */
   master?: boolean
   activeId?: string | null

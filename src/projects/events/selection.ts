@@ -41,6 +41,19 @@ export function moveSelection(order: readonly string[], current: string | null, 
   return order[j] ?? null
 }
 
+/**
+ * The ids from `fromId` to `toId` inclusive, in list order whichever comes
+ * first (shift-click range select). If the anchor is gone from the list the
+ * range is just the clicked one; if the clicked one is gone, nothing.
+ */
+export function rangeBetween(order: readonly string[], fromId: string | null, toId: string): string[] {
+  const j = order.indexOf(toId)
+  if (j === -1) return []
+  const i = fromId === null ? -1 : order.indexOf(fromId)
+  if (i === -1) return [toId]
+  return order.slice(Math.min(i, j), Math.max(i, j) + 1)
+}
+
 export type ListKeyAction = { kind: 'move'; move: Move } | { kind: 'clear' } | null
 
 interface KeyLike {
@@ -52,15 +65,17 @@ interface KeyLike {
 }
 
 /**
- * What a key press does to the list selection: Arrow Up/Down step, Home/End
+ * What a key press does to the list selection: Arrow Up/Down (or j/k) step, Home/End
  * jump, Esc clears. Any modifier leaves the key to the browser/OS.
  */
 export function listKeyAction(k: KeyLike): ListKeyAction {
   if (k.altKey || k.ctrlKey || k.metaKey || k.shiftKey) return null
   switch (k.key) {
     case 'ArrowDown':
+    case 'j':
       return { kind: 'move', move: 'next' }
     case 'ArrowUp':
+    case 'k':
       return { kind: 'move', move: 'prev' }
     case 'Home':
       return { kind: 'move', move: 'first' }

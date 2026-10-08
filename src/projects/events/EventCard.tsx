@@ -21,7 +21,8 @@ interface Props {
   /** Multi-select mode: tapping the card toggles `selected` instead of expanding it. */
   selecting?: boolean
   selected?: boolean
-  onSelect?: ((e: EventItem) => void) | undefined
+  /** `range` = shift held: select everything between the last pick and this card. */
+  onSelect?: ((e: EventItem, range?: boolean) => void) | undefined
   /**
    * Master-detail (lg+): tapping the card shows it in the detail panel
    * (`onActivate`) instead of expanding it inline; `active` = the one shown.
@@ -69,7 +70,11 @@ export const EventCard = memo(function EventCard({
       <button
         type="button"
         data-event-id={e.id}
-        onClick={() => (selecting ? onSelect?.(e) : master ? onActivate?.(e) : setOpen((v) => !v))}
+        onMouseDown={(ev) => {
+          // Shift-click range select must not also select text.
+          if (selecting && ev.shiftKey) ev.preventDefault()
+        }}
+        onClick={(ev) => (selecting ? onSelect?.(e, ev.shiftKey) : master ? onActivate?.(e) : setOpen((v) => !v))}
         {...(selecting
           ? { 'aria-pressed': selected }
           : master

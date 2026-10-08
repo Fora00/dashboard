@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { isTypingTarget, listKeyAction, moveSelection, visibleOrder } from './selection'
+import { isTypingTarget, listKeyAction, moveSelection, rangeBetween, visibleOrder } from './selection'
 import type { WeekGroup } from './model'
 import type { EventItem } from './types'
 
@@ -86,9 +86,16 @@ describe('listKeyAction', () => {
     expect(listKeyAction({ ...keys, key: 'Escape' })).toEqual({ kind: 'clear' })
   })
 
+  it('maps j and k to next and previous', () => {
+    expect(listKeyAction({ ...keys, key: 'j' })).toEqual({ kind: 'move', move: 'next' })
+    expect(listKeyAction({ ...keys, key: 'k' })).toEqual({ kind: 'move', move: 'prev' })
+  })
+
   it('ignores other keys and any modifier', () => {
     expect(listKeyAction({ ...keys, key: 'Enter' })).toBeNull()
-    expect(listKeyAction({ ...keys, key: 'j' })).toBeNull()
+    expect(listKeyAction({ ...keys, key: 'x' })).toBeNull()
+    expect(listKeyAction({ ...keys, key: 'j', metaKey: true })).toBeNull()
+    expect(listKeyAction({ ...keys, key: 'k', ctrlKey: true })).toBeNull()
     expect(listKeyAction({ ...keys, key: 'ArrowDown', metaKey: true })).toBeNull()
     expect(listKeyAction({ ...keys, key: 'ArrowUp', shiftKey: true })).toBeNull()
     expect(listKeyAction({ ...keys, key: 'Escape', altKey: true })).toBeNull()
@@ -107,5 +114,25 @@ describe('isTypingTarget', () => {
     expect(isTypingTarget({ tagName: 'BUTTON' })).toBe(false)
     expect(isTypingTarget({ tagName: 'A' })).toBe(false)
     expect(isTypingTarget(null)).toBe(false)
+  })
+})
+
+describe('rangeBetween', () => {
+  const order = ['a', 'b', 'c', 'd', 'e']
+
+  it('is inclusive and follows list order in both directions', () => {
+    expect(rangeBetween(order, 'b', 'd')).toEqual(['b', 'c', 'd'])
+    expect(rangeBetween(order, 'd', 'b')).toEqual(['b', 'c', 'd'])
+  })
+
+  it('is just the clicked one when anchor equals target, is null or is gone', () => {
+    expect(rangeBetween(order, 'c', 'c')).toEqual(['c'])
+    expect(rangeBetween(order, null, 'c')).toEqual(['c'])
+    expect(rangeBetween(order, 'zzz', 'c')).toEqual(['c'])
+  })
+
+  it('is empty when the clicked one is not in the list', () => {
+    expect(rangeBetween(order, 'a', 'zzz')).toEqual([])
+    expect(rangeBetween([], null, 'a')).toEqual([])
   })
 })

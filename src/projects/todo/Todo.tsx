@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useRef, useState, type FormEvent } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, type Todo as TodoItem } from '../../lib/db'
 import {
@@ -12,6 +12,8 @@ import {
 import { useAuth } from '../../lib/useAuth'
 import { useOwner } from '../../lib/useOwner'
 import { useUndoSnackbar } from '../../lib/useUndoSnackbar'
+import { Kbd } from '../../components/Kbd'
+import { useListHotkeys } from '../../lib/useListHotkeys'
 import { Button } from '../../components/Button'
 import { ListRow } from '../../components/ListRow'
 import { PageHeader } from '../../components/PageHeader'
@@ -26,6 +28,10 @@ export function Todo() {
   const owner = useOwner()
   const isGuestViewer = Boolean(session) && owner === false
   const [text, setText] = useState('')
+  const inputRef = useRef<HTMLInputElement>(null)
+  // No search here: '/' and 'n' both jump to the add field.
+  const focusInput = () => inputRef.current?.focus()
+  useListHotkeys({ onSearch: focusInput, onNew: focusInput })
   const todos = useLiveQuery(() => db.todos.orderBy('createdAt').toArray())
   const { pending, trigger, confirmUndo } = useUndoSnackbar()
 
@@ -99,16 +105,20 @@ export function Todo() {
       <SyncCard sync={sync} />
 
       <form onSubmit={addTodo} className="mb-6 flex gap-2">
-        <input
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          aria-label="Add a todo"
-          placeholder="Add something to do…"
-          maxLength={MAX_TEXT_LENGTH}
-          autoComplete="off"
-          enterKeyHint="done"
-          className="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-(color:--accent-ring) focus:outline-none focus-visible:ring-2 focus-visible:ring-(color:--accent-ring) dark:border-slate-700 dark:bg-slate-800"
-        />
+        <div className="relative min-w-0 flex-1">
+          <input
+            ref={inputRef}
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            aria-label="Add a todo"
+            placeholder="Add something to do…"
+            maxLength={MAX_TEXT_LENGTH}
+            autoComplete="off"
+            enterKeyHint="done"
+            className="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-(color:--accent-ring) focus:outline-none focus-visible:ring-2 focus-visible:ring-(color:--accent-ring) dark:border-slate-700 dark:bg-slate-800"
+          />
+          {!text && <Kbd>/</Kbd>}
+        </div>
         <Button type="submit" disabled={!text.trim()}>
           Add
         </Button>

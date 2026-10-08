@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type DragEvent } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, requestPersistentStorage, type TransferFile } from '../../lib/db'
 import { formatBytes, formatDate } from '../../lib/format'
@@ -21,6 +21,8 @@ import { EmptyState } from '../../components/EmptyState'
 import { SyncCard } from '../../components/SyncCard'
 import { Snackbar } from '../../components/Snackbar'
 import { SkeletonList } from '../../components/Skeleton'
+import { runSafe } from '../../lib/runSafe'
+import { filesFromTransfer, hasFiles } from './drop'
 
 export function LocalTransfer() {
   const online = useOnline()
@@ -66,11 +68,51 @@ export function LocalTransfer() {
     await refreshRemote()
   }
 
-  function onDrop(e: DragEvent) {
-    e.preventDefault()
-    setDragActive(false)
-    void addFiles(e.dataTransfer.files)
-  }
+  // Drop files anywhere on the page (Finder -> browser). A depth counter, not
+  // a boolean: dragenter/dragleave fire for every child the pointer crosses,
+  // which would make the overlay flicker. Same add path as the file picker.
+  const dropRef = useRef<(files: File[]) => void>(() => {})
+  useEffect(() => {
+    dropRef.current = (files) => void runSafe(addFiles, 'Could not add files')(files)
+  })
+  useEffect(() => {
+    let depth = 0
+    const carriesFiles = (e: globalThis.DragEvent) => hasFiles(e.dataTransfer?.types)
+    function onEnter(e: globalThis.DragEvent) {
+      if (!carriesFiles(e)) return
+      e.preventDefault()
+      depth++
+      setDragActive(true)
+    }
+    function onOver(e: globalThis.DragEvent) {
+      if (!carriesFiles(e)) return
+      // Required, or the browser refuses the drop (and opens the file).
+      e.preventDefault()
+      if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy'
+    }
+    function onLeave(e: globalThis.DragEvent) {
+      if (!carriesFiles(e)) return
+      depth = Math.max(0, depth - 1)
+      if (depth === 0) setDragActive(false)
+    }
+    function onDropEvt(e: globalThis.DragEvent) {
+      if (!carriesFiles(e)) return
+      e.preventDefault()
+      depth = 0
+      setDragActive(false)
+      if (e.dataTransfer) dropRef.current(filesFromTransfer(e.dataTransfer))
+    }
+    window.addEventListener('dragenter', onEnter)
+    window.addEventListener('dragover', onOver)
+    window.addEventListener('dragleave', onLeave)
+    window.addEventListener('drop', onDropEvt)
+    return () => {
+      window.removeEventListener('dragenter', onEnter)
+      window.removeEventListener('dragover', onOver)
+      window.removeEventListener('dragleave', onLeave)
+      window.removeEventListener('drop', onDropEvt)
+    }
+  }, [])
 
   function download(f: TransferFile) {
     const url = URL.createObjectURL(f.blob)
@@ -146,12 +188,6 @@ export function LocalTransfer() {
             inputRef.current?.click()
           }
         }}
-        onDragOver={(e) => {
-          e.preventDefault()
-          setDragActive(true)
-        }}
-        onDragLeave={() => setDragActive(false)}
-        onDrop={onDrop}
         className={`mb-6 flex cursor-pointer flex-col items-center gap-1 rounded-xl border-2 border-dashed px-6 py-10 text-center transition-colors ${
           dragActive
             ? 'border-(color:--accent-ring) bg-(color:--accent-soft)'
@@ -160,7 +196,7 @@ export function LocalTransfer() {
       >
         <span className="text-3xl">⬆️</span>
         <p className="font-medium">Tap to add files</p>
-        <p className="text-sm text-slate-500">or drag &amp; drop here</p>
+        <p className="text-sm text-slate-500">or drag &amp; drop files anywhere on this page</p>
         <input
           ref={inputRef}
           type="file"
@@ -172,6 +208,15 @@ export function LocalTransfer() {
           }}
         />
       </div>
+
+      {dragActive && (
+        <div
+          aria-hidden="true"
+          className="pointer-events-none fixed inset-3 z-40 flex items-center justify-center rounded-2xl border-4 border-dashed border-(color:--accent-ring) bg-(color:--accent-soft)/90 text-xl font-semibold text-slate-900 dark:text-slate-100"
+        >
+          Drop files to add
+        </div>
+      )}
 
       <SyncCard />
 
