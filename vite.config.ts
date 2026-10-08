@@ -33,9 +33,37 @@ export default defineConfig({
         icons: [
           { src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png' },
           { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png' },
-          { src: 'icons/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
-          { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+          {
+            src: 'icons/apple-touch-icon.png',
+            sizes: '180x180',
+            type: 'image/png',
+          },
+          {
+            src: 'icons/icon-maskable-512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable',
+          },
         ],
+        // HashRouter: urls are relative to the manifest (inside scope), route in the hash.
+        shortcuts: (
+          [
+            ['Events', 'events'],
+            ['Life', 'life'],
+            ['Todo', 'todo'],
+            ['Shop List', 'shop-list'],
+          ] as const
+        ).map(([name, id]) => ({
+          name,
+          url: `./#/${id}`,
+          icons: [
+            {
+              src: `icons/projects/${id}.png`,
+              sizes: '180x180',
+              type: 'image/png',
+            },
+          ],
+        })),
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],

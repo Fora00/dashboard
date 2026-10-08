@@ -1,0 +1,106 @@
+{
+  "appIcon": "B",
+  "style": "solid",
+  "areas": {
+    "utility": {
+      "name": "Utility",
+      "color": "#64748b"
+    },
+    "casa": {
+      "name": "Casa e cibo",
+      "color": "#e11d48"
+    },
+    "organizzazione": {
+      "name": "Organizzazione e crescita",
+      "color": "#22c55e"
+    },
+    "sport": {
+      "name": "Sport, viaggi e uscite",
+      "color": "#0ea5e9"
+    },
+    "svago": {
+      "name": "Svago e idee",
+      "color": "#f59e0b"
+    }
+  },
+  "projects": {
+    "links": {
+      "icon": "link",
+      "color": "#3b82f6",
+      "area": "utility"
+    },
+    "local-transfer": {
+      "icon": "folder-sync",
+      "color": "#0ea5e9",
+      "area": "utility"
+    },
+    "sharing": {
+      "icon": "share-2",
+      "color": "#14b8a6",
+      "area": "utility"
+    },
+    "settings": {
+      "icon": "settings",
+      "color": "#475569",
+      "area": "utility"
+    },
+    "shop-list": {
+      "icon": "shopping-cart",
+      "color": "#f59e0b",
+      "area": "casa"
+    },
+    "meal-diary": {
+      "icon": "apple",
+      "color": "#ef4444",
+      "area": "casa"
+    },
+    "todo": {
+      "icon": "list-checks",
+      "color": "#0ea5e9",
+      "area": "organizzazione"
+    },
+    "habits": {
+      "icon": "flame",
+      "color": "#22c55e",
+      "area": "organizzazione"
+    },
+    "life": {
+      "icon": "compass",
+      "color": "#a855f7",
+      "area": "organizzazione"
+    },
+    "climbing": {
+      "icon": "mountain-snow",
+      "color": "#e11d48",
+      "area": "sport"
+    },
+    "trips": {
+      "icon": "plane",
+      "color": "#3b82f6",
+      "area": "sport"
+    },
+    "events": {
+      "icon": "map-pin",
+      "color": "#f59e0b",
+      "area": "sport"
+    },
+    "book-ideas": {
+      "icon": "book-open",
+      "color": "#6366f1",
+      "area": "svago"
+    },
+    "boardgame-ideas": {
+      "icon": "dice-5",
+      "color": "#ef4444",
+      "area": "svago"
+    }
+  },
+  "extras": {
+    "groupHome": true,
+    "accent": true,
+    "newproject": true,
+    "perProjectInstall": true,
+    "shortcuts": true
+  },
+  "_about": "Owner's icon choice (2026-10-08) from the local icon picker. Source of truth for the registry icons/areas/colours and for scripts/icons/build-icons.mjs. appIcon B = 'Hub' (project nodes orbiting a white core)."
+}
