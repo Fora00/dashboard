@@ -87,6 +87,7 @@ async function run(ctx: AdapterContext): Promise<RawEvent[]> {
   const out: RawEvent[] = []
   for (let i = 0; url && i < 10; i++) {
     const res: PdPage = await ctx.fetchJson<PdPage>(url)
+    if (!res || !Array.isArray(res.data)) throw new Error('no data array in the events API response (API changed?)')
     for (const ev of res.data ?? []) {
       const title = ev.title?.trim()
       if (!title || !ev.drupal_internal__nid) continue

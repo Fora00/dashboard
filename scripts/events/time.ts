@@ -76,13 +76,22 @@ export function romeDate(ms: number): string {
 
 /**
  * Any ISO string with an explicit offset (or Z) → the same instant expressed
- * in Rome time. A bare date (YYYY-MM-DD) → Rome midnight of that date.
+ * in Rome time. An offset-less date-time is read as Rome wall time (not the
+ * runner's). A bare date (YYYY-MM-DD) → Rome midnight of that date.
  * Returns null when unparseable.
  */
 export function normalizeIso(value: string | null | undefined): string | null {
   if (!value) return null
   const v = value.trim()
   if (/^\d{4}-\d{2}-\d{2}$/.test(v)) return dateToIso(v)
+  // No Z / offset: a Rome wall time. Date.parse would read it in the runner's
+  // zone (UTC in CI), shifting it by 1-2 hours.
+  const wall = v.match(/^(\d{4}-\d{2}-\d{2})[T ](\d{1,2}:\d{2}(?::\d{2})?)(?:\.\d+)?$/)
+  if (wall) {
+    const [, mo, d] = parseYmd(wall[1] as string)
+    if (mo < 1 || mo > 12 || d < 1 || d > 31) return null
+    return localToIso(wall[1] as string, wall[2])
+  }
   const ms = Date.parse(v)
   if (Number.isNaN(ms)) return null
   return instantToIso(ms)

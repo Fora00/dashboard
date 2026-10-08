@@ -11,6 +11,7 @@
 // `ogMisses` for a week. A full backlog is therefore worked off over a few
 // daily runs. The image is hot-linked, never re-hosted.
 import type { AdapterContext, Event } from './types.ts'
+import { assertFetchable } from './http.ts'
 import { absUrl, decodeEntities } from './text.ts'
 
 /** Sources whose pages carry a real per-event og:image. */
@@ -46,6 +47,16 @@ export function extractOgImage(html: string, pageUrl: string): string | null {
   return null
 }
 
+/** Timeouts, resets, DNS and robots.txt fetch failures: transient, not a verdict on the page. */
+export function isNetworkError(err: unknown): boolean {
+  const e = err as { name?: string; message?: string; cause?: { code?: string } }
+  if (e.name === 'TimeoutError' || e.name === 'AbortError') return true
+  if (e.cause?.code) return true
+  return /fetch failed|ECONN|ENOTFOUND|EAI_AGAIN|ETIMEDOUT|socket|terminated|robots\.txt for \S+ failed/i.test(
+    e.message ?? '',
+  )
+}
+
 export interface OgResult {
   /** Images found this run, plus those carried over. */
   filled: number
@@ -55,7 +66,8 @@ export interface OgResult {
 
 /**
  * Mutates `events` (the final, sorted list). `previous` supplies images found
- * on earlier runs and the miss list. Never throws: a page that fails is a miss.
+ * on earlier runs and the miss list. Never throws: a page that fails is a miss
+ * (a network error or timeout is not: it is retried on the next run).
  */
 export async function enrichImages(
   events: Event[],
@@ -94,6 +106,12 @@ export async function enrichImages(
   }
   for (const e of order) {
     if (fetched >= OG_MAX_REQUESTS || Date.now() - started > maxMs) break
+    try {
+      assertFetchable(new URL(e.url))
+    } catch {
+      misses[e.id] = now
+      continue
+    }
     fetched++
     try {
       const page = await ctx.fetchText(e.url)
@@ -107,6 +125,8 @@ export async function enrichImages(
     } catch (err) {
       // Request cap reached: stop quietly; any other failure is a (retried-in-a-week) miss.
       if (/request cap/.test((err as Error).message)) break
+      // A network error or timeout says nothing about the page: try again next run.
+      if (isNetworkError(err)) continue
       misses[e.id] = now
     }
   }

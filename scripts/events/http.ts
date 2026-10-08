@@ -15,6 +15,8 @@ const PRODUCT_TOKEN = 'dashboard-events-crawler'
 const MIN_DELAY_MS = 1500
 const TIMEOUT_MS = 20_000
 const MAX_REDIRECTS = 5
+/** Largest response body we read; a bigger one is an error, not a memory problem. */
+export const MAX_BODY_BYTES = 5 * 1024 * 1024
 /** Ignore absurd Crawl-delay values rather than stall the whole run. */
 const MAX_CRAWL_DELAY_S = 30
 
@@ -90,6 +92,63 @@ export function isAllowed(rules: Rule[], pathAndQuery: string): boolean {
   return best ? best.allow : true
 }
 
+/** True for loopback, private, link-local and other non-public hosts (literal names/IPs; no DNS lookup). */
+export function isBlockedHost(hostname: string): boolean {
+  const h = hostname.toLowerCase().replace(/^\[|\]$/g, '')
+  if (h === 'localhost' || h.endsWith('.localhost') || h.endsWith('.local') || h.endsWith('.internal')) return true
+  const v4 = h.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/)
+  if (v4) {
+    const [a, b] = [Number(v4[1]), Number(v4[2])]
+    return (
+      a === 0 ||
+      a === 10 ||
+      a === 127 ||
+      (a === 100 && b >= 64 && b <= 127) ||
+      (a === 169 && b === 254) ||
+      (a === 172 && b >= 16 && b <= 31) ||
+      (a === 192 && b === 168) ||
+      a >= 224
+    )
+  }
+  if (h.includes(':')) {
+    const mapped = h.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/)
+    if (mapped) return isBlockedHost(mapped[1] as string)
+    return h === '::' || h === '::1' || /^f[cd]/.test(h) || /^fe[89ab]/.test(h)
+  }
+  return false
+}
+
+/** Throws unless `url` is plain http(s) to a public-looking host. */
+export function assertFetchable(url: URL): void {
+  if (url.protocol !== 'http:' && url.protocol !== 'https:') throw new Error(`refusing non-http(s) URL ${url.href}`)
+  if (isBlockedHost(url.hostname)) throw new Error(`refusing private/loopback host ${url.hostname}`)
+}
+
+/** Read a body as text, failing once it exceeds `max` bytes (Content-Length first, then while streaming). */
+export async function readCapped(res: Response, max = MAX_BODY_BYTES): Promise<string> {
+  const declared = Number(res.headers.get('content-length'))
+  if (Number.isFinite(declared) && declared > max) {
+    await res.body?.cancel()
+    throw new Error(`response too large (${declared} bytes > ${max})`)
+  }
+  if (!res.body) return ''
+  const reader = res.body.getReader()
+  const decoder = new TextDecoder()
+  let total = 0
+  let text = ''
+  for (;;) {
+    const { done, value } = await reader.read()
+    if (done) break
+    total += value.byteLength
+    if (total > max) {
+      await reader.cancel()
+      throw new Error(`response too large (> ${max} bytes)`)
+    }
+    text += decoder.decode(value, { stream: true })
+  }
+  return text + decoder.decode()
+}
+
 function sleep(ms: number): Promise<void> {
   return new Promise((r) => setTimeout(r, ms))
 }
@@ -101,12 +160,17 @@ export class PoliteHttp {
   private hostDelay = new Map<string, number>()
   private hostQueue = new Map<string, Promise<void>>()
   requests = 0
+  private opts: { fetch?: typeof fetch; minDelayMs?: number }
+
+  constructor(opts: { fetch?: typeof fetch; minDelayMs?: number } = {}) {
+    this.opts = opts
+  }
 
   /** Wait until this host may be hit again, then mark the slot as taken. */
   private async slot(host: string): Promise<void> {
     const prev = this.hostQueue.get(host) ?? Promise.resolve()
     const mine = prev.then(async () => {
-      const delay = Math.max(MIN_DELAY_MS, this.hostDelay.get(host) ?? 0)
+      const delay = Math.max(this.opts.minDelayMs ?? MIN_DELAY_MS, this.hostDelay.get(host) ?? 0)
       const wait = (this.lastRequest.get(host) ?? 0) + delay - Date.now()
       if (wait > 0) await sleep(wait)
       this.lastRequest.set(host, Date.now())
@@ -125,7 +189,7 @@ export class PoliteHttp {
     await this.slot(url.host)
     this.requests++
     try {
-      return await fetch(url, {
+      return await (this.opts.fetch ?? fetch)(url, {
         redirect,
         headers:
           body === undefined
@@ -182,6 +246,7 @@ export class PoliteHttp {
   async get(href: string): Promise<FetchResult> {
     let url = new URL(href)
     for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
+      assertFetchable(url)
       await this.assertAllowed(url)
       const res = await this.rawGet(url, 'manual')
       const location = res.headers.get('location')
@@ -190,7 +255,7 @@ export class PoliteHttp {
         url = new URL(location, url)
         continue
       }
-      const text = await res.text()
+      const text = await readCapped(res)
       if (!res.ok) throw new Error(`HTTP ${res.status} for ${url.href}`)
       return { status: res.status, url: url.href, text }
     }
@@ -204,6 +269,7 @@ export class PoliteHttp {
    */
   async post(href: string, body: unknown, form = false): Promise<FetchResult> {
     const url = new URL(href)
+    assertFetchable(url)
     await this.assertAllowed(url)
     const res = form
       ? await this.rawGet(
@@ -214,7 +280,7 @@ export class PoliteHttp {
           'application/x-www-form-urlencoded',
         )
       : await this.rawGet(url, 'manual', 0, JSON.stringify(body))
-    const text = await res.text()
+    const text = await readCapped(res)
     if (!res.ok) throw new Error(`HTTP ${res.status} for POST ${url.href}`)
     return { status: res.status, url: url.href, text }
   }

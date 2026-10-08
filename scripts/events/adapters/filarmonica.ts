@@ -139,7 +139,7 @@ function fromFeed(xml: string): Map<string, Draft[]> {
 
 async function fromIcal(ctx: AdapterContext, post: string, link: string): Promise<Draft[]> {
   const { text } = await ctx.fetchText(`${SITE}/?method=ical&id=${post}`)
-  if (!text.includes('BEGIN:VCALENDAR')) return []
+  if (!text.includes('BEGIN:VCALENDAR')) throw new Error(`iCal export for post ${post} is not iCal (markup changed?)`)
   const out: Draft[] = []
   for (const ev of parseIcal(text)) {
     const s = icalDate(ev.DTSTART)

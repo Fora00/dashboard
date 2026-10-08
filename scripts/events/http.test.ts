@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { isAllowed, parseRobots } from './http.ts'
+import { PoliteHttp, assertFetchable, isAllowed, isBlockedHost, parseRobots, readCapped } from './http.ts'
 
 const allowed = (robots: string, path: string) => isAllowed(parseRobots(robots).rules, path)
 
@@ -125,5 +125,66 @@ describe('isAllowed', () => {
   it('Disallow: / blocks the whole site', () => {
     expect(allowed('User-agent: *\nDisallow: /', '/')).toBe(false)
     expect(allowed('User-agent: *\nDisallow: /', '/x')).toBe(false)
+  })
+})
+
+describe('fetch hardening', () => {
+  const robots404 = () => new Response('', { status: 404 })
+
+  it('blocks loopback, private and link-local hosts and non-http(s) URLs', () => {
+    for (const h of [
+      'localhost',
+      '127.0.0.1',
+      '10.0.0.5',
+      '192.168.1.1',
+      '172.20.0.1',
+      '169.254.169.254',
+      '[::1]',
+      'fd00::1',
+    ])
+      expect(isBlockedHost(h), h).toBe(true)
+    for (const h of ['example.com', '8.8.8.8', '172.32.0.1']) expect(isBlockedHost(h), h).toBe(false)
+    expect(() => assertFetchable(new URL('file:///etc/passwd'))).toThrow(/non-http/)
+    expect(() => assertFetchable(new URL('http://127.0.0.1/x'))).toThrow(/private/)
+    expect(() => assertFetchable(new URL('https://example.com/x'))).not.toThrow()
+  })
+
+  it('readCapped rejects an oversized Content-Length and an oversized stream', async () => {
+    await expect(readCapped(new Response('x', { headers: { 'content-length': '100' } }), 10)).rejects.toThrow(
+      /too large/,
+    )
+    await expect(readCapped(new Response('x'.repeat(50)), 10)).rejects.toThrow(/too large/)
+    await expect(readCapped(new Response('hello'), 10)).resolves.toBe('hello')
+  })
+
+  it('refuses a redirect to a private host without requesting it', async () => {
+    const seen: string[] = []
+    const http = new PoliteHttp({
+      minDelayMs: 0,
+      fetch: (async (u: URL) => {
+        seen.push(u.href)
+        if (u.pathname === '/robots.txt') return robots404()
+        return new Response('', {
+          status: 302,
+          headers: { location: 'http://169.254.169.254/latest' },
+        })
+      }) as unknown as typeof fetch,
+    })
+    await expect(http.get('https://example.com/a')).rejects.toThrow(/private/)
+    expect(seen.some((u) => u.includes('169.254'))).toBe(false)
+  })
+
+  it('refuses a non-http(s) URL and an over-cap body', async () => {
+    const http = new PoliteHttp({
+      minDelayMs: 0,
+      fetch: (async (u: URL) =>
+        u.pathname === '/robots.txt'
+          ? robots404()
+          : new Response('x', {
+              headers: { 'content-length': String(6 * 1024 * 1024) },
+            })) as unknown as typeof fetch,
+    })
+    await expect(http.get('ftp://example.com/a')).rejects.toThrow(/non-http/)
+    await expect(http.get('https://example.com/big')).rejects.toThrow(/too large/)
   })
 })

@@ -51,10 +51,14 @@ function hintFor(type: string): CategoryId | undefined {
 async function run(ctx: AdapterContext): Promise<RawEvent[]> {
   const { text } = await ctx.fetchText(PAGE)
   const out: RawEvent[] = []
-  for (const card of text.split(/(?=<div data-month=")/).slice(1)) {
+  const cards = text.split(/(?=<div data-month=")/).slice(1)
+  if (!cards.length) throw new Error('no event cards (markup changed?)')
+  let wanted = 0
+  for (const card of cards) {
     const month = card.match(/^<div data-month="([a-z]+)-(\d{4})"/)
     const type = card.match(/data-type="([^"]*)"/)?.[1] ?? ''
     if (!month || SKIP_TYPES.test(type)) continue
+    wanted++
     const date = card.match(/class="[^"]*date-mobile"><span class="day-mobile">[^<]*<\/span>\s*(\d{1,2})\s+([a-z]+)/i)
     const link = card.match(/<h3[^>]*>\s*<a[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/i)
     if (!date || !link) continue
@@ -86,6 +90,8 @@ async function run(ctx: AdapterContext): Promise<RawEvent[]> {
       tagText: [label, type.replace(/-/g, ' ')].filter(Boolean).join(' · '),
     })
   }
+  // Cards exist but none could be read: the card markup changed.
+  if (wanted > 0 && !out.length) throw new Error('event cards found but none parsed (markup changed?)')
   return out
 }
 

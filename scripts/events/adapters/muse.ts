@@ -151,13 +151,21 @@ async function run(ctx: AdapterContext): Promise<RawEvent[]> {
   const today = romeDate(ctx.now)
   const horizon = addDays(today, ctx.horizonDays)
   const out: RawEvent[] = []
-  for (const c of await candidates(ctx)) {
+  const cands = await candidates(ctx)
+  let failed = 0
+  let attempted = 0
+  for (const c of cands) {
     let html: string
     try {
+      attempted++
       html = (await ctx.fetchText(c.url)).text
     } catch (e) {
       // The request cap is the end of the run; one bad page is just skipped.
-      if (/request cap/.test((e as Error).message)) break
+      if (/request cap/.test((e as Error).message)) {
+        attempted--
+        break
+      }
+      failed++
       continue
     }
     const place = parsePlace(sidebarLines(html, 'map-pin')[0] ?? null)
@@ -184,6 +192,8 @@ async function run(ctx: AdapterContext): Promise<RawEvent[]> {
       })
     })
   }
+  // Skipping one bad page is fine; every page failing is a broken source.
+  if (attempted > 0 && failed === attempted) throw new Error(`all ${failed} event pages failed to load`)
   return out
 }
 

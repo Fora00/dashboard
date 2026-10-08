@@ -97,3 +97,14 @@ describe('localToIso', () => {
     expect(localToIso('2026-10-04')).toBe('2026-10-04T00:00:00+02:00')
   })
 })
+
+describe('normalizeIso without an offset', () => {
+  it('reads an offset-less date-time as Rome wall time, whatever the runner zone', () => {
+    expect(normalizeIso('2026-10-04T20:30:00')).toBe('2026-10-04T20:30:00+02:00')
+    expect(normalizeIso('2026-01-15 09:05')).toBe('2026-01-15T09:05:00+01:00')
+  })
+  it('still converts explicit offsets and Z to Rome time', () => {
+    expect(normalizeIso('2026-10-04T18:30:00Z')).toBe('2026-10-04T20:30:00+02:00')
+    expect(normalizeIso('2026-10-04T20:30:00+02:00')).toBe('2026-10-04T20:30:00+02:00')
+  })
+})

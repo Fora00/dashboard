@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { AdapterContext, Event } from './types.ts'
-import { OG_MAX_REQUESTS, enrichImages, extractOgImage } from './ogimage.ts'
+import { OG_MAX_REQUESTS, enrichImages, extractOgImage, isNetworkError } from './ogimage.ts'
 
 const PAGE = 'https://www.comune.pergine.tn.it/Eventi/Mostra'
 const NOW = Date.parse('2026-10-10T10:00:00Z')
@@ -88,5 +88,30 @@ describe('enrichImages', () => {
     ]
     await enrichImages(events, null, ctxFor({}, calls), NOW, { maxMs: 60_000 })
     expect(calls).toEqual(['https://p.it/a1', 'https://p.it/b1', 'https://p.it/a2', 'https://p.it/b2'])
+  })
+})
+
+describe('enrichImages network errors', () => {
+  it('retries a network error or timeout next run but remembers an HTTP error as a miss', async () => {
+    const ctx = {
+      fetchText: async (url: string) => {
+        if (url.endsWith('/t'))
+          throw Object.assign(new Error('The operation was aborted'), {
+            name: 'TimeoutError',
+          })
+        if (url.endsWith('/n'))
+          throw Object.assign(new Error('fetch failed'), {
+            cause: { code: 'ENOTFOUND' },
+          })
+        throw new Error('HTTP 404 for ' + url)
+      },
+    } as unknown as AdapterContext
+    const r = await enrichImages([ev('t'), ev('n'), ev('h')], null, ctx, NOW)
+    expect(Object.keys(r.misses)).toEqual(['h'])
+  })
+  it('isNetworkError', () => {
+    expect(isNetworkError(new Error('HTTP 500 for x'))).toBe(false)
+    expect(isNetworkError(new Error('response too large'))).toBe(false)
+    expect(isNetworkError(new Error('robots.txt for a.it failed (fetch failed); skipping host'))).toBe(true)
   })
 })
