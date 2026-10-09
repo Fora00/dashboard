@@ -6,6 +6,7 @@ import { isValidMarkId } from '../projects/events/marks'
 import {
   asInterestValue,
   interestFeatures,
+  isOwnHide,
   sanitizeFeatures,
   type InterestFeatures,
   type InterestValue,
@@ -90,10 +91,8 @@ function stamp(...prev: Array<number | undefined>): number {
   return Math.max(Date.now(), ...prev.map((p) => (p ?? 0) + 1))
 }
 
-/** Is `mark` the hide that `signal`'s 👎 made? (Shared stamp, see above.) */
-export function isOwnHide(signal: EventInterest | undefined, mark: EventMark | undefined): boolean {
-  return signal?.value === -1 && mark?.state === 'hidden' && mark.updatedAt === signal.updatedAt
-}
+/** Is `mark` the hide that `signal`'s 👎 made? (Shared stamp, see above; pure rule in interest.ts.) */
+export { isOwnHide }
 
 export interface InterestResult {
   /** The tap hid the event (a new 👎 on an event that wasn't hidden). */
@@ -154,6 +153,17 @@ export async function toggleInterest(e: EventItem, value: InterestValue): Promis
         }
       }),
   }
+}
+
+/**
+ * "Reset what was learned" on /events/interests: delete EVERY 👍 / 👎 (one
+ * tombstone each, so it propagates). Marks are never touched: a 👎's hide
+ * stays a hide, saved stays saved. Returns how many signals were deleted.
+ */
+export async function clearAllInterest(): Promise<number> {
+  const ids = (await db.eventInterest.toCollection().primaryKeys()) as string[]
+  await engine.removeMany('event_interest', ids)
+  return ids.length
 }
 
 // --- Sync engine ------------------------------------------------------------

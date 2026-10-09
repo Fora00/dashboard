@@ -6,7 +6,8 @@
 // (v3 default shop area), v4 (v5 todos.updatedAt backfill) and v14 (v15
 // queues existing event marks/prefs once; v16 adds the meals table) and v16
 // (v17 moves starred/hidden from projectStats into the synced projectPrefs)
-// and v17 (v18 adds the empty eventInterest table, nothing queued).
+// and v17 (v18 adds the empty eventInterest table, nothing queued) and v18
+// (v19 adds the empty eventInterestProfile table, nothing queued).
 // fake-indexeddb must be installed before Dexie loads (Dexie captures
 // indexedDB when its module initialises), so this side-effect import is first.
 import 'fake-indexeddb/auto'
@@ -47,6 +48,8 @@ const V16_STORES = { ...V14_STORES, meals: 'id, day, createdAt' }
 
 const V17_STORES = { ...V16_STORES, projectStats: 'id, opens', projectPrefs: 'id' }
 
+const V18_STORES = { ...V17_STORES, eventInterest: 'id, value' }
+
 /** Create the on-disk database at `version` with `stores`, seed it, close it. */
 async function writeOld(version: number, stores: Record<string, string>, seed: (old: Dexie) => Promise<void>) {
   const old = new Dexie(db.name)
@@ -75,7 +78,7 @@ describe('db upgrade paths', () => {
       },
     )
     await db.open()
-    expect(db.verno).toBe(18)
+    expect(db.verno).toBe(19)
     expect((await db.shopAreas.get(DEFAULT_AREA_ID))?.name).toBe('Groceries')
     const items = await db.shopItems.orderBy('createdAt').toArray()
     expect(items.map((i) => [i.id, i.text, i.areaId])).toEqual([
@@ -116,7 +119,7 @@ describe('db upgrade paths', () => {
       await old.table('outbox').add({ table: 'links', op: 'upsert', rowId: 'l1', ts: 1 })
     })
     await db.open()
-    expect(db.verno).toBe(18)
+    expect(db.verno).toBe(19)
     expect(await db.eventMarks.count()).toBe(2)
     // Prefs written before v15 get updatedAt 0 ("merge me" on the server).
     expect(await db.eventPrefs.get('prefs')).toEqual({ id: 'prefs', favouriteCategories: ['music'], updatedAt: 0 })
@@ -154,7 +157,7 @@ describe('db upgrade paths', () => {
       await old.table('outbox').add({ table: 'links', op: 'upsert', rowId: 'l1', ts: 1 })
     })
     await db.open()
-    expect(db.verno).toBe(18)
+    expect(db.verno).toBe(19)
     expect(await db.projectPrefs.orderBy('id').toArray()).toEqual([
       { id: 'events', starred: 0, hidden: 1, updatedAt: 0 },
       { id: 'links', starred: 1, hidden: null, updatedAt: 0 },
@@ -202,7 +205,7 @@ describe('db upgrade paths', () => {
       await old.table('outbox').add({ table: 'event_marks', op: 'upsert', rowId: 'e1', ts: 1 })
     })
     await db.open()
-    expect(db.verno).toBe(18)
+    expect(db.verno).toBe(19)
     expect(await db.eventInterest.count()).toBe(0)
     expect(await db.eventMarks.get('e1')).toMatchObject({ state: 'hidden', updatedAt: 5 })
     expect(await db.projectPrefs.get('links')).toEqual({ id: 'links', starred: 1, hidden: null, updatedAt: 3 })
@@ -211,5 +214,27 @@ describe('db upgrade paths', () => {
     // The new table is usable, with its value index.
     await db.eventInterest.put({ id: 'e1', value: -1, features: {} as never, updatedAt: 6 })
     expect(await db.eventInterest.where('value').equals(-1).count()).toBe(1)
+  })
+
+  it('v18 → current: an empty eventInterestProfile table appears; signals, marks and the outbox are kept', async () => {
+    await writeOld(18, V18_STORES, async (old) => {
+      await old.table('eventInterest').add({ id: 'e1', value: -1, features: { v: 1 }, updatedAt: 7 })
+      await old.table('eventMarks').add({ id: 'e1', state: 'hidden', event: { id: 'e1', title: 'x' }, updatedAt: 7 })
+      await old.table('outbox').add({ table: 'event_interest', op: 'upsert', rowId: 'e1', ts: 1 })
+    })
+    await db.open()
+    expect(db.verno).toBe(19)
+    expect(await db.eventInterestProfile.count()).toBe(0)
+    expect(await db.eventInterest.get('e1')).toMatchObject({ value: -1, updatedAt: 7 })
+    expect(await db.eventMarks.get('e1')).toMatchObject({ state: 'hidden', updatedAt: 7 })
+    expect((await db.outbox.toArray()).map((e) => `${e.table} ${e.rowId}`)).toEqual(['event_interest e1'])
+    // The new table is usable.
+    await db.eventInterestProfile.put({ id: 'tag:fake', seed: 0.5, pin: null, updatedAt: 1 })
+    expect(await db.eventInterestProfile.get('tag:fake')).toEqual({
+      id: 'tag:fake',
+      seed: 0.5,
+      pin: null,
+      updatedAt: 1,
+    })
   })
 })

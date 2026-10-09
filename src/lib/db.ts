@@ -1,6 +1,6 @@
 import Dexie, { type EntityTable } from 'dexie'
 
-import type { EventsFile, EventItem, InterestFeatures, InterestValue } from '../projects/events/types'
+import type { EventsFile, EventItem, InterestFeatures, InterestPin, InterestValue } from '../projects/events/types'
 
 // One shared local-first database for the whole dashboard.
 // Every project reads/writes here, so any project can use another project's data.
@@ -355,6 +355,7 @@ export interface OutboxMap {
   event_prefs: EventPrefs
   project_prefs: ProjectPref
   event_interest: EventInterest
+  event_interest_profile: EventInterestProfile
 }
 
 // Remote table names the engine can push to — also the discriminator on an
@@ -422,6 +423,18 @@ export interface EventInterest {
   updatedAt: number
 }
 
+// The owner's interest profile on /events, one row per feature key
+// (`cat:theatre`, `city:trento`, see src/projects/events/featureKeys.ts).
+// `seed` is the owner's starting guess (-1..1) that fades as signals arrive;
+// `pin` overrides what was learned. A row with neither is deleted. Owner-only
+// synced table `event_interest_profile` (src/lib/eventInterestProfileSync.ts).
+export interface EventInterestProfile {
+  id: string
+  seed: number | null
+  pin: InterestPin | null
+  updatedAt: number
+}
+
 // An event the owner added by hand (e.g. from a climbing gym's Instagram
 // post). Owner-only synced table `custom_events`; merged into the events list
 // as source 'manual' by src/projects/events/custom.ts. Times follow
@@ -467,6 +480,7 @@ export const db = new Dexie('dashboard') as Dexie & {
   meals: EntityTable<MealEntry, 'id'>
   projectPrefs: EntityTable<ProjectPref, 'id'>
   eventInterest: EntityTable<EventInterest, 'id'>
+  eventInterestProfile: EntityTable<EventInterestProfile, 'id'>
 }
 
 db.version(1).stores({
@@ -891,6 +905,36 @@ db.version(18).stores({
   meals: 'id, day, createdAt',
   projectPrefs: 'id',
   eventInterest: 'id, value',
+})
+
+// v19: eventInterestProfile, the owner's interest seed and pins
+// (eventInterestProfileSync.ts). A brand-new empty table: no upgrade callback.
+db.version(19).stores({
+  files: 'id, name, createdAt, synced',
+  shopItems: 'id, done, createdAt, areaId',
+  shopAreas: 'id, createdAt',
+  outbox: '++seq, rowId',
+  climbSessions: 'id, date',
+  climbs: 'id, sessionId, date',
+  habits: 'id, createdAt',
+  habitChecks: 'id, habitId, day, [habitId+day]',
+  todos: 'id, done, createdAt',
+  bookIdeas: 'id, createdAt',
+  boardgameIdeas: 'id, createdAt',
+  links: 'id, read, createdAt, *tags',
+  projectStats: 'id, opens',
+  lifeWeeks: 'id, importedAt',
+  lifeEntries: 'id, week, [week+kind]',
+  eventsCache: 'id',
+  eventMarks: 'id, state, updatedAt',
+  eventPrefs: 'id',
+  tripIdeas: 'id, done, createdAt, *companionIds',
+  tripCompanions: 'id, createdAt',
+  customEvents: 'id, start, updatedAt',
+  meals: 'id, day, createdAt',
+  projectPrefs: 'id',
+  eventInterest: 'id, value',
+  eventInterestProfile: 'id',
 })
 
 // Ask the browser not to evict our data under storage pressure (important on iOS).

@@ -22,7 +22,18 @@ test('a todo added offline survives a reload', async ({ page, context }) => {
 test('every route renders without an error screen, signed out', async ({ page }) => {
   const errors: string[] = []
   page.on('pageerror', (e) => errors.push(e.message))
-  for (const path of ['', 'todo', 'habits', 'shop-list', 'links', 'life', 'meal-diary', 'events', 'settings']) {
+  for (const path of [
+    '',
+    'todo',
+    'habits',
+    'shop-list',
+    'links',
+    'life',
+    'meal-diary',
+    'events',
+    'events/interests',
+    'settings',
+  ]) {
     await page.goto(`#/${path}`)
     await expect(page.locator('#main-content')).toBeVisible()
     await expect(page.getByText(/something went wrong/i)).toHaveCount(0)

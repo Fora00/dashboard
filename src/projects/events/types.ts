@@ -72,3 +72,6 @@ export interface InterestFeatures {
   /** Subcategory id (lowercase-kebab, <= 40); absent when the event has none. Additive, v stays 1. */
   subcategory?: string
 }
+
+/** A manual pin on one interest feature (db.eventInterestProfile): it overrides what was learned. */
+export type InterestPin = 'up' | 'down' | 'mute'

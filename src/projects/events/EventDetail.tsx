@@ -22,6 +22,8 @@ interface Props {
   interest: InterestState
   onInterest: (e: EventItem, value: InterestValue) => void
   onEdit: (e: EventItem) => void
+  /** "Ordina per te" on: why it ranks where it does ("perché: …"). */
+  why?: string | undefined
   /** Clear the selection (the ✕, or Esc on the page). */
   onClose: () => void
 }
@@ -55,6 +57,7 @@ function Detail({
   interest,
   onInterest,
   onEdit,
+  why,
   onClose,
 }: Props & { event: EventItem }) {
   const [imgOk, setImgOk] = useState(true)
@@ -134,6 +137,7 @@ function Detail({
 
       <div className="space-y-2 px-4 py-3">
         <InterestButtons event={e} interest={interest} onInterest={onInterest} variant="row" />
+        {why && <p className="text-xs text-slate-500 italic dark:text-slate-400">{why}</p>}
         {text ? (
           <p className="text-sm whitespace-pre-line text-slate-700 dark:text-slate-300">{text}</p>
         ) : (

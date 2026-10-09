@@ -245,6 +245,27 @@ export type Database = {
         }
         Relationships: []
       }
+      event_interest_profile: {
+        Row: {
+          id: string
+          pin: string | null
+          seed: number | null
+          updated_at: number
+        }
+        Insert: {
+          id: string
+          pin?: string | null
+          seed?: number | null
+          updated_at: number
+        }
+        Update: {
+          id?: string
+          pin?: string | null
+          seed?: number | null
+          updated_at?: number
+        }
+        Relationships: []
+      }
       event_marks: {
         Row: {
           event: Json

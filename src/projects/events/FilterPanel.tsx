@@ -1,11 +1,13 @@
 import { useState, type ReactNode } from 'react'
+import { Link } from 'react-router-dom'
 import { Chip } from '../../components/Chip'
 import { rowTone } from '../../components/chipTone'
-import { FOCUS_RING_INSET } from '../../components/focus'
+import { FOCUS_RING, FOCUS_RING_INSET } from '../../components/focus'
 import { categoryLabel } from './model'
 import { DISTANCE_STEPS, NEAR_MINUTES, minutesLabel } from './distance'
 import { FORMAT_CHIPS, formatLabel } from './format'
 import { categoryOfSubcategory, subLabel, subcategoriesOf } from './subcategories'
+import { INTEREST_WEIGHTS } from './interestScore'
 
 /** Everything the filters need; shared by the sheet (< lg) and the rail (lg+). */
 export interface FilterPanelProps {
@@ -35,6 +37,47 @@ export interface FilterPanelProps {
   onToggleFavourite: (id: string) => void
   onShowHidden: (v: boolean) => void
   onClearAll: () => void
+  /** "Ordina per te" (interestScore.ts): per-device switch, gated on the number of signals. */
+  forYou: {
+    /** In effect now (switched on AND enough signals). */
+    on: boolean
+    /** Enough signals to switch it on. */
+    available: boolean
+    signals: number
+    onChange: (on: boolean) => void
+  }
+}
+
+/** The "Ordina per te" switch and the link to /events/interests. */
+function ForYouSection({ forYou }: { forYou: FilterPanelProps['forYou'] }) {
+  const min = INTEREST_WEIGHTS.minSignalsForOrdering
+  return (
+    <div className="mt-2 border-t border-slate-100 pt-2 dark:border-slate-800">
+      <label className="flex min-h-10 items-center justify-between gap-2 text-sm text-slate-700 dark:text-slate-200">
+        Ordina per te
+        <input
+          type="checkbox"
+          role="switch"
+          checked={forYou.on}
+          disabled={!forYou.available}
+          aria-describedby="for-you-hint"
+          onChange={(e) => forYou.onChange(e.target.checked)}
+          className="size-5 disabled:cursor-not-allowed"
+        />
+      </label>
+      <p id="for-you-hint" className="text-xs text-slate-500 dark:text-slate-400">
+        {forYou.available
+          ? 'Each day of the list puts what matches your interests first.'
+          : `Needs at least ${min} signals (👍 / 👎, saved, hidden, your own events): ${forYou.signals} so far.`}
+      </p>
+      <Link
+        to="/events/interests"
+        className={`mt-1 inline-flex min-h-10 items-center text-sm font-medium text-(--accent-border) underline ${FOCUS_RING}`}
+      >
+        Your interests →
+      </Link>
+    </div>
+  )
 }
 
 /**
@@ -302,6 +345,8 @@ export function FilterPanel({ variant, ...p }: FilterPanelProps & { variant: Fil
           />
         </label>
       )}
+
+      <ForYouSection forYou={p.forYou} />
     </>
   )
 }

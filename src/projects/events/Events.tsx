@@ -35,6 +35,9 @@ import type { EventItem } from './types'
 import type { InterestValue } from './interest'
 import { categoryLabel, fetchEventsFile, groupByWeek, isKidsEvent, isNew, relativeTime } from './model'
 import { recordVisit } from './visit'
+import { canOrderForYou, explain, makeScorer } from './interestScore'
+import { interestModelFrom } from './useInterestModel'
+import { useForYouSetting } from './forYou'
 
 /** The add/edit sheet: closed, adding (with an optional prefill) or editing a row. */
 type Editor =
@@ -58,6 +61,7 @@ export function Events() {
     () => new Map<string, InterestValue>((interestRows ?? []).map((r) => [r.id, r.value])),
     [interestRows],
   )
+  const profileRows = useLiveQuery(() => db.eventInterestProfile.toArray())
   const [editor, setEditor] = useState<Editor>({ open: false })
 
   // Hand-added events disappear two weeks after their last day; saved/hidden
@@ -138,9 +142,31 @@ export function Events() {
     [allEvents],
   )
 
+  // "Ordina per te" (interestScore.ts): per device, default off, and only
+  // effective with enough signals. The model behind the ORDER is built once
+  // per refresh (`now`) and when the switch flips, not on every 👍 / save, so
+  // cards never jump under the finger; the gate and the counts stay live.
+  const [forYouSetting, setForYou] = useForYouSetting()
+  const interestReady = Boolean(interestRows && marksRaw && customRows && profileRows)
+  const liveModel = useMemo(
+    () =>
+      interestRows && marksRaw && customRows && profileRows
+        ? interestModelFrom({ signals: interestRows, marks: marksRaw, custom: customRows, profile: profileRows }, now)
+        : null,
+    [interestRows, marksRaw, customRows, profileRows, now],
+  )
+  const forYouAvailable = liveModel !== null && canOrderForYou(liveModel.nSignals)
+  const forYou = forYouSetting && forYouAvailable
+  // oxlint-disable-next-line react-hooks/exhaustive-deps -- frozen on purpose (see above): rebuilt per refresh, switch flip or first load
+  const orderModel = useMemo(() => (forYou ? liveModel : null), [forYou, now, interestReady])
+  const scorer = useMemo(() => (orderModel ? makeScorer(orderModel) : null), [orderModel])
+  const scoreOf = useMemo(() => (scorer ? (e: EventItem) => scorer(e).score : null), [scorer])
+  const explainFor = useMemo(() => (scorer ? (e: EventItem) => explain(scorer(e).reasons) : undefined), [scorer])
+
   const { filters, toggles, counts, groups, marks } = useEventFilters(events, marksRaw, prefs, {
     now,
     persist: Boolean(file),
+    scoreOf,
   })
   const {
     view,
@@ -392,6 +418,12 @@ export function Events() {
     onToggleSub: toggles.toggleSub,
     onShowHidden: toggles.setShowHidden,
     onClearAll: toggles.clearAll,
+    forYou: {
+      on: forYou,
+      available: forYouAvailable,
+      signals: liveModel?.nSignals ?? 0,
+      onChange: setForYou,
+    },
   }
 
   const notices = (
@@ -534,6 +566,7 @@ export function Events() {
             activeId={activeId}
             onActivate={onActivate}
             repeats={repeats}
+            explain={explainFor}
           />
           {limit < total && (
             <div className="flex justify-center">
@@ -592,6 +625,7 @@ export function Events() {
                 interest={activeEvent ? (interest.get(activeEvent.id) ?? 0) : 0}
                 onInterest={onInterest}
                 onEdit={onEdit}
+                why={activeEvent && explainFor ? explainFor(activeEvent) : undefined}
                 onClose={() => setActiveId(null)}
               />
             </aside>

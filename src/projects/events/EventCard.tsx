@@ -37,6 +37,8 @@ interface Props {
   master?: boolean
   active?: boolean
   onActivate?: ((e: EventItem) => void) | undefined
+  /** "Ordina per te" on: why it ranks here ("perché: …"), shown when expanded. */
+  why?: string | undefined
 }
 
 export const EventCard = memo(function EventCard({
@@ -56,6 +58,7 @@ export const EventCard = memo(function EventCard({
   master = false,
   active = false,
   onActivate,
+  why,
 }: Props) {
   const [open, setOpen] = useState(false)
   const [imgOk, setImgOk] = useState(true)
@@ -159,6 +162,7 @@ export const EventCard = memo(function EventCard({
       )}
       {expanded && (
         <div className="space-y-3 border-t border-slate-200 px-4 py-3 dark:border-slate-800">
+          {why && <p className="text-xs text-slate-500 italic dark:text-slate-400">{why}</p>}
           {showImage && (
             <img
               src={image}

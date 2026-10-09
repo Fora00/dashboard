@@ -37,6 +37,7 @@ queue: `ROADMAP.md` (`npm run roadmap` lists the open tasks).
 | `tripsSync.ts` | `trip_ideas`, `trip_companions` |
 | `customEventsSync.ts` / `eventMarksSync.ts` | `custom_events` / `event_marks` (+ `event_prefs`) (owner-only) |
 | `eventInterestSync.ts` | `event_interest` (owner-only: the 👍 / 👎 on /events with a feature snapshot; a 👎 also writes an `event_marks` hide; never pruned with the events) |
+| `eventInterestProfileSync.ts` | `event_interest_profile` (owner-only: per feature key of the interest model, the seed, a starting guess that fades, and the up/down/mute pins; edited on `/events/interests`, scored by `src/projects/events/interestScore.ts`) |
 | `lifeSync.ts` | `life_entries`, `life_weeks` (owner-only) |
 | `mealDiarySync.ts` | `meal_entries` (owner-only) |
 | `projectPrefsSync.ts` | `project_prefs` (per user: the home grid's `starred`/`hidden`; open counts stay in local-only Dexie `projectStats`) |
@@ -51,7 +52,8 @@ queue: `ROADMAP.md` (`npm run roadmap` lists the open tasks).
 - **`shop_area_members`**: per shop area (shop-list only), its own invite links.
 - **Owner-only**: Life and meal-diary (`ownerOnly` in the registry), plus `/sharing`; settings is device-only.
   Also gated by `is_owner()` while their page is public: the events tables
-  `custom_events`, `event_marks`, `event_prefs` and `event_interest`. On any
+  `custom_events`, `event_marks`, `event_prefs`, `event_interest` and
+  `event_interest_profile`. On any
   other device their pushes are rejected (42501) and dead-lettered, so the
   rows stay local there. All of these are listed in `src/lib/privateData.ts`
   (removable from a device after sign-out).

@@ -141,6 +141,7 @@ export function WeekSections({
   activeId = null,
   onActivate,
   repeats,
+  explain,
 }: {
   weeks: WeekGroup[]
   collapsedWeeks: ReadonlySet<string>
@@ -164,6 +165,8 @@ export function WeekSections({
   onActivate?: (e: EventItem) => void
   /** next occurrence's id -> all its dates, for repeated events (groups.ts). */
   repeats?: ReadonlyMap<string, EventItem[]>
+  /** "Ordina per te" on: why an event ranks where it does ("perché: …"). */
+  explain?: ((e: EventItem) => string) | undefined
 }) {
   const cardProps = (e: EventItem): React.ComponentProps<typeof EventCard> => ({
     event: e,
@@ -182,6 +185,7 @@ export function WeekSections({
     master,
     active: activeId === e.id,
     onActivate,
+    why: explain?.(e),
   })
   return (
     <>

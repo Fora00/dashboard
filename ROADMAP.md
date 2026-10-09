@@ -721,6 +721,7 @@ sync can come later).
          feature snapshot); step 2 scoring + "your interests" page (reorder off until
          ~30 signals); seed from `~/life` only through a local path; check the card
          footer at 375 px; hand-added events as implicit 👍.
+      12. [x] Interest signal step 2 DONE 2026-10-09: scoring (`interestScore.ts`), `/events/interests` page with pins, owner-only `event_interest_profile` (migration `20261009170000`), seed import (paste or `scripts/events-seed-link.ts` link), opt-in "Ordina per te" (off, needs 30 signals). Follow-ups [sonnet]: mark snapshots drop `subcategory` (sanitizeSnapshot) so saves/hides never teach `sub:*`; saved/hidden marks are pruned a day after the event so implicit evidence vanishes (keep a snapshot when pruning); zod to `dependencies`; npm alias for the seed script; pins on seed-only rows; check the filter-sheet switch on a phone.
       Parked: map view (only events with a venue), price/free filter (needs a
       crawler field per source), real `organizer` field.
 - [ ] Later: more categories, one at a time (SAT/hikes, climbing,

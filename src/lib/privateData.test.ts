@@ -33,12 +33,14 @@ async function seed() {
   await db.eventMarks.put(mark)
   await db.eventPrefs.put({ id: 'prefs', favouriteCategories: ['music'], updatedAt: 1 })
   await db.eventInterest.put(signal)
+  await db.eventInterestProfile.put({ id: 'tag:fake', seed: 0.5, pin: 'up', updatedAt: 1 })
   await db.todos.put(todo)
   await db.outbox.bulkAdd([
     { table: 'meal_entries', op: 'upsert', rowId: 'm1', payload: meal, ts: 1 },
     { table: 'life_weeks', op: 'upsert', rowId: week.id, payload: week, ts: 2, dead: 1 },
     { table: 'todos', op: 'upsert', rowId: 't1', payload: todo, ts: 3 },
     { table: 'event_interest', op: 'delete', rowId: 'e2', ts: 4, dead: 1 },
+    { table: 'event_interest_profile', op: 'delete', rowId: 'tag:gone', ts: 5 },
   ])
 }
 
@@ -46,7 +48,7 @@ describe('private data on this device', () => {
   it('summary counts private rows and their unsynced outbox entries only', async () => {
     expect(await privateDataSummary()).toEqual({ rows: 0, unsynced: 0 })
     await seed()
-    expect(await privateDataSummary()).toEqual({ rows: 5, unsynced: 3 })
+    expect(await privateDataSummary()).toEqual({ rows: 6, unsynced: 4 })
   })
 
   it('clearPrivateData removes private rows and outbox entries, keeps everything else', async () => {

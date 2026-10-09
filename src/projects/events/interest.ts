@@ -116,3 +116,16 @@ export function asInterestValue(v: unknown): InterestValue | null {
   const n = typeof v === 'string' ? Number(v) : v
   return n === 1 || n === -1 ? n : null
 }
+
+/**
+ * Is `mark` the hide that `signal`'s 👎 made? A 👎 that creates a hide writes
+ * the mark and the signal with the SAME updatedAt, and the hide stays "the
+ * 👎's own" while the hidden mark still carries exactly that stamp (full rule
+ * in src/lib/eventInterestSync.ts). Structural types: pure, no Dexie.
+ */
+export function isOwnHide(
+  signal: { value: number; updatedAt: number } | undefined,
+  mark: { state: string; updatedAt: number } | undefined,
+): boolean {
+  return signal?.value === -1 && mark?.state === 'hidden' && mark.updatedAt === signal.updatedAt
+}

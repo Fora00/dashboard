@@ -16,6 +16,7 @@ import { cleanFormats, matchesFormat, FORMAT_CHIPS } from './format'
 import type { EventItem } from './types'
 import { isManual } from './custom'
 import { collapseRepeats } from './groups'
+import { compareForYou } from './interestScore'
 import { categoryOfSubcategory } from './subcategories'
 import { DISTANCE_STEPS, isNear, tooFarForCategory, withinMinutes } from './distance'
 import {
@@ -68,6 +69,12 @@ interface Options {
   now: number
   /** Remembered filters are only written once the events file is there. */
   persist: boolean
+  /**
+   * "Ordina per te" (interestScore.ts): when given, each day of the All view
+   * is ordered by this score first (highest first), then by the usual
+   * compareInDay. null = the usual order, nothing is reordered.
+   */
+  scoreOf?: ((e: EventItem) => number) | null
 }
 
 /**
@@ -79,7 +86,7 @@ export function useEventFilters(
   events: EventItem[],
   marksRaw: EventMark[] | undefined,
   prefs: EventPrefs | null | undefined,
-  { now, persist }: Options,
+  { now, persist, scoreOf = null }: Options,
 ) {
   const [view, setViewState] = useState<View>('all')
   // The last selection of this device (guarded localStorage); the search text is not kept.
@@ -243,11 +250,12 @@ export function useEventFilters(
       const running = filtered
         .filter((e) => isLongRunning(e, now))
         .sort((a, b) => Date.parse(a.end ?? a.start) - Date.parse(b.end ?? b.start))
+      const usual = compareInDay(defaultCats)
       out.push(
         ...groupByDay(
           filtered.filter((e) => !isLongRunning(e, now)),
           now,
-          compareInDay(defaultCats),
+          scoreOf ? compareForYou(scoreOf, usual) : usual,
         ),
       )
       if (running.length) out.push({ key: 'open-now', label: 'Open now', events: running })
@@ -260,7 +268,7 @@ export function useEventFilters(
     // Repeats (3+ same title and city) become one row, only in the main view;
     // marked and hand-added events stay on their own. Paging counts a group once.
     return collapseRepeats(out, view === 'all', (e) => isManual(e) || marks.has(e.id))
-  }, [filtered, view, now, marks, defaultCats])
+  }, [filtered, view, now, marks, defaultCats, scoreOf])
   const groups = collapsed.days
   const repeats = collapsed.repeats
 

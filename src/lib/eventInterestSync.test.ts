@@ -22,7 +22,7 @@ vi.mock('./sync', () => ({
   syncEnabled: true,
 }))
 
-const { eventInterestTable, isOwnHide, sync, toggleInterest } = await import('./eventInterestSync')
+const { clearAllInterest, eventInterestTable, isOwnHide, sync, toggleInterest } = await import('./eventInterestSync')
 const { pruneEventMarks, sync: marksSync, toggleEventMark } = await import('./eventMarksSync')
 
 const ev = (over: Partial<EventItem> = {}): EventItem => ({
@@ -284,5 +284,19 @@ describe('event interest sync', () => {
     await until(async () => (await db.eventInterest.get(ID)) === undefined)
     stop()
     vi.unstubAllGlobals()
+  })
+
+  it('reset: every signal is deleted locally and remotely; marks (even the hide of a 👎) stay', async () => {
+    await toggleInterest(ev(), -1)
+    await toggleInterest(ev({ id: 'other1' }), 1)
+    await toggleEventMark(ev({ id: 'saved1' }), 'saved')
+    await settle()
+    expect(await clearAllInterest()).toBe(2)
+    await settle()
+    expect(await db.eventInterest.count()).toBe(0)
+    expect(fake.remote.event_interest).toHaveLength(0)
+    expect(await markState()).toBe('hidden')
+    expect((await db.eventMarks.get('saved1'))?.state).toBe('saved')
+    expect(await clearAllInterest()).toBe(0)
   })
 })
