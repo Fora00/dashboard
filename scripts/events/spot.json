@@ -346,6 +346,42 @@
       "tags": ["outdoor"],
       "category": "outdoor",
       "verified": false
+    },
+    {
+      "id": "minicami-minilab-fermentati-2026-10",
+      "title": "Minilab Fermentati (Minicami)",
+      "start": "2026-10-11",
+      "end": "2026-10-11",
+      "city": "Rovereto",
+      "venue": "Minicami",
+      "url": "https://www.instagram.com/minicami_world/",
+      "summary": "Laboratorio alla scoperta della fermentazione, con vini naturali e kombucha. Dal post Instagram dell'organizzatore (30 settembre): orario e luogo non indicati, info e partecipazione in DM o a minicami.world@gmail.com.",
+      "tags": ["food", "social-friend"],
+      "category": "food"
+    },
+    {
+      "id": "minicami-minilab-crochet-halloween-2026-10",
+      "title": "Minilab Crochet Halloween (Minicami)",
+      "start": "2026-10-22",
+      "end": "2026-10-22",
+      "city": "Rovereto",
+      "venue": "Minicami",
+      "url": "https://www.instagram.com/minicami_world/",
+      "summary": "Laboratorio creativo a tema all'uncinetto per una decorazione handmade di Halloween, con aperitivo. Dal post Instagram dell'organizzatore (30 settembre): orario e luogo non indicati, info e partecipazione in DM o a minicami.world@gmail.com.",
+      "tags": ["creative", "social-friend"],
+      "category": "creative"
+    },
+    {
+      "id": "minicami-swap-party-2026-10",
+      "title": "Swap Party (Minicami)",
+      "start": "2026-10-31",
+      "end": "2026-10-31",
+      "city": "Rovereto",
+      "venue": "Minicami",
+      "url": "https://www.instagram.com/minicami_world/",
+      "summary": "Chiusura del mese con uno swap party: si porta ciò che non si usa più, per scambiare, chiacchierare e dare nuova vita alle cose. Dal post Instagram dell'organizzatore (30 settembre): orario e luogo non indicati, info e partecipazione in DM o a minicami.world@gmail.com.",
+      "tags": ["social-friend"],
+      "category": "other"
     }
   ]
 }
