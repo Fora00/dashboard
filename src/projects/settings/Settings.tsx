@@ -15,6 +15,7 @@ import { PageHeader } from '../../components/PageHeader'
 import { SyncCard } from '../../components/SyncCard'
 import { runSafe } from '../../lib/runSafe'
 import { buildBackup, parseBackup, restoreBackup } from '../../lib/backup'
+import { DataView } from './DataView'
 import { clearPrivateData, privateDataSummary } from '../../lib/privateData'
 
 // Settings: project visibility (per user, synced when signed in), storage
@@ -202,6 +203,8 @@ export function Settings() {
             </p>
           </Card>
         </section>
+
+        <DataView />
 
         <section>
           <h2 className="mb-2 text-sm font-medium text-slate-500 dark:text-slate-400">Backup</h2>
