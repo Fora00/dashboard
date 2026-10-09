@@ -40,8 +40,15 @@ export function TrackerRow({
   // The details (day strip, energy, per-entry edit) stay one tap away but are
   // hidden by default: the row itself is a single "done today" toggle.
   const [showDetails, setShowDetails] = useState(false)
-  const limit = tracker.target ?? tracker.max
-  const goal = limit !== null ? `${total}/${limit}` : total > 0 ? `${total}` : ''
+  // "2/4" = a target to reach; "4 · max 2" = a cap not to exceed; bare count = no goal.
+  const goal =
+    tracker.target !== null
+      ? `${total}/${tracker.target}${ts.reachedTarget ? ' ✓' : ''}`
+      : tracker.max !== null
+        ? `${total} · max ${tracker.max}`
+        : total > 0
+          ? `${total}`
+          : ''
   const activeEntry = energyPromptId ? entries.find((e) => e.id === energyPromptId) : undefined
   const today = useToday()
   const doneToday = entries.some((e) => e.day === today)
@@ -105,7 +112,7 @@ export function TrackerRow({
           <span className="min-w-0 flex-1 truncate">{tracker.label}</span>
           {goal && (
             <span
-              className={`shrink-0 text-xs font-normal ${atMax ? 'text-amber-600 dark:text-amber-400' : 'text-slate-500 dark:text-slate-400'}`}
+              className={`shrink-0 text-xs font-normal ${atMax ? 'text-amber-600 dark:text-amber-400' : ts.reachedTarget ? 'text-emerald-700 dark:text-emerald-300' : 'text-slate-500 dark:text-slate-400'}`}
             >
               {goal}
             </span>

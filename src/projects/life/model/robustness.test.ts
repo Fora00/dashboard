@@ -78,6 +78,27 @@ describe('buildChartPoints (LF4)', () => {
     const weeks = [wk('2026-10-05'), wk('2026-09-28'), wk('2026-09-21')]
     expect(buildChartPoints(weeks, [], '2026-10-05', 2).map((p) => p.week)).toEqual(['2026-09-28', '2026-10-05'])
   })
+  it('scores habits as capped progress towards each target, ignoring caps and goal-less ones', () => {
+    const p = plan({
+      trackers: [
+        { ...tracker('walk'), target: 4 },
+        { ...tracker('climb'), target: 2 },
+        { ...tracker('gym'), target: 2 },
+        { ...tracker('social'), max: 2 },
+        tracker('free'),
+      ],
+    })
+    const entries = [
+      tEntry('walk', WEEK, 'w1'),
+      tEntry('walk', WEEK, 'w2'),
+      tEntry('climb', WEEK, 'c1'),
+      tEntry('climb', WEEK, 'c2'),
+      tEntry('climb', WEEK, 'c3'),
+      ...[1, 2, 3, 4].map((i) => tEntry('social', WEEK, `s${i}`)),
+    ]
+    // walk 2/4 = .5, climb capped at 1, gym 0 -> mean 0.5
+    expect(buildChartPoints([{ ...wk(WEEK), plan: p }], entries, WEEK, 12)[0]!.habits).toBe(50)
+  })
   it('handles empty input, a lone point and all-null series', () => {
     expect(buildChartPoints([], [], WEEK, 12)).toEqual([])
     const one = buildChartPoints([wk(WEEK)], [], WEEK, 12)

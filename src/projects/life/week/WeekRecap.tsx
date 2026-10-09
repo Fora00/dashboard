@@ -42,7 +42,6 @@ export function WeekRecap({
       {trackers.length > 0 && (
         <ul className="space-y-0.5">
           {trackers.map(({ tracker, total, reachedTarget, atMax }) => {
-            const limit = tracker.target ?? tracker.max
             return (
               <li key={tracker.id} className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
                 <span aria-hidden>{tracker.emoji}</span>
@@ -56,7 +55,11 @@ export function WeekRecap({
                         : 'text-slate-800 dark:text-slate-100'
                   }`}
                 >
-                  {limit !== null ? `${total}/${limit}` : total}
+                  {tracker.target !== null
+                    ? `${total}/${tracker.target}`
+                    : tracker.max !== null
+                      ? `${total} · max ${tracker.max}`
+                      : total}
                   {reachedTarget && ' ✓'}
                 </span>
               </li>
