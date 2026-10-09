@@ -1,4 +1,5 @@
-import { db } from './db'
+import { db, type ProjectPref } from './db'
+import { sync as projectPrefsEngine } from './projectPrefsSync'
 
 // Whole-device backup: every Dexie table as one JSON file. The sync outbox is
 // left out (a restored outbox would replay stale writes); everything else is
@@ -40,16 +41,49 @@ export function parseBackup(text: string): Backup {
   return b as Backup
 }
 
+/** Backups from before Dexie v17 kept starred/hidden on projectStats rows. Returns
+ *  those rows without the two fields, and the prefs they stand for (updatedAt 0 =
+ *  predates sync, like the v17 upgrade; ids that already have a pref are kept). */
+function migrateLegacyStats(
+  stats: unknown[],
+  existing: ReadonlySet<string>,
+): { stats: unknown[]; prefs: ProjectPref[] } {
+  const prefs: ProjectPref[] = []
+  const cleaned = stats.map((raw) => {
+    const { starred, hidden, ...rest } = raw as { id: string; starred?: 0 | 1; hidden?: 0 | 1 }
+    const chosen = starred === 1 || hidden !== undefined
+    if (chosen && !existing.has(rest.id)) {
+      prefs.push({ id: rest.id, starred: starred === 1 ? 1 : 0, hidden: hidden ?? null, updatedAt: 0 })
+    }
+    return rest
+  })
+  return { stats: cleaned, prefs }
+}
+
 /** Merges a backup into the local db; returns the number of rows written. Unknown tables are ignored. */
 export async function restoreBackup(backup: Backup): Promise<number> {
-  const known = db.tables.filter((t) => !SKIPPED.has(t.name) && Array.isArray(backup.tables[t.name]))
+  const tables = { ...backup.tables }
+  let legacy: ProjectPref[] = []
+  if (Array.isArray(tables.projectStats)) {
+    const have = new Set<string>(await db.projectPrefs.toCollection().primaryKeys())
+    for (const p of (tables.projectPrefs ?? []) as { id: string }[]) have.add(p.id)
+    const m = migrateLegacyStats(tables.projectStats, have)
+    tables.projectStats = m.stats
+    legacy = m.prefs
+  }
+  const known = db.tables.filter((t) => !SKIPPED.has(t.name) && Array.isArray(tables[t.name]))
   let rows = 0
   await db.transaction('rw', known, async () => {
     for (const t of known) {
-      const list = backup.tables[t.name]!
+      const list = tables[t.name]!
       await t.bulkPut(list)
       rows += list.length
     }
   })
+  // Through the engine so they are queued for sync, like the v17 upgrade does.
+  if (legacy.length > 0) {
+    await projectPrefsEngine.upsertMany('project_prefs', legacy)
+    rows += legacy.length
+  }
   return rows
 }
