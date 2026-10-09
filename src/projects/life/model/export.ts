@@ -1,6 +1,7 @@
-import type { LifeAnswer, LifeEntry, LifePlan, LifeQuestion, MealEntry } from '../../../lib/db'
+import type { EventMark, LifeAnswer, LifeEntry, LifePlan, LifeQuestion, MealEntry } from '../../../lib/db'
 import { withCheckinIds } from './checkinIds.ts'
 import { dayKey, weekDays } from './dates.ts'
+import { summarizeSavedEvents } from './events.ts'
 import { fenceFor } from './fence.ts'
 import { summarizeMealsWeek } from './meals.ts'
 import { summarizeWeek } from './summary.ts'
@@ -30,6 +31,10 @@ export function buildExportMarkdown(
   entries: readonly LifeEntry[],
   today: string = dayKey(new Date()),
   meals: readonly MealEntry[] = [],
+  savedEvents: { marks: readonly EventMark[]; favouriteCategories: readonly string[] } = {
+    marks: [],
+    favouriteCategories: [],
+  },
 ): string {
   const plan = withCheckinIds(planIn)
   const s = summarizeWeek(plan, entries, today)
@@ -114,6 +119,20 @@ export function buildExportMarkdown(
     out.push('')
   }
 
+  const saved = summarizeSavedEvents(savedEvents.marks, plan.week, savedEvents.favouriteCategories)
+  if (saved.events.length || saved.favouriteCategories.length) {
+    out.push('## Saved events next week', '')
+    for (const e of saved.events) {
+      const day = e.start.slice(0, 10)
+      const dow = DAY_NAMES[(new Date(`${day}T12:00:00Z`).getUTCDay() + 6) % 7]
+      const time = e.allDay ? '' : ` ${e.start.slice(11, 16)}`
+      const where = [e.venue, e.city].filter(Boolean).join(', ')
+      out.push(`- ${dow} ${day}${time} · ${oneLine(e.title)}${where ? ` — ${oneLine(where)}` : ''}`)
+    }
+    if (saved.favouriteCategories.length) out.push(`Favourite categories: ${saved.favouriteCategories.join(', ')}`)
+    out.push('')
+  }
+
   if (s.removed.length) {
     out.push('## Removed from plan', '')
     for (const e of s.removed) out.push(`- ${describeRemoved(e)} (removed from plan)`)
@@ -143,6 +162,22 @@ export function buildExportMarkdown(
               estimated,
             })),
           ),
+        }
+      : {}),
+    // Present only when there are saved events next week.
+    ...(saved.events.length
+      ? {
+          savedEvents: saved.events.map(({ id, title, start, end, allDay, city, venue, url, category }) => ({
+            id,
+            title,
+            start,
+            end,
+            allDay,
+            city,
+            venue,
+            url,
+            category,
+          })),
         }
       : {}),
   }

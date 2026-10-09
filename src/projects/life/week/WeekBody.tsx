@@ -44,6 +44,9 @@ export function WeekBody({ week, plan, entries, readOnly, lateEdit = false }: We
   const summary = useMemo(() => summarizeWeek(plan, entries), [plan, entries])
   // The meal diary's entries for this week (read-only here), live.
   const meals = useLiveQuery(() => db.meals.where('day').between(week, addDays(week, 6), true, true).toArray(), [week])
+  // Saved events + favourite categories (Events project, local Dexie) ride along in the export.
+  const eventMarks = useLiveQuery(() => db.eventMarks.where('state').equals('saved').toArray(), [])
+  const eventPrefs = useLiveQuery(() => db.eventPrefs.get('prefs'), [])
   const food = useMemo(() => summarizeMealsWeek(meals ?? [], week), [meals, week])
   const { pending, trigger, confirmUndo } = useUndoSnackbar()
   const { sections, sundayOpen, toggleSection, toggleSunday } = useSections(week, readOnly)
@@ -165,6 +168,8 @@ export function WeekBody({ week, plan, entries, readOnly, lateEdit = false }: We
             plan={plan}
             entries={entries}
             meals={meals ?? []}
+            eventMarks={eventMarks ?? []}
+            favouriteCategories={eventPrefs?.favouriteCategories ?? []}
             open={sections.export}
             onToggle={() => toggleSection('export')}
             readOnly={readOnly}

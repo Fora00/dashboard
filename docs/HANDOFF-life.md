@@ -163,7 +163,13 @@ the **installed iOS PWA**.
 
 "Export week" → Markdown (plus the JSON in a collapsible block): focus
 done/not, tracker counts per day with energy pairs, Sunday answers, entries
-removed from the plan. Copy to clipboard; `navigator.share` when available.
+removed from the plan. When the Events page has saved events overlapping the
+**following** week (Mon..Sun after the exported one; max 30, by start), a
+`## Saved events next week` section lists them (`- Sat 2026-10-17 21:00 ·
+Title — Venue, City`, no time if all-day) plus a `Favourite categories:` line,
+and the JSON block gets a `savedEvents` array (only when non-empty).
+`/settimana` proposes placing them in the new plan. Local only (Dexie
+`eventMarks`/`eventPrefs`); code in `model/events.ts`. Copy to clipboard; `navigator.share` when available.
 
 ## 2.5 History
 

@@ -25,5 +25,6 @@ export {
 } from './things.ts'
 export { buildExportMarkdown } from './export.ts'
 export { fenceFor, extractJsonFence } from './fence.ts'
+export { summarizeSavedEvents, type SavedEventsNextWeek } from './events.ts'
 export { summarizeMealsWeek, type MealsWeek, type MealsDay } from './meals.ts'
 export { LIFE_IMPORT_BASE, encodeImportLink, decodeImportParam } from './importLink.ts'

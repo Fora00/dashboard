@@ -27,6 +27,10 @@ Paths: dashboard = `~/Dev/personal/dashboard`, notes = `~/life`.
    exporting again. Bring food into `~/life` the way `~/life`'s own
    instructions say (usually a summary: averages and notable days, not every
    entry); it is the owner's data and stays on the Mac.
+   It may also carry a `## Saved events next week` section (and a
+   `savedEvents` array in the JSON): the events the owner saved in the
+   dashboard's Events page for the coming week, plus their favourite
+   categories. Use it in step 2.1 below.
 2. Check what happened in Things to the week's tasks (read-only, Mac only):
    `pbpaste | npx -y tsx ~/Dev/personal/dashboard/scripts/life-things-status.ts`.
    It matches by each send's timestamp, so renamed to-dos are still found.
@@ -48,6 +52,10 @@ Paths: dashboard = `~/Dev/personal/dashboard`, notes = `~/life`.
    A Sunday question a habit already answers ("gym 3 times?", "how many
    runs?") gets `"tracker": "<tracker id>"` and type `boolean`/`number`:
    the dashboard fills it in by itself, the owner never types it.
+   Read the export's `## Saved events next week` section too and propose
+   where those events fit in the coming plan (day, time, what they displace),
+   and which favourite categories are worth a slot. They are the owner's
+   choices, so propose and let them confirm; never add them silently.
 2. Tags on tasks must already exist in Things, or Things drops them
    silently. If unsure, list them (read-only):
    `osascript -e 'tell application "Things3" to get name of tags'`.

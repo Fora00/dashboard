@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import type { LifeEntry, LifePlan, MealEntry } from '../../../lib/db'
+import type { EventMark, LifeEntry, LifePlan, MealEntry } from '../../../lib/db'
 import { buildExportMarkdown } from '../model'
+import { categoryLabel } from '../../events/model'
 import { markExported } from '../lateEdit'
 import { shareOrCopy } from '../../../lib/share'
 import { useFlash } from '../../../lib/useFlash'
@@ -12,6 +13,8 @@ export function ExportSection({
   plan,
   entries,
   meals,
+  eventMarks,
+  favouriteCategories,
   open,
   onToggle,
   readOnly,
@@ -19,6 +22,8 @@ export function ExportSection({
   plan: LifePlan
   entries: LifeEntry[]
   meals: MealEntry[]
+  eventMarks: EventMark[]
+  favouriteCategories: string[]
   open: boolean
   onToggle: () => void
   readOnly: boolean
@@ -29,7 +34,10 @@ export function ExportSection({
   const [fallbackText, setFallbackText] = useState<string | null>(null)
 
   async function doExport() {
-    const md = buildExportMarkdown(plan, entries, undefined, meals)
+    const md = buildExportMarkdown(plan, entries, undefined, meals, {
+      marks: eventMarks,
+      favouriteCategories: favouriteCategories.map(categoryLabel),
+    })
     if (navigator.clipboard) {
       try {
         await navigator.clipboard.writeText(md)
@@ -46,7 +54,10 @@ export function ExportSection({
   }
 
   async function doShare() {
-    const md = buildExportMarkdown(plan, entries, undefined, meals)
+    const md = buildExportMarkdown(plan, entries, undefined, meals, {
+      marks: eventMarks,
+      favouriteCategories: favouriteCategories.map(categoryLabel),
+    })
     try {
       const outcome = await shareOrCopy(md, { title: `Week of ${plan.week}` })
       if (outcome !== 'cancelled') markExported(plan.week)
@@ -61,8 +72,9 @@ export function ExportSection({
   return (
     <CollapsibleSection title="Export" open={open} onToggle={onToggle} readOnly={readOnly}>
       <p className="mb-3 text-sm text-slate-500 dark:text-slate-400">
-        Copies a summary of this week — focus, trackers with energy, Sunday answers, check-ins, tasks, food — to paste
-        into /settimana on your Mac. Exporting on or after Sunday also closes this week's late answers on this device.
+        Copies a summary of this week — focus, trackers with energy, Sunday answers, check-ins, tasks, food, saved
+        events of next week — to paste into /settimana on your Mac. Exporting on or after Sunday also closes this week's
+        late answers on this device.
       </p>
       <Card className="space-y-3 text-sm">
         <div className="flex flex-wrap gap-2">
@@ -77,7 +89,7 @@ export function ExportSection({
         </div>
         {canShare && (
           <p className="text-sm text-slate-500 dark:text-slate-400">
-            Sharing sends this week, food included, outside the app.
+            Sharing sends this week, food and saved events included, outside the app.
           </p>
         )}
         {fallbackText !== null && (
