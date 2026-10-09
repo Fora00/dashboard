@@ -13,6 +13,7 @@ import { Card } from '../../components/Card'
 import { PageHeader } from '../../components/PageHeader'
 import { SyncCard } from '../../components/SyncCard'
 import { runSafe } from '../../lib/runSafe'
+import { buildBackup, parseBackup, restoreBackup } from '../../lib/backup'
 import { clearPrivateData, privateDataSummary } from '../../lib/privateData'
 
 // Per-device settings: project visibility, storage usage, persistence, sync
@@ -120,6 +121,7 @@ export function Settings() {
   const [estimate, setEstimate] = useState<StorageEstimate | null>(null)
   const [persisted, setPersisted] = useState<boolean | null>(null)
   const [confirmWipe, setConfirmWipe] = useState(false)
+  const [imported, setImported] = useState<number | null>(null)
 
   useEffect(() => {
     void navigator.storage?.estimate?.().then(setEstimate)
@@ -128,6 +130,20 @@ export function Settings() {
 
   async function requestPersist() {
     setPersisted(await requestPersistentStorage())
+  }
+
+  async function exportData() {
+    const blob = new Blob([JSON.stringify(await buildBackup())], { type: 'application/json' })
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(blob)
+    a.download = `dashboard-backup-${new Date().toISOString().slice(0, 10)}.json`
+    a.click()
+    URL.revokeObjectURL(a.href)
+  }
+
+  async function importData(file: File) {
+    const rows = await restoreBackup(parseBackup(await file.text()))
+    setImported(rows)
   }
 
   async function wipeLocal() {
@@ -181,6 +197,37 @@ export function Settings() {
                 </Button>
               )}
             </p>
+          </Card>
+        </section>
+
+        <section>
+          <h2 className="mb-2 text-sm font-medium text-slate-500 dark:text-slate-400">Backup</h2>
+          <Card className="space-y-3 text-sm">
+            <p className="text-slate-500 dark:text-slate-400">
+              Save everything on this device to one file, or merge a saved file back in. Importing never deletes current
+              data.
+            </p>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button variant="ghost" onClick={() => void runSafe(exportData, 'Could not export data')()}>
+                Export backup
+              </Button>
+              <label className="inline-flex min-h-10 cursor-pointer items-center rounded-lg px-3 text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">
+                Import backup
+                <input
+                  type="file"
+                  accept="application/json,.json"
+                  className="sr-only"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0]
+                    e.target.value = ''
+                    if (file) void runSafe(() => importData(file), 'Could not import backup')()
+                  }}
+                />
+              </label>
+              {imported !== null && (
+                <span className="text-emerald-700 dark:text-emerald-300">Restored {imported} rows ✅</span>
+              )}
+            </div>
           </Card>
         </section>
 
