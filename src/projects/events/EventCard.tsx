@@ -2,7 +2,7 @@ import { memo, useState } from 'react'
 import type { EventItem } from './types'
 import { FOCUS_RING, FOCUS_RING_INSET } from '../../components/focus'
 import { CategoryThumb } from './CategoryThumb'
-import { driveLabel } from './distance'
+import { travelLabel } from './travel'
 import { EventActions } from './EventActions'
 import { EventBadges } from './EventBadges'
 import { eventImage, eventPlace } from './display'
@@ -52,7 +52,7 @@ export const EventCard = memo(function EventCard({
 }: Props) {
   const [open, setOpen] = useState(false)
   const [imgOk, setImgOk] = useState(true)
-  const drive = driveLabel(e.city)
+  const drive = travelLabel(e)
   const place = eventPlace(e)
   const url = safeHttpUrl(e.url)
   const image = eventImage(e)

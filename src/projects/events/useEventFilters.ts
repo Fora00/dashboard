@@ -11,12 +11,14 @@ import {
   CATEGORIES,
   DEFAULT_CATEGORIES,
   categoryOf,
+  compareInDay,
   groupByDay,
   inCategory,
   isLongRunning,
   isOngoingNow,
   isOver,
   isSpot,
+  savedGroups,
   type DayGroup,
 } from './model'
 
@@ -201,6 +203,7 @@ export function useEventFilters(
         ...groupByDay(
           filtered.filter((e) => !isLongRunning(e, now)),
           now,
+          compareInDay(defaultCats),
         ),
       )
       if (running.length) out.push({ key: 'open-now', label: 'Open now', events: running })
@@ -208,12 +211,12 @@ export function useEventFilters(
       const running = [...filtered].sort((a, b) => Date.parse(a.end ?? a.start) - Date.parse(b.end ?? b.start))
       if (running.length) out.push({ key: 'open-now', label: 'Open now', events: running })
     } else {
-      out.push(...groupByDay(filtered, now))
+      out.push(...savedGroups(filtered, now))
     }
     // Repeats (3+ same title and city) become one row, only in the main view;
     // marked and hand-added events stay on their own. Paging counts a group once.
     return collapseRepeats(out, view === 'all', (e) => isManual(e) || marks.has(e.id))
-  }, [filtered, view, now, marks])
+  }, [filtered, view, now, marks, defaultCats])
   const groups = collapsed.days
   const repeats = collapsed.repeats
 

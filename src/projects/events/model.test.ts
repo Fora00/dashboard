@@ -10,6 +10,8 @@ import {
   dayLabel,
   formatRange,
   groupByDay,
+  compareInDay,
+  savedGroups,
   inCategory,
   isKidsEvent,
   isNew,
@@ -353,5 +355,76 @@ describe('isNew', () => {
     expect(isNew({ firstSeen: '2026-10-06T04:00:00Z' }, null)).toBe(false)
     expect(isNew({}, since)).toBe(false)
     expect(isNew({ firstSeen: 'garbage' }, since)).toBe(false)
+  })
+})
+
+describe('compareInDay', () => {
+  const day = (over: Partial<EventItem>) => ev({ start: '2026-10-12T20:00:00+02:00', ...over })
+  const order = (list: EventItem[], favs: string[]) =>
+    groupByDay(list, NOW, compareInDay(favs))[0]?.events.map((e) => e.id)
+  it('ring first: home, near, spot, no ring last', () => {
+    const list = [
+      day({ id: 'none', category: 'nerd' }),
+      day({ id: 'spot', ring: 'spot', category: 'nerd' }),
+      day({ id: 'near', ring: 'near', category: 'nerd' }),
+      day({ id: 'home', ring: 'home', category: 'nerd' }),
+    ]
+    expect(order(list, ['nerd'])).toEqual(['home', 'near', 'spot', 'none'])
+  })
+  it('then favourite categories (or tags) before the rest, then start, then title', () => {
+    const list = [
+      day({ id: 'c-late', ring: 'home', category: 'concerts', start: '2026-10-12T18:00:00+02:00' }),
+      day({ id: 'n-late', ring: 'home', category: 'nerd', start: '2026-10-12T22:00:00+02:00' }),
+      day({ id: 'n-b', ring: 'home', category: 'nerd', title: 'B' }),
+      day({ id: 'n-a', ring: 'home', category: 'nerd', title: 'A' }),
+      day({ id: 'tagged', ring: 'home', category: 'concerts', tags: ['nerd'], start: '2026-10-12T23:00:00+02:00' }),
+    ]
+    expect(order(list, ['nerd'])).toEqual(['n-a', 'n-b', 'n-late', 'tagged', 'c-late'])
+  })
+  it('a worse ring loses to a better ring even with a favourite category', () => {
+    const list = [
+      day({ id: 'spot-fav', ring: 'spot', category: 'nerd' }),
+      day({ id: 'home-other', ring: 'home', category: 'concerts' }),
+    ]
+    expect(order(list, ['nerd'])).toEqual(['home-other', 'spot-fav'])
+  })
+  it('never moves an event to another day', () => {
+    const list = [day({ id: 'a', ring: 'spot' }), day({ id: 'b', ring: 'home', start: '2026-10-13T10:00:00+02:00' })]
+    expect(groupByDay(list, NOW, compareInDay([])).map((g) => g.events.map((e) => e.id))).toEqual([['a'], ['b']])
+  })
+})
+
+describe('savedGroups', () => {
+  it('upcoming by date ascending, past last in one group, most recent past first', () => {
+    const list = [
+      ev({ id: 'p1', start: '2026-10-01T20:00:00+02:00', end: '2026-10-01T22:00:00+02:00' }),
+      ev({ id: 'p2', start: '2026-10-05T20:00:00+02:00', end: '2026-10-05T22:00:00+02:00' }),
+      ev({ id: 'f2', start: '2026-10-20T20:00:00+02:00' }),
+      ev({ id: 'f1', start: '2026-10-12T20:00:00+02:00' }),
+    ].sort((a, b) => Date.parse(a.start) - Date.parse(b.start))
+    const groups = savedGroups(list, NOW)
+    expect(groups.map((g) => [g.key, g.events.map((e) => e.id)])).toEqual([
+      ['2026-10-12', ['f1']],
+      ['2026-10-20', ['f2']],
+      ['past', ['p2', 'p1']],
+    ])
+  })
+  it('no past group when nothing is over', () => {
+    expect(savedGroups([ev({ id: 'f', start: '2026-10-12T20:00:00+02:00' })], NOW).map((g) => g.key)).toEqual([
+      '2026-10-12',
+    ])
+  })
+  it('the past group is its own week bucket', () => {
+    const weeks = groupByWeek(
+      savedGroups(
+        [
+          ev({ id: 'p', start: '2026-10-05T20:00:00+02:00', end: '2026-10-05T22:00:00+02:00' }),
+          ev({ id: 'f', start: '2026-10-12T20:00:00+02:00' }),
+        ],
+        NOW,
+      ),
+      NOW,
+    )
+    expect(weeks.map((w) => w.key)).toEqual(['2026-10-12', 'past'])
   })
 })

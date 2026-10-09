@@ -288,7 +288,7 @@ export function dayLabel(day: string, now: number): string {
 }
 
 export interface DayGroup {
-  key: string // local day, or 'open-now'
+  key: string // local day, 'open-now' or 'past' (Saved view)
   label: string
   events: EventItem[]
 }
@@ -303,10 +303,43 @@ export function shortDay(day: string): string {
   return fmt(`${day}T12:00:00Z`, DATE_SHORT)
 }
 
-/** Groups by listing day (start, or next date for series); order within a day is kept. */
-export function groupByDay(events: EventItem[], now: number): DayGroup[] {
+const RING_RANK: Record<string, number> = { home: 0, near: 1, spot: 2 }
+
+/** Ring proximity: home, near, spot; no ring (or an unknown one) sorts last. */
+export function ringRank(e: Pick<EventItem, 'ring'>): number {
+  return (e.ring !== undefined ? RING_RANK[e.ring] : undefined) ?? 3
+}
+
+/**
+ * Order inside one day: ring proximity (home, near, spot, no ring), then the
+ * favourite categories before the rest, then start time, then title. Pure;
+ * `favourites` = the owner's favourite categories (or the defaults).
+ */
+export function compareInDay(favourites: readonly string[]): (a: EventItem, b: EventItem) => number {
+  const fav = (e: EventItem) => (favourites.some((c) => inCategory(e, c)) ? 0 : 1)
+  return (a, b) =>
+    ringRank(a) - ringRank(b) ||
+    fav(a) - fav(b) ||
+    Date.parse(a.start) - Date.parse(b.start) ||
+    a.title.localeCompare(b.title)
+}
+
+/** Day-group keys that are one flat bucket (no week, no day heading, never folded). */
+export function isFlatGroup(key: string): boolean {
+  return key === 'open-now' || key === 'past'
+}
+
+/**
+ * Groups by listing day (start, or next date for series). Within a day the
+ * input order is kept, or sorted by `within` when given.
+ */
+export function groupByDay(
+  events: EventItem[],
+  now: number,
+  within?: (a: EventItem, b: EventItem) => number,
+): DayGroup[] {
   const keyed = events.map((e, i) => ({ e, i, day: listingDay(e, now) }))
-  keyed.sort((a, b) => (a.day < b.day ? -1 : a.day > b.day ? 1 : a.i - b.i))
+  keyed.sort((a, b) => (a.day < b.day ? -1 : a.day > b.day ? 1 : (within ? within(a.e, b.e) : 0) || a.i - b.i))
   const groups: DayGroup[] = []
   for (const { e, day } of keyed) {
     const last = groups[groups.length - 1]
@@ -314,6 +347,20 @@ export function groupByDay(events: EventItem[], now: number): DayGroup[] {
     else groups.push({ key: day, label: dayLabel(day, now), events: [e] })
   }
   return groups
+}
+
+/**
+ * The Saved view: `events` sorted by start, day groups by date ascending, and
+ * the finished ones last in one 'past' group, the most recent first.
+ */
+export function savedGroups(events: EventItem[], now: number): DayGroup[] {
+  const out = groupByDay(
+    events.filter((e) => !isOver(e, now)),
+    now,
+  )
+  const past = events.filter((e) => isOver(e, now)).reverse()
+  if (past.length) out.push({ key: 'past', label: 'Past', events: past })
+  return out
 }
 
 export interface WeekGroup {
@@ -345,17 +392,18 @@ export function weekLabel(start: string, now: number): string {
   return `Week ${isoWeekNumber(start)} · ${noWeekday(start)} – ${noWeekday(addDays(start, 6))}`
 }
 
-/** Buckets consecutive day groups into weeks (Mon–Sun); the 'open-now' group stays its own bucket. */
+/** Buckets consecutive day groups into weeks (Mon–Sun); the 'open-now' and 'past' groups stay their own buckets. */
 export function groupByWeek(days: DayGroup[], now: number): WeekGroup[] {
   const out: WeekGroup[] = []
   for (const g of days) {
-    const key = g.key === 'open-now' ? 'open-now' : weekStart(g.key)
+    const flat = isFlatGroup(g.key)
+    const key = flat ? g.key : weekStart(g.key)
     const last = out[out.length - 1]
-    if (last && last.key === key && key !== 'open-now') {
+    if (last && last.key === key && !flat) {
       last.days.push(g)
       last.count += g.events.length
     } else {
-      out.push({ key, label: key === 'open-now' ? g.label : weekLabel(key, now), days: [g], count: g.events.length })
+      out.push({ key, label: flat ? g.label : weekLabel(key, now), days: [g], count: g.events.length })
     }
   }
   return out

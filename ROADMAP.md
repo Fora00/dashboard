@@ -692,9 +692,9 @@ sync can come later).
          guarded localStorage or Dexie).
       4. [x] DONE 2026-10-09 (`groups.ts`: 3+ records with the same title and city collapse in the All view, group = next occurrence's card + expandable dates; saved/hidden/hand-added never join; unverified on a phone) — Group repeats with the same title across records into one
          expandable row ("17 serate, next ≈ …"); optional venue filter.
-      5. [sonnet] Sorting inside a day: ring proximity, then favourite
+      5. [x] DONE 2026-10-09 (in a day: ring home/near/spot, then favourite categories, start, title; Saved by date, finished ones last in one "Past" group, most recent first) — Sorting inside a day: ring proximity, then favourite
          categories; Saved view by date, past last.
-      6. [sonnet] Travel time from Trento/Rovereto per city (from rings).
+      6. [x] DONE 2026-10-09 (`travel.ts`, nearer origin only, hidden for Trento/Rovereto/online; the Trento column is the agent's own estimate, check it by eye; far spot cities left out) — Travel time from Trento/Rovereto per city (from rings).
       7. [x] DONE 2026-09-30 (`ics.ts`, "📅 Calendar" in the expanded card, TZID Europe/Rome; iOS share-sheet path and a real Apple/Google Calendar import unverified) — Export an event as .ics.
       8. [x] DONE 2026-10-01, not committed: saved/hidden (`eventMarks`) and favourite
          categories (`eventPrefs`) sync, owner-only. `src/lib/eventMarksSync.ts`,

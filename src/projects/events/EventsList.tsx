@@ -2,7 +2,7 @@ import { Fragment, useState } from 'react'
 import { EventCard } from './EventCard'
 import { FOCUS_RING } from '../../components/focus'
 import type { EventMark } from '../../lib/db'
-import { formatRange, isNew, listingDay, shortDay, type WeekGroup } from './model'
+import { formatRange, isFlatGroup, isNew, listingDay, shortDay, type WeekGroup } from './model'
 import { eventPlace } from './display'
 import type { EventItem } from './types'
 import { EyeOffIcon, ListChecksIcon } from './icons'
@@ -178,7 +178,7 @@ export function WeekSections({
   return (
     <>
       {weeks.map((w) => {
-        const isOpenNow = w.key === 'open-now'
+        const isOpenNow = isFlatGroup(w.key)
         const folded = !isOpenNow && collapsedWeeks.has(w.key)
         return (
           <section key={w.key} aria-label={w.label}>
@@ -207,7 +207,7 @@ export function WeekSections({
               <div className="space-y-5">
                 {w.days.map((g) => (
                   <div key={g.key}>
-                    {w.key !== 'open-now' && (
+                    {!isFlatGroup(w.key) && (
                       <h3 className="mb-2 text-sm font-semibold text-slate-500 dark:text-slate-400">{g.label}</h3>
                     )}
                     <ul className="space-y-2">

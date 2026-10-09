@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { FOCUS_RING } from '../../components/focus'
 import type { EventItem } from './types'
 import { CategoryThumb } from './CategoryThumb'
-import { driveLabel } from './distance'
+import { travelLabel } from './travel'
 import { EventActions } from './EventActions'
 import { EventBadges } from './EventBadges'
 import { XIcon } from './icons'
@@ -54,7 +54,7 @@ function Detail({
   const image = eventImage(e)
   const showImage = image !== null && imgOk
   const place = eventPlace(e)
-  const drive = driveLabel(e.city)
+  const drive = travelLabel(e)
   const url = safeHttpUrl(e.url)
   const maps = mapsUrl(e)
   const series = isSparseSeries(e)
