@@ -1123,7 +1123,7 @@ what's already shipped. Ranked by how cheap + how load-bearing.
       open shop-list. Fix: `React.lazy()` + `<Suspense>` per `<Route>` in
       `App.tsx`, one shared loading fallback (reuse `Skeleton`-style UI).
       Effort S–M.
-- [ ] **Whitelist-rejection detection is a message-text regex** [sonnet] —
+- [x] **Whitelist-rejection detection is a message-text regex** [sonnet] — DONE 2026-10-09: `isWhitelistRejection` also accepts 500 + `unexpected_failure`, pinned by `sync.test.ts`. —
       `requestLoginCode` in `src/lib/sync.ts` detects "this email isn't
       invited" by matching `/database error/i` against the raw Supabase
       error message string. This is exactly the kind of check that breaks
@@ -1282,5 +1282,7 @@ Second batch (brainstormed 2026-07-04, later the same day):
 
 Infrastructure ideas:
 
-- [ ] Export/import all local data as a backup file [sonnet]
+- [x] Export/import all local data as a backup file [sonnet] — Settings → Backup (`src/lib/backup.ts`); merges on import, skips the outbox. Done 2026-10-09.
+- [x] Global sync-health strip [opus] — `SyncHealth` in Layout watches every engine (`src/lib/syncHealth.ts`; new engines go in `watchedEngines`); engine status gained `retrying` and `pullFailed`. Done 2026-10-09.
+- [x] Playwright e2e of the offline, signed-out path [sonnet] — `npm run e2e` (not in `npm run check` or CI). Done 2026-10-09.
 - [ ] E2E encryption for synced files [opus]

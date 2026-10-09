@@ -22,13 +22,23 @@ export const supabase: SupabaseClient<Database> | null = syncEnabled
   ? createClient<Database>(supabaseUrl!, supabaseAnonKey!)
   : null
 
+/** GoTrue wraps the whitelist trigger's exception in an opaque 500: "Database
+ *  error saving new user", code `unexpected_failure`. Nothing more specific
+ *  reaches the client, so match either signal (a wording change keeps one). */
+export function isWhitelistRejection(error: {
+  message?: string | undefined
+  code?: string | undefined
+  status?: number | undefined
+}): boolean {
+  return /database error/i.test(error.message ?? '') || (error.status === 500 && error.code === 'unexpected_failure')
+}
+
 /** Email a 6-digit sign-in code. Fails if the email isn't whitelisted. */
 export async function requestLoginCode(email: string): Promise<void> {
   if (!supabase) throw new Error('Sync is not configured')
   const { error } = await supabase.auth.signInWithOtp({ email })
   if (error) {
-    // The whitelist trigger rejects the user insert with an opaque error.
-    if (/database error/i.test(error.message)) {
+    if (isWhitelistRejection(error)) {
       throw new Error("This email isn't invited to this dashboard.")
     }
     throw error
