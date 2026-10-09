@@ -5,6 +5,7 @@ import { loadFilters, matchesQuery, matchesChip, normalizeText, saveFilters, typ
 import { cleanFormats, matchesFormat, FORMAT_CHIPS } from './format'
 import type { EventItem } from './types'
 import { isManual } from './custom'
+import { collapseRepeats } from './groups'
 import { DISTANCE_STEPS, isNear, tooFarForCategory, withinMinutes } from './distance'
 import {
   CATEGORIES,
@@ -188,7 +189,7 @@ export function useEventFilters(
   )
 
   // Flat, ordered list of groups; then cut to `limit` cards in total.
-  const groups = useMemo(() => {
+  const collapsed = useMemo(() => {
     const out: DayGroup[] = []
     if (view === 'all') {
       // Dated days first (grouped into weeks by the page); the long "Open now"
@@ -209,8 +210,12 @@ export function useEventFilters(
     } else {
       out.push(...groupByDay(filtered, now))
     }
-    return out
-  }, [filtered, view, now])
+    // Repeats (3+ same title and city) become one row, only in the main view;
+    // marked and hand-added events stay on their own. Paging counts a group once.
+    return collapseRepeats(out, view === 'all', (e) => isManual(e) || marks.has(e.id))
+  }, [filtered, view, now, marks])
+  const groups = collapsed.days
+  const repeats = collapsed.repeats
 
   const total = groups.reduce((n, g) => n + g.events.length, 0)
   const visibleGroups = useMemo(() => {
@@ -320,7 +325,7 @@ export function useEventFilters(
       showMore,
     },
     counts: { distanceCounts, catCounts, formatCounts, catOrder },
-    groups: { visibleGroups, total, limit },
+    groups: { visibleGroups, total, limit, repeats },
     marks,
   }
 }

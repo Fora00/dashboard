@@ -146,7 +146,7 @@ export function Events() {
     filtering,
     filterCount,
   } = filters
-  const { visibleGroups, total, limit } = groups
+  const { visibleGroups, total, limit, repeats } = groups
   const weeks = useMemo(() => groupByWeek(visibleGroups, now), [visibleGroups, now])
   // Weeks the user folded away (all open by default).
   const [collapsedWeeks, setCollapsedWeeks] = useState<ReadonlySet<string>>(new Set())
@@ -506,6 +506,7 @@ export function Events() {
             master={wide}
             activeId={activeId}
             onActivate={onActivate}
+            repeats={repeats}
           />
           {limit < total && (
             <div className="flex justify-center">

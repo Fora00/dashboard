@@ -1,7 +1,9 @@
+import { Fragment, useState } from 'react'
 import { EventCard } from './EventCard'
 import { FOCUS_RING } from '../../components/focus'
 import type { EventMark } from '../../lib/db'
-import type { WeekGroup } from './model'
+import { formatRange, isNew, listingDay, shortDay, type WeekGroup } from './model'
+import { eventPlace } from './display'
 import type { EventItem } from './types'
 import { EyeOffIcon, ListChecksIcon } from './icons'
 
@@ -44,6 +46,80 @@ export function SelectionBar({
   )
 }
 
+/**
+ * The other dates of a repeated event (groups.ts), under the card of its next
+ * occurrence: a toggle "17 dates · next ≈ …" and, open, one compact row per
+ * date (day/time, place); tapping a row shows the normal card with its
+ * actions. Save/Hide there apply to that one date only.
+ */
+function RepeatRows({
+  dates,
+  cardProps,
+  now,
+  since,
+}: {
+  dates: EventItem[]
+  cardProps: (e: EventItem) => React.ComponentProps<typeof EventCard>
+  now: number
+  since: number | null
+}) {
+  const [open, setOpen] = useState(false)
+  const [openId, setOpenId] = useState<string | null>(null)
+  const anyNew = dates.some((d) => isNew(d, since))
+  const first = dates[0]
+  return (
+    <>
+      <li className="-mt-1">
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          aria-expanded={open}
+          className={`flex min-h-10 w-full items-center gap-2 rounded-lg px-3 text-left text-sm font-medium text-slate-600 dark:text-slate-300 ${FOCUS_RING}`}
+        >
+          <span aria-hidden="true" className="text-xs">
+            {open ? '▾' : '▸'}
+          </span>
+          <span>
+            {dates.length} dates{first ? ` · next ≈ ${shortDay(listingDay(first, now))}` : ''}
+          </span>
+          {anyNew && (
+            <span className="rounded-full bg-violet-100 px-2.5 py-1 text-xs font-medium text-violet-800 dark:bg-violet-500/20 dark:text-violet-200">
+              New
+            </span>
+          )}
+        </button>
+      </li>
+      {open && (
+        <li>
+          <ul className="space-y-1 border-l-2 border-slate-200 pl-3 dark:border-slate-700">
+            {dates.map((d) =>
+              openId === d.id ? (
+                <EventCard key={d.id} {...cardProps(d)} />
+              ) : (
+                <li key={d.id}>
+                  <button
+                    type="button"
+                    onClick={() => setOpenId(d.id)}
+                    className={`flex min-h-10 w-full flex-col items-start justify-center rounded-lg px-2 py-1 text-left text-sm ${FOCUS_RING}`}
+                  >
+                    <span className="font-medium text-slate-700 dark:text-slate-200">
+                      {isNew(d, since) && <span className="mr-1.5 text-violet-700 dark:text-violet-300">New ·</span>}
+                      {formatRange(d)}
+                    </span>
+                    {eventPlace(d) && (
+                      <span className="text-xs text-slate-500 dark:text-slate-400">{eventPlace(d)}</span>
+                    )}
+                  </button>
+                </li>
+              ),
+            )}
+          </ul>
+        </li>
+      )}
+    </>
+  )
+}
+
 /** Week > day > event cards, with foldable weeks (the "open now" group never folds). */
 export function WeekSections({
   weeks,
@@ -61,6 +137,7 @@ export function WeekSections({
   master = false,
   activeId = null,
   onActivate,
+  repeats,
 }: {
   weeks: WeekGroup[]
   collapsedWeeks: ReadonlySet<string>
@@ -79,7 +156,25 @@ export function WeekSections({
   master?: boolean
   activeId?: string | null
   onActivate?: (e: EventItem) => void
+  /** next occurrence's id -> all its dates, for repeated events (groups.ts). */
+  repeats?: ReadonlyMap<string, EventItem[]>
 }) {
+  const cardProps = (e: EventItem): React.ComponentProps<typeof EventCard> => ({
+    event: e,
+    saved: marks.get(e.id)?.state === 'saved',
+    hidden: marks.get(e.id)?.state === 'hidden',
+    now,
+    since,
+    onToggleSave,
+    onToggleHide,
+    onEdit,
+    selecting,
+    selected: selectedIds.has(e.id),
+    onSelect,
+    master,
+    active: activeId === e.id,
+    onActivate,
+  })
   return (
     <>
       {weeks.map((w) => {
@@ -117,23 +212,12 @@ export function WeekSections({
                     )}
                     <ul className="space-y-2">
                       {g.events.map((e) => (
-                        <EventCard
-                          key={`${g.key}-${e.id}`}
-                          event={e}
-                          saved={marks.get(e.id)?.state === 'saved'}
-                          hidden={marks.get(e.id)?.state === 'hidden'}
-                          now={now}
-                          since={since}
-                          onToggleSave={onToggleSave}
-                          onToggleHide={onToggleHide}
-                          onEdit={onEdit}
-                          selecting={selecting}
-                          selected={selectedIds.has(e.id)}
-                          onSelect={onSelect}
-                          master={master}
-                          active={activeId === e.id}
-                          onActivate={onActivate}
-                        />
+                        <Fragment key={`${g.key}-${e.id}`}>
+                          <EventCard {...cardProps(e)} />
+                          {!selecting && repeats?.get(e.id) && (
+                            <RepeatRows dates={repeats.get(e.id) ?? []} cardProps={cardProps} now={now} since={since} />
+                          )}
+                        </Fragment>
                       ))}
                     </ul>
                   </div>

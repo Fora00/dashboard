@@ -690,7 +690,7 @@ sync can come later).
          native `<select multiple>` is worse on iPhone).
       3. [x] DONE 2026-10-09 (`firstSeen` stamped by the crawler, `visit.ts` baseline with a 30-minute same-visit window, "New" chip + filter; no badge shows until the first crawl with this change has run; unverified on a phone) — "New since last visit" badge (last-visit timestamp in
          guarded localStorage or Dexie).
-      4. [sonnet] Group repeats with the same title across records into one
+      4. [x] DONE 2026-10-09 (`groups.ts`: 3+ records with the same title and city collapse in the All view, group = next occurrence's card + expandable dates; saved/hidden/hand-added never join; unverified on a phone) — Group repeats with the same title across records into one
          expandable row ("17 serate, next ≈ …"); optional venue filter.
       5. [sonnet] Sorting inside a day: ring proximity, then favourite
          categories; Saved view by date, past last.
