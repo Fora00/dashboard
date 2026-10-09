@@ -187,6 +187,59 @@ describe('other categories never get a subcategory', () => {
   })
 })
 
+describe('description tier (last, strict)', () => {
+  const desc = (category: CategoryId, title: string, description: string, summary = '') =>
+    subcategoryOf({ category, title, summary, description, tags: [category], source: 'x' })
+
+  it('classifies on two distinct keywords of one subcategory', () => {
+    expect(
+      desc(
+        'exhibitions',
+        'Espressionismo dell anima',
+        'Una grande mostra monografica dedicata al pittore tedesco Max Pechstein, membro del gruppo Die Brucke.',
+      ),
+    ).toBe('arte')
+    expect(
+      desc(
+        'exhibitions',
+        'Giovanni Umicini per Padova',
+        'Mostra permanente con una trentina di foto e scatti. Il lavoro fotografico entra in sintonia con la vita.',
+      ),
+    ).toBe('fotografia')
+    expect(desc('theatre', 'Kamikaze', 'Il quarto spettacolo del migliore stand-up comedian italiano.')).toBe(
+      'stand-up',
+    )
+  })
+
+  it('ignores HTML and reads only the first 400 characters', () => {
+    expect(desc('exhibitions', 'Boh', '<p>Mostra di <b>pittura</b> e <i>scultura</i></p>')).toBe('arte')
+    expect(desc('exhibitions', 'Boh', `${'x '.repeat(220)} pittura scultura`)).toBeUndefined()
+  })
+
+  it('needs two distinct keywords, a repeated one is not enough', () => {
+    expect(desc('exhibitions', 'Boh', 'Una mostra di pittura. La pittura e la pittura.')).toBeUndefined()
+  })
+
+  it('stays unclassified when another subcategory of the category has a hit', () => {
+    expect(desc('exhibitions', 'Boh', 'Pittura e scultura, accanto a fotografie storiche.')).toBeUndefined()
+  })
+
+  it('stays unclassified on a blurb naming three or more genres', () => {
+    expect(
+      desc('concerts', 'Serata', 'Un viaggio tra jazz, blues, rock, pop e musica classica con orchestra.'),
+    ).toBeUndefined()
+  })
+
+  it('skips programmes and rassegne', () => {
+    expect(desc('theatre', 'Teatro di Rovereto | Stagione 2026/2027', 'Commedia, dramma e monologo.')).toBeUndefined()
+    expect(desc('theatre', 'Boh', 'Rassegna di commedia e dramma con un monologo.')).toBeUndefined()
+  })
+
+  it('never overrides title, summary or source', () => {
+    expect(desc('concerts', 'Padova jazz festival', 'Orchestra sinfonica e pianoforte.')).toBe('jazz-blues')
+  })
+})
+
 describe('withSubcategory and the pipeline', () => {
   it('sets, replaces and removes the field', () => {
     expect(withSubcategory(full({ title: 'Padova jazz festival' })).subcategory).toBe('jazz-blues')

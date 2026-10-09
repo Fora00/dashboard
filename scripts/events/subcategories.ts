@@ -9,7 +9,9 @@
 // the source's own character (Mart is an art museum…); inside a tier the
 // order of the list is the priority. Keyword syntax is the one of tags.ts
 // ('word', 'prefix*', multi-word phrases; accents and punctuation ignored).
-// The long description is never read: it name-drops every genre.
+// The long description is a last, strict tier (see byDescription): it
+// name-drops every genre, so it only decides on two distinct keywords and no
+// competing subcategory.
 import type { Event } from './types.ts'
 import type { CategoryId } from './tags.ts'
 import { compile, hayOf } from './tags.ts'
@@ -675,6 +677,15 @@ const RULES: Partial<Record<CategoryId, Rule[]>> = {
 /** Season / festival programmes ('Stagione 2026/2027', 'Prestagione', 'Rassegna'). */
 const SEASON = /(?:^| )(?:pre)?stagion[ei]|(?:^| )rassegna(?= |$)/
 
+/** Characters of the description the last tier reads. */
+const DESCRIPTION_CHARS = 400
+/** Distinct keywords a subcategory needs in the description to win. */
+const DESCRIPTION_MIN_HITS = 2
+/** A description naming this many different genres is a programme, not one show. */
+const DESCRIPTION_MAX_GENRES = 3
+/** Too generic to count as evidence inside a blurb. */
+const DESCRIPTION_IGNORE = new Set(['programma'])
+
 const compileAll = (words: string[] | undefined) => (words ?? []).map(compile)
 const COMPILED = new Map(
   Object.entries(RULES).map(([category, rules]) => [
@@ -686,9 +697,42 @@ const COMPILED = new Map(
       short: compileAll(r.short),
       unless: compileAll(r.unless),
       sources: r.sources ?? [],
+      descWords: (r.short ?? []).filter((w) => !DESCRIPTION_IGNORE.has(w)).map((w) => compile(w)),
     })),
   ]),
 )
+
+/** Number of different genres (subcategories of any category) with a keyword hit in `hay`. */
+function genresIn(hay: string): number {
+  let n = 0
+  for (const rules of COMPILED.values()) for (const r of rules) if (r.descWords.some((p) => p.test(hay))) n++
+  return n
+}
+
+/**
+ * Last tier: the first ~400 characters of the description. A subcategory wins
+ * only with 2+ distinct keywords while no other subcategory of the category has
+ * a single hit; programmes and multi-genre blurbs never classify.
+ */
+function byDescription(
+  rules: NonNullable<ReturnType<typeof COMPILED.get>>,
+  description: string | undefined,
+  head: string,
+): string | undefined {
+  if (!description || SEASON.test(head)) return undefined
+  const hay = hayOf([
+    description
+      .replace(/<[^>]*>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .slice(0, DESCRIPTION_CHARS),
+  ])
+  if (!hay || SEASON.test(hay.slice(0, 60)) || genresIn(hay) >= DESCRIPTION_MAX_GENRES) return undefined
+  const hits = rules.map((r) => ({ r, n: r.descWords.filter((p) => p.test(hay)).length })).filter((h) => h.n > 0)
+  const [only] = hits
+  if (hits.length !== 1 || !only || only.n < DESCRIPTION_MIN_HITS) return undefined
+  return only.r.unless.some((p) => p.test(hay)) ? undefined : only.r.id
+}
 
 /**
  * The subcategory of an event, or undefined: only for the categories of
@@ -696,7 +740,7 @@ const COMPILED = new Map(
  * re-run on records carried over from an older events.json.
  */
 export function subcategoryOf(
-  e: Pick<Event, 'category' | 'title' | 'summary' | 'tags' | 'source'> & { sources?: string[] },
+  e: Pick<Event, 'category' | 'title' | 'summary' | 'tags' | 'source'> & { sources?: string[]; description?: string },
 ): string | undefined {
   const rules = COMPILED.get(e.category)
   if (!rules) return undefined
@@ -713,7 +757,8 @@ export function subcategoryOf(
     rules.find((r) => ok(r) && tagged(r))?.id ??
     byTitle ??
     rules.find((r) => ok(r) && hit(r.short, short))?.id ??
-    rules.find((r) => r.sources.includes(e.source) || r.sources.some((s) => e.sources?.includes(s)))?.id
+    rules.find((r) => r.sources.includes(e.source) || r.sources.some((s) => e.sources?.includes(s)))?.id ??
+    byDescription(rules, e.description, head)
   )
 }
 
