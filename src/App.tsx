@@ -10,6 +10,7 @@ import { startHabitSync } from './lib/habitSync'
 import { startLifeSync } from './lib/lifeSync'
 import { startLinksSync } from './lib/linksSync'
 import { startMealDiarySync } from './lib/mealDiarySync'
+import { startProjectPrefsSync } from './lib/projectPrefsSync'
 import { startShopSync } from './lib/shopSync'
 import { startTripsSync } from './lib/tripsSync'
 import { startTodoSync } from './lib/todoSync'
@@ -65,6 +66,7 @@ export default function App() {
       startTripsSync(),
       startCustomEventsSync(),
       startEventMarksSync(),
+      startProjectPrefsSync(),
     ]
     return () => {
       for (const stop of stops) stop()

@@ -69,6 +69,14 @@ export interface TableSync<L extends { id: string } = { id: string }, R = unknow
    *  outbox entry as delivered instead of dead-lettering it. The next pull
    *  brings the server's copy and removes the local duplicate. */
   uniqueViolationIsDone?: boolean
+  /** false = ignore realtime DELETE events (default: apply them). For tables
+   *  whose `id` is only unique PER USER (project_prefs: id = project id, primary
+   *  key (user_id, id)). Realtime does not apply RLS to deletes, so every
+   *  subscriber gets every DELETE with just the old primary key: another
+   *  user's row going away (e.g. an account deleted, FK cascade) would delete
+   *  OUR row of the same id. Such tables never delete from the client; the
+   *  next pull reconciles any real removal. */
+  realtimeDeletes?: boolean
 }
 
 // Erased variant for heterogeneous config lists (each entry keeps its own L/R
@@ -528,6 +536,7 @@ export function createCloudSync(config: SyncConfig): CloudSync {
     if ((await db.outbox.where('rowId').equals(id).count()) > 0) return
 
     if (payload.eventType === 'DELETE') {
+      if (tc.realtimeDeletes === false) return
       await tc.table().delete(id)
       return
     }

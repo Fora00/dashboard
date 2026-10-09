@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { db, requestPersistentStorage, type ProjectStat } from '../../lib/db'
+import { db, requestPersistentStorage, type ProjectPref } from '../../lib/db'
 import { formatBytes } from '../../lib/format'
 import { projects } from '../../lib/projects'
 import { NEVER_HIDDEN, isHidden, setHidden, useApplyHiddenDefaults } from '../../lib/projectStats'
+import { sync as projectPrefsSync } from '../../lib/projectPrefsSync'
 import { syncEnabled } from '../../lib/sync'
 import { useAuth } from '../../lib/useAuth'
 import { useOwner } from '../../lib/useOwner'
@@ -16,17 +17,17 @@ import { runSafe } from '../../lib/runSafe'
 import { buildBackup, parseBackup, restoreBackup } from '../../lib/backup'
 import { clearPrivateData, privateDataSummary } from '../../lib/privateData'
 
-// Per-device settings: project visibility, storage usage, persistence, sync
-// status, local wipe.
+// Settings: project visibility (per user, synced when signed in), storage
+// usage, persistence, sync status, local wipe.
 
 // Show/hide switches for the home grid. Same ownerOnly rule as Home, minus
 // the never-hideable projects (this page and Sharing).
 function ProjectVisibility() {
   const owner = useOwner()
   const applyDefaults = useApplyHiddenDefaults()
-  const stats = useLiveQuery(() => db.projectStats.toArray())
-  if (stats === undefined) return null
-  const statsById = new Map<string, ProjectStat>(stats.map((s) => [s.id, s]))
+  const prefs = useLiveQuery(() => db.projectPrefs.toArray())
+  if (prefs === undefined) return null
+  const prefsById = new Map<string, ProjectPref>(prefs.map((p) => [p.id, p]))
   const hideable = projects.filter((p) => (!p.ownerOnly || owner) && !NEVER_HIDDEN.has(p.id))
 
   return (
@@ -38,7 +39,7 @@ function ProjectVisibility() {
         </p>
         <ul className="divide-y divide-slate-200 dark:divide-slate-700/60">
           {hideable.map((p) => {
-            const shown = !isHidden(p.id, statsById.get(p.id), applyDefaults)
+            const shown = !isHidden(p.id, prefsById.get(p.id), applyDefaults)
             return (
               <li key={p.id}>
                 <button
@@ -166,7 +167,9 @@ export function Settings() {
         <section>
           <h2 className="mb-2 text-sm font-medium text-slate-500 dark:text-slate-400">Cloud sync</h2>
           {syncEnabled ? (
-            <SyncCard />
+            // The engine shown here is the home layout's (starred/hidden), the
+            // one sync this page owns: its Retry/Discard live here.
+            <SyncCard sync={projectPrefsSync} />
           ) : (
             <Card className="text-sm text-slate-500 dark:text-slate-400">☁️ Sync isn't configured in this build.</Card>
           )}

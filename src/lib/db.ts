@@ -179,16 +179,29 @@ export interface TripCompanion {
 
 // Per-device usage stats for a dashboard project, keyed by ProjectMeta.id.
 // Drives the home grid's ordering. Deliberately local-only — open counts
-// are per-device, so this never syncs and has no remote table.
+// are per-device, so this never syncs and has no remote table. Until v17 it
+// also held `starred` and `hidden`; those moved to ProjectPref (synced).
 export interface ProjectStat {
   id: string // matches ProjectMeta.id in src/lib/projects.ts
   opens: number
-  starred: 0 | 1 // Dexie can't index booleans — store 0/1
   lastOpenedAt: number
-  // Hidden from the home grid. Unset = use DEFAULT_HIDDEN (projectStats.ts),
-  // so an explicit choice is never overwritten by the defaults. Not indexed,
-  // hence no schema version bump.
-  hidden?: 0 | 1
+}
+
+// The home grid's per-USER layout choices for one project, synced across the
+// user's devices (src/lib/projectPrefsSync.ts, remote table project_prefs,
+// rows scoped by user_id = auth.uid()). Keyed by ProjectMeta.id. Signed out
+// it is just a local table, like every other.
+export interface ProjectPref {
+  id: string // matches ProjectMeta.id in src/lib/projects.ts
+  starred: 0 | 1
+  // Hidden from the home grid. null = unset = use DEFAULT_HIDDEN
+  // (projectStats.ts), so an explicit choice is never overwritten by the
+  // defaults. Tri-state on purpose; mirrored by a nullable column remotely.
+  hidden: 0 | 1 | null
+  // ms, last-writer-wins. 0 = a choice that predates sync (queued by the v17
+  // upgrade): the server MERGES it into its row instead of letting it win or
+  // lose (project_prefs_merge in the project_prefs migration).
+  updatedAt: number
 }
 
 // --- Life (owner-only weekly plan + log; spec in docs/HANDOFF-life.md) ------
@@ -340,6 +353,7 @@ export interface OutboxMap {
   custom_events: CustomEvent
   event_marks: EventMark
   event_prefs: EventPrefs
+  project_prefs: ProjectPref
 }
 
 // Remote table names the engine can push to — also the discriminator on an
@@ -437,6 +451,7 @@ export const db = new Dexie('dashboard') as Dexie & {
   tripCompanions: EntityTable<TripCompanion, 'id'>
   customEvents: EntityTable<CustomEvent, 'id'>
   meals: EntityTable<MealEntry, 'id'>
+  projectPrefs: EntityTable<ProjectPref, 'id'>
 }
 
 db.version(1).stores({
@@ -767,6 +782,72 @@ db.version(16).stores({
   customEvents: 'id, start, updatedAt',
   meals: 'id, day, createdAt',
 })
+
+// v17: the home grid's `starred` and `hidden` leave projectStats (local-only,
+// per device) for the new projectPrefs table, which syncs per user
+// (projectPrefsSync.ts). projectStats keeps opens/lastOpenedAt and drops its
+// `starred` index. The upgrade moves every explicit choice (starred = 1, or
+// hidden set either way) into projectPrefs with updatedAt 0 and queues it in
+// the outbox ONCE, so the first signed-in pull can't treat it as deleted
+// remotely; the server merges updatedAt-0 rows (a star survives, a hidden
+// choice fills an unset one) instead of overwriting. starred = 0 with hidden
+// unset is no choice at all and is not copied. Nothing else is touched.
+db.version(17)
+  .stores({
+    files: 'id, name, createdAt, synced',
+    shopItems: 'id, done, createdAt, areaId',
+    shopAreas: 'id, createdAt',
+    outbox: '++seq, rowId',
+    climbSessions: 'id, date',
+    climbs: 'id, sessionId, date',
+    habits: 'id, createdAt',
+    habitChecks: 'id, habitId, day, [habitId+day]',
+    todos: 'id, done, createdAt',
+    bookIdeas: 'id, createdAt',
+    boardgameIdeas: 'id, createdAt',
+    links: 'id, read, createdAt, *tags',
+    projectStats: 'id, opens',
+    lifeWeeks: 'id, importedAt',
+    lifeEntries: 'id, week, [week+kind]',
+    eventsCache: 'id',
+    eventMarks: 'id, state, updatedAt',
+    eventPrefs: 'id',
+    tripIdeas: 'id, done, createdAt, *companionIds',
+    tripCompanions: 'id, createdAt',
+    customEvents: 'id, start, updatedAt',
+    meals: 'id, day, createdAt',
+    projectPrefs: 'id',
+  })
+  .upgrade(async (tx) => {
+    type LegacyStat = ProjectStat & { starred?: 0 | 1; hidden?: 0 | 1 }
+    const stats = (await tx.table('projectStats').toArray()) as LegacyStat[]
+    const prefs: ProjectPref[] = []
+    for (const s of stats) {
+      const starred = s.starred === 1 ? 1 : 0
+      const hidden = s.hidden === 0 || s.hidden === 1 ? s.hidden : null
+      if (starred === 1 || hidden !== null) prefs.push({ id: s.id, starred, hidden, updatedAt: 0 })
+    }
+    if (prefs.length > 0) {
+      await tx.table('projectPrefs').bulkPut(prefs)
+      const ts = Date.now()
+      const entries: OutboxEntry[] = prefs.map((p) => ({
+        table: 'project_prefs',
+        op: 'upsert',
+        rowId: p.id,
+        payload: p,
+        ts,
+      }))
+      await tx.table('outbox').bulkAdd(entries)
+    }
+    // Only after the copy: projectStats is opens/lastOpenedAt from here on.
+    await tx
+      .table('projectStats')
+      .toCollection()
+      .modify((s: LegacyStat) => {
+        delete s.starred
+        delete s.hidden
+      })
+  })
 
 // Ask the browser not to evict our data under storage pressure (important on iOS).
 export async function requestPersistentStorage(): Promise<boolean> {

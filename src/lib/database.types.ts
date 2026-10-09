@@ -498,6 +498,30 @@ export type Database = {
         }
         Relationships: []
       }
+      project_prefs: {
+        Row: {
+          hidden: boolean | null
+          id: string
+          starred: boolean
+          updated_at: number
+          user_id: string
+        }
+        Insert: {
+          hidden?: boolean | null
+          id: string
+          starred?: boolean
+          updated_at: number
+          user_id?: string
+        }
+        Update: {
+          hidden?: boolean | null
+          id?: string
+          starred?: boolean
+          updated_at?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       shareable_projects: {
         Row: {
           id: string

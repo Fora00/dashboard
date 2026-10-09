@@ -211,7 +211,7 @@ do NOT carry across devices (see the follow-up below).
       over all four modes x reversed, ties, never-opened rows, and
       starred-stays-on-top.
 
-- [ ] **Sync the starred flag across devices** [opus] — stars are currently
+- [x] **Sync the starred flag across devices** [opus] — DONE 2026-10-09: `project_prefs` (per user, starred + hidden; opens stay local), migration `20261009120000` pushed. TO CHECK on a device: star while signed in, confirm the upsert works and the row has your `user_id`; two devices with old stars merge. Follow-up [sonnet]: map pre-v17 backups' starred/hidden into `projectPrefs` on restore. Original note: — stars are currently
       per-device because `projectStats` is local-only. Open counts should
       stay local (they're per-device by nature), so this is NOT a
       straight "add it to the engine" job: it needs a split between a synced

@@ -73,7 +73,7 @@ const GRID = 'grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 sm:gap-4'
 // of one project reading another project's data through the shared db.
 export function Home() {
   // ownerOnly + hidden filtering, shared with the sidebar (useVisibleProjects).
-  const { stats, statsById, visible, hiddenCount } = useVisibleProjects()
+  const { stats, statsById, prefs, visible, hiddenCount, isStarred } = useVisibleProjects()
   const [order, setOrder] = usePersistedState<HomeOrder>(HOME_ORDER_KEY, 'used', undefined, orderCodec)
   const [reversed, setReversed] = usePersistedState<boolean>(HOME_REVERSED_KEY, false, undefined, reversedCodec)
 
@@ -123,11 +123,11 @@ export function Home() {
   // While stats are still loading, render the registry order untouched —
   // reversal doesn't apply to that fallback.
   const ordered: ProjectMeta[] =
-    stats === undefined
+    stats === undefined || prefs === undefined
       ? visible
       : (() => {
-          const starredGroup = visible.filter((p) => statsById.get(p.id)?.starred === 1).sort(compareWithinGroup)
-          const unstarredGroup = visible.filter((p) => statsById.get(p.id)?.starred !== 1).sort(compareWithinGroup)
+          const starredGroup = visible.filter((p) => isStarred(p.id)).sort(compareWithinGroup)
+          const unstarredGroup = visible.filter((p) => !isStarred(p.id)).sort(compareWithinGroup)
           if (reversed) {
             starredGroup.reverse()
             unstarredGroup.reverse()
@@ -186,7 +186,7 @@ export function Home() {
   }
 
   function renderCard(p: ProjectMeta) {
-    const starred = statsById.get(p.id)?.starred === 1
+    const starred = isStarred(p.id)
     return (
       <div key={p.id} className="relative">
         <button
@@ -225,7 +225,7 @@ export function Home() {
     )
   }
 
-  const sections = grouped ? groupByArea(ordered, (id) => statsById.get(id)?.starred === 1) : []
+  const sections = grouped ? groupByArea(ordered, isStarred) : []
 
   return (
     <div>

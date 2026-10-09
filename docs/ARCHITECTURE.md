@@ -38,6 +38,7 @@ queue: `ROADMAP.md` (`npm run roadmap` lists the open tasks).
 | `customEventsSync.ts` / `eventMarksSync.ts` | `custom_events` / `event_marks` (+ `event_prefs`) |
 | `lifeSync.ts` | `life_entries`, `life_weeks` (owner-only) |
 | `mealDiarySync.ts` | `meal_entries` (owner-only) |
+| `projectPrefsSync.ts` | `project_prefs` (per user: the home grid's `starred`/`hidden`; open counts stay in local-only Dexie `projectStats`) |
 | `projectInvites.ts` | `project_invites`, `shareable_projects` + invite RPCs (not an engine table; per-project invite links) |
 | `transferSync.ts` | transfer files (signed links) |
 
@@ -48,6 +49,14 @@ queue: `ROADMAP.md` (`npm run roadmap` lists the open tasks).
   A new synced project needs a row in `public.shareable_projects`.
 - **`shop_area_members`**: per shop area (shop-list only), its own invite links.
 - **Owner-only**: Life and meal-diary (`ownerOnly` in the registry), plus `/sharing`; settings is device-only.
+- **Per user (`user_id = auth.uid()`)**: `project_prefs`, the home grid's
+  starred/hidden choices. Neither system above: every signed-in user (owner
+  or guest) reads and writes only their own rows. Primary key
+  `(user_id, id)` with `id` = project id and `user_id` defaulting to
+  `auth.uid()`, so the engine still addresses rows by `id` alone. Because the
+  same `id` exists for many users and Realtime broadcasts DELETEs to every
+  subscriber, this table sets `realtimeDeletes: false` and the client never
+  deletes (unstar = `starred false`, back to defaults = `hidden null`).
 
 ## Auth
 
@@ -77,7 +86,7 @@ a trigger. Owner plus per-project/per-area guests.
   accent line stays on top of the content. CSS only (`hidden lg:flex`), no
   matchMedia or UA checks, so resizing a window just works.
 - **Sidebar.** Same list as Home: `useVisibleProjects()` (`src/lib/`; ownerOnly
-  for the owner, per-device hidden removed) split by `groupByArea` (Starred
+  for the owner, per-user hidden removed) split by `groupByArea` (Starred
   first, then areas), but in REGISTRY order inside a section so entries don't
   move as open counts change. Active entry = `aria-current="page"`, accent
   tint (`--accent-soft`) and an accent bar. Online badge at the bottom.

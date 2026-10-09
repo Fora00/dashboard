@@ -9,6 +9,7 @@ import { sync as habits } from './habitSync'
 import { sync as life } from './lifeSync'
 import { sync as links } from './linksSync'
 import { sync as mealDiary } from './mealDiarySync'
+import { sync as projectPrefs } from './projectPrefsSync'
 import { sync as shop } from './shopSync'
 import { sync as todo } from './todoSync'
 import { sync as trips } from './tripsSync'
@@ -35,6 +36,7 @@ export const watchedEngines: readonly WatchedEngine[] = [
   { label: 'Trips', path: '/trips', sync: trips },
   { label: 'Events', path: '/events', sync: customEvents },
   { label: 'Events', path: '/events', sync: eventMarks },
+  { label: 'Home layout', path: '/settings', sync: projectPrefs },
 ]
 
 export type Severity = 'ok' | 'warn' | 'error'

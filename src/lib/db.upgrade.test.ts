@@ -4,7 +4,8 @@
 // Dexie instance declaring only that old version, then opens the real `db`.
 // Three starting points cover the upgrade callbacks that move real data: v2
 // (v3 default shop area), v4 (v5 todos.updatedAt backfill) and v14 (v15
-// queues existing event marks/prefs once; v16 adds the meals table).
+// queues existing event marks/prefs once; v16 adds the meals table) and v16
+// (v17 moves starred/hidden from projectStats into the synced projectPrefs).
 // fake-indexeddb must be installed before Dexie loads (Dexie captures
 // indexedDB when its module initialises), so this side-effect import is first.
 import 'fake-indexeddb/auto'
@@ -41,6 +42,8 @@ const V14_STORES = {
   customEvents: 'id, start, updatedAt',
 }
 
+const V16_STORES = { ...V14_STORES, meals: 'id, day, createdAt' }
+
 /** Create the on-disk database at `version` with `stores`, seed it, close it. */
 async function writeOld(version: number, stores: Record<string, string>, seed: (old: Dexie) => Promise<void>) {
   const old = new Dexie(db.name)
@@ -69,7 +72,7 @@ describe('db upgrade paths', () => {
       },
     )
     await db.open()
-    expect(db.verno).toBe(16)
+    expect(db.verno).toBe(17)
     expect((await db.shopAreas.get(DEFAULT_AREA_ID))?.name).toBe('Groceries')
     const items = await db.shopItems.orderBy('createdAt').toArray()
     expect(items.map((i) => [i.id, i.text, i.areaId])).toEqual([
@@ -110,7 +113,7 @@ describe('db upgrade paths', () => {
       await old.table('outbox').add({ table: 'links', op: 'upsert', rowId: 'l1', ts: 1 })
     })
     await db.open()
-    expect(db.verno).toBe(16)
+    expect(db.verno).toBe(17)
     expect(await db.eventMarks.count()).toBe(2)
     // Prefs written before v15 get updatedAt 0 ("merge me" on the server).
     expect(await db.eventPrefs.get('prefs')).toEqual({ id: 'prefs', favouriteCategories: ['music'], updatedAt: 0 })
@@ -131,5 +134,60 @@ describe('db upgrade paths', () => {
     db.close()
     await db.open()
     expect(await db.outbox.count()).toBe(4)
+  })
+
+  it('v16 → current: stars and hidden choices move to projectPrefs, queued once; opens stay local', async () => {
+    await writeOld(16, V16_STORES, async (old) => {
+      await old.table('projectStats').bulkAdd([
+        // starred, never hidden
+        { id: 'links', opens: 7, starred: 1, lastOpenedAt: 70 },
+        // explicitly shown (hidden 0 beats DEFAULT_HIDDEN) and starred
+        { id: 'todo', opens: 2, starred: 1, lastOpenedAt: 20, hidden: 0 },
+        // explicitly hidden, not starred
+        { id: 'events', opens: 0, starred: 0, lastOpenedAt: 0, hidden: 1 },
+        // opened only: no choice to carry over
+        { id: 'trips', opens: 3, starred: 0, lastOpenedAt: 30 },
+      ])
+      await old.table('outbox').add({ table: 'links', op: 'upsert', rowId: 'l1', ts: 1 })
+    })
+    await db.open()
+    expect(db.verno).toBe(17)
+    expect(await db.projectPrefs.orderBy('id').toArray()).toEqual([
+      { id: 'events', starred: 0, hidden: 1, updatedAt: 0 },
+      { id: 'links', starred: 1, hidden: null, updatedAt: 0 },
+      { id: 'todo', starred: 1, hidden: 0, updatedAt: 0 },
+    ])
+    // projectStats keeps only the per-device usage, every row intact.
+    expect(await db.projectStats.orderBy('id').toArray()).toEqual([
+      { id: 'events', opens: 0, lastOpenedAt: 0 },
+      { id: 'links', opens: 7, lastOpenedAt: 70 },
+      { id: 'todo', opens: 2, lastOpenedAt: 20 },
+      { id: 'trips', opens: 3, lastOpenedAt: 30 },
+    ])
+    expect(await db.projectStats.where('opens').above(2).count()).toBe(2)
+    const queued = (await db.outbox.orderBy('seq').toArray()).map((e) => `${e.table} ${e.op} ${e.rowId}`)
+    expect(queued).toEqual([
+      'links upsert l1',
+      'project_prefs upsert events',
+      'project_prefs upsert links',
+      'project_prefs upsert todo',
+    ])
+    const todoEntry = (await db.outbox.toArray()).find((e) => e.rowId === 'todo')
+    expect(todoEntry?.payload).toEqual({ id: 'todo', starred: 1, hidden: 0, updatedAt: 0 })
+
+    // Re-opening at the current version must not queue them a second time.
+    db.close()
+    await db.open()
+    expect(await db.outbox.count()).toBe(4)
+  })
+
+  it('v16 → current with no stars or hidden choices queues nothing', async () => {
+    await writeOld(16, V16_STORES, async (old) => {
+      await old.table('projectStats').add({ id: 'trips', opens: 1, starred: 0, lastOpenedAt: 5 })
+    })
+    await db.open()
+    expect(await db.projectPrefs.count()).toBe(0)
+    expect(await db.outbox.count()).toBe(0)
+    expect(await db.projectStats.get('trips')).toEqual({ id: 'trips', opens: 1, lastOpenedAt: 5 })
   })
 })
