@@ -520,7 +520,7 @@ sync can come later).
       drops that end); series with more than 8 dates are folded into one
       all-day record (`occurrences`); keyword noise ("mostra" also means
       "shows"); fuzzy near-duplicates across sources not merged.
-- [ ] **Watch the first scheduled Actions run** [orchestrator] — after
+- [x] **Watch the first scheduled Actions run** [orchestrator] — DONE 2026-10-09: scheduled runs succeed daily (~15 min), `events.json` served (200). Warnings seen in the 2026-10-08 crawl: `trentinospettacoli` HTTP 400 on page 3 (FIXED 2026-10-09: a WordPress page past the end is now the normal end); `rovereto` is disallowed by robots.txt (respected, keeps its 17 old events); `infinityboulder` and `santachiara` answer the Actions runner with a SiteGround captcha instead of JSON (not worked around on purpose; the first has never produced an event); TriO Desenzano 2026-10-10 still unverified (the official site lists no date; only aggregators do). — after
       push: check the crawl step's summary table in the log and that
       `https://fora00.github.io/dashboard/events.json` is served.
 - [x] **Phase 2: `/events` page** [sonnet] — done 2026-09-29, local-only

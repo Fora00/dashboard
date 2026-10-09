@@ -31,14 +31,20 @@ function attr(block: string, re: RegExp): string | null {
   return m?.[1] ? decodeEntities(m[1]).trim() : null
 }
 
-async function categoriesByLink(ctx: AdapterContext): Promise<Map<string, string[]>> {
+export async function categoriesByLink(ctx: AdapterContext): Promise<Map<string, string[]>> {
   const terms = await ctx.fetchJson<WpTerm[]>(`${REST}/categorie_eventi?per_page=100&_fields=id,name,slug`)
   const name = new Map(terms.map((t) => [t.id, t.name]))
   const out = new Map<string, string[]>()
   for (let page = 1; page <= 5; page++) {
-    const items = await ctx.fetchJson<WpEvent[]>(
-      `${REST}/eventi?per_page=100&page=${page}&_fields=link,categorie_eventi`,
-    )
+    let items: WpEvent[]
+    try {
+      items = await ctx.fetchJson<WpEvent[]>(`${REST}/eventi?per_page=100&page=${page}&_fields=link,categorie_eventi`)
+    } catch (err) {
+      // WordPress answers a page past the end with HTTP 400 (rest_post_invalid_page_number):
+      // when the last full page held exactly N*100 events that is the normal end, not a failure.
+      if (page > 1 && err instanceof Error && /^HTTP 400\b/.test(err.message)) break
+      throw err
+    }
     for (const it of items) {
       if (it.link) out.set(it.link, (it.categorie_eventi ?? []).map((id) => name.get(id) ?? '').filter(Boolean))
     }
