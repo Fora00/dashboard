@@ -4,6 +4,7 @@ import { ErrorBoundary } from './ErrorBoundary'
 import { InstallHint } from './InstallHint'
 import { OnlineBadge } from './OnlineBadge'
 import { OfflineBanner } from './OfflineBanner'
+import { SyncHealth } from './SyncHealth'
 import { SkeletonList } from './Skeleton'
 import { UpdateToast } from './UpdateToast'
 import { ErrorFlash } from './ErrorFlash'
@@ -146,6 +147,7 @@ export function Layout() {
             />
           )}
           <OfflineBanner />
+          <SyncHealth />
           {/* data-layout / layout-* class / --content-max let pages adapt to
               the column width. Deliberately NOT a container-type here: that
               would make <main> the containing block of the pages' fixed

@@ -17,6 +17,8 @@ const EMPTY: SyncStatus = {
   lastError: null,
   syncing: false,
   skipped: 0,
+  retrying: 0,
+  pullFailed: false,
 }
 
 export function useSyncStatus(sync?: CloudSync): SyncStatus {

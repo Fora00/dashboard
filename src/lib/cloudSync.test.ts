@@ -153,6 +153,17 @@ describe('server-answered failures', () => {
     expect((await db.outbox.where('rowId').equals('flaky').first())?.dead).toBe(1)
   })
 
+  it('a transient 500 shows as retrying until it goes through', async () => {
+    fake.rejectWith(() => ({ code: 'XX000', message: 'boom', status: 500 }))
+    await eng.upsert('todos', todo('flaky2'))
+    await settle()
+    expect(eng.getStatus()).toMatchObject({ pending: 1, retrying: 1, dead: 0 })
+    fake.rejectWith(() => null)
+    await eng.flush()
+    await settle()
+    expect(eng.getStatus()).toMatchObject({ pending: 0, retrying: 0 })
+  })
+
   it('an expired JWT (PGRST301 / 401) is never counted and never dead', async () => {
     fake.rejectWith(() => ({ code: 'PGRST301', message: 'jwt expired', status: 401 }))
     await eng.upsert('todos', todo('jwt'))
@@ -367,6 +378,10 @@ describe('pull shield and remote rows', () => {
     await settle()
     expect(await db.todos.get('local1')).toBeDefined()
     expect(eng.getStatus().lastSyncedAt).toBeNull()
+    expect(eng.getStatus().pullFailed).toBe(true)
+    await eng.syncNow() // the next complete pull clears it
+    await settle()
+    expect(eng.getStatus().pullFailed).toBe(false)
   })
 
   it('a table past the 1000-row cap is fully pulled and no local row is deleted', async () => {

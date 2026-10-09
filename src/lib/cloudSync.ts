@@ -102,6 +102,12 @@ export interface SyncStatus {
   syncing: boolean
   /** Remote rows the last pull skipped because they were malformed. */
   skipped: number
+  /** Live entries the server answered with a transient error (5xx, 429…) and
+   *  that are being retried: not dead, but not getting through either. */
+  retrying: number
+  /** The last pull while signed in and online failed, so local data may be
+   *  stale. Cleared by the next complete pull. */
+  pullFailed: boolean
 }
 
 /** A local-only child delete that rides along a parent's cascade delete: every
@@ -252,6 +258,8 @@ export function createCloudSync(config: SyncConfig): CloudSync {
     lastError: null,
     syncing: false,
     skipped: 0,
+    retrying: 0,
+    pullFailed: false,
   }
   const listeners = new Set<() => void>()
 
@@ -277,15 +285,19 @@ export function createCloudSync(config: SyncConfig): CloudSync {
   async function refreshCounts(): Promise<void> {
     let pending = 0
     let dead = 0
+    let retrying = 0
     // Badge count is best-effort: a closed db mid-flight must not reject.
     const rows = await db.outbox.toArray().catch(() => null)
     if (!rows) return
     for (const e of rows) {
       if (!remotes.has(e.table)) continue
       if (e.dead) dead++
-      else pending++
+      else {
+        pending++
+        if ((e.tries ?? 0) > 0) retrying++
+      }
     }
-    setStatus({ pending, dead, lastError: dead > 0 ? deadMessage(dead) : null })
+    setStatus({ pending, dead, retrying, lastError: dead > 0 ? deadMessage(dead) : null })
   }
 
   /** The signed-in user's id, or null when signed out. */
@@ -340,6 +352,7 @@ export function createCloudSync(config: SyncConfig): CloudSync {
         // Server answered with a transient error (5xx, 429…): count it and
         // stop, preserving per-row order.
         await db.outbox.update(entry.seq!, { tries })
+        await refreshCounts()
         return false
       }
       await db.outbox.delete(entry.seq!)
@@ -432,10 +445,13 @@ export function createCloudSync(config: SyncConfig): CloudSync {
       // as "the server has nothing" would wipe local data. Never pull then.
       const userId = await sessionUserId()
       if (!userId) return false
-      const results = await Promise.all(config.tables.map(selectAll))
+      const results = await Promise.all(config.tables.map((t) => selectAll(t).catch(() => null)))
       // If any table (or any page of it) errored, abort the whole pull — never
       // partial-delete based on an incomplete remote view.
-      if (results.some((r) => r === null)) return false
+      if (results.some((r) => r === null)) {
+        setStatus({ pullFailed: true })
+        return false
+      }
       // The session may have ended or switched user while the selects were in
       // flight (sign-out mid-pull): the rows then belong to another view of
       // RLS, possibly empty. Abort without touching Dexie.
@@ -470,7 +486,7 @@ export function createCloudSync(config: SyncConfig): CloudSync {
       if (skipped > 0) {
         console.warn(`cloudSync(${config.projectId}): skipped ${skipped} malformed remote row(s)`)
       }
-      setStatus({ skipped })
+      setStatus({ skipped, pullFailed: false })
       if (config.afterPull) {
         try {
           await config.afterPull()
