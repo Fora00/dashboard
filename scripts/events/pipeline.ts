@@ -268,6 +268,73 @@ function mergeSubtitled(events: Event[]): Event[] {
   return out
 }
 
+/** A title cut at its first separator ("Core. Subtitle", "Core - Subtitle", "Core: Subtitle"), both parts normalised. */
+export function titleParts(title: string): { core: string; rest: string } {
+  const m = /\s[-–—]\s|[.:|]\s/.exec(title)
+  if (!m) return { core: normalize(title), rest: '' }
+  return { core: normalize(title.slice(0, m.index)), rest: normalize(title.slice(m.index + m[0].length)) }
+}
+
+/** The shorter subtitle's words are all in the longer one (or it is empty). */
+function subtitlesAgree(a: string, b: string): boolean {
+  const [small, big] = a.length <= b.length ? [a, b] : [b, a]
+  if (!small) return true
+  const words = new Set(big.split(' '))
+  return small.split(' ').every((w) => words.has(w))
+}
+
+/**
+ * Same showing for the core pass (the day already matches): both timed → same
+ * instant; both all-day → both must carry a subtitle (a bare title against a
+ * subtitled one may be two different things on a long-running exhibition);
+ * one of each → fine.
+ */
+function sameShowing(a: Event, b: Event): boolean {
+  if (!a.allDay && !b.allDay) return Date.parse(a.start) === Date.parse(b.start)
+  if (a.allDay && b.allDay) return titleParts(a.title).rest !== '' && titleParts(b.title).rest !== ''
+  return true
+}
+
+/**
+ * Third, narrow pass: the same event titled slightly differently by two
+ * sources. Merges only when the title core (the part before the first
+ * ". ", " - ", ": " or " | ", at least 3 words) is equal, the local start day
+ * and the city are equal, the sources differ, the subtitles do not
+ * contradict each other, and each record has exactly one such partner (two
+ * showings on the day → nothing is merged). Never across days or cities.
+ */
+function mergeCore(events: Event[]): Event[] {
+  const groups = new Map<string, Event[]>()
+  for (const e of events) {
+    const { core } = titleParts(e.title)
+    if (core.split(' ').length < 3) continue
+    const key = `${core}|${e.start.slice(0, 10)}|${normalize(e.city)}`
+    groups.set(key, [...(groups.get(key) ?? []), e])
+  }
+  const gone = new Set<Event>()
+  const replaced = new Map<Event, Event>()
+  for (const group of groups.values()) {
+    if (group.length < 2) continue
+    const partners = (e: Event) =>
+      group.filter(
+        (o) =>
+          o !== e &&
+          !o.sources.some((s) => e.sources.includes(s)) &&
+          sameShowing(e, o) &&
+          subtitlesAgree(titleParts(e.title).rest, titleParts(o.title).rest),
+      )
+    for (const e of group) {
+      if (gone.has(e)) continue
+      const p = partners(e)
+      const other = p[0]
+      if (p.length !== 1 || !other || gone.has(other) || partners(other).length !== 1) continue
+      replaced.set(e, merge(e, other))
+      gone.add(other)
+    }
+  }
+  return events.filter((e) => !gone.has(e)).map((e) => replaced.get(e) ?? e)
+}
+
 export function dedup(events: Event[]): Event[] {
   const byKey = new Map<string, Event>()
   for (const e of events) {
@@ -290,7 +357,7 @@ export function dedup(events: Event[]): Event[] {
     byKey.set(target, merge(byKey.get(target) as Event, e))
     byKey.delete(key)
   }
-  return mergeSubtitled([...byKey.values()])
+  return mergeCore(mergeSubtitled([...byKey.values()]))
 }
 
 export function sortEvents(events: Event[]): Event[] {

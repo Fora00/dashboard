@@ -463,6 +463,71 @@ describe('dedup', () => {
       ).toHaveLength(2)
     })
   })
+
+  describe('same title core, same day and city (Pietre di pane)', () => {
+    const mart = event({
+      id: 'm',
+      title: 'Pietre di pane. Memorie di geografie fragili',
+      source: 'mart',
+      sources: ['mart'],
+      allDay: true,
+      start: '2026-10-19T00:00:00+02:00',
+      end: '2026-11-15T00:00:00+01:00',
+    })
+    const comune = event({
+      id: 'c',
+      title: 'Pietre di pane - Memorie di Geografie fragili - Installazione site specific',
+      source: 'comune-trento',
+      sources: ['comune-trento'],
+      allDay: true,
+      start: '2026-10-19T00:00:00+02:00',
+      end: '2026-11-01T00:00:00+01:00',
+      venue: 'Palazzo',
+    })
+
+    it('merges two all-day records whose subtitles agree', () => {
+      const out = dedup([mart, comune])
+      expect(out).toHaveLength(1)
+      expect(out[0]?.sources).toEqual(['comune-trento', 'mart'])
+    })
+
+    it('merges a timed record with an all-day one of the same day', () => {
+      const timed = { ...comune, allDay: false, start: '2026-10-19T18:00:00+02:00' }
+      expect(dedup([mart, timed])).toHaveLength(1)
+    })
+
+    it('does not merge across days or cities', () => {
+      expect(dedup([mart, { ...comune, start: '2026-10-20T00:00:00+02:00' }])).toHaveLength(2)
+      expect(dedup([mart, { ...comune, city: 'Rovereto' }])).toHaveLength(2)
+    })
+
+    it('does not merge contradicting subtitles, one source, short cores or different times', () => {
+      expect(dedup([mart, { ...comune, title: 'Pietre di pane - Laboratorio per bambini' }])).toHaveLength(2)
+      expect(dedup([mart, { ...comune, source: 'mart', sources: ['mart'] }])).toHaveLength(2)
+      const a = event({ id: 'a', title: 'Festa. Musica dal vivo', source: 'x', sources: ['x'] })
+      const b = event({ id: 'b', title: 'Festa - Danza e canti', source: 'y', sources: ['y'] })
+      expect(dedup([a, b])).toHaveLength(2)
+      const t1 = event({ id: 't1', title: 'Il flauto magico - Opera', source: 'x', sources: ['x'] })
+      const t2 = event({
+        id: 't2',
+        title: 'Il flauto magico: Opera',
+        source: 'y',
+        sources: ['y'],
+        start: '2026-10-20T17:00:00+02:00',
+      })
+      expect(dedup([t1, t2])).toHaveLength(2)
+    })
+
+    it('does not merge a bare all-day title with a subtitled all-day one', () => {
+      expect(dedup([{ ...mart, title: 'Pietre di pane' }, comune])).toHaveLength(2)
+    })
+
+    it('leaves the record alone when two showings could be the partner', () => {
+      const t1 = { ...comune, id: 't1', allDay: false, start: '2026-10-19T17:00:00+02:00' }
+      const t2 = { ...comune, id: 't2', allDay: false, start: '2026-10-19T21:00:00+02:00', source: 'z', sources: ['z'] }
+      expect(dedup([mart, t1, t2])).toHaveLength(3)
+    })
+  })
 })
 
 describe('sortEvents', () => {
