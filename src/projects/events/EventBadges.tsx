@@ -3,10 +3,11 @@ import { endingInDays } from './filters'
 import { cleanFormats, formatLabel } from './format'
 import { isManual } from './custom'
 import { categoryLabel, categoryOf, isNew, isSpot } from './model'
+import { subcategoryLabel } from './subcategories'
 
 const BADGE = 'rounded-full px-2.5 py-1 text-xs font-medium'
 
-/** New since the last visit · ending soon · category · formats · added by you · spot · tentative · hidden. */
+/** New since the last visit · ending soon · category · subcategory · formats · added by you · spot · tentative · hidden. */
 export function EventBadges({
   event: e,
   hidden,
@@ -19,6 +20,7 @@ export function EventBadges({
   since?: number | null
 }) {
   const left = endingInDays(e, now)
+  const sub = subcategoryLabel(categoryOf(e), e.subcategory)
   return (
     <div className="flex flex-wrap items-center gap-1.5 pt-1">
       {isNew(e, since) && (
@@ -32,6 +34,7 @@ export function EventBadges({
       <span className={`${BADGE} bg-(color:--accent-soft) text-slate-800 dark:text-slate-100`}>
         {categoryLabel(categoryOf(e))}
       </span>
+      {sub && <span className={`${BADGE} bg-(color:--accent-soft) text-slate-600 dark:text-slate-300`}>{sub}</span>}
       {cleanFormats(e.tags).map((id) => (
         <span key={id} className={`${BADGE} bg-sky-100 text-sky-800 dark:bg-sky-500/20 dark:text-sky-200`}>
           {formatLabel(id)}

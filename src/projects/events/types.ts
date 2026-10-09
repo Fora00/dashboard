@@ -37,6 +37,8 @@ export interface EventItem {
   datesTentative?: true
   /** UTC ISO time the id first appeared in events.json (added 2026-10-09). Absent = never "new". */
   firstSeen?: string
+  /** Finer split of theatre/concerts/exhibitions/talks (added 2026-10-09). Absent = none recognised. */
+  subcategory?: string
 }
 
 export interface EventsFile {
@@ -67,4 +69,6 @@ export interface InterestFeatures {
   weekday: number | null
   /** Hour of the start in Europe/Rome (0-23); null for all-day / date-only. */
   hour: number | null
+  /** Subcategory id (lowercase-kebab, <= 40); absent when the event has none. Additive, v stays 1. */
+  subcategory?: string
 }

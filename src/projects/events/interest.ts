@@ -70,8 +70,11 @@ export function interestFeatures(e: EventItem): InterestFeatures {
     area: areaOf(e),
     weekday,
     hour,
+    subcategory: e.subcategory,
   })!
 }
+
+const SUBCATEGORY_ID = /^[a-z][a-z0-9-]{0,39}$/
 
 function intIn(v: unknown, min: number, max: number): number | null {
   return typeof v === 'number' && Number.isInteger(v) && v >= min && v <= max ? v : null
@@ -102,6 +105,7 @@ export function sanitizeFeatures(raw: unknown): InterestFeatures | null {
     weekday: intIn(r.weekday, 1, 7),
     hour: intIn(r.hour, 0, 23),
   }
+  if (typeof r.subcategory === 'string' && SUBCATEGORY_ID.test(r.subcategory)) out.subcategory = r.subcategory
   // Belt and braces: the caps already fit the budget in the worst case.
   if (utf8Bytes(JSON.stringify(out)) > FEATURES_BUDGET) out.tags = out.tags.slice(0, 5)
   return out

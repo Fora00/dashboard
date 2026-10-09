@@ -19,6 +19,7 @@ import { useUndoSnackbar } from '../../lib/useUndoSnackbar'
 import { SkeletonList } from '../../components/Skeleton'
 import { FilterSheet } from './FilterSheet'
 import { FilterPanel, type FilterPanelProps } from './FilterPanel'
+import { subLabel } from './subcategories'
 import { EventDetail } from './EventDetail'
 import { isTypingTarget, listKeyAction, moveSelection, rangeBetween, visibleOrder } from './selection'
 import { useWide } from './useWide'
@@ -150,6 +151,7 @@ export function Events() {
     maxMin,
     selectedCats,
     selectedFormats,
+    selectedSubs,
     activeCats,
     favourites,
     filtering,
@@ -384,6 +386,10 @@ export function Events() {
     formatCounts: counts.formatCounts,
     selectedFormats,
     onToggleFormat: toggles.toggleFormat,
+    subCounts: counts.subCounts,
+    noSubHidden: counts.noSubHidden,
+    selectedSubs,
+    onToggleSub: toggles.toggleSub,
     onShowHidden: toggles.setShowHidden,
     onClearAll: toggles.clearAll,
   }
@@ -620,6 +626,17 @@ export function Events() {
               onClick={() => toggles.toggleCat(id)}
             >
               {categoryLabel(id)} ✕
+            </Chip>
+          ))}
+          {selectedSubs.map((id) => (
+            <Chip
+              key={`s-${id}`}
+              toggle={false}
+              active={false}
+              aria-label={`Remove filter ${subLabel(id)}`}
+              onClick={() => toggles.toggleSub(id)}
+            >
+              {subLabel(id)} ✕
             </Chip>
           ))}
           {selectedFormats.map((id) => (

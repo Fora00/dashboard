@@ -5,7 +5,10 @@ import {
   EMPTY_FILTERS,
   chipRange,
   loadFilters,
+  effectiveSubs,
+  lacksSubcategory,
   matchesChip,
+  matchesSubcategory,
   matchesQuery,
   matchesRange,
   normalizeText,
@@ -182,7 +185,14 @@ describe('remembered selection', () => {
 
   it('round-trips', () => {
     stubStorage()
-    const f: StoredFilters = { cats: ['theatre'], chip: 'weekend', formats: ['solo-ok'], showHidden: true, maxMin: 50 }
+    const f: StoredFilters = {
+      cats: ['theatre'],
+      chip: 'weekend',
+      formats: ['solo-ok'],
+      showHidden: true,
+      maxMin: 50,
+      subs: ['prosa'],
+    }
     saveFilters(f)
     expect(loadFilters()).toEqual(f)
   })
@@ -212,7 +222,14 @@ describe('remembered selection', () => {
         maxMin: 45,
       }),
     })
-    expect(loadFilters()).toEqual({ cats: ['a'], chip: null, formats: ['solo-ok'], showHidden: false, maxMin: null })
+    expect(loadFilters()).toEqual({
+      cats: ['a'],
+      chip: null,
+      formats: ['solo-ok'],
+      showHidden: false,
+      maxMin: null,
+      subs: [],
+    })
   })
 
   it('values from before formats existed load with none', () => {
@@ -236,5 +253,53 @@ describe('remembered selection', () => {
   it('no localStorage at all is survived too', () => {
     expect(loadFilters()).toEqual(EMPTY_FILTERS)
     expect(() => saveFilters(EMPTY_FILTERS)).not.toThrow()
+  })
+})
+
+describe('subcategory filter', () => {
+  const th = (subcategory?: string) =>
+    ev({ category: 'theatre', tags: ['theatre'], ...(subcategory ? { subcategory } : {}) })
+
+  it('no selection lets everything through', () => {
+    expect(matchesSubcategory(th(), [])).toBe(true)
+  })
+
+  it('narrows the category to the picked subcategories, dropping events without one', () => {
+    expect(matchesSubcategory(th('danza'), ['danza'])).toBe(true)
+    expect(matchesSubcategory(th('prosa'), ['danza'])).toBe(false)
+    expect(matchesSubcategory(th(), ['danza'])).toBe(false)
+  })
+
+  it('leaves other categories alone', () => {
+    expect(matchesSubcategory(ev({ category: 'concerts' }), ['danza'])).toBe(true)
+    expect(matchesSubcategory(ev({ category: 'concerts', subcategory: 'jazz-blues' }), ['danza'])).toBe(true)
+  })
+
+  it('effectiveSubs keeps only picks of a selected category and drops unknown ids', () => {
+    expect(effectiveSubs(['danza', 'jazz-blues', 'bogus'], ['theatre'])).toEqual(['danza'])
+    expect(effectiveSubs(['danza'], [])).toEqual([])
+  })
+
+  it('lacksSubcategory counts the category events with no (known) subcategory', () => {
+    expect(lacksSubcategory(th(), 'theatre')).toBe(true)
+    expect(lacksSubcategory(th('danza'), 'theatre')).toBe(false)
+    expect(lacksSubcategory(th('jazz-blues'), 'theatre')).toBe(true)
+    expect(lacksSubcategory(ev({ category: 'concerts' }), 'theatre')).toBe(false)
+  })
+
+  function stubStorage(initial: Record<string, string>) {
+    vi.stubGlobal('localStorage', {
+      getItem: (k: string) => initial[k] ?? null,
+      setItem: () => {},
+      removeItem: () => {},
+    })
+  }
+  afterEach(() => vi.unstubAllGlobals())
+
+  it('stored filters without subs (older values) load with none; unknown ids are dropped', () => {
+    stubStorage({ 'dashboard:events-filters': JSON.stringify({ cats: ['theatre'] }) })
+    expect(loadFilters().subs).toEqual([])
+    stubStorage({ 'dashboard:events-filters': JSON.stringify({ subs: ['danza', 'bogus', 3] }) })
+    expect(loadFilters().subs).toEqual(['danza'])
   })
 })

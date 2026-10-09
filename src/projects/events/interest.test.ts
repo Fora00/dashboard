@@ -73,6 +73,13 @@ describe('interestFeatures', () => {
     })
   })
 
+  it('adds the subcategory only when present and a valid slug', () => {
+    expect(interestFeatures(ev({ category: 'theatre', subcategory: 'stand-up' })).subcategory).toBe('stand-up')
+    expect('subcategory' in interestFeatures(ev())).toBe(false)
+    expect('subcategory' in interestFeatures(ev({ subcategory: 'Not A Slug' }))).toBe(false)
+    expect('subcategory' in interestFeatures(ev({ subcategory: 'a'.repeat(41) }))).toBe(false)
+  })
+
   it('unknown category -> other; missing ring -> home; area derived like areaOf', () => {
     const { ring: _r, area: _a, ...old } = ev({ category: 'from-a-newer-crawler' })
     const f = interestFeatures(old as EventItem)

@@ -1,11 +1,22 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { EventMark, EventPrefs } from '../../lib/db'
 import { setFavouriteCategories } from '../../lib/eventMarksSync'
-import { loadFilters, matchesQuery, matchesChip, normalizeText, saveFilters, type DateChip } from './filters'
+import {
+  effectiveSubs,
+  lacksSubcategory,
+  loadFilters,
+  matchesQuery,
+  matchesChip,
+  matchesSubcategory,
+  normalizeText,
+  saveFilters,
+  type DateChip,
+} from './filters'
 import { cleanFormats, matchesFormat, FORMAT_CHIPS } from './format'
 import type { EventItem } from './types'
 import { isManual } from './custom'
 import { collapseRepeats } from './groups'
+import { categoryOfSubcategory } from './subcategories'
 import { DISTANCE_STEPS, isNear, tooFarForCategory, withinMinutes } from './distance'
 import {
   CATEGORIES,
@@ -79,6 +90,7 @@ export function useEventFilters(
   const [rawFormats, setSelectedFormats] = useState<string[]>(initial.formats)
   const [showHidden, setShowHiddenState] = useState(initial.showHidden)
   const [maxMin, setMaxMin] = useState<number | null>(initial.maxMin)
+  const [rawSubs, setSelectedSubs] = useState<string[]>(initial.subs)
   const [query, setQueryState] = useState('')
   const [limit, setLimit] = useState(PAGE)
 
@@ -101,13 +113,16 @@ export function useEventFilters(
       formats: selectedFormats,
       showHidden,
       maxMin,
+      subs: rawSubs,
     })
-  }, [persist, selectedCats, dateChip, selectedFormats, showHidden, maxMin])
+  }, [persist, selectedCats, dateChip, selectedFormats, showHidden, maxMin, rawSubs])
 
   const nq = useMemo(() => normalizeText(query), [query])
   // Untouched = the favourites, or the default picks when there are none.
   const defaultCats = useMemo(() => (favourites.length > 0 ? favourites : [...DEFAULT_CATEGORIES]), [favourites])
   const activeCats = selectedCats ?? defaultCats
+  // Subcategory picks only count while their category is selected.
+  const selectedSubs = useMemo(() => effectiveSubs(rawSubs, activeCats), [rawSubs, activeCats])
 
   // Base list of the current view, before category/city filters.
   const base = useMemo(() => {
@@ -140,9 +155,11 @@ export function useEventFilters(
   // Sheet counts: each one respects every filter except its own.
   // Events within each distance step (cumulative), respecting category and format.
   const distanceCounts = useMemo(() => {
-    const pool = scoped.filter((e) => inCats(e, activeCats) && matchesFormat(e, selectedFormats))
+    const pool = scoped.filter(
+      (e) => inCats(e, activeCats) && matchesSubcategory(e, selectedSubs) && matchesFormat(e, selectedFormats),
+    )
     return new Map<number, number>(DISTANCE_STEPS.map((m) => [m, pool.filter((e) => withinMinutes(e, m)).length]))
-  }, [scoped, activeCats, selectedFormats])
+  }, [scoped, activeCats, selectedSubs, selectedFormats])
 
   // Category counts respect the area, city and format filters but not the category filter.
   const catCounts = useMemo(
@@ -160,11 +177,37 @@ export function useEventFilters(
     () =>
       countBy(
         scoped,
-        (e) => inCats(e, activeCats) && (maxMin === null || withinMinutes(e, maxMin)),
+        (e) =>
+          inCats(e, activeCats) && matchesSubcategory(e, selectedSubs) && (maxMin === null || withinMinutes(e, maxMin)),
         (e) => FORMAT_CHIPS.filter((c) => e.tags.includes(c.id)).map((c) => c.id),
       ),
-    [scoped, activeCats, maxMin],
+    [scoped, activeCats, selectedSubs, maxMin],
   )
+
+  // Subcategory counts (by id) respect format and distance but not the subcategory filter itself.
+  const subCounts = useMemo(
+    () =>
+      countBy(
+        scoped,
+        (e) => matchesFormat(e, selectedFormats) && (maxMin === null || withinMinutes(e, maxMin)),
+        (e) => (e.subcategory ? [e.subcategory] : []),
+      ),
+    [scoped, selectedFormats, maxMin],
+  )
+
+  // Per category with an active subcategory filter: events hidden for lacking a subcategory.
+  const noSubHidden = useMemo(() => {
+    const cats = new Set(selectedSubs.map((id) => categoryOfSubcategory(id)).filter((c): c is string => c !== null))
+    const m = new Map<string, number>()
+    for (const c of cats) {
+      const n = scoped.filter(
+        (e) =>
+          lacksSubcategory(e, c) && matchesFormat(e, selectedFormats) && (maxMin === null || withinMinutes(e, maxMin)),
+      ).length
+      m.set(c, n)
+    }
+    return m
+  }, [scoped, selectedSubs, selectedFormats, maxMin])
 
   const catOrder = useMemo(() => {
     const ids = CATEGORIES.map((c) => c.id)
@@ -184,10 +227,11 @@ export function useEventFilters(
                 (view === 'saved' && isSpot(e)) ||
                 // Untouched defaults: an exhibition close by (the Mart) is worth a look.
                 (favourites.length === 0 && categoryOf(e) === 'exhibitions' && isNear(e))))) &&
+          matchesSubcategory(e, selectedSubs) &&
           matchesFormat(e, selectedFormats) &&
           (maxMin === null || withinMinutes(e, maxMin)),
       ),
-    [scoped, activeCats, selectedCats, selectedFormats, view, maxMin, favourites],
+    [scoped, activeCats, selectedCats, selectedSubs, selectedFormats, view, maxMin, favourites],
   )
 
   // Flat, ordered list of groups; then cut to `limit` cards in total.
@@ -233,7 +277,7 @@ export function useEventFilters(
   }, [groups, limit])
 
   const filtering = activeCats.length > 0 || selectedFormats.length > 0 || maxMin !== null
-  const filterCount = activeCats.length + selectedFormats.length + (maxMin !== null ? 1 : 0)
+  const filterCount = activeCats.length + selectedSubs.length + selectedFormats.length + (maxMin !== null ? 1 : 0)
 
   // --- Toggles ---------------------------------------------------------------------
 
@@ -272,6 +316,11 @@ export function useEventFilters(
     [defaultCats, resetLimit],
   )
 
+  function toggleSub(id: string) {
+    setSelectedSubs((cur) => toggleIn(cur, id))
+    resetLimit()
+  }
+
   function toggleFormat(id: string) {
     setSelectedFormats((cur) => toggleIn(cur, id))
     resetLimit()
@@ -291,6 +340,7 @@ export function useEventFilters(
   function clearAll() {
     setSelectedFormats([])
     setSelectedCats([])
+    setSelectedSubs([])
     setMaxMin(null)
     setShowHiddenState(false)
     resetLimit()
@@ -310,6 +360,7 @@ export function useEventFilters(
       maxMin,
       selectedCats,
       selectedFormats,
+      selectedSubs,
       activeCats,
       favourites,
       filtering,
@@ -321,13 +372,14 @@ export function useEventFilters(
       toggleDateChip,
       toggleCat,
       toggleFormat,
+      toggleSub,
       toggleMaxMin,
       setShowHidden,
       clearAll,
       toggleFavourite,
       showMore,
     },
-    counts: { distanceCounts, catCounts, formatCounts, catOrder },
+    counts: { distanceCounts, catCounts, formatCounts, subCounts, noSubHidden, catOrder },
     groups: { visibleGroups, total, limit, repeats },
     marks,
   }

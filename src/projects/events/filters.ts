@@ -2,7 +2,8 @@ import type { EventItem } from './types'
 import { cleanFormats } from './format'
 import { readJSON, writeJSON } from '../../lib/safeStorage'
 import { DISTANCE_STEPS } from './distance'
-import { listingDay, localDay, romeDate, isSparseSeries } from './model'
+import { categoryOf, listingDay, localDay, romeDate, isSparseSeries } from './model'
+import { categoryOfSubcategory } from './subcategories'
 
 // Pure helpers for the events quick filters (date chips, text search) and the
 // per-device memory of the last selection. No React.
@@ -103,6 +104,36 @@ export function matchesChip(e: EventItem, chip: DateChip, now: number): boolean 
   return endingInDays(e, now) !== null
 }
 
+// --- Subcategories -----------------------------------------------------------------
+
+/** Selected subcategory ids that belong to one of `cats` (a deselected category's picks do nothing). */
+export function effectiveSubs(subs: readonly string[], cats: readonly string[]): string[] {
+  return subs.filter((id) => {
+    const c = categoryOfSubcategory(id)
+    return c !== null && cats.includes(c)
+  })
+}
+
+/**
+ * Second-level filter, applied to the event's primary category only: when
+ * subcategories of that category are selected, the event must carry one of
+ * them (so one WITHOUT a subcategory is out). Other categories are untouched.
+ */
+export function matchesSubcategory(e: EventItem, subs: readonly string[]): boolean {
+  if (subs.length === 0) return true
+  const mine = subs.filter((id) => categoryOfSubcategory(id) === categoryOf(e))
+  return mine.length === 0 || (e.subcategory !== undefined && mine.includes(e.subcategory))
+}
+
+/** Events hidden only because they lack a subcategory while `category` has an active subcategory filter. */
+export function lacksSubcategory(e: EventItem, category: string): boolean {
+  return categoryOf(e) === category && !subcategoryKnown(e)
+}
+
+function subcategoryKnown(e: EventItem): boolean {
+  return e.subcategory !== undefined && categoryOfSubcategory(e.subcategory) === categoryOf(e)
+}
+
 // --- Remembered selection --------------------------------------------------------
 
 const KEY = 'dashboard:events-filters'
@@ -116,9 +147,18 @@ export interface StoredFilters {
   showHidden: boolean
   /** Only towns within this many driving minutes of Rovereto (distance.ts); null = any. */
   maxMin: number | null
+  /** Subcategory ids (subcategories.ts); missing in older stored values = none. */
+  subs: string[]
 }
 
-export const EMPTY_FILTERS: StoredFilters = { cats: null, chip: null, formats: [], showHidden: false, maxMin: null }
+export const EMPTY_FILTERS: StoredFilters = {
+  cats: null,
+  chip: null,
+  formats: [],
+  showHidden: false,
+  maxMin: null,
+  subs: [],
+}
 
 function strings(v: unknown): string[] {
   return Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : []
@@ -132,6 +172,7 @@ function sanitizeFilters(v: unknown): StoredFilters {
     chip: DATE_CHIPS.some((c) => c.id === o.chip) ? (o.chip as DateChip) : null,
     formats: cleanFormats(strings(o.formats)),
     showHidden: o.showHidden === true,
+    subs: strings(o.subs).filter((id) => categoryOfSubcategory(id) !== null),
     maxMin: typeof o.maxMin === 'number' && DISTANCE_STEPS.includes(o.maxMin as never) ? o.maxMin : null,
   }
 }

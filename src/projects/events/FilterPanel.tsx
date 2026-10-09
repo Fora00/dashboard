@@ -5,6 +5,7 @@ import { FOCUS_RING_INSET } from '../../components/focus'
 import { categoryLabel } from './model'
 import { DISTANCE_STEPS, NEAR_MINUTES, minutesLabel } from './distance'
 import { FORMAT_CHIPS, formatLabel } from './format'
+import { categoryOfSubcategory, subLabel, subcategoriesOf } from './subcategories'
 
 /** Everything the filters need; shared by the sheet (< lg) and the rail (lg+). */
 export interface FilterPanelProps {
@@ -19,6 +20,12 @@ export interface FilterPanelProps {
   formatCounts: Map<string, number>
   selectedFormats: string[]
   onToggleFormat: (id: string) => void
+  /** Events per subcategory id (respecting every filter except the subcategory one). */
+  subCounts: Map<string, number>
+  /** Per category with an active subcategory filter: events hidden for having no subcategory. */
+  noSubHidden: Map<string, number>
+  selectedSubs: string[]
+  onToggleSub: (id: string) => void
   showHidden: boolean
   canShowHidden: boolean
   /** Any filter of the panel is active: the Reset at the top is shown. */
@@ -115,6 +122,45 @@ function OptionGrid({
         )
       })}
     </ul>
+  )
+}
+
+/**
+ * Second-level filter: the subcategories of the selected category. With
+ * several selected categories that have some, a row of category chips picks
+ * which one to look at (local state; the picks themselves are all kept).
+ */
+function SubcategorySection({ p, gridClass }: { p: FilterPanelProps; gridClass: string }) {
+  const [picked, setPicked] = useState<string | null>(null)
+  const withSubs = p.activeCats.filter((c) => subcategoriesOf(c).length > 0)
+  if (withSubs.length === 0) return null
+  const cat =
+    withSubs.length === 1 ? (withSubs[0] ?? '') : withSubs.includes(picked ?? '') ? (picked ?? '') : (withSubs[0] ?? '')
+  const items = subcategoriesOf(cat).map((s) => ({ id: s.id, label: s.label, count: p.subCounts.get(s.id) ?? 0 }))
+  const mine = p.selectedSubs.filter((id) => categoryOfSubcategory(id) === cat)
+  const hidden = mine.length > 0 ? (p.noSubHidden.get(cat) ?? 0) : 0
+  return (
+    <Section
+      title="Sottocategoria"
+      summary={summarize(p.selectedSubs, subLabel)}
+      defaultOpen={withSubs.length === 1 || p.selectedSubs.length > 0}
+    >
+      {withSubs.length > 1 && (
+        <ul className="mb-2 flex flex-wrap gap-2">
+          {withSubs.map((c) => (
+            <li key={c}>
+              <Chip toggle={false} active={c === cat} onClick={() => setPicked(c)}>
+                {categoryLabel(c)}
+              </Chip>
+            </li>
+          ))}
+        </ul>
+      )}
+      <OptionGrid gridClass={gridClass} items={items} selected={p.selectedSubs} onToggle={p.onToggleSub} />
+      {hidden > 0 && (
+        <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">{hidden} senza sottocategoria nascosti</p>
+      )}
+    </Section>
   )
 }
 
@@ -224,6 +270,8 @@ export function FilterPanel({ variant, ...p }: FilterPanelProps & { variant: Fil
           })}
         </ul>
       </Section>
+
+      <SubcategorySection p={p} gridClass={gridClass} />
 
       <Section
         title="Come"
