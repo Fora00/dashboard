@@ -713,6 +713,14 @@ sync can come later).
          Milan Games Week / Miart dates can be verified. Then try a
          visitrovereto.it adapter (WordPress, no feed; robots + structure
          first, skip if only fragile markup is left).
+      11. [~] Interest signal (owner, 2026-10-09). Step 1 DONE: 👍/👎 on each card
+         (👎 also hides; `event_interest` owner-only, features snapshot, migration
+         `20261009150000` pushed). Subcategories (theatre/concerts/exhibitions/talks)
+         assigned by the crawler, coverage about half. Open: UI for subcategories
+         (second chip row, favourites at subcategory level, add `subcategory` to the
+         feature snapshot); step 2 scoring + "your interests" page (reorder off until
+         ~30 signals); seed from `~/life` only through a local path; check the card
+         footer at 375 px; hand-added events as implicit 👍.
       Parked: map view (only events with a venue), price/free filter (needs a
       crawler field per source), real `organizer` field.
 - [ ] Later: more categories, one at a time (SAT/hikes, climbing,

@@ -5,6 +5,7 @@ import type { EventMark } from '../../lib/db'
 import { formatRange, isFlatGroup, isNew, listingDay, shortDay, type WeekGroup } from './model'
 import { eventPlace } from './display'
 import type { EventItem } from './types'
+import type { InterestValue } from './interest'
 import { EyeOffIcon, ListChecksIcon } from './icons'
 
 /** Floating bar shown while multi-selecting events to hide. */
@@ -132,6 +133,8 @@ export function WeekSections({
   selectedIds,
   onToggleSave,
   onToggleHide,
+  interest,
+  onInterest,
   onEdit,
   onSelect,
   master = false,
@@ -150,6 +153,9 @@ export function WeekSections({
   selectedIds: ReadonlySet<string>
   onToggleSave: (e: EventItem) => void
   onToggleHide: (e: EventItem) => void
+  /** event id -> the owner's 👍 (1) / 👎 (-1). */
+  interest: ReadonlyMap<string, InterestValue>
+  onInterest: (e: EventItem, value: InterestValue) => void
   onEdit: (e: EventItem) => void
   onSelect: (e: EventItem, range?: boolean) => void
   /** lg+ master-detail: a tap shows the event in the detail panel. */
@@ -167,6 +173,8 @@ export function WeekSections({
     since,
     onToggleSave,
     onToggleHide,
+    interest: interest.get(e.id) ?? 0,
+    onInterest,
     onEdit,
     selecting,
     selected: selectedIds.has(e.id),

@@ -5,6 +5,7 @@ import { startBoardgameIdeasSync } from './lib/boardgameIdeasSync'
 import { startBookIdeasSync } from './lib/bookIdeasSync'
 import { startClimbSync } from './lib/climbSync'
 import { startCustomEventsSync } from './lib/customEventsSync'
+import { startEventInterestSync } from './lib/eventInterestSync'
 import { startEventMarksSync } from './lib/eventMarksSync'
 import { startHabitSync } from './lib/habitSync'
 import { startLifeSync } from './lib/lifeSync'
@@ -66,6 +67,7 @@ export default function App() {
       startTripsSync(),
       startCustomEventsSync(),
       startEventMarksSync(),
+      startEventInterestSync(),
       startProjectPrefsSync(),
     ]
     return () => {

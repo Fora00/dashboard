@@ -4,6 +4,8 @@ import type { EventItem } from './types'
 import { CategoryThumb } from './CategoryThumb'
 import { travelLabel } from './travel'
 import { EventActions } from './EventActions'
+import { InterestButtons, type InterestState } from './InterestButtons'
+import type { InterestValue } from './interest'
 import { EventBadges } from './EventBadges'
 import { XIcon } from './icons'
 import { eventImage, eventPlace, mapsUrl } from './display'
@@ -16,6 +18,9 @@ interface Props {
   now: number
   onToggleSave: (e: EventItem) => void
   onToggleHide: (e: EventItem) => void
+  /** The owner's 👍 / 👎 on this event (0 = none) and its toggle. */
+  interest: InterestState
+  onInterest: (e: EventItem, value: InterestValue) => void
   onEdit: (e: EventItem) => void
   /** Clear the selection (the ✕, or Esc on the page). */
   onClose: () => void
@@ -47,6 +52,8 @@ function Detail({
   now,
   onToggleSave,
   onToggleHide,
+  interest,
+  onInterest,
   onEdit,
   onClose,
 }: Props & { event: EventItem }) {
@@ -126,6 +133,7 @@ function Detail({
       />
 
       <div className="space-y-2 px-4 py-3">
+        <InterestButtons event={e} interest={interest} onInterest={onInterest} variant="row" />
         {text ? (
           <p className="text-sm whitespace-pre-line text-slate-700 dark:text-slate-300">{text}</p>
         ) : (

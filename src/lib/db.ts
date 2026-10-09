@@ -1,6 +1,6 @@
 import Dexie, { type EntityTable } from 'dexie'
 
-import type { EventsFile, EventItem } from '../projects/events/types'
+import type { EventsFile, EventItem, InterestFeatures, InterestValue } from '../projects/events/types'
 
 // One shared local-first database for the whole dashboard.
 // Every project reads/writes here, so any project can use another project's data.
@@ -354,6 +354,7 @@ export interface OutboxMap {
   event_marks: EventMark
   event_prefs: EventPrefs
   project_prefs: ProjectPref
+  event_interest: EventInterest
 }
 
 // Remote table names the engine can push to — also the discriminator on an
@@ -408,6 +409,19 @@ export interface EventPrefs {
   updatedAt?: number
 }
 
+// The owner's 👍 (1) / 👎 (-1) on an event, keyed by the event id. Owner-only
+// synced table `event_interest` (src/lib/eventInterestSync.ts). `features` is
+// a snapshot taken at click time (src/projects/events/interest.ts), so the
+// signal outlives events.json; rows are never pruned with the events. A 👎
+// also hides the event through eventMarks; the two share their updatedAt when
+// the 👎 created that hide (see eventInterestSync.ts for the undo rule).
+export interface EventInterest {
+  id: string
+  value: InterestValue
+  features: InterestFeatures
+  updatedAt: number
+}
+
 // An event the owner added by hand (e.g. from a climbing gym's Instagram
 // post). Owner-only synced table `custom_events`; merged into the events list
 // as source 'manual' by src/projects/events/custom.ts. Times follow
@@ -452,6 +466,7 @@ export const db = new Dexie('dashboard') as Dexie & {
   customEvents: EntityTable<CustomEvent, 'id'>
   meals: EntityTable<MealEntry, 'id'>
   projectPrefs: EntityTable<ProjectPref, 'id'>
+  eventInterest: EntityTable<EventInterest, 'id'>
 }
 
 db.version(1).stores({
@@ -848,6 +863,35 @@ db.version(17)
         delete s.hidden
       })
   })
+
+// v18: eventInterest, the owner's 👍 / 👎 on events (eventInterestSync.ts).
+// A brand-new empty table: no upgrade callback, nothing else changes.
+db.version(18).stores({
+  files: 'id, name, createdAt, synced',
+  shopItems: 'id, done, createdAt, areaId',
+  shopAreas: 'id, createdAt',
+  outbox: '++seq, rowId',
+  climbSessions: 'id, date',
+  climbs: 'id, sessionId, date',
+  habits: 'id, createdAt',
+  habitChecks: 'id, habitId, day, [habitId+day]',
+  todos: 'id, done, createdAt',
+  bookIdeas: 'id, createdAt',
+  boardgameIdeas: 'id, createdAt',
+  links: 'id, read, createdAt, *tags',
+  projectStats: 'id, opens',
+  lifeWeeks: 'id, importedAt',
+  lifeEntries: 'id, week, [week+kind]',
+  eventsCache: 'id',
+  eventMarks: 'id, state, updatedAt',
+  eventPrefs: 'id',
+  tripIdeas: 'id, done, createdAt, *companionIds',
+  tripCompanions: 'id, createdAt',
+  customEvents: 'id, start, updatedAt',
+  meals: 'id, day, createdAt',
+  projectPrefs: 'id',
+  eventInterest: 'id, value',
+})
 
 // Ask the browser not to evict our data under storage pressure (important on iOS).
 export async function requestPersistentStorage(): Promise<boolean> {

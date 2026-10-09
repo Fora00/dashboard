@@ -4,6 +4,7 @@ import { sync as boardgameIdeas } from './boardgameIdeasSync'
 import { sync as bookIdeas } from './bookIdeasSync'
 import { sync as climbing } from './climbSync'
 import { sync as customEvents } from './customEventsSync'
+import { sync as eventInterest } from './eventInterestSync'
 import { sync as eventMarks } from './eventMarksSync'
 import { sync as habits } from './habitSync'
 import { sync as life } from './lifeSync'
@@ -36,6 +37,7 @@ export const watchedEngines: readonly WatchedEngine[] = [
   { label: 'Trips', path: '/trips', sync: trips },
   { label: 'Events', path: '/events', sync: customEvents },
   { label: 'Events', path: '/events', sync: eventMarks },
+  { label: 'Event interests', path: '/events', sync: eventInterest },
   { label: 'Home layout', path: '/settings', sync: projectPrefs },
 ]
 

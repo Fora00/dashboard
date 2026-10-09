@@ -224,6 +224,27 @@ export type Database = {
         }
         Relationships: []
       }
+      event_interest: {
+        Row: {
+          features: Json
+          id: string
+          updated_at: number
+          value: number
+        }
+        Insert: {
+          features: Json
+          id: string
+          updated_at: number
+          value: number
+        }
+        Update: {
+          features?: Json
+          id?: string
+          updated_at?: number
+          value?: number
+        }
+        Relationships: []
+      }
       event_marks: {
         Row: {
           event: Json

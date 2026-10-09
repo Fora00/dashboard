@@ -42,11 +42,13 @@ const MARK_ID_RE = /^[A-Za-z0-9_-]+$/
 // eslint-disable-next-line no-control-regex
 const CONTROL = /[\u0000-\u0008\u000B-\u001F\u007F]/g
 
-function str(v: unknown, max: number): string {
+/** A string, control characters removed, capped at `max` UTF-16 units ('' for a non-string). */
+export function str(v: unknown, max: number): string {
   return typeof v === 'string' ? v.replace(CONTROL, '').slice(0, max) : ''
 }
 
-function strList(v: unknown, count: number, max: number): string[] {
+/** Non-empty, de-duplicated strings, each capped, at most `count` of them. */
+export function strList(v: unknown, count: number, max: number): string[] {
   if (!Array.isArray(v)) return []
   const out: string[] = []
   for (const x of v) {

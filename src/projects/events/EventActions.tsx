@@ -5,6 +5,8 @@ import type { EventItem } from './types'
 import { addToCalendar } from './ics'
 import { CalendarPlusIcon, CheckIcon, EyeIcon, EyeOffIcon, PencilIcon, ShareIcon, StarIcon, ThingsIcon } from './icons'
 import { isManual } from './custom'
+import { InterestButtons, type InterestState } from './InterestButtons'
+import type { InterestValue } from './interest'
 import { eventPlace } from './display'
 import { buildThingsAddUrl, formatRange, safeHttpUrl } from './model'
 
@@ -18,11 +20,24 @@ interface Props {
   onToggleHide: (e: EventItem) => void
   /** Hand-added events only: open the edit sheet. */
   onEdit?: ((e: EventItem) => void) | undefined
+  /** 👍 / 👎 cells at the end of the row (omit `onInterest` to leave them out). */
+  interest?: InterestState
+  onInterest?: ((e: EventItem, value: InterestValue) => void) | undefined
   className?: string
 }
 
-/** Save · Things · Calendar · Hide · Share (· Edit): the card footer and the detail panel. */
-export function EventActions({ event: e, saved, hidden, onToggleSave, onToggleHide, onEdit, className = '' }: Props) {
+/** Save · Things · Calendar · Hide · Share (· Like · Nope | · Edit): the card footer and the detail panel. */
+export function EventActions({
+  event: e,
+  saved,
+  hidden,
+  onToggleSave,
+  onToggleHide,
+  onEdit,
+  interest = 0,
+  onInterest,
+  className = '',
+}: Props) {
   const [copied, flashCopied] = useFlash(2000)
   const url = safeHttpUrl(e.url)
 
@@ -81,6 +96,9 @@ export function EventActions({ event: e, saved, hidden, onToggleSave, onToggleHi
         {copied ? <CheckIcon /> : <ShareIcon />}
         {copied ? 'Copied' : 'Share'}
       </button>
+      {onInterest && (
+        <InterestButtons event={e} interest={interest} onInterest={onInterest} variant="compact" cellClass={ICON} />
+      )}
       {isManual(e) && onEdit && (
         <button type="button" onClick={() => onEdit(e)} aria-label="Edit" title="Edit" className={ICON}>
           <PencilIcon />

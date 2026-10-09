@@ -35,7 +35,8 @@ queue: `ROADMAP.md` (`npm run roadmap` lists the open tasks).
 | `bookIdeasSync.ts` / `boardgameIdeasSync.ts` | `book_ideas` / `boardgame_ideas` |
 | `linksSync.ts` | `links` |
 | `tripsSync.ts` | `trip_ideas`, `trip_companions` |
-| `customEventsSync.ts` / `eventMarksSync.ts` | `custom_events` / `event_marks` (+ `event_prefs`) |
+| `customEventsSync.ts` / `eventMarksSync.ts` | `custom_events` / `event_marks` (+ `event_prefs`) (owner-only) |
+| `eventInterestSync.ts` | `event_interest` (owner-only: the 👍 / 👎 on /events with a feature snapshot; a 👎 also writes an `event_marks` hide; never pruned with the events) |
 | `lifeSync.ts` | `life_entries`, `life_weeks` (owner-only) |
 | `mealDiarySync.ts` | `meal_entries` (owner-only) |
 | `projectPrefsSync.ts` | `project_prefs` (per user: the home grid's `starred`/`hidden`; open counts stay in local-only Dexie `projectStats`) |
@@ -49,6 +50,11 @@ queue: `ROADMAP.md` (`npm run roadmap` lists the open tasks).
   A new synced project needs a row in `public.shareable_projects`.
 - **`shop_area_members`**: per shop area (shop-list only), its own invite links.
 - **Owner-only**: Life and meal-diary (`ownerOnly` in the registry), plus `/sharing`; settings is device-only.
+  Also gated by `is_owner()` while their page is public: the events tables
+  `custom_events`, `event_marks`, `event_prefs` and `event_interest`. On any
+  other device their pushes are rejected (42501) and dead-lettered, so the
+  rows stay local there. All of these are listed in `src/lib/privateData.ts`
+  (removable from a device after sign-out).
 - **Per user (`user_id = auth.uid()`)**: `project_prefs`, the home grid's
   starred/hidden choices. Neither system above: every signed-in user (owner
   or guest) reads and writes only their own rows. Primary key

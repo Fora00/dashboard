@@ -4,6 +4,7 @@ import { useSearchParams } from 'react-router-dom'
 import { db, type CustomEvent, type EventMark } from '../../lib/db'
 import { deleteCustomEvent, pruneCustomEvents, sync as customSync } from '../../lib/customEventsSync'
 import { hideEvents, pruneEventMarks, restoreEventMark, toggleEventMark } from '../../lib/eventMarksSync'
+import { toggleInterest } from '../../lib/eventInterestSync'
 import { Kbd } from '../../components/Kbd'
 import { useListHotkeys } from '../../lib/useListHotkeys'
 import { SyncCard } from '../../components/SyncCard'
@@ -30,6 +31,7 @@ import { SelectionBar, WeekSections } from './EventsList'
 import { ListChecksIcon, PlusIcon, XIcon } from './icons'
 import { useEventFilters, type View } from './useEventFilters'
 import type { EventItem } from './types'
+import type { InterestValue } from './interest'
 import { categoryLabel, fetchEventsFile, groupByWeek, isKidsEvent, isNew, relativeTime } from './model'
 import { recordVisit } from './visit'
 
@@ -48,6 +50,13 @@ export function Events() {
   const marksRaw = useLiveQuery(() => db.eventMarks.toArray())
   const prefs = useLiveQuery(() => db.eventPrefs.get('prefs'), [], null)
   const customRows = useLiveQuery(() => db.customEvents.toArray())
+  // The owner's 👍 / 👎 (collected only; nothing ranks by them yet). Never
+  // pruned with the events: the snapshot outlives events.json.
+  const interestRows = useLiveQuery(() => db.eventInterest.toArray())
+  const interest = useMemo(
+    () => new Map<string, InterestValue>((interestRows ?? []).map((r) => [r.id, r.value])),
+    [interestRows],
+  )
   const [editor, setEditor] = useState<Editor>({ open: false })
 
   // Hand-added events disappear two weeks after their last day; saved/hidden
@@ -217,6 +226,16 @@ export function Events() {
     [triggerUndo],
   )
   const onToggleSave = useCallback((e: EventItem) => void setMark(e, 'saved'), [setMark])
+  // 👍 / 👎 (eventInterestSync.ts). A new 👎 also hides the card, so it gets
+  // the same Undo as Hide, which puts back both the signal and the mark.
+  const onInterest = useCallback(
+    (e: EventItem, value: InterestValue) => {
+      void toggleInterest(e, value).then(({ hid, undo }) => {
+        if (hid) triggerUndo('Not interested · hidden', undo)
+      })
+    },
+    [triggerUndo],
+  )
   const onToggleHide = useCallback((e: EventItem) => void setMark(e, 'hidden'), [setMark])
   // Shift-click range select: the last card picked is the anchor; the list
   // order is read through a ref so onSelect stays stable for the memoised cards.
@@ -501,6 +520,8 @@ export function Events() {
             selectedIds={selectedIds}
             onToggleSave={onToggleSave}
             onToggleHide={onToggleHide}
+            interest={interest}
+            onInterest={onInterest}
             onEdit={onEdit}
             onSelect={onSelect}
             master={wide}
@@ -562,6 +583,8 @@ export function Events() {
                 now={now}
                 onToggleSave={onToggleSave}
                 onToggleHide={onToggleHide}
+                interest={activeEvent ? (interest.get(activeEvent.id) ?? 0) : 0}
+                onInterest={onInterest}
                 onEdit={onEdit}
                 onClose={() => setActiveId(null)}
               />

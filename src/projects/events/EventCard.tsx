@@ -4,6 +4,8 @@ import { FOCUS_RING, FOCUS_RING_INSET } from '../../components/focus'
 import { CategoryThumb } from './CategoryThumb'
 import { travelLabel } from './travel'
 import { EventActions } from './EventActions'
+import type { InterestState } from './InterestButtons'
+import type { InterestValue } from './interest'
 import { EventBadges } from './EventBadges'
 import { eventImage, eventPlace } from './display'
 import { categoryOf, formatRange, isSparseSeries, listingDay, safeHttpUrl, shortDay } from './model'
@@ -18,6 +20,9 @@ interface Props {
   /** Receive the event so the parent can pass one stable callback to every card (memo). */
   onToggleSave: (e: EventItem) => void
   onToggleHide: (e: EventItem) => void
+  /** The owner's 👍 / 👎 on this event (0 = none) and its toggle. */
+  interest?: InterestState
+  onInterest?: ((e: EventItem, value: InterestValue) => void) | undefined
   /** Hand-added events only: open the edit sheet. */
   onEdit?: ((e: EventItem) => void) | undefined
   /** Multi-select mode: tapping the card toggles `selected` instead of expanding it. */
@@ -42,6 +47,8 @@ export const EventCard = memo(function EventCard({
   since = null,
   onToggleSave,
   onToggleHide,
+  interest = 0,
+  onInterest,
   onEdit,
   selecting = false,
   selected = false,
@@ -144,6 +151,8 @@ export const EventCard = memo(function EventCard({
           hidden={hidden}
           onToggleSave={onToggleSave}
           onToggleHide={onToggleHide}
+          interest={interest}
+          onInterest={onInterest}
           onEdit={onEdit}
           className="border-t border-slate-100 px-2 py-1 dark:border-slate-700/50"
         />

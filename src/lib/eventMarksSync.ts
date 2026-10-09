@@ -159,6 +159,20 @@ export async function hideEvents(events: EventItem[]): Promise<Array<[string, Ev
   return changed
 }
 
+/**
+ * Hide one event with a caller-chosen stamp, replacing a saved mark like the
+ * Hide button does. Used by a 👎 (eventInterestSync.ts), which gives the hide
+ * the same updatedAt as the signal so it can later tell "this hide is mine".
+ * The caller must pass a stamp newer than the current mark's. Returns false
+ * (and writes nothing) when the event can't be snapshotted.
+ */
+export async function hideEventWithStamp(e: EventItem, updatedAt: number): Promise<boolean> {
+  const event = sanitizeSnapshot(e)
+  if (!event) return false
+  await engine.upsert('event_marks', { id: event.id, state: 'hidden', event, updatedAt })
+  return true
+}
+
 /** Clear an event's mark (no-op, and nothing queued, when it has none). */
 export async function removeEventMark(id: string): Promise<void> {
   if (await db.eventMarks.get(id)) await engine.remove('event_marks', id)
