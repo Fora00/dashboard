@@ -38,6 +38,14 @@ describe('collapseRepeats', () => {
     expect(out.repeats.get('a')?.map((e) => e.id)).toEqual(['a', 'b', 'c'])
   })
 
+  it('never collapses cinema screenings', () => {
+    const film = (id: string, day: string) => ev(id, day, { title: 'Digger', category: 'cinema', city: 'Rovereto' })
+    const d = days([film('a', '2026-10-12'), film('b', '2026-10-13'), film('c', '2026-10-14')])
+    const out = collapseRepeats(d, true)
+    expect(ids(out.days)).toEqual(['a', 'b', 'c'])
+    expect(out.repeats.size).toBe(0)
+  })
+
   it('leaves a pair as two cards', () => {
     expect(MIN_REPEATS).toBe(3)
     const d = days([ev('a', '2026-10-12'), ev('b', '2026-10-19')])

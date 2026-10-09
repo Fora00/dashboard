@@ -24,6 +24,7 @@ import { teatrosociale } from './teatrosociale.ts'
 import { filarmonica } from './filarmonica.ts'
 import { arcadia } from './arcadia.ts'
 import { muse } from './muse.ts'
+import { supercinema } from './supercinema.ts'
 
 export const ADAPTERS: Adapter[] = [
   // Batch A — board games
@@ -88,6 +89,10 @@ export const ADAPTERS: Adapter[] = [
     mode: 'search',
     classes: '[event]',
     city: 'Trentino',
+    // Four cinema venue pages are listed as "events" dated all of 2026 (no
+    // film, no screening time); the real programmes come from `supercinema`
+    // and trentinospettacoli. Exact venue names only.
+    skipTitle: /^(?:Supercinema Rovereto|Cineworld Trento|Harpo Lab|Nuovo Astra)$/i,
   }),
   // ViviRovereto: the municipal agenda (RAM film festival, theatre season
   // preludes…). robots.txt only allows /opendata/api/calendar here.
@@ -177,6 +182,8 @@ export const ADAPTERS: Adapter[] = [
   trentinospettacoli,
   // MUSE (Trento science museum): dates only on each event page, see adapters/muse.ts.
   muse,
+  // Supercinema Rovereto film programme: one event per screening.
+  supercinema,
   infinityboulder,
   santachiara,
   tebe,

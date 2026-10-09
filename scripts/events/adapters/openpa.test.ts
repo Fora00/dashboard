@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { AdapterContext } from '../types.ts'
 import { openpa } from './openpa.ts'
+import { ADAPTERS } from './index.ts'
 
 const NOW = Date.parse('2026-10-08T10:00:00Z')
 const ctx = (json: (url: string) => unknown, horizonDays = 30): AdapterContext =>
@@ -196,5 +197,34 @@ describe('openpa search mode', () => {
   })
   it('surfaces an API error message', async () => {
     await expect(s.run(ctx(() => ({ error_message: 'bad query' })))).rejects.toThrow(/bad query/)
+  })
+})
+
+describe('cultura-trentino cinema venue pages', () => {
+  const a = ADAPTERS.find((x) => x.id === 'cultura-trentino')
+  const hit = (id: number, title: string) => ({
+    metadata: { id, mainNodeId: id + 100, name: { 'ita-IT': title } },
+    data: { 'ita-IT': { from_time: '2026-01-01T00:00:00+01:00', to_time: '2026-12-31T00:00:00+01:00' } },
+  })
+  it('drops the four venue listings dated all of 2026 and keeps real events', async () => {
+    const out = await a?.run(
+      ctx(() => ({
+        totalCount: 7,
+        searchHits: [
+          hit(1, 'Supercinema Rovereto'),
+          hit(2, 'Cineworld Trento'),
+          hit(3, 'Harpo Lab'),
+          hit(4, 'Nuovo Astra'),
+          hit(5, 'Nuovo Astra: serata speciale'),
+          hit(6, 'Supercinema Rovereto presenta Il cielo sopra Berlino'),
+          hit(7, 'Mostra al Castello'),
+        ],
+      })),
+    )
+    expect(out?.map((e) => e.title)).toEqual([
+      'Nuovo Astra: serata speciale',
+      'Supercinema Rovereto presenta Il cielo sopra Berlino',
+      'Mostra al Castello',
+    ])
   })
 })

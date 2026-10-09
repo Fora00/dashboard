@@ -27,7 +27,8 @@ export interface Collapsed {
  * list order (their next occurrence), which keeps its position. Only for the
  * dated day groups of the main view: pass `grouped = false` for the Saved and
  * Open-now views; the 'open-now' group is never touched. `standalone` records
- * (saved, hidden, hand-added) are never grouped, so they stay on their own.
+ * (saved, hidden, hand-added) and cinema screenings are never grouped, so
+ * they stay on their own.
  * Save/Hide on the group's card therefore applies to the next occurrence only
  * (saving it takes it out of the group); there are no group-level marks.
  */
@@ -43,6 +44,8 @@ export function collapseRepeats(
     if (g.key === 'open-now') continue
     for (const e of g.events) {
       if (standalone(e)) continue
+      // Cinema screenings are per day by nature: never folded into one row.
+      if (e.category === 'cinema') continue
       const k = repeatKey(e)
       const list = byKey.get(k)
       if (list) list.push(e)

@@ -338,7 +338,12 @@ describe('ordering', () => {
     const score = makeScorer(model)
     const cmp = compareForYou((e) => score(e).score, compareInDay([]))
     const repeat = (id: string, d: string) => {
-      const { subcategory: _none, ...e } = ev({ id, title: 'Weekly', category: 'cinema', start: `${d}T18:00:00+02:00` })
+      const { subcategory: _none, ...e } = ev({
+        id,
+        title: 'Weekly',
+        category: 'boardgames',
+        start: `${d}T18:00:00+02:00`,
+      })
       return e
     }
     const reps = [repeat('r1', day), repeat('r2', '2026-10-22'), repeat('r3', '2026-10-29')]
