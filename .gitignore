@@ -37,3 +37,6 @@ dev-dist
 
 # Events crawler output (built daily in CI, never committed)
 public/events.json
+
+test-results
+playwright-report

@@ -19,7 +19,8 @@
     "life:link": "node --disable-warning=ExperimentalWarning scripts/life-link.ts",
     "life:things-lists": "node --disable-warning=ExperimentalWarning scripts/life-things-lists.ts",
     "life:things-status": "node --disable-warning=ExperimentalWarning scripts/life-things-status.ts",
-    "db:types": "node scripts/db-types.mjs"
+    "db:types": "node scripts/db-types.mjs",
+    "e2e": "playwright test"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.110.0",
@@ -30,6 +31,7 @@
     "react-router-dom": "^7.18.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.64.0",
     "@tailwindcss/vite": "^4.3.2",
     "@types/node": "^24.13.2",
     "@types/react": "^19.2.17",
