@@ -13,6 +13,8 @@ interface Props {
   saved: boolean
   hidden: boolean
   now: number
+  /** Previous-visit baseline for the "New" badge (null = none). */
+  since?: number | null
   /** Receive the event so the parent can pass one stable callback to every card (memo). */
   onToggleSave: (e: EventItem) => void
   onToggleHide: (e: EventItem) => void
@@ -37,6 +39,7 @@ export const EventCard = memo(function EventCard({
   saved,
   hidden,
   now,
+  since = null,
   onToggleSave,
   onToggleHide,
   onEdit,
@@ -121,7 +124,7 @@ export const EventCard = memo(function EventCard({
                 {drive && <span className="whitespace-nowrap"> · 🚗 {drive}</span>}
               </p>
             )}
-            <EventBadges event={e} hidden={hidden} now={now} />
+            <EventBadges event={e} hidden={hidden} now={now} since={since} />
             {e.occurrences > 1 && (
               <p className="text-xs text-slate-500 dark:text-slate-400">
                 {e.occurrences} dates

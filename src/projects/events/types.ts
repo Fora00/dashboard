@@ -35,6 +35,8 @@ export interface EventItem {
   fetchedAt: string
   /** Hand-added spot event whose dates are not confirmed (added 2026-10-05). */
   datesTentative?: true
+  /** UTC ISO time the id first appeared in events.json (added 2026-10-09). Absent = never "new". */
+  firstSeen?: string
 }
 
 export interface EventsFile {

@@ -66,6 +66,7 @@ unknown `category`/`tags` value like `other`. A breaking change bumps
 | `image` | string \| null | Absolute https URL of the source's image for the event. Hot-linked from the source, never re-hosted; may disappear. |
 | `occurrences` | number | `1` normally. `N > 1` when a series with more than 8 dates in the window was folded into one span record (see "Recurring events"). |
 | `datesTentative` | `true` \| absent | Only on hand-added spot events whose dates are not confirmed on the official site (`verified: false` in spot.json); the page shows a "Date da confermare" badge. Absent otherwise. Added 2026-10-05. |
+| `firstSeen` | string \| absent | UTC ISO time the crawler first published this id (the "New since last visit" badge). Set on ids absent from the previous `events.json`, then carried over on every later run. Absent on events already published before 2026-10-09, and on every event when there was no previous file to compare with: absent means never "new". Added 2026-10-09. |
 | `fetchedAt` | string | UTC ISO time this record was last fetched. Older than `generatedAt` when its source failed and the record was carried over. |
 
 ### Times and time zone

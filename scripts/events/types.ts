@@ -42,6 +42,8 @@ export interface Event {
   fetchedAt: string
   /** True only for hand-added spot events whose dates are not confirmed on the official site; the page shows "dates to be confirmed". Absent otherwise. Added 2026-10-05. */
   datesTentative?: true
+  /** UTC ISO time this id first appeared in events.json; carried over from the previous file. Absent on events already published before it existed. Added 2026-10-09. */
+  firstSeen?: string
 }
 
 /**

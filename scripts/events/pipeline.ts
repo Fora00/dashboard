@@ -299,3 +299,24 @@ export function sortEvents(events: Event[]): Event[] {
       Date.parse(a.start) - Date.parse(b.start) || a.title.localeCompare(b.title, 'it') || a.id.localeCompare(b.id),
   )
 }
+
+/**
+ * Stamps `firstSeen` (the crawl time) on ids the previous events.json did not
+ * have; an id already published keeps its earlier `firstSeen`, or none when
+ * that file predates the field (such events are never "new"). With no
+ * previous file (first run, or it could not be loaded) nothing is stamped:
+ * everything would otherwise look new.
+ */
+export function stampFirstSeen(
+  events: Event[],
+  previous: readonly Pick<Event, 'id' | 'firstSeen'>[] | null,
+  generatedAt: string,
+): Event[] {
+  if (!previous) return events
+  const before = new Map(previous.map((e) => [e.id, e.firstSeen]))
+  return events.map((e) => {
+    const known = e.firstSeen ?? before.get(e.id)
+    if (known) return { ...e, firstSeen: known }
+    return before.has(e.id) ? e : { ...e, firstSeen: generatedAt }
+  })
+}

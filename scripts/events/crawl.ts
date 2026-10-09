@@ -40,7 +40,16 @@ import {
   zeroTracking,
 } from './health.ts'
 import { validPreviousEvents } from './schemas.ts'
-import { HORIZON_DAYS, dedup, inWindow, isOngoing, sortEvents, toEvents, withPlace } from './pipeline.ts'
+import {
+  HORIZON_DAYS,
+  dedup,
+  inWindow,
+  isOngoing,
+  sortEvents,
+  stampFirstSeen,
+  toEvents,
+  withPlace,
+} from './pipeline.ts'
 
 const DEFAULT_PREVIOUS = 'https://fora00.github.io/dashboard/events.json'
 const DEFAULT_MAX_REQUESTS = 60
@@ -256,7 +265,7 @@ async function main(): Promise<void> {
     timings.set(adapter.id, Date.now() - t0)
   }
 
-  const events = sortEvents(dedup(all))
+  const events = sortEvents(stampFirstSeen(dedup(all), loaded.kind === 'ok' ? previousRecords : null, generatedAt))
 
   const refuse = (reason: string) => {
     const why = reason.replace(/\s+/g, ' ') // one annotation line

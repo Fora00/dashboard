@@ -12,6 +12,7 @@ import {
   groupByDay,
   inCategory,
   isKidsEvent,
+  isNew,
   isLongRunning,
   isOngoingNow,
   isOver,
@@ -338,5 +339,19 @@ describe('fetchEventsFile validation', () => {
     const out = await fetchEventsFile('/')
     expect(out.kind).toBe('ok')
     if (out.kind === 'ok') expect(out.file.events.map((e) => e.id)).toEqual(['e1'])
+  })
+})
+
+describe('isNew', () => {
+  const since = Date.parse('2026-10-05T10:00:00Z')
+  it('is true only for events first seen after the previous visit', () => {
+    expect(isNew({ firstSeen: '2026-10-06T04:00:00Z' }, since)).toBe(true)
+    expect(isNew({ firstSeen: '2026-10-05T10:00:00Z' }, since)).toBe(false)
+    expect(isNew({ firstSeen: '2026-10-01T04:00:00Z' }, since)).toBe(false)
+  })
+  it('first visit (no baseline) and events without firstSeen are never new', () => {
+    expect(isNew({ firstSeen: '2026-10-06T04:00:00Z' }, null)).toBe(false)
+    expect(isNew({}, since)).toBe(false)
+    expect(isNew({ firstSeen: 'garbage' }, since)).toBe(false)
   })
 })

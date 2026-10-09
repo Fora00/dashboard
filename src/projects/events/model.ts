@@ -393,3 +393,14 @@ export function buildThingsAddUrl(e: EventItem, now: number = Date.now()): strin
     .join('\n')
   return `things:///add?title=${encodeURIComponent(e.title)}&notes=${encodeURIComponent(notes)}&when=${when}`
 }
+
+/**
+ * First published after `since` (epoch ms of the previous visit, visit.ts).
+ * No baseline (first visit) or no `firstSeen` (older file, hand-added event)
+ * = never new.
+ */
+export function isNew(e: Pick<EventItem, 'firstSeen'>, since: number | null): boolean {
+  if (since === null || !e.firstSeen) return false
+  const t = Date.parse(e.firstSeen)
+  return !Number.isNaN(t) && t > since
+}

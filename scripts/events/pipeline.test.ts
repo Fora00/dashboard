@@ -10,6 +10,7 @@ import {
   LONG_SERIES,
   MAX_OCCURRENCES,
   sortEvents,
+  stampFirstSeen,
   toEvents,
   withPlace,
 } from './pipeline.ts'
@@ -508,5 +509,25 @@ describe('withPlace (events carried over from an old events.json)', () => {
     )
     expect(out.map((e) => e.id)).toEqual(['keep'])
     expect(drops.get('civic-notice')).toBe(1)
+  })
+})
+
+describe('stampFirstSeen', () => {
+  const T1 = '2026-10-09T04:00:00Z'
+  const T0 = '2026-10-01T04:00:00Z'
+  it('stamps ids the previous file did not have', () => {
+    const out = stampFirstSeen([event({ id: 'new' })], [event({ id: 'old' })], T1)
+    expect(out[0]?.firstSeen).toBe(T1)
+  })
+  it('carries over the earlier firstSeen', () => {
+    const out = stampFirstSeen([event({ id: 'a' })], [event({ id: 'a', firstSeen: T0 })], T1)
+    expect(out[0]?.firstSeen).toBe(T0)
+  })
+  it('leaves events of a file that predates the field unstamped', () => {
+    const out = stampFirstSeen([event({ id: 'a' })], [event({ id: 'a' })], T1)
+    expect(out[0]?.firstSeen).toBeUndefined()
+  })
+  it('stamps nothing without a previous file', () => {
+    expect(stampFirstSeen([event({ id: 'a' })], null, T1)[0]?.firstSeen).toBeUndefined()
   })
 })

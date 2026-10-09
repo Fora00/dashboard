@@ -30,7 +30,8 @@ import { SelectionBar, WeekSections } from './EventsList'
 import { ListChecksIcon, PlusIcon, XIcon } from './icons'
 import { useEventFilters, type View } from './useEventFilters'
 import type { EventItem } from './types'
-import { categoryLabel, fetchEventsFile, groupByWeek, isKidsEvent, relativeTime } from './model'
+import { categoryLabel, fetchEventsFile, groupByWeek, isKidsEvent, isNew, relativeTime } from './model'
+import { recordVisit } from './visit'
 
 /** The add/edit sheet: closed, adding (with an optional prefill) or editing a row. */
 type Editor =
@@ -78,6 +79,11 @@ export function Events() {
   const [showSources, setShowSources] = useState(false)
   // The clock is read once per mount/refresh, not on every render.
   const [now, setNow] = useState(() => Date.now())
+  // Baseline for "New" (visit.ts): read once on mount, before this visit is
+  // recorded, so it stays the same for the whole visit (and reloads within it).
+  // The toggle is never persisted with the filters: it would go stale.
+  const [since] = useState(() => recordVisit(Date.now()))
+  const [onlyNew, setOnlyNew] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -108,9 +114,19 @@ export function Events() {
   // Children's/family events are never shown (owner's choice); saved ones
   // still appear under Saved from their snapshot. Hand-added events are merged
   // in (custom.ts) and never dropped by that rule; they work with no file.
-  const events = useMemo(() => mergeEvents(file?.events ?? [], customRows ?? [], isKidsEvent), [file, customRows])
+  const allEvents = useMemo(() => mergeEvents(file?.events ?? [], customRows ?? [], isKidsEvent), [file, customRows])
+  const newCount = useMemo(() => allEvents.filter((e) => isNew(e, since)).length, [allEvents, since])
+  // "New" only narrows the list; a stale toggle with nothing new is ignored.
+  const newOnly = onlyNew && newCount > 0
+  const events = useMemo(
+    () => (newOnly ? allEvents.filter((e) => isNew(e, since)) : allEvents),
+    [allEvents, newOnly, since],
+  )
   const hasCustom = (customRows?.length ?? 0) > 0
-  const cityNames = useMemo(() => [...new Set(events.map((e) => e.city))].sort((a, b) => a.localeCompare(b)), [events])
+  const cityNames = useMemo(
+    () => [...new Set(allEvents.map((e) => e.city))].sort((a, b) => a.localeCompare(b)),
+    [allEvents],
+  )
 
   const { filters, toggles, counts, groups, marks } = useEventFilters(events, marksRaw, prefs, {
     now,
@@ -265,7 +281,7 @@ export function Events() {
       title="Events"
       subtitle={
         file
-          ? `${events.length} events · updated ${relativeTime(file.generatedAt, now)}`
+          ? `${allEvents.length} events · updated ${relativeTime(file.generatedAt, now)}`
           : 'Public events around Trentino, Bolzano and Verona.'
       }
     >
@@ -449,6 +465,11 @@ export function Events() {
             {label}
           </Chip>
         ))}
+        {newCount > 0 && (
+          <Chip active={newOnly} count={newCount} onClick={() => setOnlyNew((v) => !v)} className="col-span-4">
+            New since last visit
+          </Chip>
+        )}
       </div>
     </>
   )
@@ -475,6 +496,7 @@ export function Events() {
             onToggleWeek={toggleWeek}
             marks={marks}
             now={now}
+            since={since}
             selecting={selecting}
             selectedIds={selectedIds}
             onToggleSave={onToggleSave}

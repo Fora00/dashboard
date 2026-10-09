@@ -688,7 +688,7 @@ sync can come later).
          per device (guarded localStorage); the cities list becomes a
          checklist with a search box (chips stay for Area/Category/Come:
          native `<select multiple>` is worse on iPhone).
-      3. [sonnet] "New since last visit" badge (last-visit timestamp in
+      3. [x] DONE 2026-10-09 (`firstSeen` stamped by the crawler, `visit.ts` baseline with a 30-minute same-visit window, "New" chip + filter; no badge shows until the first crawl with this change has run; unverified on a phone) — "New since last visit" badge (last-visit timestamp in
          guarded localStorage or Dexie).
       4. [sonnet] Group repeats with the same title across records into one
          expandable row ("17 serate, next ≈ …"); optional venue filter.

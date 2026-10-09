@@ -51,6 +51,7 @@ export function WeekSections({
   onToggleWeek,
   marks,
   now,
+  since = null,
   selecting,
   selectedIds,
   onToggleSave,
@@ -66,6 +67,8 @@ export function WeekSections({
   onToggleWeek: (key: string) => void
   marks: Map<string, EventMark>
   now: number
+  /** Previous-visit baseline for the "New" badge (null = none). */
+  since?: number | null
   selecting: boolean
   selectedIds: ReadonlySet<string>
   onToggleSave: (e: EventItem) => void
@@ -120,6 +123,7 @@ export function WeekSections({
                           saved={marks.get(e.id)?.state === 'saved'}
                           hidden={marks.get(e.id)?.state === 'hidden'}
                           now={now}
+                          since={since}
                           onToggleSave={onToggleSave}
                           onToggleHide={onToggleHide}
                           onEdit={onEdit}
