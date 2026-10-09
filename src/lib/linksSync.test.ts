@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 // db.ts constructs a Dexie instance on import: give it IndexedDB.
 import '../test/fakeDb'
-import { normalizeTag, normalizeUrl } from './linksSync'
+import { defaultTitle, normalizeTag, normalizeUrl } from './linksSync'
 
 describe('normalizeUrl', () => {
   it('adds https:// when there is no scheme', () => {
@@ -74,5 +74,12 @@ describe('normalizeTag', () => {
   it('is idempotent', () => {
     const once = normalizeTag('  Hello   World ')
     expect(normalizeTag(once ?? '')).toBe(once)
+  })
+})
+
+describe('defaultTitle', () => {
+  it('shows IDN hosts and percent-encoded paths readably', () => {
+    expect(defaultTitle('https://xn--r8jz45g.jp/%E3%83%91%E3%82%B9')).toBe('例え.jp/パス')
+    expect(defaultTitle('https://www.example.com/')).toBe('example.com')
   })
 })

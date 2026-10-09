@@ -29,6 +29,7 @@ import { SwipeableRow } from '../../components/SwipeableRow'
 import { SkeletonList } from '../../components/Skeleton'
 import { TagFilterBar } from './TagFilterBar'
 import { ManageTagsSheet } from './ManageTagsSheet'
+import { displayHost } from '../../lib/idn'
 
 // Mirrors MAX_TAGS in linksSync.ts / the links_tags_max_count SQL constraint —
 // the UI stops at the same wall the mutation and the server enforce.
@@ -41,7 +42,7 @@ const ROW_TAG_LIMIT = 3
 
 function hostname(url: string): string {
   try {
-    return new URL(url).hostname.replace(/^www\./, '')
+    return displayHost(new URL(url).hostname).replace(/^www\./, '')
   } catch {
     return url
   }

@@ -160,7 +160,7 @@ Follow-ups this project surfaced:
       into both. Effort XS. Partially retires the parked "No length limits
       on user-entered text" item for *future* projects; existing projects
       still need the retrofit.
-- [ ] **IDN links display as punycode** [sonnet] — `defaultTitle()` and the
+- [x] **IDN links display as punycode** [sonnet] — DONE 2026-10-09 (`src/lib/idn.ts`, display only; stored URL unchanged). — `defaultTitle()` and the
       page's `hostname()` helper both show `new URL().hostname`, which is
       punycode for non-ASCII domains (`https://例え.jp/パス` titles as
       `xn--r8jz45g.jp/%E3%83%91%E3%82%B9`). Cosmetic only, and the title is

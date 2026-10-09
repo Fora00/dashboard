@@ -1,6 +1,7 @@
 import { db, type LinkItem } from './db'
 import { createCloudSync, type TableSync } from './cloudSync'
 import { useSyncStatus } from './useSyncStatus'
+import { displayHost, displayPath } from './idn'
 
 // Local-first sync for the links project, built on the generic engine in
 // cloudSync.ts. Copied from src/lib/todoSync.ts (THE reference integration) —
@@ -77,10 +78,10 @@ export function normalizeUrl(raw: string): string | null {
   }
 }
 
-function defaultTitle(url: string): string {
+export function defaultTitle(url: string): string {
   const parsed = new URL(url)
-  const host = parsed.hostname.replace(/^www\./, '')
-  const path = parsed.pathname === '/' ? '' : parsed.pathname.replace(/\/$/, '')
+  const host = displayHost(parsed.hostname).replace(/^www\./, '')
+  const path = parsed.pathname === '/' ? '' : displayPath(parsed.pathname).replace(/\/$/, '')
   return (host + path).slice(0, 300)
 }
 
