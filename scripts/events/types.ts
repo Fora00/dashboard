@@ -30,6 +30,8 @@ export interface Event {
   category: CategoryId
   /** Every matching category id in priority order (always includes `category`), plus `kids` for children's/family events. */
   tags: TagId[]
+  /** Finer split of theatre, concerts, exhibitions and talks only (ids in subcategories.ts SUBCATEGORIES); absent when no rule recognises the event, and always absent for other categories. Added 2026-10-09. */
+  subcategory?: string
   /** Full plain text (HTML stripped, entities decoded), paragraphs separated by "\n\n", at most ~2000 chars. '' when none. */
   description: string
   /** One-line plain-text snippet, at most ~300 chars. '' when none. */

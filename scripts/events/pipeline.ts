@@ -3,6 +3,7 @@
 import type { Adapter, Event, RawEvent } from './types.ts'
 import type { DropRule, TagId } from './tags.ts'
 import { CATEGORIES, classify, dropRule, finishTags } from './tags.ts'
+import { withSubcategory } from './subcategories.ts'
 import { areaFor, closerRing, keepForRing } from './areas.ts'
 import { DAY, addDays, dateToIso } from './time.ts'
 import { absUrl, clip, htmlToBlocks, normalize, snippet, stableId } from './text.ts'
@@ -129,7 +130,7 @@ export function toEvents(
     // Ring 2 sources: interests only (NEAR_INTERESTS), never kids.
     if (!keepForRing(ring, tags)) continue
     const city = r.city.trim() || 'Trentino'
-    events.push({
+    const event: Event = {
       id,
       title: r.title.replace(/\s+/g, ' ').trim(),
       start: r.start,
@@ -151,7 +152,8 @@ export function toEvents(
       occurrences: r.occurrences,
       fetchedAt,
       ...(r.datesTentative ? { datesTentative: true as const } : {}),
-    })
+    }
+    events.push(withSubcategory(event))
   }
   return events
 }
@@ -357,7 +359,9 @@ export function dedup(events: Event[]): Event[] {
     byKey.set(target, merge(byKey.get(target) as Event, e))
     byKey.delete(key)
   }
-  return mergeCore(mergeSubtitled([...byKey.values()]))
+  // After every merge: a kept record may have changed category, and records
+  // carried over from an older events.json have no subcategory yet.
+  return mergeCore(mergeSubtitled([...byKey.values()])).map(withSubcategory)
 }
 
 export function sortEvents(events: Event[]): Event[] {

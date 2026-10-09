@@ -765,7 +765,7 @@ function escape(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
-function compile(keyword: string): RegExp {
+export function compile(keyword: string): RegExp {
   const prefix = keyword.endsWith('*')
   const words = normalize(prefix ? keyword.slice(0, -1) : keyword)
     .split(' ')
@@ -784,7 +784,7 @@ const RULES = CATEGORIES.map((c) => ({
   context: (c.context ?? []).map(compile),
 }))
 
-function hayOf(texts: (string | null | undefined)[]): string {
+export function hayOf(texts: (string | null | undefined)[]): string {
   return normalize(texts.filter(Boolean).join(' \n '))
 }
 
