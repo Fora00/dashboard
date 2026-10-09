@@ -54,6 +54,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run lint
+      - run: npm run format:check
       - run: npm test --if-present
 
       # crawl: writes public/events.json (copied into dist by the build). A

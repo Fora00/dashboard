@@ -822,7 +822,7 @@ order. Tag = who implements. `db push` stays orchestrator-only.
       → done 2026-10-08.
       Climbing/SessionCard/Events) [haiku, XS] → helper in `lib/dates.ts`.
 - [ ] **L9 `cloudSync.ts:48,66` `no-explicit-any`** [opus, S, optional].
-- [ ] **L10 Spot-checks** [haiku, XS] — empty/loading states in `LifeImport`,
+- [x] **L10 Spot-checks** [haiku, XS] — PARTLY DONE 2026-10-09: `npx knip` run (88 unused exports, nearly all deliberate: the `*Sync.ts` wrapper surface and constants the tests use; only `scripts/icons/build-icons.mjs` is unreferenced; nothing removed). The empty/loading-state and `w-8` checks still need a look on a phone. Original: — empty/loading states in `LifeImport`,
       `TrackersSection`; `w-8` grade label clipping; try `npx knip` for dead exports.
 - [x] **L11 Docs hygiene** [haiku, XS] — README (19 lines) lacks Supabase
       → mostly done 2026-10-08: README + scripts table + NEW_PROJECT placeholder; `.claude/` tracking is still an owner decision.
