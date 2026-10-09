@@ -666,7 +666,7 @@ sync can come later).
       instead. Full-width 16:9 images make the list long on iPhone, so
       consider a thumbnail layout. `capitalize` on the day headings also
       capitalizes month names ("Mer 30 Set").
-- [ ] Crawler follow-ups [sonnet, each XS–S]: images for bibcom,
+- [ ] Crawler follow-ups [sonnet, each XS–S] (2026-10-09: fuzzier dedup DONE via `mergeCore`, one extra merge on live data; images already covered by OG_SOURCES for cultura-trentino/verona/trentogiovani, capped by politeness, bibcom pages have no og:image; keywords not started, no named misses): images for bibcom,
       trentogiovani and Verona (capped extra object reads); fuzzier dedup
       (e.g. "Pietre di pane" on mart and comune-trento); more keywords
       per category; shorter horizon for Verona if its roughly 30 MB per run is too heavy;
@@ -703,7 +703,7 @@ sync can come later).
          BEFORE shipping the client, then `npm run db:types`.** Known gap: an
          un-save is a hard delete, so an offline device pushing an older save
          later brings it back. Marks of past events are auto-deleted (`pruneEventMarks`, local + server). /events SyncCard shows only the custom-events engine.
-      9. [sonnet] Saved/favourite events in the Sunday Life plan.
+      9. [x] DONE 2026-10-09 (`## Saved events next week` + `savedEvents` in the Life export, `/settimana` proposes where they fit; unverified on a device) — Saved/favourite events in the Sunday Life plan.
       10. [opus] Spot pass (after the categories/food builder finishes; owner
          OK'd 2026-09-30): hand-verified `spot.json` entries for Festa della
          Castagna, Castione di Brentonico (18 Oct 2026, from visitrovereto.it)
@@ -1269,7 +1269,7 @@ Second batch (brainstormed 2026-07-04, later the same day):
       paperwork deadlines (bollo, revisione, insurance) with next-due
       rollup — the subscriptions tracker idea, but for the car. Effort S–M.
 
-- [ ] **🔍 On-device data view in Settings** [sonnet] — *to evaluate
+- [x] **🔍 On-device data view in Settings** [sonnet] — DONE 2026-10-09 (`DataView.tsx`: rows per table, outbox per table, rejected entries read-only, per-engine Retry all / Discard all; per-entry actions would need an engine API, so the per-entry part of the dead-letter item stays open). Original: — *to evaluate
       (2026-09-30)*. Owner asked how to see what's in the db; on Mac the
       Supabase Table Editor and Chrome DevTools (IndexedDB → `dashboard`)
       already cover it, so a generic row browser is NOT worth building. What
