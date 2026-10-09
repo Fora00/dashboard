@@ -704,7 +704,7 @@ sync can come later).
          un-save is a hard delete, so an offline device pushing an older save
          later brings it back. Marks of past events are auto-deleted (`pruneEventMarks`, local + server). /events SyncCard shows only the custom-events engine.
       9. [x] DONE 2026-10-09 (`## Saved events next week` + `savedEvents` in the Life export, `/settimana` proposes where they fit; unverified on a device) — Saved/favourite events in the Sunday Life plan.
-      10. [opus] Spot pass (after the categories/food builder finishes; owner
+      10. [~] PARTLY DONE 2026-10-09: 14 hand-verified spot entries added (3 flagged unverified: Avio date conflict, Luci d'Artista, Artigiano in Fiera). Open: add Vallarsa/Villa Lagarina/Besenello to the trentino list in `areas.ts` then add Fiera di San Luca (17-18 Oct), Foliage Lago di Cei (18 Oct), Autunno DiVino Besenello (9-11 Oct); re-check Luci d'Artista + Avio in late October; Miart 2027 and Milan Games Week unverifiable (Incapsula); owner decides on `verified:false` for Milan Games Week; visitrovereto adapter not started. Original brief: Spot pass (after the categories/food builder finishes; owner
          OK'd 2026-09-30): hand-verified `spot.json` entries for Festa della
          Castagna, Castione di Brentonico (18 Oct 2026, from visitrovereto.it)
          and other autumn festivals around Rovereto/Vallagarina; more
