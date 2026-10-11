@@ -1,5 +1,5 @@
 import type { LifeFocus } from '../../../lib/db'
-import { toggleFocus } from '../../../lib/lifeSync'
+import { removeFocus, toggleFocus } from '../../../lib/lifeSync'
 import { CollapsibleSection } from './CollapsibleSection'
 import { runSafe } from '../../../lib/runSafe'
 
@@ -30,13 +30,13 @@ export function FocusSection({
         {focus.map((f) => {
           const done = focusDone.has(f.id)
           return (
-            <li key={f.id}>
+            <li key={f.id} className="flex items-center gap-2">
               <button
                 type="button"
                 disabled={readOnly}
                 aria-pressed={done}
                 onClick={() => void runSafe(toggleFocus, 'Could not save')(week, f.id)}
-                className={`flex min-h-16 w-full items-center gap-3 rounded-xl border px-4 py-3 text-left text-base font-medium transition-colors ${
+                className={`flex min-h-16 min-w-0 flex-1 items-center gap-3 rounded-xl border px-4 py-3 text-left text-base font-medium transition-colors ${
                   readOnly ? '' : 'active:bg-slate-100 dark:active:bg-slate-800'
                 } ${
                   done
@@ -53,6 +53,19 @@ export function FocusSection({
                 </span>
                 <span className={`min-w-0 flex-1 ${done ? 'text-slate-500 line-through' : ''}`}>{f.title}</span>
               </button>
+              {!readOnly && (
+                <button
+                  type="button"
+                  aria-label={`Cancel focus: ${f.title}`}
+                  onClick={() => {
+                    if (window.confirm(`Remove "${f.title}" from this week's focus?`))
+                      void runSafe(removeFocus, 'Could not remove')(week, f.id)
+                  }}
+                  className="flex size-10 shrink-0 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
+                >
+                  ✕
+                </button>
+              )}
             </li>
           )
         })}

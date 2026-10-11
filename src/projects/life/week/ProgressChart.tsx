@@ -10,18 +10,10 @@ const PAD_T = 8
 const MAX_WEEKS = 12
 const SERIES = [
   { key: 'focus', label: 'Focus', stroke: 'stroke-sky-400', fill: 'fill-sky-400', text: 'text-sky-500' },
-  {
-    key: 'checkins',
-    label: 'Check-ins',
-    stroke: 'stroke-emerald-400',
-    fill: 'fill-emerald-400',
-    text: 'text-emerald-500',
-  },
   { key: 'habits', label: 'Habits', stroke: 'stroke-violet-400', fill: 'fill-violet-400', text: 'text-violet-500' },
-  { key: 'tasks', label: 'Things sent', stroke: 'stroke-amber-400', fill: 'fill-amber-400', text: 'text-amber-500' },
 ] as const
 
-/** Percent of focus / check-ins / Things done per week, one line each, oldest to newest. The current week is the hollow dotted end point. Plain SVG. */
+/** Percent of focus and habits done per week, one line each, oldest to newest. The current week is the hollow dotted end point. Plain SVG. */
 export function ProgressChart({
   weeks,
   entries,

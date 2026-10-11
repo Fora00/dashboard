@@ -134,6 +134,20 @@ export async function importWeek(plan: LifePlan): Promise<LifeWeek> {
   return week
 }
 
+/**
+ * Cancel a focus item: drops it from the week's plan. Its done-entry (if any)
+ * is kept, like entries whose ref left the plan on import.
+ */
+export async function removeFocus(week: string, focusId: string): Promise<void> {
+  const row = await db.lifeWeeks.get(week)
+  if (!row) return
+  await engine.upsert('life_weeks', {
+    ...row,
+    plan: { ...row.plan, focus: row.plan.focus.filter((f) => f.id !== focusId) },
+    updatedAt: Date.now(),
+  })
+}
+
 export interface LogTrackerOptions {
   /** Local day key to log on; defaults to today. */
   day?: string

@@ -106,9 +106,7 @@ describe('buildChartPoints (LF4)', () => {
     expect(one[0]).toMatchObject({
       at: 0,
       focus: null,
-      checkins: null,
       habits: null,
-      tasks: null,
     })
   })
 })

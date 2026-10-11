@@ -7,9 +7,7 @@ export interface ChartPoint {
   /** Position along the x axis, 0 (oldest shown week) to 1 (newest). Weeks with gaps between them sit proportionally apart. */
   at: number
   focus: number | null
-  checkins: number | null
   habits: number | null
-  tasks: number | null
 }
 
 const pct = (done: number, total: number) => (total > 0 ? Math.round((done / total) * 100) : null)
@@ -49,10 +47,8 @@ export function buildChartPoints(
       current: w.week === currentWeek,
       at: span > 0 ? daysBetween(first, w.week) / span : 0,
       focus: pct(s.focusDone.size, w.plan.focus.length),
-      checkins: pct(s.checkins.filter((c) => c.done).length, s.checkins.length),
       // habits = average progress towards each target, capped at 100% per habit
       habits: habitsPct(s.trackers),
-      tasks: pct(w.plan.tasks.filter((t) => s.sentTaskIds.has(t.id)).length, w.plan.tasks.length),
     }
   })
 }
