@@ -1,5 +1,6 @@
 import type { LifeAnswer, LifeCheckin, LifeEntry, LifePlan, LifeTracker } from '../../../lib/db'
 import { withCheckinIds } from './checkinIds.ts'
+import { SCREEN_IDS } from './screenTime.ts'
 import { dayKey, daysBetween, weekDays } from './dates.ts'
 
 // --- Week summary (shared by the Week screen and the export) -----------------
@@ -34,6 +35,8 @@ export interface WeekSummary {
   checkins: CheckinStatus[]
   trackers: TrackerSummary[]
   answers: Map<string, LifeAnswer>
+  /** Screen-time answers by reserved id (SCREEN_QUESTIONS); kept apart from `answers`. */
+  screen: Map<string, LifeAnswer>
   /** Question ids whose answer was computed from a linked tracker. */
   autoAnswered: Set<string>
   sentTaskIds: Set<string>
@@ -66,11 +69,16 @@ export function summarizeWeek(
 
   const focusDone = new Set<string>()
   const answers = new Map<string, LifeAnswer>()
+  const screen = new Map<string, LifeAnswer>()
   const sentTaskIds = new Set<string>()
   const checkinValues = new Map<string, { done: boolean; note?: string }>()
   const removed: LifeEntry[] = []
 
   for (const e of mine) {
+    if (e.kind === 'sunday' && SCREEN_IDS.has(e.ref)) {
+      if (e.value.answer !== null) screen.set(e.ref, e.value.answer)
+      continue
+    }
     const known = ids[e.kind].has(e.ref)
     if (!known) {
       if (isMeaningful(e)) removed.push(e)
@@ -123,7 +131,7 @@ export function summarizeWeek(
     autoAnswered.add(q.id)
   }
 
-  return { focusDone, checkins, trackers, answers, autoAnswered, sentTaskIds, removed }
+  return { focusDone, checkins, trackers, answers, screen, autoAnswered, sentTaskIds, removed }
 }
 
 function isMeaningful(e: LifeEntry): boolean {

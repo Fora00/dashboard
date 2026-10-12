@@ -5,6 +5,7 @@ import { summarizeSavedEvents } from './events.ts'
 import { parseApps } from './apps.ts'
 import { fenceFor } from './fence.ts'
 import { summarizeMealsWeek } from './meals.ts'
+import { SCREEN_QUESTIONS } from './screenTime.ts'
 import { summarizeWeek } from './summary.ts'
 
 // --- Export ---------------------------------------------------------------------
@@ -85,6 +86,14 @@ export function buildExportMarkdown(
     for (const q of plan.sundayCheck) {
       const auto = s.autoAnswered.has(q.id) ? ' (from tracker)' : ''
       out.push(`- ${q.label}: ${formatAnswer(q, s.answers.get(q.id) ?? null)}${auto}`)
+    }
+    out.push('')
+  }
+
+  if (s.screen.size) {
+    out.push('## Screen time', '')
+    for (const q of SCREEN_QUESTIONS) {
+      if (s.screen.has(q.id)) out.push(`- ${q.label}: ${formatAnswer(q, s.screen.get(q.id) ?? null)}`)
     }
     out.push('')
   }

@@ -1,8 +1,8 @@
-import type { LifeEntry, LifeWeek } from '../../../lib/db'
-import { parseApps, summarizeWeek, type AppUsage } from '../model'
+import type { LifeAnswer, LifeEntry, LifeWeek } from '../../../lib/db'
+import { parseApps, SCREEN_QUESTIONS, summarizeWeek, type AppUsage } from '../model'
 
 export interface DurationSeries {
-  /** The question label, shared across weeks (ids may differ week to week). */
+  /** The fixed question label. */
   label: string
   /** Minutes per week, aligned with `weeks`; null when not answered. */
   values: (number | null)[]
@@ -30,28 +30,27 @@ export function buildScreenTime(
     .filter((w) => w.week <= currentWeek)
     .sort((a, b) => a.week.localeCompare(b.week))
     .slice(-max)
-  const byLabel = new Map<string, { label: string; byWeek: Map<string, number> }>()
+  const durations = SCREEN_QUESTIONS.filter((q) => q.type === 'duration')
+  const byWeek = new Map<string, Map<string, LifeAnswer>>()
   const appWeeks: { week: string; rows: AppUsage[] }[] = []
   for (const w of shown) {
-    const answers = summarizeWeek(w.plan, entries).answers
-    for (const q of w.plan.sundayCheck) {
-      const a = answers.get(q.id) ?? null
-      if (q.type === 'duration' && typeof a === 'number') {
-        const key = q.label.trim().toLowerCase()
-        const s = byLabel.get(key) ?? { label: q.label.trim(), byWeek: new Map() }
-        s.byWeek.set(w.week, a)
-        byLabel.set(key, s)
-      } else if (q.type === 'apps') {
-        const rows = parseApps(a)
-        if (rows.length) appWeeks.push({ week: w.week, rows })
-      }
-    }
+    const screen = summarizeWeek(w.plan, entries).screen
+    byWeek.set(w.week, screen)
+    const rows = parseApps(screen.get('screen-apps'))
+    if (rows.length) appWeeks.push({ week: w.week, rows })
   }
-  const used = shown.filter((w) => [...byLabel.values()].some((s) => s.byWeek.has(w.week))).map((w) => w.week)
-  const series = [...byLabel.values()].map((s) => ({
-    label: s.label,
-    values: used.map((wk) => s.byWeek.get(wk) ?? null),
-  }))
+  const used = shown
+    .filter((w) => durations.some((q) => typeof byWeek.get(w.week)?.get(q.id) === 'number'))
+    .map((w) => w.week)
+  const series = durations
+    .map((q) => ({
+      label: q.label,
+      values: used.map((wk) => {
+        const v = byWeek.get(wk)?.get(q.id)
+        return typeof v === 'number' ? v : null
+      }),
+    }))
+    .filter((s) => s.values.some((v) => v !== null))
   const last = appWeeks[appWeeks.length - 1]
   const prev = appWeeks[appWeeks.length - 2]
   return {

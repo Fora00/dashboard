@@ -10,6 +10,7 @@ import { CollapsibleSection } from './CollapsibleSection'
 import { ExportSection } from './ExportSection'
 import { FocusSection } from './FocusSection'
 import { FoodSection } from './FoodSection'
+import { ScreenTimeSection } from './ScreenTimeSection'
 import { SundaySection } from './SundaySection'
 import { ThingsSection } from './ThingsSection'
 import { TrackersSection } from './TrackersSection'
@@ -160,6 +161,17 @@ export function WeekBody({ week, plan, entries, readOnly, lateEdit = false }: We
             open={sections.food}
             onToggle={() => toggleSection('food')}
             readOnly={readOnly}
+          />
+        </Slot>
+
+        <Slot n={7}>
+          <ScreenTimeSection
+            week={week}
+            summary={summary}
+            open={sections.screen}
+            onToggle={() => toggleSection('screen')}
+            readOnly={readOnly}
+            editable={!answersReadOnly}
           />
         </Slot>
 

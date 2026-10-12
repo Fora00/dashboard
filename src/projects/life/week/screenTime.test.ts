@@ -10,10 +10,7 @@ const plan = (week: string): LifePlan => ({
   tasks: [],
   trackers: [],
   checkins: [],
-  sundayCheck: [
-    { id: 'q-social', label: 'Social', type: 'duration' },
-    { id: 'q-apps', label: 'Top apps', type: 'apps' },
-  ],
+  sundayCheck: [],
 })
 const wk = (week: string): LifeWeek => ({ id: week, week, plan: plan(week), importedAt: 0, updatedAt: 0 })
 const ans = (week: string, ref: string, answer: unknown): LifeEntry =>
@@ -29,15 +26,15 @@ const ans = (week: string, ref: string, answer: unknown): LifeEntry =>
   }) as LifeEntry
 
 describe('buildScreenTime', () => {
-  it('groups durations by label and picks the latest apps with deltas', () => {
+  it('reads the fixed screen-time answers and picks the latest apps with deltas', () => {
     const weeks = [wk('2026-10-12'), wk('2026-10-05')]
     const entries = [
-      ans('2026-10-05', 'q-social', 90),
-      ans('2026-10-12', 'q-social', 120),
-      ans('2026-10-05', 'q-apps', JSON.stringify([{ app: 'Instagram', minutes: 60 }])),
+      ans('2026-10-05', 'screen-social', 90),
+      ans('2026-10-12', 'screen-social', 120),
+      ans('2026-10-05', 'screen-apps', JSON.stringify([{ app: 'Instagram', minutes: 60 }])),
       ans(
         '2026-10-12',
-        'q-apps',
+        'screen-apps',
         JSON.stringify([
           { app: 'Instagram', minutes: 80 },
           { app: 'Safari', minutes: 100 },
@@ -56,5 +53,20 @@ describe('buildScreenTime', () => {
     const d = buildScreenTime([wk('2026-10-12')], [], '2026-10-12', 12)
     expect(d.series).toEqual([])
     expect(d.apps).toBeNull()
+  })
+})
+
+describe('screen time in the export', () => {
+  it('prints a Screen time section and keeps the entries out of "removed"', async () => {
+    const { buildExportMarkdown } = await import('../model')
+    const entries = [
+      ans('2026-10-12', 'screen-social', 135),
+      ans('2026-10-12', 'screen-apps', JSON.stringify([{ app: 'Instagram', minutes: 80 }])),
+    ]
+    const md = buildExportMarkdown(plan('2026-10-12'), entries, '2026-10-12')
+    expect(md).toContain('## Screen time')
+    expect(md).toContain('- Social: 2h 15m')
+    expect(md).toContain('- App più usate: Instagram 80m')
+    expect(md).not.toContain('Removed from plan')
   })
 })

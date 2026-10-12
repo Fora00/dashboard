@@ -107,7 +107,7 @@ export function SundayQuestion({ week, question, value }: { week: string; questi
 }
 
 /** Hours + minutes boxes; stored as total minutes. Both empty clears the answer. */
-function DurationInput({
+export function DurationInput({
   label,
   value,
   onSave,
@@ -174,7 +174,7 @@ function useKnownApps(): string[] {
 }
 
 /** Up to 7 rows of app + hours/minutes. Saved on leaving the group. */
-function AppsInput({
+export function AppsInput({
   label,
   value,
   onSave,

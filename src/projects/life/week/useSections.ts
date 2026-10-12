@@ -14,7 +14,7 @@ import { useToday } from '../useToday'
 
 const SECTIONS_KEY = 'dashboard:life-sections'
 
-export type SectionId = 'focus' | 'trackers' | 'rules' | 'checkins' | 'things' | 'food' | 'export'
+export type SectionId = 'focus' | 'trackers' | 'rules' | 'checkins' | 'things' | 'food' | 'screen' | 'export'
 
 interface SectionsState {
   focus: boolean
@@ -23,6 +23,7 @@ interface SectionsState {
   checkins: boolean
   things: boolean
   food: boolean
+  screen: boolean
   export: boolean
   sundayWeek: string | null
   sundayOpen: boolean
@@ -35,6 +36,7 @@ const DEFAULT_SECTIONS: SectionsState = {
   checkins: true,
   things: true,
   food: true,
+  screen: true,
   export: true,
   sundayWeek: null,
   sundayOpen: false,
@@ -54,6 +56,7 @@ function sanitizeSections(raw: unknown): SectionsState {
     checkins: isBool(r.checkins) ? r.checkins : DEFAULT_SECTIONS.checkins,
     things: isBool(r.things) ? r.things : DEFAULT_SECTIONS.things,
     food: isBool(r.food) ? r.food : DEFAULT_SECTIONS.food,
+    screen: isBool(r.screen) ? r.screen : DEFAULT_SECTIONS.screen,
     export: isBool(r.export) ? r.export : DEFAULT_SECTIONS.export,
     sundayWeek: typeof r.sundayWeek === 'string' ? r.sundayWeek : null,
     sundayOpen: isBool(r.sundayOpen) ? r.sundayOpen : DEFAULT_SECTIONS.sundayOpen,
