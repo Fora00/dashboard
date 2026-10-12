@@ -9,6 +9,8 @@ const QUESTION_TYPE_OPTIONS: { value: LifeQuestionType; label: string }[] = [
   { value: 'boolean', label: 'Yes / No' },
   { value: 'text', label: 'Text' },
   { value: 'scale5', label: '1–5' },
+  { value: 'duration', label: 'Duration (h:mm)' },
+  { value: 'apps', label: 'Top apps (up to 7)' },
 ]
 
 export function SundaySection({
@@ -37,7 +39,13 @@ export function SundaySection({
               />
               <select
                 value={q.type}
-                onChange={(e) => setSundayCheck(updateAt(sundayCheck, i, { type: e.target.value as LifeQuestionType }))}
+                onChange={(e) =>
+                  setSundayCheck(
+                    updateAt(sundayCheck, i, {
+                      type: e.target.value as LifeQuestionType,
+                    }),
+                  )
+                }
                 aria-label="Question type"
                 className={`${inputClass} w-32`}
               >

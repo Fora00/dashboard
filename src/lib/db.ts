@@ -240,7 +240,7 @@ export interface LifeTracker {
   energy: boolean // ask energy before/after (1–5) on log
 }
 
-export type LifeQuestionType = 'number' | 'boolean' | 'text' | 'scale5'
+export type LifeQuestionType = 'number' | 'boolean' | 'text' | 'scale5' | 'duration' | 'apps'
 
 export interface LifeQuestion {
   id: string

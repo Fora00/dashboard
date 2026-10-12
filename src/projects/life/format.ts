@@ -62,10 +62,26 @@ export function describeEnergy(e: LifeTrackerEntry): string {
   return `energy ${b ?? '–'} → ${a ?? '–'}`
 }
 
+import { parseApps } from './model/apps'
+
+/** Minutes as '2h 15m' / '45m' / '3h'. */
+export function formatDuration(minutes: number): string {
+  const h = Math.floor(minutes / 60)
+  const m = Math.round(minutes % 60)
+  return h && m ? `${h}h ${m}m` : h ? `${h}h` : `${m}m`
+}
+
 export function describeAnswer(question: LifeQuestion, answer: LifeAnswer): string {
   if (answer === null) return '—'
   if (typeof answer === 'boolean') return answer ? 'Yes' : 'No'
   if (question.type === 'scale5') return `${answer}/5`
+  if (question.type === 'apps')
+    return (
+      parseApps(answer)
+        .map((r) => `${r.app} ${formatDuration(r.minutes)}`)
+        .join(', ') || '—'
+    )
+  if (question.type === 'duration' && typeof answer === 'number') return formatDuration(answer)
   return String(answer)
 }
 

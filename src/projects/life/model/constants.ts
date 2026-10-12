@@ -46,6 +46,6 @@ export const LIFE_CAPS = {
 /** Things `when` keywords accepted besides a 'YYYY-MM-DD' date. */
 export const THINGS_WHEN_KEYWORDS = ['today', 'tonight', 'evening', 'anytime', 'someday'] as const
 
-export const QUESTION_TYPES: readonly LifeQuestionType[] = ['number', 'boolean', 'text', 'scale5']
+export const QUESTION_TYPES: readonly LifeQuestionType[] = ['number', 'boolean', 'text', 'scale5', 'duration', 'apps']
 /** Question types that can be answered automatically from a tracker. */
 export const AUTO_QUESTION_TYPES: readonly LifeQuestionType[] = ['number', 'boolean']

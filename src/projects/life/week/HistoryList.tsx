@@ -7,6 +7,7 @@ import { PageHeader } from '../../../components/PageHeader'
 import { SkeletonList } from '../../../components/Skeleton'
 import { summarizeWeek } from '../model'
 import { ProgressChart } from './ProgressChart'
+import { ScreenTimeChart } from './ScreenTimeChart'
 import { WeekRecap } from './WeekRecap'
 
 export function HistoryList({
@@ -36,6 +37,7 @@ export function HistoryList({
         <div className="lg:grid lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:items-start lg:gap-6">
           <div className="lg:sticky lg:top-4">
             {entries && weeks && <ProgressChart weeks={weeks} entries={entries} currentWeek={currentWeek} />}
+            {entries && weeks && <ScreenTimeChart weeks={weeks} entries={entries} currentWeek={currentWeek} />}
           </div>
           <ul className="space-y-2">
             {weeks.map((w) => (

@@ -10,6 +10,7 @@
 export { LIFE_CAPS, THINGS_WHEN_KEYWORDS, AUTO_QUESTION_TYPES } from './constants.ts'
 export { dayKey, isDateKey, parseDayKey, isMondayKey, addDays, weekKey, weekDays, daysBetween } from './dates.ts'
 export { parseWeekJson, validatePlan, type ParseResult } from './validate.ts'
+export { MAX_APPS, parseApps, serializeApps, type AppUsage } from './apps.ts'
 export { derivedCheckinId, withCheckinIds } from './checkinIds.ts'
 export { entryId, isEnergy, validateAnswer } from './entries.ts'
 export { summarizeWeek, nextCheckin, type TrackerSummary, type CheckinStatus, type WeekSummary } from './summary.ts'

@@ -2,6 +2,7 @@ import type { EventMark, LifeAnswer, LifeEntry, LifePlan, LifeQuestion, MealEntr
 import { withCheckinIds } from './checkinIds.ts'
 import { dayKey, weekDays } from './dates.ts'
 import { summarizeSavedEvents } from './events.ts'
+import { parseApps } from './apps.ts'
 import { fenceFor } from './fence.ts'
 import { summarizeMealsWeek } from './meals.ts'
 import { summarizeWeek } from './summary.ts'
@@ -14,6 +15,17 @@ function formatAnswer(q: LifeQuestion | undefined, a: LifeAnswer): string {
   if (a === null) return '—'
   if (typeof a === 'boolean') return a ? 'yes' : 'no'
   if (q?.type === 'scale5') return `${a}/5`
+  if (q?.type === 'apps')
+    return (
+      parseApps(a)
+        .map((r) => `${r.app} ${r.minutes}m`)
+        .join(', ') || '—'
+    )
+  if (q?.type === 'duration' && typeof a === 'number') {
+    const h = Math.floor(a / 60)
+    const m = a % 60
+    return h && m ? `${h}h ${m}m` : h ? `${h}h` : `${m}m`
+  }
   return String(a)
 }
 
@@ -31,7 +43,10 @@ export function buildExportMarkdown(
   entries: readonly LifeEntry[],
   today: string = dayKey(new Date()),
   meals: readonly MealEntry[] = [],
-  savedEvents: { marks: readonly EventMark[]; favouriteCategories: readonly string[] } = {
+  savedEvents: {
+    marks: readonly EventMark[]
+    favouriteCategories: readonly string[]
+  } = {
     marks: [],
     favouriteCategories: [],
   },

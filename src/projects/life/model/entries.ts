@@ -1,4 +1,5 @@
 import type { LifeAnswer, LifeEntryKind, LifeQuestionType } from '../../../lib/db'
+import { validateApps } from './apps.ts'
 import { LIFE_CAPS } from './constants.ts'
 
 // --- Entry values -------------------------------------------------------------
@@ -21,6 +22,12 @@ export function validateAnswer(type: LifeQuestionType, answer: LifeAnswer): stri
       return typeof answer === 'boolean' ? null : 'Answer yes or no'
     case 'scale5':
       return isEnergy(answer) ? null : 'Pick a value from 1 to 5'
+    case 'apps':
+      return validateApps(answer)
+    case 'duration':
+      return typeof answer === 'number' && Number.isInteger(answer) && answer >= 0 && answer <= 24 * 60 * 7
+        ? null
+        : 'Enter hours and minutes'
     case 'number':
       return typeof answer === 'number' && Number.isFinite(answer) && Math.abs(answer) <= LIFE_CAPS.answerNumber
         ? null
