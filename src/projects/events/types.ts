@@ -39,6 +39,12 @@ export interface EventItem {
   firstSeen?: string
   /** Finer split of theatre/concerts/exhibitions/talks (added 2026-10-09). Absent = none recognised. */
   subcategory?: string
+  /** True on every record of a recurring series (added 2026-10-14). */
+  recurring?: true
+  /** The series a recurring record belongs to (added 2026-10-14); `next` are start instants, `weekday` Monday = 0, null for a folded record. */
+  series?: { id: string; cadence: string; weekday: number | null; count: number; next: string[] }
+  /** Meetings of a cycle ("8 incontri"), when the text gives them (added 2026-10-14). */
+  meetings?: number
 }
 
 export interface EventsFile {

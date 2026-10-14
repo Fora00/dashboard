@@ -69,6 +69,13 @@ describe('markSeries', () => {
     const play = thursdays.map((e) => ({ ...e, category: 'theatre' as const }))
     expect(markSeries(play, NOW).some((e) => e.recurring)).toBe(false)
   })
+  it('a recurring course is also a cycle, and the cycle goes with the series', () => {
+    const course = thursdays.map((e) => ({ ...e, category: 'courses' as const, tags: ['courses' as const] }))
+    const out = markSeries(course, NOW)
+    expect(out[0]?.tags).toEqual(['courses', 'cycle', 'recurring'])
+    const stale = markSeries(out.slice(0, 2), NOW)
+    expect(stale[0]?.tags).toEqual(['courses'])
+  })
   it('judges a folded record by its average gap', () => {
     const folded = ev({
       start: '2026-10-15T00:00:00+02:00',

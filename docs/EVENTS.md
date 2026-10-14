@@ -195,6 +195,7 @@ ids and labels, a town → area map, the ring-2 interest list).
 | `boardgames` | Board games |
 | `nerd` | Comics & games |
 | `creative` | Creative (added 2026-09-29) |
+| `courses` | Corsi (added 2026-10-14) |
 | `theatre` | Theatre (added 2026-09-29) |
 | `exhibitions` | Exhibitions |
 | `concerts` | Concerts & music |
@@ -216,6 +217,14 @@ Keywords live in `scripts/events/tags.ts` and match title + summary +
 description + the source's typology labels, case- and accent-insensitive, on
 whole words.
 
+- **`courses`** (2026-10-14): courses and cycles for adults — "corso di/per…",
+  "ciclo di incontri/lezioni", "lezioni di…", conversation and reading groups.
+  Short text only (title, summary, typologies), never a bare "corso" (Corso
+  Bettini). Ranks after `creative`/`boardgames`/`nerd` (a ceramics course stays
+  `creative`, a burraco course `boardgames`). The `cycle` tag marks a run of
+  meetings with a start and an end: the text says "N incontri/lezioni…" or
+  "ciclo di …" (`meetings` carries N when given), or a recurring `courses`
+  series (`scripts/events/tags.ts` `cycleOf`, `series.ts`).
 - **`creative`**: hands-on making for adults — ceramics (tornio, raku),
   drawing/painting/watercolour courses, printmaking, sewing, knitting,
   embroidery, weaving, photography courses and walks, creative writing,

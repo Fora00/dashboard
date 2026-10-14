@@ -2,7 +2,7 @@
 // series folding, ids/tags, cross-source dedup, `ongoing`, sorting.
 import type { Adapter, Event, RawEvent } from './types.ts'
 import type { DropRule, TagId } from './tags.ts'
-import { CATEGORIES, classify, dropRule, finishTags } from './tags.ts'
+import { CATEGORIES, classify, cycleOf, dropRule, finishTags, sortTags } from './tags.ts'
 import { withSubcategory } from './subcategories.ts'
 import { areaFor, closerRing, keepForRing } from './areas.ts'
 import { DAY, addDays, dateToIso } from './time.ts'
@@ -127,6 +127,9 @@ export function toEvents(
       category = adapter.longSeriesCategory
       tags = finishTags(category, tags, tags.includes('kids'))
     }
+    // A run of meetings with a start and an end ("8 incontri"): tag `cycle`.
+    const cycle = tags.includes('kids') ? null : cycleOf(text, category)
+    if (cycle) tags = sortTags([...tags, 'cycle'])
     // Ring 2 sources: interests only (NEAR_INTERESTS), never kids.
     if (!keepForRing(ring, tags)) continue
     const city = r.city.trim() || 'Trentino'
@@ -152,6 +155,7 @@ export function toEvents(
       occurrences: r.occurrences,
       fetchedAt,
       ...(r.datesTentative ? { datesTentative: true as const } : {}),
+      ...(cycle?.meetings ? { meetings: cycle.meetings } : {}),
     }
     events.push(withSubcategory(event))
   }

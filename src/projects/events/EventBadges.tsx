@@ -2,7 +2,7 @@ import type { EventItem } from './types'
 import { endingInDays } from './filters'
 import { cleanFormats, formatLabel } from './format'
 import { isManual } from './custom'
-import { categoryLabel, categoryOf, isNew, isSpot } from './model'
+import { cadenceLabel, categoryLabel, categoryOf, isNew, isSpot } from './model'
 import { subcategoryLabel } from './subcategories'
 
 const BADGE = 'rounded-full px-2.5 py-1 text-xs font-medium'
@@ -34,6 +34,12 @@ export function EventBadges({
       <span className={`${BADGE} bg-(color:--accent-soft) text-slate-800 dark:text-slate-100`}>
         {categoryLabel(categoryOf(e))}
       </span>
+      {cadenceLabel(e) && (
+        <span className={`${BADGE} bg-cyan-100 text-cyan-800 dark:bg-cyan-500/20 dark:text-cyan-200`}>
+          🔁 {cadenceLabel(e)}
+          {e.meetings ? ` · ${e.meetings} incontri` : ''}
+        </span>
+      )}
       {sub && <span className={`${BADGE} bg-(color:--accent-soft) text-slate-600 dark:text-slate-300`}>{sub}</span>}
       {cleanFormats(e.tags).map((id) => (
         <span key={id} className={`${BADGE} bg-sky-100 text-sky-800 dark:bg-sky-500/20 dark:text-sky-200`}>

@@ -5,6 +5,7 @@ const LOOK: Record<string, { glyph: string; tone: string }> = {
   boardgames: { glyph: '🎲', tone: 'from-emerald-200 to-emerald-400 dark:from-emerald-900 dark:to-emerald-700' },
   nerd: { glyph: '🎮', tone: 'from-violet-200 to-violet-400 dark:from-violet-900 dark:to-violet-700' },
   creative: { glyph: '🎨', tone: 'from-pink-200 to-pink-400 dark:from-pink-900 dark:to-pink-700' },
+  courses: { glyph: '🎓', tone: 'from-cyan-200 to-cyan-400 dark:from-cyan-900 dark:to-cyan-700' },
   theatre: { glyph: '🎭', tone: 'from-rose-200 to-rose-400 dark:from-rose-900 dark:to-rose-700' },
   exhibitions: { glyph: '🖼️', tone: 'from-amber-200 to-amber-400 dark:from-amber-900 dark:to-amber-700' },
   concerts: { glyph: '🎵', tone: 'from-indigo-200 to-indigo-400 dark:from-indigo-900 dark:to-indigo-700' },

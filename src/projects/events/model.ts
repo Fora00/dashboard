@@ -11,6 +11,7 @@ export const CATEGORIES: { id: string; label: string }[] = [
   { id: 'boardgames', label: 'Board games' },
   { id: 'nerd', label: 'Comics & games' },
   { id: 'creative', label: 'Creative' },
+  { id: 'courses', label: 'Corsi' },
   { id: 'theatre', label: 'Theatre' },
   { id: 'exhibitions', label: 'Exhibitions' },
   { id: 'concerts', label: 'Concerts & music' },
@@ -32,6 +33,7 @@ export const DEFAULT_CATEGORIES: readonly string[] = [
   'boardgames',
   'nerd',
   'creative',
+  'courses',
   'festivals',
   'theatre',
   'cinema',
@@ -326,7 +328,53 @@ export function compareInDay(favourites: readonly string[]): (a: EventItem, b: E
 
 /** Day-group keys that are one flat bucket (no week, no day heading, never folded). */
 export function isFlatGroup(key: string): boolean {
-  return key === 'open-now' || key === 'past'
+  return key === 'open-now' || key === 'past' || key === 'series'
+}
+
+const WEEKDAYS = ['lunedì', 'martedì', 'mercoledì', 'giovedì', 'venerdì', 'sabato', 'domenica']
+
+/** "ogni giovedì", "ogni 2 settimane", "ogni mese"; null when the event is not part of a series. */
+export function cadenceLabel(e: Pick<EventItem, 'series'>): string | null {
+  const s = e.series
+  if (!s) return null
+  const day = s.weekday !== null ? WEEKDAYS[s.weekday] : undefined
+  if (s.cadence === 'weekly') return day ? `ogni ${day}` : 'ogni settimana'
+  if (s.cadence === 'biweekly') return day ? `ogni 2 settimane · ${day}` : 'ogni 2 settimane'
+  if (s.cadence === 'monthly') return day ? `ogni mese · ${day}` : 'ogni mese'
+  return null
+}
+
+/**
+ * "Cose che si ripetono": one card per series (the crawler's `series.id`),
+ * the next date that is not over, ordered by that date. `repeats` maps the
+ * card's id to all its upcoming dates (next first), like groups.ts, for the
+ * expandable rows. Finished series are left out.
+ */
+export function seriesGroups(
+  events: EventItem[],
+  now: number,
+): { days: DayGroup[]; repeats: Map<string, EventItem[]> } {
+  const bySeries = new Map<string, EventItem[]>()
+  for (const e of events) {
+    if (!e.series || isOver(e, now)) continue
+    const list = bySeries.get(e.series.id)
+    if (list) list.push(e)
+    else bySeries.set(e.series.id, [e])
+  }
+  const repeats = new Map<string, EventItem[]>()
+  const leads: EventItem[] = []
+  for (const list of bySeries.values()) {
+    list.sort((a, b) => Date.parse(a.start) - Date.parse(b.start) || a.id.localeCompare(b.id))
+    const [lead] = list
+    if (!lead) continue
+    leads.push(lead)
+    if (list.length > 1) repeats.set(lead.id, list)
+  }
+  leads.sort((a, b) => Date.parse(a.start) - Date.parse(b.start) || a.title.localeCompare(b.title))
+  return {
+    days: leads.length ? [{ key: 'series', label: 'Cose che si ripetono', events: leads }] : [],
+    repeats,
+  }
 }
 
 /**

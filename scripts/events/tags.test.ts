@@ -1,5 +1,15 @@
 import { describe, expect, it } from 'vitest'
-import { classify, dropRule, isAdjacent, finishTags, formatTags, isKids, matchCategories, sortTags } from './tags.ts'
+import {
+  classify,
+  cycleOf,
+  dropRule,
+  isAdjacent,
+  finishTags,
+  formatTags,
+  isKids,
+  matchCategories,
+  sortTags,
+} from './tags.ts'
 
 describe('matchCategories (keyword compilation: stems, accents, word boundaries)', () => {
   it('a trailing * matches word continuations', () => {
@@ -220,5 +230,31 @@ describe('adjacent interests', () => {
     expect(classify(undefined, 'other', { title: 'Laboratorio di fotografia per bambini' }).tags).not.toContain(
       'adjacent',
     )
+  })
+})
+
+describe('courses and cycles', () => {
+  it('a course is filed under courses, a craft course stays creative', () => {
+    expect(classify(undefined, 'other', { title: 'Corso di inglese livello B1' }).category).toBe('courses')
+    expect(classify(undefined, 'other', { title: 'Gruppo di conversazione sul cinema' }).category).toBe('courses')
+    expect(classify(undefined, 'other', { title: 'Corso di ceramica' }).category).toBe('creative')
+    expect(classify(undefined, 'other', { title: 'Corso di burraco' }).category).toBe('boardgames')
+  })
+  it('a bare "corso" (a street) or a long description does not make a course', () => {
+    expect(classify(undefined, 'other', { title: 'Concerto in Corso Bettini' }).category).not.toBe('courses')
+    const c = classify(undefined, 'other', {
+      title: 'Serata di gala',
+      description: 'Dopo il corso di formazione si cena.',
+    })
+    expect(c.category).not.toBe('courses')
+  })
+  it('cycleOf reads the number of meetings', () => {
+    expect(cycleOf({ title: 'Fotografia', summary: '8 incontri ogni martedì dal 3 novembre' }, 'courses')).toEqual({
+      meetings: 8,
+    })
+    expect(cycleOf({ title: 'Ciclo di 6 lezioni sul cinema' }, 'talks')).toEqual({ meetings: 6 })
+    expect(cycleOf({ title: 'Ciclo di incontri sulla storia' }, 'talks')).toEqual({ meetings: null })
+    expect(cycleOf({ title: 'Festival', description: '30 incontri con gli autori' }, 'festivals')).toBeNull()
+    expect(cycleOf({ title: 'Corso', description: 'si articola in 5 lezioni' }, 'courses')).toEqual({ meetings: 5 })
   })
 })

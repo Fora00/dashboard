@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { collapseRepeats, MIN_REPEATS, repeatKey } from './groups'
-import { groupByDay } from './model'
+import { cadenceLabel, groupByDay, seriesGroups } from './model'
 import type { EventItem } from './types'
 
 const NOW = Date.parse('2026-10-10T10:00:00Z')
@@ -124,5 +124,35 @@ describe('collapseRepeats', () => {
   it('counts a group as one card for paging', () => {
     const many = Array.from({ length: 10 }, (_, i) => ev(`r${i}`, `2026-10-${String(12 + i).padStart(2, '0')}`))
     expect(collapseRepeats(days(many), true).days.flatMap((g) => g.events)).toHaveLength(1)
+  })
+})
+
+const series = { id: 's1', cadence: 'weekly', weekday: 3, count: 4, next: [] }
+
+describe('series (crawler series.id)', () => {
+  it('joins records whose titles differ under one repeat key', () => {
+    const a = ev('a', '2026-10-15', { title: 'Serata giochi', series })
+    const b = ev('b', '2026-10-22', { title: 'Serata giochi!', series })
+    expect(repeatKey(a)).toBe(repeatKey(b))
+  })
+  it('cadenceLabel reads the weekday and cadence', () => {
+    expect(cadenceLabel({ series })).toBe('ogni giovedì')
+    expect(cadenceLabel({ series: { ...series, cadence: 'biweekly' } })).toBe('ogni 2 settimane · giovedì')
+    expect(cadenceLabel({ series: { ...series, cadence: 'monthly', weekday: null } })).toBe('ogni mese')
+    expect(cadenceLabel({})).toBeNull()
+  })
+  it('seriesGroups gives one card per series, next date first, finished ones out', () => {
+    const past = ev('p', '2026-10-01', { series })
+    const a = ev('a', '2026-10-15', { series })
+    const b = ev('b', '2026-10-22', { series })
+    const other = ev('o', '2026-10-13', { title: 'Scacchi', series: { ...series, id: 's2' } })
+    const plain = ev('x', '2026-10-14')
+    const done = ev('d', '2026-10-02', { title: 'Vecchia', series: { ...series, id: 's3' } })
+    const out = seriesGroups([b, past, plain, a, done, other], NOW)
+    expect(out.days).toHaveLength(1)
+    expect(out.days[0]?.key).toBe('series')
+    expect(out.days[0]?.events.map((e) => e.id)).toEqual(['o', 'a'])
+    expect(out.repeats.get('a')?.map((e) => e.id)).toEqual(['a', 'b'])
+    expect(out.repeats.has('o')).toBe(false)
   })
 })

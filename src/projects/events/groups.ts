@@ -11,8 +11,9 @@ import { normalizeText } from './filters'
 export const MIN_REPEATS = 3
 
 /** Same normalized title in the same city (the venue may differ). */
-export function repeatKey(e: Pick<EventItem, 'title' | 'city'>): string {
-  return `${normalizeText(e.title)}|${normalizeText(e.city)}`
+export function repeatKey(e: Pick<EventItem, 'title' | 'city' | 'series'>): string {
+  // The crawler's series id when there is one: it joins records the title alone would split.
+  return e.series ? `series:${e.series.id}` : `${normalizeText(e.title)}|${normalizeText(e.city)}`
 }
 
 export interface Collapsed {

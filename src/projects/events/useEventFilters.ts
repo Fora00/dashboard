@@ -31,10 +31,11 @@ import {
   isOver,
   isSpot,
   savedGroups,
+  seriesGroups,
   type DayGroup,
 } from './model'
 
-export type View = 'all' | 'open' | 'saved'
+export type View = 'all' | 'open' | 'saved' | 'series'
 export const PAGE = 60
 
 /** Add `id` to `list`, or remove it when present. Always returns a new array. */
@@ -259,6 +260,9 @@ export function useEventFilters(
         ),
       )
       if (running.length) out.push({ key: 'open-now', label: 'Open now', events: running })
+    } else if (view === 'series') {
+      // Not through collapseRepeats: seriesGroups already builds one card per series.
+      return seriesGroups(filtered, now)
     } else if (view === 'open') {
       const running = [...filtered].sort((a, b) => Date.parse(a.end ?? a.start) - Date.parse(b.end ?? b.start))
       if (running.length) out.push({ key: 'open-now', label: 'Open now', events: running })

@@ -461,11 +461,12 @@ export function Events() {
   // View tabs, search, date chips: on top of the list in both layouts.
   const controls = (
     <>
-      <div className="mb-3 grid grid-cols-3 gap-2">
+      <div className="mb-3 grid grid-cols-4 gap-2">
         {(
           [
             ['all', 'All'],
             ['open', 'Open now'],
+            ['series', 'Si ripete'],
             [
               'saved',
               `Saved${marksRaw.filter((m) => m.state === 'saved').length ? ` (${marksRaw.filter((m) => m.state === 'saved').length})` : ''}`,

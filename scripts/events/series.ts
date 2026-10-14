@@ -2,7 +2,7 @@
 // ONE proposal ("Serata giochi, every Thursday"), not N evenings. Pure,
 // runs after dedup on the final list, so cross-source copies are already one.
 import type { Event, EventSeries, SeriesCadence } from './types.ts'
-import type { CategoryId, TagId } from './tags.ts'
+import { sortTags, type CategoryId } from './tags.ts'
 import { DAY } from './time.ts'
 import { normalize, stableId } from './text.ts'
 
@@ -44,11 +44,15 @@ function modeOf(xs: number[]): number {
 
 function strip(e: Event): Event {
   const { series: _s, recurring: _r, ...rest } = e
-  return { ...rest, tags: rest.tags.filter((t) => t !== 'recurring') }
+  // A `cycle` tag that came from a recurring course goes too; the one from the text is set again by toEvents (and kept when meetings is set).
+  const keepCycle = rest.meetings !== undefined
+  return { ...rest, tags: rest.tags.filter((t) => t !== 'recurring' && (t !== 'cycle' || !e.recurring || keepCycle)) }
 }
 
 function mark(e: Event, series: EventSeries): Event {
-  return { ...e, tags: [...e.tags, 'recurring' as TagId], recurring: true, series }
+  // A recurring course is a cycle too (it is not a standing club).
+  const tags = sortTags([...e.tags, 'recurring', ...(e.category === 'courses' ? (['cycle'] as const) : [])])
+  return { ...e, tags, recurring: true, series }
 }
 
 /**

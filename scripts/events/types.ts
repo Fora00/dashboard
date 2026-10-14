@@ -46,6 +46,8 @@ export interface Event {
   datesTentative?: true
   /** UTC ISO time this id first appeared in events.json; carried over from the previous file. Absent on events already published before it existed. Added 2026-10-09. */
   firstSeen?: string
+  /** Number of meetings of a cycle ("8 incontri"), only with the `cycle` tag and only when the text gives it. Added 2026-10-14. */
+  meetings?: number
   /** True on every record of a recurring series (weekly, fortnightly or monthly); the `recurring` tag says the same. Added 2026-10-14. */
   recurring?: true
   /** The series this record belongs to; present exactly when `recurring`. Added 2026-10-14. */

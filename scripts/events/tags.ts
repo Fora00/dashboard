@@ -23,6 +23,7 @@ export type CategoryId =
   | 'boardgames'
   | 'nerd'
   | 'creative'
+  | 'courses'
   | 'theatre'
   | 'exhibitions'
   | 'concerts'
@@ -41,7 +42,7 @@ export type CategoryId =
  */
 export type FormatTagId = 'social-friend' | 'social-girl' | 'solo-ok'
 /** Not a category: events about topics next to the owner's core interests (see ADJACENT). */
-export type TagId = CategoryId | 'kids' | FormatTagId | 'adjacent' | 'recurring'
+export type TagId = CategoryId | 'kids' | FormatTagId | 'adjacent' | 'recurring' | 'cycle'
 
 export interface Category {
   id: CategoryId
@@ -239,6 +240,45 @@ export const CATEGORIES: Category[] = [
       'werkstatt*',
       'mitmach*',
     ],
+  },
+  {
+    // Courses and cycles of meetings for adults: a language course, a
+    // photography course, "ciclo di incontri", a conversation or reading
+    // group. Placed after `creative` (a ceramics course stays creative) and
+    // before the rest, so "Corso di inglese" is not filed under talks.
+    // Short text only (a long description name-drops "corso di…" in passing)
+    // and always "corso di/per…", never a bare "corso" (Corso Bettini).
+    id: 'courses',
+    label: 'Courses',
+    keywords: [
+      'corso di',
+      'corsi di',
+      'corso base',
+      'corso avanzato',
+      'corso intermedio',
+      'corso intensivo',
+      'corso introduttivo',
+      'corso per',
+      'corsi per',
+      'corso serale',
+      'ciclo di incontri',
+      'ciclo di lezioni',
+      'ciclo di laboratori',
+      'ciclo di appuntamenti',
+      'lezioni di',
+      'incontri settimanali',
+      'gruppo di conversazione',
+      'gruppi di conversazione',
+      'conversazione in',
+      'gruppo di lettura',
+      'gruppi di lettura',
+      'circolo di lettura',
+      'circolo letterario',
+      'corso di lingua',
+      'sprachkurs*',
+      'kurs fur erwachsene',
+    ],
+    shortOnly: true,
   },
   {
     // Staged performance. Opera is here, not under concerts: it is staged and
@@ -1353,6 +1393,35 @@ export function formatTags(
   return out
 }
 
+// --- Cycles -------------------------------------------------------------------------
+//
+// A cycle is a run of meetings with a start and an end: "8 incontri, ogni
+// martedì dal 3 novembre". The text gives the count ("8 incontri", "ciclo di
+// 6 lezioni") or at least says it is a cycle ("ciclo di incontri"). Title,
+// summary are read, and the description too for a `courses` event only (a
+// festival's description counts "30 incontri con gli autori" in passing).
+
+export interface Cycle {
+  /** Number of meetings; null when the text says "ciclo" without a number. */
+  meetings: number | null
+}
+
+const CYCLE_COUNT_RE =
+  /(?:^| )(\d{1,2}) (?:incontri|lezioni|appuntamenti|serate|sessioni|sabati|martedi|lunedi|mercoledi|giovedi|venerdi)(?= |$)/
+const CYCLE_OF_COUNT_RE = /(?:^| )ciclo di (\d{1,2})(?= |$)/
+const CYCLE_WORD_RE = /(?:^| )ciclo di (?:incontri|lezioni|laboratori|appuntamenti|conferenze|workshop|seminari)(?= |$)/
+
+export function cycleOf(
+  text: { title: string; summary?: string | null; description?: string | null },
+  category: CategoryId,
+): Cycle | null {
+  const hay = hayOf([text.title, text.summary, category === 'courses' ? text.description : null])
+  const n = CYCLE_OF_COUNT_RE.exec(hay) ?? CYCLE_COUNT_RE.exec(hay)
+  const count = n ? Number(n[1]) : null
+  if (count !== null && count >= 2 && count <= 40) return { meetings: count }
+  return CYCLE_WORD_RE.test(hay) ? { meetings: null } : null
+}
+
 // --- Drop rules ---------------------------------------------------------------------
 //
 // Events nobody browses for, removed at crawl time (owner's decision,
@@ -1731,7 +1800,10 @@ export function finishTags(category: CategoryId, tags: TagId[], kids: boolean): 
 
 const ORDER = new Map<TagId, number>([
   ...CATEGORIES.map((c, i): [TagId, number] => [c.id, i]),
-  ...(['kids', ...FORMAT_TAGS, 'adjacent'] as TagId[]).map((t, i): [TagId, number] => [t, 100 + i]),
+  ...(['kids', ...FORMAT_TAGS, 'adjacent', 'cycle', 'recurring'] as TagId[]).map((t, i): [TagId, number] => [
+    t,
+    100 + i,
+  ]),
 ])
 
 export function sortTags(tags: TagId[]): TagId[] {
