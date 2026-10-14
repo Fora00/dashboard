@@ -236,7 +236,8 @@ describe('adjacent interests', () => {
 describe('courses and cycles', () => {
   it('a course is filed under courses, a craft course stays creative', () => {
     expect(classify(undefined, 'other', { title: 'Corso di inglese livello B1' }).category).toBe('courses')
-    expect(classify(undefined, 'other', { title: 'Gruppo di conversazione sul cinema' }).category).toBe('courses')
+    expect(classify(undefined, 'other', { title: 'Gruppo di conversazione sul cinema' }).category).not.toBe('courses')
+    expect(classify(undefined, 'other', { title: 'Gruppo di lettura in inglese' }).category).toBe('courses')
     expect(classify(undefined, 'other', { title: 'Corso di ceramica' }).category).toBe('creative')
     expect(classify(undefined, 'other', { title: 'Corso di burraco' }).category).toBe('boardgames')
   })

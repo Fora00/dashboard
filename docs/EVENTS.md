@@ -218,7 +218,8 @@ description + the source's typology labels, case- and accent-insensitive, on
 whole words.
 
 - **`courses`** (2026-10-14): courses and cycles for adults — "corso di/per…",
-  "ciclo di incontri/lezioni", "lezioni di…", conversation and reading groups.
+  "ciclo di incontri/lezioni", "lezioni di…", reading groups (conversation
+  groups left out: not an interest of the owner, 2026-10-14).
   Short text only (title, summary, typologies), never a bare "corso" (Corso
   Bettini). Ranks after `creative`/`boardgames`/`nerd` (a ceramics course stays
   `creative`, a burraco course `boardgames`). The `cycle` tag marks a run of
