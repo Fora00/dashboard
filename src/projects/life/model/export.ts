@@ -173,11 +173,12 @@ export function buildExportMarkdown(
     ...(food.days.length
       ? {
           meals: food.days.flatMap((d) =>
-            d.entries.map(({ day, meal, text, weighed, grams, kcal, proteinG, carbsG, fatG, estimated }) => ({
+            d.entries.map(({ day, meal, text, weighed, mood, grams, kcal, proteinG, carbsG, fatG, estimated }) => ({
               day,
               meal,
               text,
               weighed: weighed === true,
+              mood: mood ?? null,
               grams,
               kcal,
               proteinG,

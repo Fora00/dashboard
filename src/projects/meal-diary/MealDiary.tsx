@@ -16,7 +16,8 @@ import type { NutritionForm } from './nutrition'
 import { NutritionFields } from './NutritionFields'
 import { NutritionTrends } from './NutritionTrends'
 
-import { DayTotalsLine, WeighedToggle } from './MealParts'
+import { DayTotalsLine, MoodPicker, WeighedToggle } from './MealParts'
+import { moodFace } from './mood'
 import { macros, toForm, toNutrition } from './mealFormat'
 
 const INPUT =
@@ -34,10 +35,13 @@ export function MealDiary() {
   const [text, setText] = useState('')
   // Sticky across entries: you tend to weigh (or not) a whole cooking session.
   const [weighed, setWeighed] = useState(false)
+  // Not sticky: a mood belongs to one meal, so it resets after each Add.
+  const [mood, setMood] = useState<number | null>(null)
   const [editing, setEditing] = useState<{
     id: string
     text: string
     weighed: boolean
+    mood: number | null
     nutrition: NutritionForm
   } | null>(null)
 
@@ -54,7 +58,10 @@ export function MealDiary() {
 
   async function add(e: FormEvent) {
     e.preventDefault()
-    if (await addMeal(day, meal, text, { weighed })) setText('')
+    if (await addMeal(day, meal, text, { weighed, mood })) {
+      setText('')
+      setMood(null)
+    }
   }
 
   async function saveEdit(entry: MealEntry) {
@@ -62,6 +69,7 @@ export function MealDiary() {
     await updateMeal(entry, {
       text: editing.text,
       weighed: editing.weighed,
+      mood: editing.mood,
       nutrition: toNutrition(editing.nutrition),
     })
     setEditing(null)
@@ -111,6 +119,7 @@ export function MealDiary() {
             className={INPUT}
           />
           <WeighedToggle weighed={weighed} onChange={setWeighed} />
+          <MoodPicker mood={mood} onChange={setMood} />
           <Button type="submit" disabled={!text.trim()} title="Add to the diary">
             Add
           </Button>
@@ -198,6 +207,10 @@ export function MealDiary() {
                                     weighed={editing.weighed}
                                     onChange={(w) => setEditing({ ...editing, weighed: w })}
                                   />
+                                  <MoodPicker
+                                    mood={editing.mood}
+                                    onChange={(m) => setEditing({ ...editing, mood: m })}
+                                  />
                                   <Button type="submit" disabled={!editing.text.trim()}>
                                     Save
                                   </Button>
@@ -225,6 +238,7 @@ export function MealDiary() {
                                       id: entry.id,
                                       text: entry.text,
                                       weighed: entry.weighed === true,
+                                      mood: entry.mood ?? null,
                                       nutrition: toForm(entry),
                                     })
                                   }
@@ -239,6 +253,11 @@ export function MealDiary() {
                                     >
                                       {entry.weighed ? '⚖️' : '👁️'}
                                     </span>
+                                    {moodFace(entry.mood) && (
+                                      <span title="Mood" aria-label="Mood">
+                                        {` ${moodFace(entry.mood)}`}
+                                      </span>
+                                    )}
                                     {macros(entry).text && (
                                       <span title={macros(entry).hint} aria-label={macros(entry).hint}>
                                         {` ${macros(entry).text}`}

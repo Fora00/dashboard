@@ -79,3 +79,24 @@ describe('meal diary weighed flag', () => {
     expect((await db.meals.get(riso.id))?.weighed).toBe(true) // an unrelated edit keeps it
   })
 })
+
+describe('meal diary mood', () => {
+  it('is empty by default, keeps a 1-5 value, ignores anything else and survives unrelated edits', async () => {
+    await db.meals.clear()
+    await addMeal('2026-10-14', 'snack', 'biscotti')
+    await addMeal('2026-10-14', 'lunch', 'pasta', { mood: 4 })
+    await addMeal('2026-10-14', 'dinner', 'zuppa', { mood: 9 })
+    const all = await db.meals.toArray()
+    expect(all.find((m) => m.text === 'biscotti')?.mood).toBeNull()
+    expect(all.find((m) => m.text === 'pasta')?.mood).toBe(4)
+    expect(all.find((m) => m.text === 'zuppa')?.mood).toBeNull()
+
+    const pasta = all.find((m) => m.text === 'pasta')!
+    await updateMeal(pasta, { text: 'pasta al pesto' })
+    expect((await db.meals.get(pasta.id))?.mood).toBe(4) // an unrelated edit keeps it
+    await updateMeal(pasta, { mood: 2 })
+    expect((await db.meals.get(pasta.id))?.mood).toBe(2)
+    await updateMeal(pasta, { mood: null })
+    expect((await db.meals.get(pasta.id))?.mood).toBeNull() // tapping the face again clears it
+  })
+})

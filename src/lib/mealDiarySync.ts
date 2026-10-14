@@ -13,12 +13,18 @@ import { useSyncStatus } from './useSyncStatus'
 // supabase/migrations/20261005140000_meal_diary.sql and the input's maxLength.
 export const MAX_TEXT_LENGTH = 300
 
+/** A mood is a whole number 1-5; anything else (or nothing) means "not entered". */
+export function sanitizeMood(value: unknown): number | null {
+  return typeof value === 'number' && Number.isInteger(value) && value >= 1 && value <= 5 ? value : null
+}
+
 interface MealRow {
   id: string
   day: string
   meal: MealKind
   text: string
   weighed: boolean
+  mood: number | null
   grams: number | null
   kcal: number | null
   protein_g: number | null
@@ -32,7 +38,8 @@ interface MealRow {
 const mealsTable: TableSync<MealEntry, MealRow> = {
   remote: 'meal_entries',
   table: () => db.meals,
-  columns: 'id, day, meal, text, weighed, grams, kcal, protein_g, carbs_g, fat_g, estimated, created_at, updated_at',
+  columns:
+    'id, day, meal, text, weighed, mood, grams, kcal, protein_g, carbs_g, fat_g, estimated, created_at, updated_at',
   realtime: true,
   updatedAt: (m) => m.updatedAt,
   toRow: (m) => ({
@@ -42,6 +49,7 @@ const mealsTable: TableSync<MealEntry, MealRow> = {
     text: m.text,
     // Rows saved before the flag existed have no value: they count as by eye.
     weighed: m.weighed === true,
+    mood: sanitizeMood(m.mood),
     grams: m.grams,
     kcal: m.kcal,
     protein_g: m.proteinG,
@@ -57,6 +65,7 @@ const mealsTable: TableSync<MealEntry, MealRow> = {
     meal: r.meal,
     text: r.text,
     weighed: Boolean(r.weighed),
+    mood: sanitizeMood(r.mood),
     grams: r.grams ?? null,
     kcal: r.kcal ?? null,
     proteinG: r.protein_g ?? null,
@@ -80,7 +89,11 @@ export async function addMeal(
   day: string,
   meal: MealKind,
   text: string,
-  options: { weighed?: boolean; nutrition?: Partial<Nutrition> } = {},
+  options: {
+    weighed?: boolean
+    mood?: number | null
+    nutrition?: Partial<Nutrition>
+  } = {},
 ): Promise<boolean> {
   const trimmed = text.trim().slice(0, MAX_TEXT_LENGTH)
   if (!trimmed) return false
@@ -91,6 +104,7 @@ export async function addMeal(
     meal,
     text: trimmed,
     weighed: options.weighed === true,
+    mood: sanitizeMood(options.mood),
     ...(options.nutrition ? sanitizeNutrition(options.nutrition) : NO_NUTRITION),
     createdAt: now,
     updatedAt: now,
@@ -100,7 +114,14 @@ export async function addMeal(
 
 export async function updateMeal(
   entry: MealEntry,
-  changes: { text?: string; meal?: MealKind; day?: string; weighed?: boolean; nutrition?: Partial<Nutrition> },
+  changes: {
+    text?: string
+    meal?: MealKind
+    day?: string
+    weighed?: boolean
+    mood?: number | null
+    nutrition?: Partial<Nutrition>
+  },
 ): Promise<void> {
   const text = changes.text === undefined ? entry.text : changes.text.trim().slice(0, MAX_TEXT_LENGTH)
   if (!text) return
@@ -109,6 +130,7 @@ export async function updateMeal(
     ...(changes.nutrition ? sanitizeNutrition(changes.nutrition) : {}),
     text,
     weighed: changes.weighed ?? entry.weighed === true,
+    mood: changes.mood === undefined ? sanitizeMood(entry.mood) : sanitizeMood(changes.mood),
     meal: changes.meal ?? entry.meal,
     day: changes.day ?? entry.day,
     updatedAt: Date.now(),

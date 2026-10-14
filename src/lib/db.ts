@@ -95,6 +95,9 @@ export interface MealEntry {
   // Weighed on a scale (true) or eyeballed (false, the default): tells the AI
   // estimate how far to trust a quantity written in the text.
   weighed: boolean
+  // How the owner felt, 1 (low) to 5 (great). Missing/null = not entered
+  // (indifferent). Optional so rows from before the field existed still type-check.
+  mood?: number | null
   // Optional nutrition (whole numbers, null = not entered). `estimated` = the
   // values came from the built-in food table, not typed by the owner.
   grams: number | null
