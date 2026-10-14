@@ -255,6 +255,7 @@ describe('courses and cycles', () => {
     expect(cycleOf({ title: 'Ciclo di 6 lezioni sul cinema' }, 'talks')).toEqual({ meetings: 6 })
     expect(cycleOf({ title: 'Ciclo di incontri sulla storia' }, 'talks')).toEqual({ meetings: null })
     expect(cycleOf({ title: 'Festival', description: '30 incontri con gli autori' }, 'festivals')).toBeNull()
+    expect(cycleOf({ title: 'Il Faro', summary: '3 serate di spettacolo' }, 'theatre')).toBeNull()
     expect(cycleOf({ title: 'Corso', description: 'si articola in 5 lezioni' }, 'courses')).toEqual({ meetings: 5 })
   })
 })

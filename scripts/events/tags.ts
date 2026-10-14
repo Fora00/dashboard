@@ -1415,6 +1415,8 @@ export function cycleOf(
   text: { title: string; summary?: string | null; description?: string | null },
   category: CategoryId,
 ): Cycle | null {
+  // "3 serate" of a play or "20 incontri" of a festival is a programme, not a course.
+  if (['theatre', 'concerts', 'cinema', 'exhibitions', 'festivals'].includes(category)) return null
   const hay = hayOf([text.title, text.summary, category === 'courses' ? text.description : null])
   const n = CYCLE_OF_COUNT_RE.exec(hay) ?? CYCLE_COUNT_RE.exec(hay)
   const count = n ? Number(n[1]) : null
