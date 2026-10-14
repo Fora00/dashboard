@@ -383,6 +383,7 @@ them (the dashboard's category chips match only category ids).
 | `ctb` | www.centroteatralebresciano.it (ring 2): CTB, Teatro Sociale + Mina Mezzadri | static HTML listing `/spettacoli/` | 1 request; one all-day range per production (first night's time in the summary); morning-only productions (school matinées) dropped; no descriptions or venues |
 | `teatrogrande` | teatrogrande.it (ring 2): Teatro Grande Brescia | static HTML calendar `/it/calendario`, `data-date` per row | 1 request; café opening-hours rows dropped except "Aperitivo in Jazz"; "under 11"/"Educational" rows → `kids` |
 | `spot` | `scripts/events/spot.json` (hand-curated) | no network | see "Spot events" |
+| `recurring` | `scripts/events/recurring.json` (hand-curated) | no network | see "Recurring activities" |
 
 Not included (checked 2026-09-29):
 
@@ -532,6 +533,20 @@ It is type-checked by `npm run build` (`tsconfig.node.json`) and linted by
    new.
 5. Add it to `ADAPTERS`, run `EVENTS_ONLY=<id> npm run events:crawl`, check
    the output, then document it in the table above.
+
+## Recurring activities
+
+Fixed weekly timetables that a place publishes as a timetable, not a calendar
+(a games night, a conversation group, a course, a climbing session) are
+curated by hand in `scripts/events/recurring.json`, read by the `recurring`
+adapter (no network; add one with `/add-recurring-activity`). Each entry has
+`id`, `title`, `city`, `url` (the official page where the timetable was
+verified), `summary`, `weekdays` (mon..sun), `time` (HH:MM), `from`/`until`
+(the run, inclusive), and optionally `venue`, `durationMin`, `everyWeeks`,
+`skip`, `tags`, `category`, `verified: false`. It is expanded into one timed
+event per meeting inside the 90-day window; `series.ts` then flags them as
+one recurring series. Validated with zod like spot.json. Courses held on
+request without fixed dates are not events: do not add them.
 
 ## Spot events
 

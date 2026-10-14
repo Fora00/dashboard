@@ -51,6 +51,51 @@ export const SpotFileSchema = z.object({ events: z.array(SpotEntrySchema) }).sup
   })
 })
 
+const WEEKDAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as const
+
+/** One hand-curated weekly activity of recurring.json (expanded to dated events by the `recurring` adapter). */
+export const RecurringEntrySchema = z
+  .object({
+    id: z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, 'id must be kebab-case'),
+    title: z.string().min(1),
+    city: z.string().min(1),
+    venue: z.string().optional(),
+    /** The OFFICIAL page where the timetable was verified. */
+    url: z.url({ protocol: /^https?$/ }),
+    summary: z.string().min(1),
+    weekdays: z.array(z.enum(WEEKDAYS)).min(1),
+    /** Local start time, HH:MM. */
+    time: z.string().regex(/^\d{2}:\d{2}$/, 'time must be HH:MM'),
+    /** Length in minutes; omit when unknown (no end is published). */
+    durationMin: z.number().int().min(15).max(720).optional(),
+    /** Every N weeks (default 1). */
+    everyWeeks: z.number().int().min(1).max(8).default(1),
+    /** First and last day of the run, local YYYY-MM-DD, inclusive. */
+    from: z.string().regex(DAY, 'from must be YYYY-MM-DD'),
+    until: z.string().regex(DAY, 'until must be YYYY-MM-DD'),
+    /** Days with no meeting (holidays, breaks). */
+    skip: z.array(z.string().regex(DAY)).default([]),
+    tags: z.array(z.string()).optional(),
+    category: z.string().optional(),
+    /** false = timetable not confirmed on the official site: shown as "Date da confermare". Default true. */
+    verified: z.boolean().default(true),
+  })
+  .refine((e) => e.from <= e.until, { message: 'until is before from', path: ['until'] })
+
+export type RecurringEntry = z.infer<typeof RecurringEntrySchema>
+
+/** recurring.json: entries as above, ids unique, `category` a CATEGORIES id. */
+export const RecurringFileSchema = z.object({ activities: z.array(RecurringEntrySchema) }).superRefine((file, ctx) => {
+  const seen = new Set<string>()
+  file.activities.forEach((a, i) => {
+    if (seen.has(a.id))
+      ctx.addIssue({ code: 'custom', message: `duplicate id "${a.id}"`, path: ['activities', i, 'id'] })
+    seen.add(a.id)
+    if (a.category !== undefined && !CATEGORY_IDS.has(a.category))
+      ctx.addIssue({ code: 'custom', message: `unknown category "${a.category}"`, path: ['activities', i, 'category'] })
+  })
+})
+
 /** Top-level shape of a previously published events.json (records are kept as-is). */
 export const PreviousFileSchema = z.looseObject({
   schemaVersion: z.literal(1),

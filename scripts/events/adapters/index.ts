@@ -26,6 +26,7 @@ import { filarmonica } from './filarmonica.ts'
 import { arcadia } from './arcadia.ts'
 import { muse } from './muse.ts'
 import { supercinema } from './supercinema.ts'
+import { recurring } from './recurring.ts'
 
 /** What a far town (Verona, Bolzano) is kept for. Owner's choice, 2026-10-14. */
 const FAR_INTERESTS: readonly TagId[] = ['boardgames', 'nerd', 'creative', 'courses']
@@ -221,6 +222,8 @@ export const ADAPTERS: Adapter[] = [
   }),
   ctb,
   teatrogrande,
+  // Hand-curated: weekly activities with a fixed timetable, and big far events
+  recurring,
   // Spot (hand-curated)
   spot,
 ]
