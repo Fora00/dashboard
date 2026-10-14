@@ -725,6 +725,25 @@ sync can come later).
       13. [x] DONE 2026-10-09: `supercinema` adapter (one event per film/day/time, 28 screenings of 7 films on the first dry run; one of the 8 films on the home gave none, not investigated: probably a rassegna entry), 4 ghost venue records of `cultura-trentino` dropped, cinema never collapsed in the list. Owner: Minicami October workshops added to spot.json by hand (the spot adapter gives every entry ring `spot`, so local Rovereto entries sort last in a day and show the Spot badge: a per-entry ring would need a schema + pipeline change). Cineworld Trento, Nuovo Astra, Harpo Lab: no source checked yet.
       Parked: map view (only events with a venue), price/free filter (needs a
       crawler field per source), real `organizer` field.
+- [~] **Recurring activities and courses** (owner brief, 2026-10-14). DONE: (1) `rovereto`
+      (eventi.comune.rovereto.tn.it) removed: its robots.txt is `Disallow: /` for everyone; Verona in
+      15-day chunks (`chunkDays`), under the 5 MB cap; visitrovereto.it re-checked and still skipped
+      (dates in prose). (2) `scripts/events/series.ts`: `recurring` tag + `series` field
+      (id, cadence weekly/biweekly/monthly, weekday, count, next dates) on 3+ dates of one
+      title+city; never for cinema/theatre/concerts. (4) category `courses`, tag `cycle` (+ `meetings`),
+      view "Si ripete" in /events (one card per `series.id`, next start first; visits, tastings,
+      markets, exhibitions and performances left out). Cleanup with the owner's OK: Verona 30 days and
+      Bolzano/Merano/Bressanone keep only boardgames/nerd/creative/courses (`ringInterests`),
+      exhibitions off by default. Signals read 2026-10-14: 5 👍, 12 👎, 5 saved, 91 hidden (too few
+      for "Ordina per te"). Open: [sonnet/opus] **`recurring.json`**, hand-curated weekly
+      timetables expanded to dated events (the Trento/Rovereto clubs, climbing gyms, CAI SAT sezioni
+      publish a timetable, not a calendar; needs the owner's list of places); per-source HTML
+      adapters (Università popolare, UPT, Caritro, Centri giovani, Muse/Mart adult workshops,
+      Block3/Pietra/Salewa Cube) only for places the owner names: probed 2026-10-14, sat.tn.it,
+      roveretogiovani.it and fondazionecaritro.it expose WP news feeds without dates, block3.it has a
+      feed to inspect; Infinity and Santa Chiara are behind a captcha on the runner. Crawl in CI is
+      about 11 minutes (was 4): watch it after the Verona cut. The owner's fixed-timetable places
+      are not scraped from Instagram/Facebook (ToS).
 - [ ] Later: more categories, one at a time (SAT/hikes, climbing,
       art/ceramics, the owner's Sunday sources: ViviRovereto, Visit
       Rovereto, Roveretogiovani).
