@@ -18,11 +18,10 @@ import { isManual } from './custom'
 import { collapseRepeats } from './groups'
 import { compareForYou } from './interestScore'
 import { categoryOfSubcategory } from './subcategories'
-import { DISTANCE_STEPS, isNear, tooFarForCategory, withinMinutes } from './distance'
+import { DISTANCE_STEPS, tooFarForCategory, withinMinutes } from './distance'
 import {
   CATEGORIES,
   DEFAULT_CATEGORIES,
-  categoryOf,
   compareInDay,
   groupByDay,
   inCategory,
@@ -230,16 +229,13 @@ export function useEventFilters(
       scoped.filter(
         (e) =>
           (inCats(e, activeCats) ||
-            (selectedCats === null &&
-              (isManual(e) ||
-                (view === 'saved' && isSpot(e)) ||
-                // Untouched defaults: an exhibition close by (the Mart) is worth a look.
-                (favourites.length === 0 && categoryOf(e) === 'exhibitions' && isNear(e))))) &&
+            // Exhibitions are no longer shown by default (owner, 2026-10-14); they stay one chip away.
+            (selectedCats === null && (isManual(e) || (view === 'saved' && isSpot(e))))) &&
           matchesSubcategory(e, selectedSubs) &&
           matchesFormat(e, selectedFormats) &&
           (maxMin === null || withinMinutes(e, maxMin)),
       ),
-    [scoped, activeCats, selectedCats, selectedSubs, selectedFormats, view, maxMin, favourites],
+    [scoped, activeCats, selectedCats, selectedSubs, selectedFormats, view, maxMin],
   )
 
   // Flat, ordered list of groups; then cut to `limit` cards in total.
