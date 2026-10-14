@@ -536,14 +536,16 @@ export function Events() {
     <>
       {total === 0 ? (
         <EmptyState
-          emoji={view === 'saved' ? '☆' : '🔎'}
-          title={view === 'saved' ? 'Nothing saved yet' : 'No events match'}
+          emoji={view === 'saved' ? '☆' : view === 'series' ? '🔁' : '🔎'}
+          title={view === 'saved' ? 'Nothing saved yet' : view === 'series' ? 'Nothing repeats yet' : 'No events match'}
           hint={
             view === 'saved'
               ? 'Open an event and tap Save to keep it here.'
-              : filtering || dateChip || nq
-                ? 'Try clearing the filters.'
-                : 'Nothing to show right now.'
+              : view === 'series'
+                ? 'Weekly and monthly activities show here after the next daily update, or when the filters let them through.'
+                : filtering || dateChip || nq
+                  ? 'Try clearing the filters.'
+                  : 'Nothing to show right now.'
           }
         />
       ) : (
