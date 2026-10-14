@@ -55,10 +55,12 @@ export interface OpenPaConfig {
   fixCaps?: boolean
   /** Drop objects whose title matches (e.g. "… - ANNULLATO"). */
   skipTitle?: RegExp
+  /** Calendar mode: days per request (default 30). Heavy installs (Verona, about 0.23 MB/day) need a smaller chunk to stay under the response cap. */
+  chunkDays?: number
 }
 
 const PAGE = 100
-const CHUNK_DAYS = 30
+const CHUNK_DAYS = 30 // default, see OpenPaConfig.chunkDays
 
 type Json = Record<string, unknown>
 
@@ -247,9 +249,10 @@ async function runCalendar(cfg: OpenPaConfig, ctx: AdapterContext): Promise<RawE
   const today = romeDate(ctx.now)
   const byKey = new Map<string, RawEvent>()
   const q = encodeURIComponent(`classes ${cfg.classes}`)
-  for (let from = 0; from < ctx.horizonDays; from += CHUNK_DAYS) {
+  const chunk = cfg.chunkDays ?? CHUNK_DAYS
+  for (let from = 0; from < ctx.horizonDays; from += chunk) {
     const start = addDays(today, from)
-    const end = addDays(today, Math.min(from + CHUNK_DAYS, ctx.horizonDays))
+    const end = addDays(today, Math.min(from + chunk, ctx.horizonDays))
     const res = await ctx.fetchJson<CalendarItem[] | { error_message?: string }>(
       `https://${cfg.host}/opendata/api/calendar/search/${q}?start=${start}&end=${end}`,
     )

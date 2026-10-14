@@ -52,14 +52,9 @@ export const ADAPTERS: Adapter[] = [
   }),
   volkan,
   // Batch B — city and culture
-  openpa({
-    id: 'rovereto',
-    name: 'Comune di Rovereto — eventi',
-    host: 'eventi.comune.rovereto.tn.it',
-    mode: 'search',
-    classes: '[event]',
-    city: 'Rovereto',
-  }),
+  // `rovereto` (eventi.comune.rovereto.tn.it) was removed 2026-10-14: its
+  // robots.txt is `Disallow: /` for everyone, so no path is allowed. Rovereto
+  // is covered by rovereto-comune, zandonai, filarmonica, supercinema, spot.
   openpa({
     id: 'comune-trento',
     name: 'Comune di Trento',
@@ -78,6 +73,8 @@ export const ADAPTERS: Adapter[] = [
     classes: '[event]',
     city: 'Verona',
     area: 'verona-garda',
+    // About 0.23 MB per day: a 30-day chunk exceeds the 5 MB response cap.
+    chunkDays: 15,
   }),
   // Batch C — culture, theatre and creative (added 2026-09-29)
   // Provincial culture portal: every town in Trentino. robots.txt asks for

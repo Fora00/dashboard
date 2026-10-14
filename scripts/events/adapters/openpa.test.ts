@@ -21,6 +21,27 @@ const cal = openpa({
 })
 
 describe('openpa calendar mode', () => {
+  it('requests smaller windows when chunkDays is set', async () => {
+    const calls: string[] = []
+    const small = openpa({
+      id: 's',
+      name: 'S',
+      host: 'cal.test',
+      mode: 'calendar',
+      classes: '[event]',
+      city: 'Verona',
+      chunkDays: 15,
+    })
+    await small.run(
+      ctx((url) => {
+        calls.push(url)
+        return []
+      }, 45),
+    )
+    expect(calls).toHaveLength(3)
+    expect(calls[0]).toContain('start=2026-10-08&end=2026-10-23')
+    expect(calls[2]).toContain('end=2026-11-22')
+  })
   it('turns the exclusive all-day end into an inclusive last day', async () => {
     const out = await cal.run(
       ctx(() => [

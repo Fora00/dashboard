@@ -344,11 +344,11 @@ them (the dashboard's category chips match only category ids).
 | `bibcom-trento` | bibcom.trento.it | OpenPA `/opendata/api/content/search/` | server-side future filter; branch prefix stripped from titles; images are relations only (null) |
 | `trentogiovani` | trentogiovani.it | OpenPA `/opendata/api/calendar/search/` | robots disallows `/api/` and `/opendata` but Allows `/opendata/api/calendar`; often few events (`mayBeEmpty`) |
 | `volkan` | volkantdg.it | The Events Calendar site-wide iCal `/events/?ical=1` | often stale: an empty feed is ok with 0 events (`mayBeEmpty`) |
-| `rovereto` | eventi.comune.rovereto.tn.it | OpenPA `/opendata/api/content/search/` | `/api/` disallowed, `/opendata/api/content` allowed; the ~1,900-event archive is never paginated |
+| ~~`rovereto`~~ | eventi.comune.rovereto.tn.it | (removed 2026-10-14) | robots.txt is `Disallow: /` for every agent, so no path is allowed; it never worked from CI. Rovereto comes from `rovereto-comune`, `zandonai`, `filarmonica-rovereto`, `supercinema`, `spot` |
 | `comune-trento` | www.comune.trento.it | OpenPA calendar (class `event_link`, OpenAgenda) | same robots situation as trentogiovani |
 | `mart` | Mart / Casa Depero / Galleria Civica | Umbraco JSON on media.mart.tn.it (the API behind `/mostre-eventi`) | robots.txt 404 = allowed. A "Workshop/Laboratorio" whose text gives a children's age range ("Dai 5 ai 12 anni") → `kids` |
 | `bolzano` | Open Data Hub tourism API | `/v1/Event`, `locfilter=mun<Bolzano>`, date window server-side | CC0; texts, venues and images are rarely filled for Bolzano. A "..." Italian title falls back to the German title / Shortname. Origin-tagged performer titles get a concert/cabaret hint; 10+-date series nothing classifies → `exhibitions` (`longSeriesCategory`) |
-| `verona` | www.comune.verona.it | OpenPA calendar | robots disallows `/api/` and `/content/search`, explicitly Allows `/opendata/api/calendar` |
+| `verona` | www.comune.verona.it | OpenPA calendar | robots disallows `/api/` and `/content/search`, explicitly Allows `/opendata/api/calendar`; about 0.23 MB per day, so requested in 15-day chunks (`chunkDays: 15`) to stay under the 5 MB response cap (6 requests, about 10 s) |
 | `cultura-trentino` | www.cultura.trentino.it (Provincia, "Trentino Cultura") | OpenPA `/opendata/api/content/search/`, class `event` | whole province; town from the `comune` relation; date-only events get a time from `orario_svolgimento` when it names exactly one ("ore 20.30"); robots `Crawl-delay: 10` (honoured); images are relations only (null) |
 | `rovereto-comune` | www.comune.rovereto.tn.it (ViviRovereto agenda) | OpenPA calendar, class `event` | robots Allows only `/opendata/api/calendar`; the municipal highlights (RAM film festival, season preludes) — `rovereto` above is the library's agenda |
 | `zandonai` | www.teatro-zandonai.it (official) | OpenPA search, class `spettacolo`, `main_datetime` | same install as Rovereto; one request. Correctly configured and complete: it is the theatre's own programme (83 objects in 2025/26). The prose + dance season is published in **one batch in early October** (2025-10-07, up to 5 months ahead); other shows ~2 weeks ahead, so it is nearly empty in September (`mayBeEmpty`). Fixed venue "Teatro Zandonai"; all-caps titles title-cased (`fixCaps`); "… - ANNULLATO" dropped (`skipTitle`); the series ("STAGIONE TEATRALE", "FESTIVAL DEI PICCOLI" → `kids`) is the subtitle, in tagText. teatrozandonai.it (no hyphen) is an unofficial, stale fan site |
@@ -377,7 +377,10 @@ Not included (checked 2026-09-29):
 
 - **visitrovereto.it** — the Events Manager REST API answers 401,
   `/events.ics` is empty even with `scope=all`, `wp/v2` exposes no event type
-  and pages carry no JSON-LD Event; only rendered markup remains.
+  and pages carry no JSON-LD Event; only rendered markup remains. Re-checked
+  2026-10-14: robots allows everything, `event-sitemap.xml` lists about 1,000
+  event posts and the listing shows about 8, but dates sit in free prose, so
+  it stays skipped (fragile).
 - **visittrentino.info** — the events listing is ~0.9 MB per page with
   JSON-LD for only ~6 highlighted events (with made-up times); paging goes
   through `/ajax` URLs that robots.txt disallows, and `/download-ical` is
