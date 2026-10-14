@@ -30,6 +30,7 @@ import { ADAPTERS } from './adapters/index.ts'
 import { PoliteHttp } from './http.ts'
 import { OG_MAX_REQUESTS, enrichImages } from './ogimage.ts'
 import type { DropCounts } from './pipeline.ts'
+import { markSeries } from './series.ts'
 import { isBigDrop, loadPrevious, unprotectedSources } from './previous.ts'
 import {
   countDelta,
@@ -265,7 +266,9 @@ async function main(): Promise<void> {
     timings.set(adapter.id, Date.now() - t0)
   }
 
-  const events = sortEvents(stampFirstSeen(dedup(all), loaded.kind === 'ok' ? previousRecords : null, generatedAt))
+  const events = sortEvents(
+    markSeries(stampFirstSeen(dedup(all), loaded.kind === 'ok' ? previousRecords : null, generatedAt), now),
+  )
 
   const refuse = (reason: string) => {
     const why = reason.replace(/\s+/g, ' ') // one annotation line

@@ -41,7 +41,7 @@ export type CategoryId =
  */
 export type FormatTagId = 'social-friend' | 'social-girl' | 'solo-ok'
 /** Not a category: events about topics next to the owner's core interests (see ADJACENT). */
-export type TagId = CategoryId | 'kids' | FormatTagId | 'adjacent'
+export type TagId = CategoryId | 'kids' | FormatTagId | 'adjacent' | 'recurring'
 
 export interface Category {
   id: CategoryId

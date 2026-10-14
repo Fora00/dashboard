@@ -46,6 +46,25 @@ export interface Event {
   datesTentative?: true
   /** UTC ISO time this id first appeared in events.json; carried over from the previous file. Absent on events already published before it existed. Added 2026-10-09. */
   firstSeen?: string
+  /** True on every record of a recurring series (weekly, fortnightly or monthly); the `recurring` tag says the same. Added 2026-10-14. */
+  recurring?: true
+  /** The series this record belongs to; present exactly when `recurring`. Added 2026-10-14. */
+  series?: EventSeries
+}
+
+export type SeriesCadence = 'weekly' | 'biweekly' | 'monthly'
+
+/** A recurring activity: separate records of one event on several dates (series.ts). Added 2026-10-14. */
+export interface EventSeries {
+  /** Stable id of the series: 16 hex chars, the same on every record of it. */
+  id: string
+  cadence: SeriesCadence
+  /** Usual weekday, Monday = 0 … Sunday = 6; null for a record the crawler folded (dates unknown). */
+  weekday: number | null
+  /** Number of distinct dates in the window (the record's `occurrences` when folded). */
+  count: number
+  /** Up to 4 upcoming start instants (same format as `start`); empty when folded. */
+  next: string[]
 }
 
 /**
