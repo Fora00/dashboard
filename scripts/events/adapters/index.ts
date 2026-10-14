@@ -1,6 +1,7 @@
 // Every source the crawler runs, in run order. Adding a source = one adapter
 // file (or one openpa({...}) entry) + one line here. See docs/EVENTS.md.
 import type { Adapter } from '../types.ts'
+import type { TagId } from '../tags.ts'
 import { openpa } from './openpa.ts'
 import { ludimus } from './ludimus.ts'
 import { volkan } from './volkan.ts'
@@ -25,6 +26,9 @@ import { filarmonica } from './filarmonica.ts'
 import { arcadia } from './arcadia.ts'
 import { muse } from './muse.ts'
 import { supercinema } from './supercinema.ts'
+
+/** What a far town (Verona, Bolzano) is kept for. Owner's choice, 2026-10-14. */
+const FAR_INTERESTS: readonly TagId[] = ['boardgames', 'nerd', 'creative', 'courses']
 
 export const ADAPTERS: Adapter[] = [
   // Batch A — board games
@@ -64,7 +68,8 @@ export const ADAPTERS: Adapter[] = [
     city: 'Trento',
   }),
   mart,
-  bolzano,
+  // Same as Verona: far, so only games, comics, making and courses (owner, 2026-10-14).
+  { ...bolzano, ring: 'near', ringInterests: FAR_INTERESTS },
   openpa({
     id: 'verona',
     name: 'Comune di Verona',
@@ -75,6 +80,10 @@ export const ADAPTERS: Adapter[] = [
     area: 'verona-garda',
     // About 0.23 MB per day: a 30-day chunk exceeds the 5 MB response cap.
     chunkDays: 15,
+    // Owner, 2026-10-14: Verona is far; only games, comics, making and courses, 30 days ahead.
+    ring: 'near',
+    ringInterests: FAR_INTERESTS,
+    horizonDays: 30,
   }),
   // Batch C — culture, theatre and creative (added 2026-09-29)
   // Provincial culture portal: every town in Trentino. robots.txt asks for

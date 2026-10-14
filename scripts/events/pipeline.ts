@@ -131,7 +131,7 @@ export function toEvents(
     const cycle = tags.includes('kids') ? null : cycleOf(text, category)
     if (cycle) tags = sortTags([...tags, 'cycle'])
     // Ring 2 sources: interests only (NEAR_INTERESTS), never kids.
-    if (!keepForRing(ring, tags)) continue
+    if (!keepForRing(ring, tags, adapter.ringInterests)) continue
     const city = r.city.trim() || 'Trentino'
     const event: Event = {
       id,
@@ -204,7 +204,7 @@ function naturalTitle(a: string, b: string): string {
 export function withPlace(adapter: Adapter, events: Event[], drops?: DropCounts): Event[] {
   const ring = adapter.ring ?? 'home'
   return events
-    .filter((e) => keepForRing(ring, e.tags ?? []))
+    .filter((e) => keepForRing(ring, e.tags ?? [], adapter.ringInterests))
     .filter((e) => {
       // Records from before a drop rule existed are dropped the same way.
       const rule = dropRule({ title: e.title ?? '', summary: e.summary }, e.category)

@@ -215,10 +215,10 @@ export function areaFor(city: string, adapterArea: AreaId): AreaId {
 }
 
 /** A ring-2 event is kept only when it matches an interest and is not for kids. */
-export function keepForRing(ring: Ring, tags: readonly TagId[]): boolean {
+export function keepForRing(ring: Ring, tags: readonly TagId[], interests: readonly TagId[] = NEAR_INTERESTS): boolean {
   if (ring !== 'near') return true
   if (tags.includes('kids')) return false
-  return tags.some((t) => NEAR_INTERESTS.includes(t))
+  return tags.some((t) => interests.includes(t))
 }
 
 const RING_ORDER: Record<Ring, number> = { home: 0, near: 1, spot: 2 }

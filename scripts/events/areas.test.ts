@@ -25,6 +25,14 @@ describe('areaFor', () => {
   })
 })
 
+describe('keepForRing with a narrower list', () => {
+  it("a 'near' source can keep fewer interests than NEAR_INTERESTS", () => {
+    expect(keepForRing('near', ['exhibitions'], ['boardgames', 'courses'])).toBe(false)
+    expect(keepForRing('near', ['courses'], ['boardgames', 'courses'])).toBe(true)
+    expect(keepForRing('home', ['exhibitions'], ['courses'])).toBe(true)
+  })
+})
+
 describe('keepForRing', () => {
   it('home and spot keep everything', () => {
     expect(keepForRing('home', ['other'])).toBe(true)

@@ -19,7 +19,7 @@
 // `comune`, `informazioni`, `orario_svolgimento`; teatro-zandonai.it has a
 // `spettacolo` class with `main_datetime`): `extract` reads all known ones.
 import type { Adapter, AdapterContext, RawEvent } from '../types.ts'
-import type { CategoryId } from '../tags.ts'
+import type { CategoryId, TagId } from '../tags.ts'
 import type { AreaId, Ring } from '../areas.ts'
 import { addDays, localToIso, normalizeIso, romeDate } from '../time.ts'
 import { absUrl, cityFromAddress, firstNonEmpty, htmlToText, titleCase } from '../text.ts'
@@ -57,6 +57,10 @@ export interface OpenPaConfig {
   skipTitle?: RegExp
   /** Calendar mode: days per request (default 30). Heavy installs (Verona, about 0.23 MB/day) need a smaller chunk to stay under the response cap. */
   chunkDays?: number
+  /** Days ahead to keep (default 90). */
+  horizonDays?: number
+  /** Tags a 'near' source keeps instead of NEAR_INTERESTS. */
+  ringInterests?: readonly TagId[]
 }
 
 const PAGE = 100
@@ -313,5 +317,7 @@ export function openpa(cfg: OpenPaConfig): Adapter {
   if (cfg.maxRequests) adapter.maxRequests = cfg.maxRequests
   if (cfg.area) adapter.area = cfg.area
   if (cfg.ring) adapter.ring = cfg.ring
+  if (cfg.horizonDays) adapter.horizonDays = cfg.horizonDays
+  if (cfg.ringInterests) adapter.ringInterests = cfg.ringInterests
   return adapter
 }

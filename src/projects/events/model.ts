@@ -345,6 +345,13 @@ export function cadenceLabel(e: Pick<EventItem, 'series'>): string | null {
 }
 
 /**
+ * Categories that repeat but are not a way to meet people: guided visits,
+ * tastings, markets, exhibitions and performances. Left out of the series view
+ * (owner, 2026-10-14); they stay in the main list.
+ */
+const NOT_A_GATHERING = new Set(['tours', 'food', 'festivals', 'exhibitions', 'theatre', 'concerts', 'cinema'])
+
+/**
  * "Cose che si ripetono": one card per series (the crawler's `series.id`),
  * the next date that is not over, ordered by that date. `repeats` maps the
  * card's id to all its upcoming dates (next first), like groups.ts, for the
@@ -356,7 +363,7 @@ export function seriesGroups(
 ): { days: DayGroup[]; repeats: Map<string, EventItem[]> } {
   const bySeries = new Map<string, EventItem[]>()
   for (const e of events) {
-    if (!e.series || isOver(e, now)) continue
+    if (!e.series || NOT_A_GATHERING.has(categoryOf(e)) || isOver(e, now)) continue
     const list = bySeries.get(e.series.id)
     if (list) list.push(e)
     else bySeries.set(e.series.id, [e])
