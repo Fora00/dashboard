@@ -14,11 +14,12 @@ import { useToday } from '../useToday'
 
 const SECTIONS_KEY = 'dashboard:life-sections'
 
-export type SectionId = 'focus' | 'trackers' | 'rules' | 'checkins' | 'things' | 'food' | 'screen' | 'export'
+export type SectionId = 'focus' | 'trackers' | 'recap' | 'rules' | 'checkins' | 'things' | 'food' | 'screen' | 'export'
 
 interface SectionsState {
   focus: boolean
   trackers: boolean
+  recap: boolean
   rules: boolean
   checkins: boolean
   things: boolean
@@ -32,6 +33,7 @@ interface SectionsState {
 const DEFAULT_SECTIONS: SectionsState = {
   focus: true,
   trackers: true,
+  recap: true,
   rules: false,
   checkins: true,
   things: true,
@@ -52,6 +54,7 @@ function sanitizeSections(raw: unknown): SectionsState {
   return {
     focus: isBool(r.focus) ? r.focus : DEFAULT_SECTIONS.focus,
     trackers: isBool(r.trackers) ? r.trackers : DEFAULT_SECTIONS.trackers,
+    recap: isBool(r.recap) ? r.recap : DEFAULT_SECTIONS.recap,
     rules: isBool(r.rules) ? r.rules : DEFAULT_SECTIONS.rules,
     checkins: isBool(r.checkins) ? r.checkins : DEFAULT_SECTIONS.checkins,
     things: isBool(r.things) ? r.things : DEFAULT_SECTIONS.things,

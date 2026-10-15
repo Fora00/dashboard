@@ -48,7 +48,8 @@ export function PlanPreview({
           {plan.trackers.length} tracker{plan.trackers.length === 1 ? '' : 's'}
         </li>
         <li>
-          {plan.sundayCheck.length} Sunday question{plan.sundayCheck.length === 1 ? '' : 's'}
+          {plan.sundayCheck.length} Sunday question
+          {plan.sundayCheck.length === 1 ? '' : 's'}
         </li>
         <li>
           {plan.rules.length} rule{plan.rules.length === 1 ? '' : 's'}
@@ -56,6 +57,11 @@ export function PlanPreview({
         <li>
           {plan.checkins.length} check-in{plan.checkins.length === 1 ? '' : 's'}
         </li>
+        {plan.recap && plan.recap.length > 0 && (
+          <li>
+            {plan.recap.length} recap line{plan.recap.length === 1 ? '' : 's'}
+          </li>
+        )}
       </ul>
 
       <div className="border-t border-slate-200 pt-2 dark:border-slate-800">

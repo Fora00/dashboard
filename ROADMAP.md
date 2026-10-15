@@ -250,6 +250,12 @@ data, routes and sync are untouched, and a hidden project's URL still opens.
       split from the log (`life_entries`), stable ids, Things via
       `things:///json` (Inbox fallback verified), import link
       `#/life/import?d=…` opened on the Mac.
+  - [x] Recap card [sonnet-sized, done 2026-10-15]: optional `plan.recap`
+        (validated, diffed, exported, kept on hand-edit), read-only
+        `RecapSection` under Trackers: bars per week for the minimum, a step
+        line for a metric, criterion pips, calm single hue. Week card only;
+        a separate monthly view is open (owner to say). Spec in
+        `docs/HANDOFF-life.md`.
   - [x] Phase 1 [opus], done 2026-09-28:
         - migration `20260928120000_life.sql` (`life_weeks` + `life_entries`,
           all eight policies `is_owner()`, CHECKs mirrored by `LIFE_CAPS`,

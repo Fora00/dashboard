@@ -14,6 +14,7 @@ import { ScreenTimeSection } from './ScreenTimeSection'
 import { SundaySection } from './SundaySection'
 import { ThingsSection } from './ThingsSection'
 import { TrackersSection } from './TrackersSection'
+import { RecapSection } from './RecapSection'
 import { ProgressAside } from './ProgressAside'
 import { useSections } from './useSections'
 
@@ -82,6 +83,18 @@ export function WeekBody({ week, plan, entries, readOnly, lateEdit = false }: We
               onToggle={() => toggleSection('trackers')}
               readOnly={readOnly}
               trigger={trigger}
+            />
+          </Slot>
+        )}
+
+        {plan.recap && plan.recap.length > 0 && (
+          <Slot n={3}>
+            <RecapSection
+              week={week}
+              items={plan.recap}
+              open={sections.recap}
+              onToggle={() => toggleSection('recap')}
+              readOnly={readOnly}
             />
           </Slot>
         )}

@@ -1,4 +1,13 @@
-import type { LifeCheckin, LifeEntry, LifeFocus, LifePlan, LifeQuestion, LifeTask, LifeTracker } from '../../../lib/db'
+import type {
+  LifeCheckin,
+  LifeEntry,
+  LifeFocus,
+  LifePlan,
+  LifeQuestion,
+  LifeRecapItem,
+  LifeTask,
+  LifeTracker,
+} from '../../../lib/db'
 import { withCheckinIds } from './checkinIds.ts'
 
 // --- Import preview diff -------------------------------------------------------
@@ -17,6 +26,7 @@ export interface PlanDiff {
   tasks: ListDiff<LifeTask>
   trackers: ListDiff<LifeTracker>
   sundayCheck: ListDiff<LifeQuestion>
+  recap: ListDiff<LifeRecapItem>
   rules: { added: string[]; removed: string[] }
   checkins: { added: LifeCheckin[]; removed: LifeCheckin[] }
   /** Human lines for the preview, e.g. "1 tracker removed", "2 tasks added". */
@@ -53,7 +63,15 @@ function plural(n: number, one: string, many = `${one}s`): string {
 
 /** What re-importing `next` over `prev` changes (prev null = first import). */
 export function diffPlans(prev: LifePlan | null, next: LifePlan): PlanDiff {
-  const empty: LifePlan = { ...next, focus: [], rules: [], tasks: [], trackers: [], sundayCheck: [], checkins: [] }
+  const empty: LifePlan = {
+    ...next,
+    focus: [],
+    rules: [],
+    tasks: [],
+    trackers: [],
+    sundayCheck: [],
+    checkins: [],
+  }
   // A plan stored before check-in ids existed gets the same derived ids the
   // new one got, so an identical re-import still reads as "unchanged".
   const old = prev ? withCheckinIds(prev) : empty
@@ -62,6 +80,7 @@ export function diffPlans(prev: LifePlan | null, next: LifePlan): PlanDiff {
     tasks: diffById(old.tasks, next.tasks),
     trackers: diffById(old.trackers, next.trackers),
     sundayCheck: diffById(old.sundayCheck, next.sundayCheck),
+    recap: diffById(old.recap ?? [], next.recap ?? []),
     rules: diffBy(old.rules, next.rules, (r) => r),
     checkins: diffBy(old.checkins, next.checkins, (c) => `${c.date} ${c.label}`),
   }
@@ -73,6 +92,7 @@ export function diffPlans(prev: LifePlan | null, next: LifePlan): PlanDiff {
     ['sundayCheck', 'Sunday question', 'Sunday questions'],
     ['rules', 'rule', 'rules'],
     ['checkins', 'check-in', 'check-ins'],
+    ['recap', 'recap line', 'recap lines'],
   ]
   for (const [key, one, many] of sections) {
     const s = d[key]
@@ -83,7 +103,12 @@ export function diffPlans(prev: LifePlan | null, next: LifePlan): PlanDiff {
   const unchanged = prev !== null && JSON.stringify(old) === JSON.stringify(next)
   // Same items, different order: still worth saying before the owner saves.
   if (!unchanged && summary.length === 0) summary.push('order changed')
-  return { firstImport: prev === null, ...d, summary: unchanged ? [] : summary, unchanged }
+  return {
+    firstImport: prev === null,
+    ...d,
+    summary: unchanged ? [] : summary,
+    unchanged,
+  }
 }
 
 /** Removed trackers that already have logged entries in `week`: re-importing

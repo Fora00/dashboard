@@ -4,6 +4,7 @@ import type {
   LifePlan,
   LifeQuestion,
   LifeQuestionType,
+  LifeRecapItem,
   LifeTask,
   LifeTracker,
 } from '../../../lib/db'
@@ -35,7 +36,10 @@ function utf8Bytes(s: string): number {
  */
 export function parseWeekJson(text: string): ParseResult {
   if (text.length > MAX_INPUT_CHARS) {
-    return { ok: false, errors: [`The input is too large (over ${MAX_INPUT_CHARS / 1000} KB) to be a week plan`] }
+    return {
+      ok: false,
+      errors: [`The input is too large (over ${MAX_INPUT_CHARS / 1000} KB) to be a week plan`],
+    }
   }
   let value: unknown
   try {
@@ -54,7 +58,7 @@ export function validatePlan(value: unknown): ParseResult {
 
   if (!isObj(value)) return { ok: false, errors: ['The week must be a JSON object'] }
 
-  const allowed = ['version', 'week', 'focus', 'rules', 'tasks', 'trackers', 'sundayCheck', 'checkins']
+  const allowed = ['version', 'week', 'focus', 'rules', 'tasks', 'trackers', 'sundayCheck', 'checkins', 'recap']
   unknownKeys(value, allowed, '', err)
 
   if (value.version !== 1) err(`version must be 1 (got ${JSON.stringify(value.version) ?? 'nothing'})`)
@@ -66,7 +70,10 @@ export function validatePlan(value: unknown): ParseResult {
   const focus = arrayField(value, 'focus', LIFE_CAPS.focus, err).map((raw, i): LifeFocus => {
     const p = `focus[${i}]`
     const o = itemObj(raw, p, ['id', 'title'], err)
-    return { id: idField(o, p, err), title: textField(o, 'title', p, LIFE_CAPS.focusTitle, true, err) }
+    return {
+      id: idField(o, p, err),
+      title: textField(o, 'title', p, LIFE_CAPS.focusTitle, true, err),
+    }
   })
   uniqueIds(focus, 'focus', err)
 
@@ -190,6 +197,9 @@ export function validatePlan(value: unknown): ParseResult {
   )
   const checkins = assignCheckinIds(checkinsRaw)
 
+  const recap = arrayField(value, 'recap', LIFE_CAPS.recap, err).map((raw, i) => recapItem(raw, `recap[${i}]`, err))
+  uniqueIds(recap, 'recap', err)
+
   if (errors.length > 0) return { ok: false, errors }
 
   const plan: LifePlan = {
@@ -201,12 +211,99 @@ export function validatePlan(value: unknown): ParseResult {
     trackers,
     sundayCheck,
     checkins,
+    // Only present when given: most plans have no recap.
+    ...(recap.length > 0 ? { recap } : {}),
   }
   const bytes = utf8Bytes(JSON.stringify(plan))
   if (bytes > LIFE_CAPS.planBytes) {
-    return { ok: false, errors: [`The week is too large (${bytes} bytes, max ${LIFE_CAPS.planBytes})`] }
+    return {
+      ok: false,
+      errors: [`The week is too large (${bytes} bytes, max ${LIFE_CAPS.planBytes})`],
+    }
   }
   return { ok: true, plan }
+}
+
+function intIn(v: unknown, min: number, max: number): v is number {
+  return typeof v === 'number' && Number.isInteger(v) && v >= min && v <= max
+}
+
+/** A recap series: ascending, unique dates, length-capped. */
+function seriesField(o: Obj, key: string, cap: number, path: string, err: (m: string) => void): Obj[] {
+  const v = o[key]
+  if (!Array.isArray(v) || v.length === 0) {
+    err(`${path}.${key} must be a non-empty array`)
+    return []
+  }
+  if (v.length > cap) {
+    err(`${path}.${key} has ${v.length} items (max ${cap})`)
+    return []
+  }
+  return v.map((raw, j) =>
+    itemObj(raw, `${path}.${key}[${j}]`, key === 'weeks' ? ['week', 'done', 'of'] : ['date', 'value'], err),
+  )
+}
+
+function recapItem(raw: unknown, p: string, err: (m: string) => void): LifeRecapItem {
+  const o = itemObj(raw, p, ['id', 'kind', 'label', 'unit', 'weeks', 'returns', 'points', 'criterion', 'closed'], err)
+  const kind = o.kind
+  if (kind !== 'minimum' && kind !== 'progress') err(`${p}.kind must be "minimum" or "progress"`)
+  const item: LifeRecapItem = {
+    id: idField(o, p, err),
+    kind: kind === 'progress' ? 'progress' : 'minimum',
+    label: textField(o, 'label', p, LIFE_CAPS.trackerLabel, true, err),
+  }
+  const isMin = kind === 'minimum'
+  const isProg = kind === 'progress'
+  for (const k of isMin ? ['unit', 'points'] : isProg ? ['weeks', 'returns'] : []) {
+    if (o[k] !== undefined) err(`${p}.${k} does not belong to a "${String(kind)}" item`)
+  }
+  if (isMin) {
+    let prev = ''
+    item.weeks = seriesField(o, 'weeks', LIFE_CAPS.recapWeeks, p, err).map((w, j) => {
+      const q = `${p}.weeks[${j}]`
+      if (!isDateKey(w.week) || !isMondayKey(w.week)) err(`${q}.week must be a Monday, YYYY-MM-DD`)
+      else {
+        if (w.week <= prev) err(`${q}.week must come after the previous one`)
+        prev = w.week
+      }
+      if (!intIn(w.of, 1, 7)) err(`${q}.of must be an integer 1–7`)
+      if (!intIn(w.done, 0, typeof w.of === 'number' ? w.of : 7)) err(`${q}.done must be an integer 0–of`)
+      return { week: String(w.week), done: Number(w.done), of: Number(w.of) }
+    })
+    if (o.returns !== undefined) {
+      if (!intIn(o.returns, 0, LIFE_CAPS.countMax)) err(`${p}.returns must be an integer 0–${LIFE_CAPS.countMax}`)
+      else item.returns = o.returns
+    }
+  }
+  if (isProg) {
+    const unit = nullableText(o, 'unit', p, LIFE_CAPS.recapUnit, err)
+    if (unit) item.unit = unit
+    let prev = ''
+    item.points = seriesField(o, 'points', LIFE_CAPS.recapPoints, p, err).map((pt, j) => {
+      const q = `${p}.points[${j}]`
+      if (!isDateKey(pt.date)) err(`${q}.date must be YYYY-MM-DD`)
+      else {
+        if (pt.date <= prev) err(`${q}.date must come after the previous one`)
+        prev = pt.date
+      }
+      if (typeof pt.value !== 'number' || !Number.isFinite(pt.value) || Math.abs(pt.value) > LIFE_CAPS.answerNumber)
+        err(`${q}.value must be a number`)
+      return { date: String(pt.date), value: Number(pt.value) }
+    })
+  }
+  if (o.criterion !== undefined && o.criterion !== null) {
+    const c = itemObj(o.criterion, `${p}.criterion`, ['text', 'met', 'of'], err)
+    const text = textField(c, 'text', `${p}.criterion`, LIFE_CAPS.recapCriterion, true, err)
+    if (!intIn(c.of, 1, 100)) err(`${p}.criterion.of must be an integer 1–100`)
+    if (!intIn(c.met, 0, typeof c.of === 'number' ? c.of : 100)) err(`${p}.criterion.met must be an integer 0–of`)
+    item.criterion = { text, met: Number(c.met), of: Number(c.of) }
+  }
+  if (o.closed !== undefined) {
+    if (typeof o.closed !== 'boolean') err(`${p}.closed must be true or false`)
+    else if (o.closed) item.closed = true
+  }
+  return item
 }
 
 function unknownKeys(o: Obj, allowed: string[], path: string, err: (m: string) => void): void {

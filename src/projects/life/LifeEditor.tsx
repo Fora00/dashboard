@@ -89,7 +89,13 @@ export function LifeEditor() {
       setTasks(plan.tasks.map(taskToRow))
       setTrackers(plan.trackers.map(trackerToRow))
       setSundayCheck(plan.sundayCheck.map(questionToRow))
-      setCheckins(withCheckinIds(plan).checkins.map((c) => ({ id: c.id, date: c.date, label: c.label })))
+      setCheckins(
+        withCheckinIds(plan).checkins.map((c) => ({
+          id: c.id,
+          date: c.date,
+          label: c.label,
+        })),
+      )
       setInitialized(true)
       return
     }
@@ -151,7 +157,13 @@ export function LifeEditor() {
           ? { id: q.id, label: q.label, type: q.type, tracker: q.tracker }
           : { id: q.id, label: q.label, type: q.type },
       ),
-      checkins: checkins.map((c) => ({ id: c.id, date: c.date, label: c.label })),
+      checkins: checkins.map((c) => ({
+        id: c.id,
+        date: c.date,
+        label: c.label,
+      })),
+      // Not editable by hand: an edit keeps the imported recap.
+      ...(existing?.plan.recap ? { recap: existing.plan.recap } : {}),
     }
   }
 

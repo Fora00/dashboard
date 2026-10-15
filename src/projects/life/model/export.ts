@@ -90,6 +90,12 @@ export function buildExportMarkdown(
     out.push('')
   }
 
+  if (plan.recap?.length) {
+    out.push('## Recap', '')
+    for (const r of plan.recap) out.push(`- ${recapLine(r)}`)
+    out.push('')
+  }
+
   if (s.screen.size) {
     out.push('## Screen time', '')
     for (const q of SCREEN_QUESTIONS) {
@@ -210,6 +216,20 @@ export function buildExportMarkdown(
   const fence = fenceFor(jsonText)
   out.push('<details>', '<summary>JSON</summary>', '', `${fence}json`, jsonText, fence, '', '</details>', '')
   return out.join('\n')
+}
+
+function recapLine(r: NonNullable<LifePlan['recap']>[number]): string {
+  const parts: string[] = []
+  if (r.weeks) parts.push(`${r.weeks.map((w) => `${w.done}/${w.of}`).join(', ')} (oldest to newest)`)
+  if (r.returns !== undefined) parts.push(`${r.returns} return${r.returns === 1 ? '' : 's'}`)
+  if (r.points?.length) {
+    const first = r.points[0]!.value
+    const last = r.points[r.points.length - 1]!.value
+    parts.push(`${first} → ${last}${r.unit ? ` ${r.unit}` : ''}`)
+  }
+  if (r.criterion) parts.push(`${r.criterion.text}: ${r.criterion.met} of ${r.criterion.of}`)
+  if (r.closed) parts.push('closed on purpose')
+  return `${r.label}: ${parts.join(' · ')}`
 }
 
 /** A note on one Markdown list line (newlines would break the list). */

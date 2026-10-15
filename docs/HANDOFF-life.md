@@ -123,6 +123,18 @@ Validation: ids unique within each array; `week` must be a Monday; dates
 `YYYY-MM-DD`; `target`/`max` positive integers; text lengths capped (mirror
 the caps in SQL, per the `links` pattern).
 
+### Recap (optional, read-only)
+
+Added 2026-10-15. `recap` in the week JSON (absent on most plans) is a list of
+up to 12 lines the Mac-side Claude computes; the app only draws it
+(`week/RecapSection.tsx`, also in History) and puts it in the export. Edits by
+hand keep it. `kind: "minimum"` has `weeks` (oldest to newest, Monday dates,
+`done` of `of` 1–7, max 12) and optional `returns`; `kind: "progress"` has
+`points` (`date`, `value`, max 24) and optional `unit`; both take an optional
+`criterion` `{ text, met, of }` and `closed: true` (an experiment stopped on
+purpose, shown calmly, criterion hidden). Ids are stable and unique. Invalid
+recap = import error, nothing saved. No migration: it lives in `plan` jsonb.
+
 ## 2.2 The Week screen (default view of `/life`)
 
 1. **Focus:** the items, big. Tap marks done for the week.

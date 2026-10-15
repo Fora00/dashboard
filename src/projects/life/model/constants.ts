@@ -35,6 +35,12 @@ export const LIFE_CAPS = {
   questionLabel: 300,
   checkins: 20,
   checkinLabel: 200,
+  /** Recap items, their weekly/point series and short texts. */
+  recap: 12,
+  recapWeeks: 12,
+  recapPoints: 24,
+  recapUnit: 20,
+  recapCriterion: 100,
   /** Check-in note (SQL: life_entries_checkin_value, char_length ≤ 1000). */
   checkinNote: 1000,
   /** Sunday text answers (SQL: pg_column_size(value) ≤ 16 KiB). */

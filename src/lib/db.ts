@@ -265,6 +265,26 @@ export interface LifeCheckin {
   label: string
 }
 
+/** One line of the read-only Recap card, computed outside the app and imported
+ * with the plan. `minimum`: done-of-days per week; `progress`: a value over time. */
+export interface LifeRecapItem {
+  id: string
+  kind: 'minimum' | 'progress'
+  label: string
+  /** progress only: the unit shown after the numbers ("rep", "kg"). */
+  unit?: string
+  /** minimum only: oldest to newest, `done` of `of` days (1–7). */
+  weeks?: { week: string; done: number; of: number }[]
+  /** minimum only: misses followed by a done within a day, this month. */
+  returns?: number
+  /** progress only: oldest to newest. */
+  points?: { date: string; value: number }[]
+  /** How close the "go up" criterion is: `met` of `of`. */
+  criterion?: { text: string; met: number; of: number }
+  /** Stopped on purpose (an experiment that ended), not failed. */
+  closed?: boolean
+}
+
 export interface LifePlan {
   version: 1
   week: string // Monday, 'YYYY-MM-DD'
@@ -274,6 +294,8 @@ export interface LifePlan {
   trackers: LifeTracker[]
   sundayCheck: LifeQuestion[]
   checkins: LifeCheckin[]
+  /** Optional read-only Recap, absent on most plans. */
+  recap?: LifeRecapItem[]
 }
 
 // One row per week. `id` IS the week (the engine addresses rows by id); the
@@ -783,7 +805,13 @@ db.version(15)
     if (prefs) {
       const row: EventPrefs = { ...prefs, updatedAt: prefs.updatedAt ?? 0 }
       await tx.table('eventPrefs').put(row)
-      entries.push({ table: 'event_prefs', op: 'upsert', rowId: row.id, payload: row, ts })
+      entries.push({
+        table: 'event_prefs',
+        op: 'upsert',
+        rowId: row.id,
+        payload: row,
+        ts,
+      })
     }
     if (entries.length > 0) await tx.table('outbox').bulkAdd(entries)
   })
