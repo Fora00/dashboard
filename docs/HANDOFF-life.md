@@ -135,6 +135,12 @@ hand keep it. `kind: "minimum"` has `weeks` (oldest to newest, Monday dates,
 purpose, shown calmly, criterion hidden). Ids are stable and unique. Invalid
 recap = import error, nothing saved. No migration: it lives in `plan` jsonb.
 
+**Month view** (Life → "Month", `week/MonthView.tsx`, `week/monthRecap.ts`):
+read-only; one entry per month with a recap (the month of a week's Monday),
+spoken for by that month's latest week with a recap. Same lines as the week
+card plus the question "go up, stay, or go down?". Nothing is stored: the
+decision lives in Notion and Things.
+
 ## 2.2 The Week screen (default view of `/life`)
 
 1. **Focus:** the items, big. Tap marks done for the week.

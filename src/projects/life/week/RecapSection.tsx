@@ -108,6 +108,40 @@ function Criterion({ c }: { c: NonNullable<LifeRecapItem['criterion']> }) {
   )
 }
 
+/** The recap lines themselves (shared by the week card and the month view). */
+export function RecapItems({ week, items }: { week: string; items: LifeRecapItem[] }) {
+  return (
+    <Card className="space-y-4">
+      {items.map((item) => (
+        <div key={item.id}>
+          <p className="mb-1.5 flex items-baseline justify-between gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
+            <span className="min-w-0 truncate">{item.label}</span>
+            {item.closed && (
+              <span className="shrink-0 text-xs font-normal text-slate-500 dark:text-slate-400">experiment closed</span>
+            )}
+          </p>
+          {item.kind === 'minimum' ? (
+            <div className="flex flex-wrap items-end gap-x-4 gap-y-1">
+              <MinimumBars item={item} week={week} />
+              {item.returns !== undefined && (
+                <p className="text-xs text-slate-600 dark:text-slate-300">
+                  ↩ {item.returns} return{item.returns === 1 ? '' : 's'} this month
+                </p>
+              )}
+            </div>
+          ) : (
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+              <StepLine item={item} />
+              <p className="text-sm text-slate-800 dark:text-slate-100">{describePoints(item)}</p>
+            </div>
+          )}
+          {item.criterion && !item.closed && <Criterion c={item.criterion} />}
+        </div>
+      ))}
+    </Card>
+  )
+}
+
 export function RecapSection({
   week,
   items,
@@ -129,36 +163,7 @@ export function RecapSection({
       onToggle={onToggle}
       readOnly={readOnly}
     >
-      <Card className="space-y-4">
-        {items.map((item) => (
-          <div key={item.id}>
-            <p className="mb-1.5 flex items-baseline justify-between gap-2 text-sm font-medium text-slate-700 dark:text-slate-200">
-              <span className="min-w-0 truncate">{item.label}</span>
-              {item.closed && (
-                <span className="shrink-0 text-xs font-normal text-slate-500 dark:text-slate-400">
-                  experiment closed
-                </span>
-              )}
-            </p>
-            {item.kind === 'minimum' ? (
-              <div className="flex flex-wrap items-end gap-x-4 gap-y-1">
-                <MinimumBars item={item} week={week} />
-                {item.returns !== undefined && (
-                  <p className="text-xs text-slate-600 dark:text-slate-300">
-                    ↩ {item.returns} return{item.returns === 1 ? '' : 's'} this month
-                  </p>
-                )}
-              </div>
-            ) : (
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-                <StepLine item={item} />
-                <p className="text-sm text-slate-800 dark:text-slate-100">{describePoints(item)}</p>
-              </div>
-            )}
-            {item.criterion && !item.closed && <Criterion c={item.criterion} />}
-          </div>
-        ))}
-      </Card>
+      <RecapItems week={week} items={items} />
     </CollapsibleSection>
   )
 }

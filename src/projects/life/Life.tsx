@@ -11,6 +11,7 @@ import { EmptyState } from '../../components/EmptyState'
 import { SyncCard } from '../../components/SyncCard'
 import { SkeletonList } from '../../components/Skeleton'
 import { HistoryList } from './week/HistoryList'
+import { MonthView } from './week/MonthView'
 import { LastWeekCard } from './week/LastWeekCard'
 import { PastWeek } from './week/PastWeek'
 import { WeekBody } from './week/WeekBody'
@@ -20,7 +21,11 @@ import { WeekBody } from './week/WeekBody'
 // offline and signed out. Mutations go through src/lib/lifeSync.ts only. The
 // page shell lives here; everything below it is in ./week/.
 
-type View = { tab: 'week' } | { tab: 'history' } | { tab: 'past'; week: string; from: 'week' | 'history' }
+type View =
+  | { tab: 'week' }
+  | { tab: 'history' }
+  | { tab: 'month' }
+  | { tab: 'past'; week: string; from: 'week' | 'history' }
 
 export function Life() {
   const today = useToday()
@@ -44,6 +49,10 @@ export function Life() {
   const weekRow = useLiveQuery(() => db.lifeWeeks.get(week).then((w) => w ?? null), [week])
   const entries = useLiveQuery(() => db.lifeEntries.where('week').equals(week).toArray(), [week])
   const pastWeeks = useLiveQuery(() => db.lifeWeeks.orderBy('id').reverse().toArray())
+
+  if (view.tab === 'month') {
+    return <MonthView weeks={pastWeeks} onBack={() => setView({ tab: 'week' })} />
+  }
 
   if (view.tab === 'history') {
     return (
@@ -79,6 +88,9 @@ export function Life() {
         </Link>
         <Button variant="ghost" onClick={() => setView({ tab: 'history' })}>
           History
+        </Button>
+        <Button variant="ghost" onClick={() => setView({ tab: 'month' })}>
+          Month
         </Button>
       </div>
     </PageHeader>
