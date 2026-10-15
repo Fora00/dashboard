@@ -65,3 +65,23 @@ describe('recap', () => {
     expect(md).toContain('8 → 9 rep')
   })
 })
+
+describe('export says when it was done', () => {
+  it('adds the day to done focus and the time to entries', () => {
+    const p = parseWeekJson(JSON.stringify({ ...base, focus: [{ id: 'f1', title: 'Focus A' }] }))
+    if (!p.ok) throw new Error('parse')
+    const entry = {
+      id: '2026-01-05:focus:f1',
+      week: '2026-01-05',
+      ref: 'f1',
+      day: '2026-01-07',
+      kind: 'focus' as const,
+      value: { done: true },
+      createdAt: Date.UTC(2026, 0, 7, 9, 30),
+      updatedAt: 0,
+    }
+    const md = buildExportMarkdown(p.plan, [entry])
+    expect(md).toContain('- [x] Focus A (Wed 2026-01-07)')
+    expect(md).toContain('"at": "2026-01-07T09:30:00.000Z"')
+  })
+})

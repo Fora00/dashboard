@@ -56,10 +56,18 @@ export function buildExportMarkdown(
   const s = summarizeWeek(plan, entries, today)
   const mine = entries.filter((e) => e.week === plan.week)
   const out: string[] = [`# Week of ${plan.week}`, '']
+  // When it was done: the local day the keyed entry was last written on.
+  const doneOn = (kind: LifeEntry['kind'], ref: string): string => {
+    const e = mine.find((x) => x.kind === kind && x.ref === ref)
+    return e ? ` (${DAY_NAMES[(new Date(`${e.day}T12:00:00Z`).getUTCDay() + 6) % 7]} ${e.day})` : ''
+  }
 
   if (plan.focus.length) {
     out.push('## Focus', '')
-    for (const f of plan.focus) out.push(`- [${s.focusDone.has(f.id) ? 'x' : ' '}] ${f.title}`)
+    for (const f of plan.focus)
+      out.push(
+        `- [${s.focusDone.has(f.id) ? 'x' : ' '}] ${f.title}${s.focusDone.has(f.id) ? doneOn('focus', f.id) : ''}`,
+      )
     out.push('')
   }
 
@@ -109,7 +117,9 @@ export function buildExportMarkdown(
     for (const c of s.checkins) {
       const flag = c.overdue ? ' (overdue)' : ''
       const note = c.note ? ` — ${oneLine(c.note)}` : ''
-      out.push(`- [${c.done ? 'x' : ' '}] ${c.checkin.date} ${c.checkin.label}${flag}${note}`)
+      out.push(
+        `- [${c.done ? 'x' : ' '}] ${c.checkin.date} ${c.checkin.label}${flag}${c.done ? doneOn('checkin', c.checkin.id) : ''}${note}`,
+      )
     }
     out.push('')
   }
@@ -117,7 +127,9 @@ export function buildExportMarkdown(
   if (plan.tasks.length) {
     out.push('## Tasks', '')
     for (const t of plan.tasks) {
-      out.push(`- ${t.title}${s.sentTaskIds.has(t.id) ? ' (sent to Things)' : ''}`)
+      out.push(
+        `- ${t.title}${s.sentTaskIds.has(t.id) ? ` (sent to Things${doneOn('sent', t.id).replace(' (', ', ').replace(')', '')})` : ''}`,
+      )
     }
     out.push('')
   }
@@ -174,7 +186,14 @@ export function buildExportMarkdown(
     entries: mine
       .slice()
       .sort((a, b) => a.createdAt - b.createdAt)
-      .map(({ kind, ref, day, value }) => ({ kind, ref, day, value })),
+      // `at` is the moment it was first logged (ISO, UTC), `day` the local day.
+      .map(({ kind, ref, day, value, createdAt }) => ({
+        kind,
+        ref,
+        day,
+        at: new Date(createdAt).toISOString(),
+        value,
+      })),
     // Present only when the diary has entries this week.
     ...(food.days.length
       ? {
