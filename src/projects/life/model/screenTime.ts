@@ -5,6 +5,7 @@ import type { LifeQuestion } from '../../../lib/db'
 // land in the week JSON with no schema change, whatever the imported plan says.
 
 export const SCREEN_QUESTIONS: readonly LifeQuestion[] = [
+  { id: 'screen-total', label: 'Tempo totale', type: 'duration' },
   { id: 'screen-avg', label: 'Media giornaliera', type: 'duration' },
   { id: 'screen-social', label: 'Social', type: 'duration' },
   { id: 'screen-other', label: 'Altro', type: 'duration' },
