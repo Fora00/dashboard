@@ -30,6 +30,7 @@ import { NEAR_MINUTES, minutesLabel } from './distance'
 import { formatLabel } from './format'
 import { SelectionBar, WeekSections } from './EventsList'
 import { ListChecksIcon, PlusIcon, XIcon } from './icons'
+import { isPastEvent } from './marks'
 import { useEventFilters, type View } from './useEventFilters'
 import type { EventItem } from './types'
 import type { InterestValue } from './interest'
@@ -65,7 +66,7 @@ export function Events() {
   const [editor, setEditor] = useState<Editor>({ open: false })
 
   // Hand-added events disappear two weeks after their last day; saved/hidden
-  // marks the day after the event (locally and on the server).
+  // marks the day after the event (locally and on the server); going marks stay as the history.
   useEffect(() => {
     void pruneCustomEvents().catch(() => {})
     void pruneEventMarks().catch(() => {})
@@ -405,7 +406,7 @@ export function Events() {
     maxMin,
     onToggleMaxMin: toggles.toggleMaxMin,
     showHidden,
-    canShowHidden: view !== 'saved',
+    canShowHidden: view !== 'saved' && view !== 'went',
     canReset: filtering || showHidden,
     total,
     onToggleCat: toggles.toggleCat,
@@ -462,7 +463,7 @@ export function Events() {
   // View tabs, search, date chips: on top of the list in both layouts.
   const controls = (
     <>
-      <div className="mb-3 grid grid-cols-4 gap-2">
+      <div className="mb-3 grid grid-cols-3 gap-2 sm:grid-cols-5">
         {(
           [
             ['all', 'All'],
@@ -471,6 +472,10 @@ export function Events() {
             [
               'saved',
               `Saved${marksRaw.filter((m) => m.state !== 'hidden').length ? ` (${marksRaw.filter((m) => m.state !== 'hidden').length})` : ''}`,
+            ],
+            [
+              'went',
+              `Been${marksRaw.filter((m) => m.state === 'going' && isPastEvent(m.event, now)).length ? ` (${marksRaw.filter((m) => m.state === 'going' && isPastEvent(m.event, now)).length})` : ''}`,
             ],
           ] as [View, string][]
         ).map(([id, label]) => (
@@ -537,16 +542,26 @@ export function Events() {
     <>
       {total === 0 ? (
         <EmptyState
-          emoji={view === 'saved' ? '☆' : view === 'series' ? '🔁' : '🔎'}
-          title={view === 'saved' ? 'Nothing saved yet' : view === 'series' ? 'Nothing repeats yet' : 'No events match'}
+          emoji={view === 'saved' ? '☆' : view === 'went' ? '✅' : view === 'series' ? '🔁' : '🔎'}
+          title={
+            view === 'saved'
+              ? 'Nothing saved yet'
+              : view === 'went'
+                ? 'Nothing logged yet'
+                : view === 'series'
+                  ? 'Nothing repeats yet'
+                  : 'No events match'
+          }
           hint={
             view === 'saved'
               ? 'Open an event and tap Save to keep it here.'
-              : view === 'series'
-                ? 'Weekly and monthly activities show here after the next daily update, or when the filters let them through.'
-                : filtering || dateChip || nq
-                  ? 'Try clearing the filters.'
-                  : 'Nothing to show right now.'
+              : view === 'went'
+                ? 'Events you tap Go on are kept here once they are over.'
+                : view === 'series'
+                  ? 'Weekly and monthly activities show here after the next daily update, or when the filters let them through.'
+                  : filtering || dateChip || nq
+                    ? 'Try clearing the filters.'
+                    : 'Nothing to show right now.'
           }
         />
       ) : (

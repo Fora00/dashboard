@@ -179,12 +179,13 @@ export async function removeEventMark(id: string): Promise<void> {
 }
 
 /**
- * Delete the marks (saved and hidden) of events that are over. Goes through
+ * Delete the marks (saved and hidden, never going) of events that are over. Goes through
  * the engine, so the deletion syncs and frees the server row; works signed
  * out too. Every device runs it, deleting an already-deleted row is harmless.
  */
 export async function pruneEventMarks(now = Date.now()): Promise<number> {
-  const old = (await db.eventMarks.toArray()).filter((m) => isPastEvent(m.event, now))
+  // 'going' marks are the history of events attended: kept for good.
+  const old = (await db.eventMarks.toArray()).filter((m) => m.state !== 'going' && isPastEvent(m.event, now))
   for (const m of old) await engine.remove('event_marks', m.id)
   return old.length
 }

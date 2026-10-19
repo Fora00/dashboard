@@ -33,9 +33,12 @@ import {
   seriesGroups,
   type DayGroup,
 } from './model'
+import { isPastEvent } from './marks'
 
-export type View = 'all' | 'open' | 'saved' | 'series'
+export type View = 'all' | 'open' | 'saved' | 'went' | 'series'
 export const PAGE = 60
+/** How far back the history view offers unlogged events (the file keeps only a few days). */
+const RECENT_DAYS = 14
 
 /** Add `id` to `list`, or remove it when present. Always returns a new array. */
 export function toggleIn<T>(list: readonly T[], id: T): T[] {
@@ -144,6 +147,22 @@ export function useEventFilters(
       )
       return [...saved, ...mine].sort(byStart)
     }
+    if (view === 'went') {
+      // The history: events the owner went to (kept for good), then the recent
+      // ones still in events.json, so yesterday's can be logged with Go.
+      const live = new Map(events.map((e) => [e.id, e]))
+      const went = (marksRaw ?? []).filter((m) => m.state === 'going' && isPastEvent(m.event, now))
+      const ids = new Set(went.map((m) => m.id))
+      const recent = events.filter(
+        (e) =>
+          !ids.has(e.id) &&
+          isOver(e, now) &&
+          !isLongRunning(e, now) &&
+          marks.get(e.id)?.state !== 'hidden' &&
+          now - Date.parse(e.end ?? e.start) < RECENT_DAYS * 86_400_000,
+      )
+      return [...went.map((m) => live.get(m.id) ?? m.event), ...recent]
+    }
     return events.filter((e) => {
       if (isOver(e, now)) return false
       if (tooFarForCategory(e) && !isManual(e) && !isSpot(e)) return false
@@ -230,12 +249,15 @@ export function useEventFilters(
         (e) =>
           (inCats(e, activeCats) ||
             // Exhibitions are no longer shown by default (owner, 2026-10-14); they stay one chip away.
-            (selectedCats === null && (isManual(e) || (view === 'saved' && isSpot(e))))) &&
+            (selectedCats === null &&
+              (isManual(e) ||
+                (view === 'saved' && isSpot(e)) ||
+                (view === 'went' && marks.get(e.id)?.state === 'going')))) &&
           matchesSubcategory(e, selectedSubs) &&
           matchesFormat(e, selectedFormats) &&
           (maxMin === null || withinMinutes(e, maxMin)),
       ),
-    [scoped, activeCats, selectedCats, selectedSubs, selectedFormats, view, maxMin],
+    [scoped, activeCats, selectedCats, selectedSubs, selectedFormats, view, maxMin, marks],
   )
 
   // Flat, ordered list of groups; then cut to `limit` cards in total.
@@ -262,6 +284,11 @@ export function useEventFilters(
     } else if (view === 'open') {
       const running = [...filtered].sort((a, b) => Date.parse(a.end ?? a.start) - Date.parse(b.end ?? b.start))
       if (running.length) out.push({ key: 'open-now', label: 'Open now', events: running })
+    } else if (view === 'went') {
+      const done = filtered.filter((e) => marks.get(e.id)?.state === 'going').sort((a, b) => byStart(b, a))
+      const recent = filtered.filter((e) => marks.get(e.id)?.state !== 'going').sort((a, b) => byStart(b, a))
+      if (done.length) out.push({ key: 'past', label: 'Been there', events: done })
+      if (recent.length) out.push({ key: 'recent', label: 'Recent: tap Go to log it', events: recent })
     } else {
       out.push(...savedGroups(filtered, now))
     }
