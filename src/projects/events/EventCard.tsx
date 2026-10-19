@@ -13,12 +13,14 @@ import { categoryOf, formatRange, isSparseSeries, listingDay, safeHttpUrl, short
 interface Props {
   event: EventItem
   saved: boolean
+  going: boolean
   hidden: boolean
   now: number
   /** Previous-visit baseline for the "New" badge (null = none). */
   since?: number | null
   /** Receive the event so the parent can pass one stable callback to every card (memo). */
   onToggleSave: (e: EventItem) => void
+  onToggleGoing: (e: EventItem) => void
   onToggleHide: (e: EventItem) => void
   /** The owner's 👍 / 👎 on this event (0 = none) and its toggle. */
   interest?: InterestState
@@ -44,10 +46,12 @@ interface Props {
 export const EventCard = memo(function EventCard({
   event: e,
   saved,
+  going,
   hidden,
   now,
   since = null,
   onToggleSave,
+  onToggleGoing,
   onToggleHide,
   interest = 0,
   onInterest,
@@ -125,7 +129,7 @@ export const EventCard = memo(function EventCard({
           <div className="min-w-0 flex-1 space-y-1">
             <div className="flex items-start justify-between gap-2">
               <span className="min-w-0 font-semibold leading-snug">{e.title}</span>
-              {saved && <span aria-label="Saved">★</span>}
+              {going ? <span aria-label="Going">✅</span> : saved && <span aria-label="Saved">★</span>}
             </div>
             <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{formatRange(e)}</p>
             {place && (
@@ -151,8 +155,10 @@ export const EventCard = memo(function EventCard({
         <EventActions
           event={e}
           saved={saved}
+          going={going}
           hidden={hidden}
           onToggleSave={onToggleSave}
+          onToggleGoing={onToggleGoing}
           onToggleHide={onToggleHide}
           interest={interest}
           onInterest={onInterest}

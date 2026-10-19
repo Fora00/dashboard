@@ -14,9 +14,11 @@ import { categoryOf, formatRange, isSparseSeries, listingDay, safeHttpUrl, short
 interface Props {
   event: EventItem | null
   saved: boolean
+  going: boolean
   hidden: boolean
   now: number
   onToggleSave: (e: EventItem) => void
+  onToggleGoing: (e: EventItem) => void
   onToggleHide: (e: EventItem) => void
   /** The owner's 👍 / 👎 on this event (0 = none) and its toggle. */
   interest: InterestState
@@ -50,9 +52,11 @@ export function EventDetail({ event, ...rest }: Props) {
 function Detail({
   event: e,
   saved,
+  going,
   hidden,
   now,
   onToggleSave,
+  onToggleGoing,
   onToggleHide,
   interest,
   onInterest,
@@ -103,6 +107,11 @@ function Detail({
       <div className="space-y-2 px-4 pt-3 pb-2">
         <h2 className="text-lg leading-snug font-semibold">
           {e.title}
+          {going && (
+            <span aria-label="Going" className="ml-1.5">
+              ✅
+            </span>
+          )}
           {saved && (
             <span aria-label="Saved" className="ml-1.5 text-amber-500">
               ★
@@ -128,8 +137,10 @@ function Detail({
       <EventActions
         event={e}
         saved={saved}
+        going={going}
         hidden={hidden}
         onToggleSave={onToggleSave}
+        onToggleGoing={onToggleGoing}
         onToggleHide={onToggleHide}
         onEdit={onEdit}
         className="border-y border-slate-100 px-2 py-1 dark:border-slate-700/50"

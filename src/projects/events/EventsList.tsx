@@ -132,6 +132,7 @@ export function WeekSections({
   selecting,
   selectedIds,
   onToggleSave,
+  onToggleGoing,
   onToggleHide,
   interest,
   onInterest,
@@ -153,6 +154,7 @@ export function WeekSections({
   selecting: boolean
   selectedIds: ReadonlySet<string>
   onToggleSave: (e: EventItem) => void
+  onToggleGoing: (e: EventItem) => void
   onToggleHide: (e: EventItem) => void
   /** event id -> the owner's 👍 (1) / 👎 (-1). */
   interest: ReadonlyMap<string, InterestValue>
@@ -171,10 +173,12 @@ export function WeekSections({
   const cardProps = (e: EventItem): React.ComponentProps<typeof EventCard> => ({
     event: e,
     saved: marks.get(e.id)?.state === 'saved',
+    going: marks.get(e.id)?.state === 'going',
     hidden: marks.get(e.id)?.state === 'hidden',
     now,
     since,
     onToggleSave,
+    onToggleGoing,
     onToggleHide,
     interest: interest.get(e.id) ?? 0,
     onInterest,

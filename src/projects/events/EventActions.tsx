@@ -3,7 +3,17 @@ import { useFlash } from '../../lib/useFlash'
 import { FOCUS_RING } from '../../components/focus'
 import type { EventItem } from './types'
 import { addToCalendar } from './ics'
-import { CalendarPlusIcon, CheckIcon, EyeIcon, EyeOffIcon, PencilIcon, ShareIcon, StarIcon, ThingsIcon } from './icons'
+import {
+  CalendarPlusIcon,
+  CheckCircleIcon,
+  CheckIcon,
+  EyeIcon,
+  EyeOffIcon,
+  PencilIcon,
+  ShareIcon,
+  StarIcon,
+  ThingsIcon,
+} from './icons'
 import { isManual } from './custom'
 import { InterestButtons, type InterestState } from './InterestButtons'
 import type { InterestValue } from './interest'
@@ -15,8 +25,10 @@ const ICON = `inline-flex min-h-10 min-w-10 flex-1 flex-col items-center justify
 interface Props {
   event: EventItem
   saved: boolean
+  going: boolean
   hidden: boolean
   onToggleSave: (e: EventItem) => void
+  onToggleGoing: (e: EventItem) => void
   onToggleHide: (e: EventItem) => void
   /** Hand-added events only: open the edit sheet. */
   onEdit?: ((e: EventItem) => void) | undefined
@@ -26,12 +38,14 @@ interface Props {
   className?: string
 }
 
-/** Save · Things · Calendar · Hide · Share (· Like · Nope | · Edit): the card footer and the detail panel. */
+/** Save · Go · Things · Calendar · Hide · Share (· Like · Nope | · Edit): the card footer and the detail panel. */
 export function EventActions({
   event: e,
   saved,
+  going,
   hidden,
   onToggleSave,
+  onToggleGoing,
   onToggleHide,
   onEdit,
   interest = 0,
@@ -67,6 +81,17 @@ export function EventActions({
       >
         <StarIcon filled={saved} />
         {saved ? 'Saved' : 'Save'}
+      </button>
+      <button
+        type="button"
+        onClick={() => onToggleGoing(e)}
+        aria-pressed={going}
+        aria-label={going ? 'Not going' : "I'm going"}
+        title={going ? 'Not going' : "I'm going"}
+        className={`${ICON} ${going ? 'text-emerald-600 dark:text-emerald-400' : ''}`}
+      >
+        <CheckCircleIcon filled={going} />
+        {going ? 'Going' : 'Go'}
       </button>
       <a href={buildThingsAddUrl(e)} aria-label="Add to Things" title="Add to Things" className={ICON}>
         <ThingsIcon />

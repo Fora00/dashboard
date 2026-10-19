@@ -125,7 +125,7 @@ describe('evidence', () => {
   const base = ev()
   const features = interestFeatures(base)
 
-  it('👍 / 👎 ±1, saved +2, hidden -0.5, hand-added +1; counts add up', () => {
+  it('👍 / 👎 ±1, saved +2, going +3, hidden -0.5, hand-added +1; counts add up', () => {
     const out = collectEvidence({
       signals: [
         { id: 'a', value: 1, features, updatedAt: 1 },
@@ -134,6 +134,7 @@ describe('evidence', () => {
       marks: [
         { id: 'c', state: 'saved', event: ev({ id: 'c' }), updatedAt: 3 },
         { id: 'd', state: 'hidden', event: ev({ id: 'd' }), updatedAt: 4 },
+        { id: 'g', state: 'going', event: ev({ id: 'g' }), updatedAt: 6 },
       ],
       manual: [{ event: ev({ id: 'm', source: 'manual' }), updatedAt: 5 }],
     })
@@ -142,15 +143,17 @@ describe('evidence', () => {
       ['b', 'explicit', -1, 2],
       ['c', 'saved', 2, 3],
       ['d', 'hidden', -0.5, 4],
+      ['g', 'going', 3, 6],
       ['m', 'manual', 1, 5],
     ])
     expect(buildInterestModel(out, [], NOW).counts).toEqual({
       up: 1,
       down: 1,
       saved: 1,
+      going: 1,
       hidden: 1,
       manual: 1,
-      total: 5,
+      total: 6,
     })
   })
 

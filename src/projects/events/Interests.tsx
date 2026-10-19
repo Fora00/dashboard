@@ -267,8 +267,8 @@ export function Interests() {
               {nSignals} {nSignals === 1 ? 'signal' : 'signals'} so far
             </h2>
             <p className="text-sm text-slate-600 dark:text-slate-300">
-              👍 {counts.up} · 👎 {counts.down} · saved {counts.saved} · hidden {counts.hidden} · your own events{' '}
-              {counts.manual}
+              👍 {counts.up} · 👎 {counts.down} · saved {counts.saved} · going {counts.going} · hidden {counts.hidden} ·
+              your own events {counts.manual}
             </p>
             <p className={SUBTLE}>
               Hides made by a 👎 count once (as the 👎). Older signals weigh less: half after{' '}

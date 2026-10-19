@@ -29,7 +29,7 @@ import type { EventItem } from '../projects/events/types'
 
 export interface EventMarkRow {
   id: string
-  state: 'saved' | 'hidden'
+  state: 'saved' | 'going' | 'hidden'
   event: EventItem
   updated_at: number
 }
@@ -58,7 +58,7 @@ export const eventMarksTable: TableSync<EventMark, EventMarkRow> = {
     // the no-op update the LWW trigger emits. Never let that wipe the local
     // snapshot: throwing makes the engine skip the event; the next pull
     // reconciles.
-    if (r.state !== 'saved' && r.state !== 'hidden') throw new Error('event_marks: bad state')
+    if (r.state !== 'saved' && r.state !== 'going' && r.state !== 'hidden') throw new Error('event_marks: bad state')
     const event = sanitizeSnapshot(r.event)
     if (!event || event.id !== r.id) throw new Error('event_marks: snapshot missing')
     return { id: r.id, state: r.state, event, updatedAt: Number(r.updated_at) }

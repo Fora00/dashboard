@@ -135,7 +135,7 @@ export function useEventFilters(
   const base = useMemo(() => {
     if (view === 'saved') {
       const live = new Map(events.map((e) => [e.id, e]))
-      const saved = (marksRaw ?? []).filter((m) => m.state === 'saved').map((m) => live.get(m.id) ?? m.event)
+      const saved = (marksRaw ?? []).filter((m) => m.state !== 'hidden').map((m) => live.get(m.id) ?? m.event)
       // Saved also holds everything the owner curates (hand-added + spot),
       // unless it is over or hidden.
       const ids = new Set(saved.map((e) => e.id))

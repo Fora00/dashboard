@@ -264,6 +264,7 @@ export function Events() {
     },
     [triggerUndo],
   )
+  const onToggleGoing = useCallback((e: EventItem) => void setMark(e, 'going'), [setMark])
   const onToggleHide = useCallback((e: EventItem) => void setMark(e, 'hidden'), [setMark])
   // Shift-click range select: the last card picked is the anchor; the list
   // order is read through a ref so onSelect stays stable for the memoised cards.
@@ -469,7 +470,7 @@ export function Events() {
             ['series', 'Si ripete'],
             [
               'saved',
-              `Saved${marksRaw.filter((m) => m.state === 'saved').length ? ` (${marksRaw.filter((m) => m.state === 'saved').length})` : ''}`,
+              `Saved${marksRaw.filter((m) => m.state !== 'hidden').length ? ` (${marksRaw.filter((m) => m.state !== 'hidden').length})` : ''}`,
             ],
           ] as [View, string][]
         ).map(([id, label]) => (
@@ -560,6 +561,7 @@ export function Events() {
             selecting={selecting}
             selectedIds={selectedIds}
             onToggleSave={onToggleSave}
+            onToggleGoing={onToggleGoing}
             onToggleHide={onToggleHide}
             interest={interest}
             onInterest={onInterest}
@@ -621,9 +623,11 @@ export function Events() {
               <EventDetail
                 event={activeEvent}
                 saved={activeEvent ? marks.get(activeEvent.id)?.state === 'saved' : false}
+                going={activeEvent ? marks.get(activeEvent.id)?.state === 'going' : false}
                 hidden={activeEvent ? marks.get(activeEvent.id)?.state === 'hidden' : false}
                 now={now}
                 onToggleSave={onToggleSave}
+                onToggleGoing={onToggleGoing}
                 onToggleHide={onToggleHide}
                 interest={activeEvent ? (interest.get(activeEvent.id) ?? 0) : 0}
                 onInterest={onInterest}

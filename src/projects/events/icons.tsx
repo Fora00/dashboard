@@ -27,6 +27,13 @@ export const StarIcon = ({ filled = false }: { filled?: boolean }) => (
   </Icon>
 )
 
+export const CheckCircleIcon = ({ filled = false }: { filled?: boolean }) => (
+  <Icon fill={filled ? 'currentColor' : 'none'}>
+    <circle cx="12" cy="12" r="10" />
+    <path d="m9 12 2 2 4-4" stroke={filled ? 'white' : 'currentColor'} />
+  </Icon>
+)
+
 export const ThingsIcon = () => (
   <Icon>
     <circle cx="12" cy="12" r="10" />

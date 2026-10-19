@@ -12,8 +12,8 @@ import { subLabel } from './subcategories'
 //
 // 1. Every event becomes a set of feature keys (featureKeysOf): its category,
 //    subcategory, tags, city, source, ring, weekday and time of day.
-// 2. Evidence (collectEvidence): 👍 = +1, 👎 = -1, saved = +2, hidden = -0.5
-//    (but not the hide a 👎 made: that one is the 👎, see isOwnHide), a
+// 2. Evidence (collectEvidence): 👍 = +1, 👎 = -1, saved = +2, going = +3,
+//    hidden = -0.5 (but not the hide a 👎 made: that one is the 👎, see isOwnHide), a
 //    hand-added event = +1. Each evidence counts in full for EVERY feature of
 //    its event, decayed by age (half-life INTEREST_WEIGHTS.halfLifeDays).
 // 3. Per feature f, with decayed weights d_i = 0.5^(age_i / halfLife):
@@ -39,7 +39,7 @@ export interface ProfileEntry {
 /** Every tunable number of the model, in one place. */
 export const INTEREST_WEIGHTS = {
   /** Value of each kind of evidence. */
-  evidence: { explicit: 1, saved: 2, hidden: -0.5, manual: 1 },
+  evidence: { explicit: 1, saved: 2, going: 3, hidden: -0.5, manual: 1 },
   /** Evidence loses half its weight every this many days (from its updatedAt). */
   halfLifeDays: 90,
   /** K in the smoothed mean sum / (n + K); also the seed's pseudo-count. */
@@ -111,7 +111,7 @@ export interface Evidence {
 
 export interface EvidenceInput {
   signals: readonly { id: string; value: number; features: InterestFeatures; updatedAt: number }[]
-  marks: readonly { id: string; state: 'saved' | 'hidden'; event: EventItem; updatedAt: number }[]
+  marks: readonly { id: string; state: 'saved' | 'going' | 'hidden'; event: EventItem; updatedAt: number }[]
   /** Hand-added events (customToEventItem) with their row's updatedAt. */
   manual: readonly { event: EventItem; updatedAt: number }[]
 }
@@ -120,6 +120,7 @@ export interface EvidenceCounts {
   up: number
   down: number
   saved: number
+  going: number
   hidden: number
   manual: number
   /** Everything above: what the seed fade and the ordering gate count. */
@@ -143,7 +144,7 @@ export function collectEvidence({ signals, marks, manual }: EvidenceInput): Evid
   }
   for (const m of marks) {
     if (m.state === 'hidden' && isOwnHide(bySignal.get(m.id), m)) continue
-    const kind = m.state === 'saved' ? 'saved' : 'hidden'
+    const kind = m.state
     out.push({ id: m.id, kind, value: E[kind], at: m.updatedAt, keys: eventKeys(m.event) })
   }
   for (const c of manual) {
@@ -153,7 +154,7 @@ export function collectEvidence({ signals, marks, manual }: EvidenceInput): Evid
 }
 
 export function countEvidence(evidence: readonly Evidence[]): EvidenceCounts {
-  const c: EvidenceCounts = { up: 0, down: 0, saved: 0, hidden: 0, manual: 0, total: evidence.length }
+  const c: EvidenceCounts = { up: 0, down: 0, saved: 0, going: 0, hidden: 0, manual: 0, total: evidence.length }
   for (const e of evidence) {
     if (e.kind === 'explicit') c[e.value > 0 ? 'up' : 'down']++
     else c[e.kind]++

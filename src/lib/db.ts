@@ -422,7 +422,7 @@ export interface EventsCacheRow {
 }
 export interface EventMark {
   id: string
-  state: 'saved' | 'hidden'
+  state: 'saved' | 'going' | 'hidden'
   event: EventItem
   updatedAt: number
 }
