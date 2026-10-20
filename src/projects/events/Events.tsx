@@ -1,10 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useSearchParams } from 'react-router-dom'
-import { db, type CustomEvent, type EventMark } from '../../lib/db'
+import { db, type CustomEvent } from '../../lib/db'
 import { deleteCustomEvent, pruneCustomEvents, sync as customSync } from '../../lib/customEventsSync'
-import { hideEvents, pruneEventMarks, restoreEventMark, toggleEventMark } from '../../lib/eventMarksSync'
-import { toggleInterest } from '../../lib/eventInterestSync'
+import { hideEvents, pruneEventMarks, restoreEventMark } from '../../lib/eventMarksSync'
 import { Kbd } from '../../components/Kbd'
 import { useListHotkeys } from '../../lib/useListHotkeys'
 import { SyncCard } from '../../components/SyncCard'
@@ -15,7 +14,6 @@ import { Chip } from '../../components/Chip'
 import { FOCUS_RING, FOCUS_RING_INSET } from '../../components/focus'
 import { Snackbar } from '../../components/Snackbar'
 import { formatDate as formatDateLocal } from '../../lib/dates'
-import { useUndoSnackbar } from '../../lib/useUndoSnackbar'
 import { SkeletonList } from '../../components/Skeleton'
 import { FilterSheet } from './FilterSheet'
 import { FilterPanel, type FilterPanelProps } from './FilterPanel'
@@ -34,8 +32,12 @@ import { isPastEvent } from './marks'
 import { useEventFilters, type View } from './useEventFilters'
 import type { EventItem } from './types'
 import type { InterestValue } from './interest'
-import { categoryLabel, fetchEventsFile, groupByWeek, isKidsEvent, isNew, relativeTime } from './model'
+import { categoryLabel, groupByWeek, isKidsEvent, isNew, relativeTime } from './model'
 import { recordVisit } from './visit'
+import { useEventsFile } from './useEventsFile'
+import { EventsNav } from './EventsNav'
+import { useEventActions } from './useEventActions'
+import { isScreening } from './screenings'
 import { canOrderForYou, explain, makeScorer } from './interestScore'
 import { interestModelFrom } from './useInterestModel'
 import { useForYouSetting } from './forYou'
@@ -50,8 +52,7 @@ type Editor =
     }
 
 export function Events() {
-  const { trigger: triggerUndo, pending: pendingUndo, confirmUndo } = useUndoSnackbar()
-  const cache = useLiveQuery(() => db.eventsCache.get('latest'), [], null)
+  const { cache, fetchState, now } = useEventsFile()
   const marksRaw = useLiveQuery(() => db.eventMarks.toArray())
   const prefs = useLiveQuery(() => db.eventPrefs.get('prefs'), [], null)
   const customRows = useLiveQuery(() => db.customEvents.toArray())
@@ -86,50 +87,26 @@ export function Events() {
     setSearchParams(next, { replace: true })
   }, [searchParams, setSearchParams])
 
-  const [fetchState, setFetchState] = useState<'loading' | 'ok' | 'offline' | 'missing'>('loading')
   const [sheetOpen, setSheetOpen] = useState(false)
   // Multi-select: pick several cards, hide them in one go.
   const [selecting, setSelecting] = useState(false)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set())
   const [showSources, setShowSources] = useState(false)
-  // The clock is read once per mount/refresh, not on every render.
-  const [now, setNow] = useState(() => Date.now())
   // Baseline for "New" (visit.ts): read once on mount, before this visit is
   // recorded, so it stays the same for the whole visit (and reloads within it).
   // The toggle is never persisted with the filters: it would go stale.
   const [since] = useState(() => recordVisit(Date.now()))
   const [onlyNew, setOnlyNew] = useState(false)
 
-  useEffect(() => {
-    let cancelled = false
-    void (async () => {
-      const out = await fetchEventsFile()
-      if (cancelled) return
-      if (out.kind === 'ok' && out.file.events.length === 0) {
-        // An empty (or all-malformed) file never replaces the offline cache.
-        setFetchState('offline')
-      } else if (out.kind === 'ok') {
-        await db.eventsCache.put({
-          id: 'latest',
-          file: out.file,
-          fetchedAt: Date.now(),
-        })
-        setNow(Date.now())
-        setFetchState('ok')
-      } else {
-        setFetchState(out.kind)
-      }
-    })()
-    return () => {
-      cancelled = true
-    }
-  }, [])
-
   const file = cache?.file
   // Children's/family events are never shown (owner's choice); saved ones
   // still appear under Saved from their snapshot. Hand-added events are merged
   // in (custom.ts) and never dropped by that rule; they work with no file.
-  const allEvents = useMemo(() => mergeEvents(file?.events ?? [], customRows ?? [], isKidsEvent), [file, customRows])
+  // The film programme is on its own page (Cinema): the list keeps the rest.
+  const allEvents = useMemo(
+    () => mergeEvents(file?.events ?? [], customRows ?? [], isKidsEvent).filter((e) => !isScreening(e)),
+    [file, customRows],
+  )
   const newCount = useMemo(() => allEvents.filter((e) => isNew(e, since)).length, [allEvents, since])
   // "New" only narrows the list; a stale toggle with nothing new is ignored.
   const newOnly = onlyNew && newCount > 0
@@ -239,34 +216,8 @@ export function Events() {
     focusCard(next)
   }
 
-  // Stable across renders (they read the current mark from Dexie), so the
-  // memoised EventCards only re-render when their own props change.
-  const setMark = useCallback(
-    async (e: EventItem, state: EventMark['state']) => {
-      // Through the owner-only sync engine (eventMarksSync.ts). The snapshot
-      // is sanitised there: a hand-added event's inline image is dropped (the
-      // live row has it), scraped fields are capped.
-      const prev = await toggleEventMark(e, state)
-      // Hiding makes the card vanish: offer Undo, restoring the previous mark.
-      if (state === 'hidden' && prev?.state !== 'hidden') {
-        triggerUndo('Event hidden', () => restoreEventMark(e.id, prev))
-      }
-    },
-    [triggerUndo],
-  )
-  const onToggleSave = useCallback((e: EventItem) => void setMark(e, 'saved'), [setMark])
-  // 👍 / 👎 (eventInterestSync.ts). A new 👎 also hides the card, so it gets
-  // the same Undo as Hide, which puts back both the signal and the mark.
-  const onInterest = useCallback(
-    (e: EventItem, value: InterestValue) => {
-      void toggleInterest(e, value).then(({ hid, undo }) => {
-        if (hid) triggerUndo('Not interested · hidden', undo)
-      })
-    },
-    [triggerUndo],
-  )
-  const onToggleGoing = useCallback((e: EventItem) => void setMark(e, 'going'), [setMark])
-  const onToggleHide = useCallback((e: EventItem) => void setMark(e, 'hidden'), [setMark])
+  const { triggerUndo, pendingUndo, confirmUndo, onToggleSave, onToggleGoing, onToggleHide, onInterest } =
+    useEventActions()
   // Shift-click range select: the last card picked is the anchor; the list
   // order is read through a ref so onSelect stays stable for the memoised cards.
   const orderRef = useRef(order)
@@ -325,29 +276,32 @@ export function Events() {
   const failed = file?.sources.filter((s) => !s.ok) ?? []
 
   const header = (
-    <PageHeader
-      emoji="📍"
-      title="Events"
-      subtitle={
-        file
-          ? `${allEvents.length} events · updated ${relativeTime(file.generatedAt, now)}`
-          : 'Public events around Trentino, Bolzano and Verona.'
-      }
-    >
-      <div className="flex items-center gap-2">
-        <Button
-          variant="ghost"
-          className="min-w-10 px-2"
-          aria-label={selecting ? 'Cancel selection' : 'Select events'}
-          onClick={() => (selecting ? exitSelect() : setSelecting(true))}
-        >
-          {selecting ? <XIcon /> : <ListChecksIcon />}
-        </Button>
-        <Button className="min-w-10 px-2" onClick={openAdd} aria-label="Add event">
-          <PlusIcon />
-        </Button>
-      </div>
-    </PageHeader>
+    <>
+      <PageHeader
+        emoji="📍"
+        title="Events"
+        subtitle={
+          file
+            ? `${allEvents.length} events · updated ${relativeTime(file.generatedAt, now)}`
+            : 'Public events around Trentino, Bolzano and Verona.'
+        }
+      >
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            className="min-w-10 px-2"
+            aria-label={selecting ? 'Cancel selection' : 'Select events'}
+            onClick={() => (selecting ? exitSelect() : setSelecting(true))}
+          >
+            {selecting ? <XIcon /> : <ListChecksIcon />}
+          </Button>
+          <Button className="min-w-10 px-2" onClick={openAdd} aria-label="Add event">
+            <PlusIcon />
+          </Button>
+        </div>
+      </PageHeader>
+      <EventsNav />
+    </>
   )
 
   const editorSheet = (

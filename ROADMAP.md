@@ -677,6 +677,17 @@ sync can come later).
       (e.g. "Pietre di pane" on mart and comune-trento); more keywords
       per category; shorter horizon for Verona if its roughly 30 MB per run is too heavy;
       a visitrovereto source if it ever exposes a feed.
+- [ ] **Events: Cinema tab** (owner, 2026-10-20). Phase 1 [x] DONE 2026-10-20
+      (`screenings.ts` + `Cinema.tsx`, own page `/events/shows` ("Spettacoli": cinema + theatre + concerts, kind chips; theatre and concerts also stay in Events) with an Events | Spettacoli nav (`EventsNav`), `showList.ts`, the same `EventCard` as the list (Save, Go, Hide, Like, Nope, Things, Calendar, Share; `useEventActions`), a film is one card on its first screening of the day (card UI to be refined with the owner): the 100 hall
+      screenings of supercinema / trentinospettacoli / cultura-trentino /
+      pergine leave the event list and show by day, one card per film with
+      town + times, town filter; festivals, talks, cineforums, Mart and
+      library evenings stay events; unverified on a phone). Phase 2 [x] DONE 2026-10-20 (`scripts/events/adapters/mymovies.ts`: Trento
+      Modena / Vittoria / HarpoLab, Cles, Pergine, Tesero, 16 screenings on the first run; Rovereto stays
+      `supercinema`; MyMovies publishes only TODAY, no day parameter, so Trento
+      shows just the crawl day: look for the halls' own sites for a full week
+      (Cineworld Trento, Nuovo Astra); unverified on a phone). Small leftover: a day-only
+      duplicate (e.g. "Taddeo", Tione) stays an event.
 - [ ] **Events improvement queue** (owner, 2026-09-30, all wanted; do ONE at a
       time, in this order). Save/Hide/Share on the collapsed card is done.
       1. [x] DONE 2026-09-30 (tags `social-friend` 199, `social-girl` 164, `solo-ok` 1,108 of 2,081; Come section in the filter sheet, OR between the social chips, AND for solo-ok) — Tagging: cluster "other" (536 of 2,199) and pick

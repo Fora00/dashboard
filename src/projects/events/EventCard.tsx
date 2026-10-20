@@ -1,4 +1,4 @@
-import { memo, useState } from 'react'
+import { memo, useState, type ReactNode } from 'react'
 import type { EventItem } from './types'
 import { FOCUS_RING, FOCUS_RING_INSET } from '../../components/focus'
 import { CategoryThumb } from './CategoryThumb'
@@ -41,6 +41,8 @@ interface Props {
   onActivate?: ((e: EventItem) => void) | undefined
   /** "Ordina per te" on: why it ranks here ("perché: …"), shown when expanded. */
   why?: string | undefined
+  /** Extra lines under the place (e.g. the other towns a film plays in). */
+  extra?: ReactNode
 }
 
 export const EventCard = memo(function EventCard({
@@ -63,6 +65,7 @@ export const EventCard = memo(function EventCard({
   active = false,
   onActivate,
   why,
+  extra,
 }: Props) {
   const [open, setOpen] = useState(false)
   const [imgOk, setImgOk] = useState(true)
@@ -138,6 +141,7 @@ export const EventCard = memo(function EventCard({
                 {drive && <span className="whitespace-nowrap"> · 🚗 {drive}</span>}
               </p>
             )}
+            {extra}
             <EventBadges event={e} hidden={hidden} now={now} since={since} />
             {e.occurrences > 1 && (
               <p className="text-xs text-slate-500 dark:text-slate-400">

@@ -31,6 +31,7 @@ const Climbing = page(() => import('./projects/climbing/Climbing'), 'Climbing')
 const MealDiary = page(() => import('./projects/meal-diary/MealDiary'), 'MealDiary')
 const Habits = page(() => import('./projects/habits/Habits'), 'Habits')
 const Events = page(() => import('./projects/events/Events'), 'Events')
+const Shows = page(() => import('./projects/events/Shows'), 'Shows')
 const EventInterests = page(() => import('./projects/events/Interests'), 'Interests')
 const JoinProject = page(() => import('./projects/join/JoinProject'), 'JoinProject')
 const Life = page(() => import('./projects/life/Life'), 'Life')
@@ -94,6 +95,7 @@ export default function App() {
           <Route path="/links" element={<Links />} />
           <Route path="/trips" element={<Trips />} />
           <Route path="/events" element={<Events />} />
+          <Route path="/events/shows" element={<Shows />} />
           <Route path="/events/interests" element={<EventInterests />} />
           <Route path="/life" element={<Life />} />
           <Route path="/life/import" element={<LifeImport />} />
