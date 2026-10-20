@@ -290,7 +290,7 @@ export function dayLabel(day: string, now: number): string {
 }
 
 export interface DayGroup {
-  key: string // local day, 'open-now' or 'past' (Saved view)
+  key: string // local day, 'open-now', 'past' (Saved view) or 'recent' (Been view)
   label: string
   events: EventItem[]
 }
@@ -328,7 +328,7 @@ export function compareInDay(favourites: readonly string[]): (a: EventItem, b: E
 
 /** Day-group keys that are one flat bucket (no week, no day heading, never folded). */
 export function isFlatGroup(key: string): boolean {
-  return key === 'open-now' || key === 'past' || key === 'series'
+  return key === 'open-now' || key === 'past' || key === 'recent' || key === 'series'
 }
 
 const WEEKDAYS = ['lunedì', 'martedì', 'mercoledì', 'giovedì', 'venerdì', 'sabato', 'domenica']

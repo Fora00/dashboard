@@ -321,6 +321,14 @@ describe('weeks', () => {
       ['2026-10-19', 'Week 43 · 19 ott – 25 ott', 1],
     ])
   })
+
+  it('keeps the Been view groups (past, recent) as flat buckets', () => {
+    const w = groupByWeek([g('past'), g('recent')], now)
+    expect(w.map((x) => [x.key, x.count])).toEqual([
+      ['past', 1],
+      ['recent', 1],
+    ])
+  })
 })
 
 describe('fetchEventsFile validation', () => {
