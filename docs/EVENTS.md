@@ -353,6 +353,7 @@ them (the dashboard's category chips match only category ids).
 | id | source | how | notes |
 |---|---|---|---|
 | `ludimus` | ludimus.it | static HTML: `/events.html` listing, date in the URL | detail pages (time, venue, text, image) fetched only for the next 30 days; later events are all-day until they come closer |
+| `mymovies` | mymovies.it | static HTML city pages `/cinema/trento/`, `cles/`, `perginevalsugana/`, `tesero/` (Rovereto is `supercinema`) | film screenings of Multisala Modena, Supercinema Vittoria, HarpoLab, Cles, Pergine, Tesero; only TODAY is published (no day parameter, RSS in manutenzione 2026-10-20), so each daily crawl adds that day; no end time, no description; shown in the Spettacoli page, not the event list (`isScreening`) |
 | `bibcom-trento` | bibcom.trento.it | OpenPA `/opendata/api/content/search/` | server-side future filter; branch prefix stripped from titles; images are relations only (null) |
 | `trentogiovani` | trentogiovani.it | OpenPA `/opendata/api/calendar/search/` | robots disallows `/api/` and `/opendata` but Allows `/opendata/api/calendar`; often few events (`mayBeEmpty`) |
 | `volkan` | volkantdg.it | The Events Calendar site-wide iCal `/events/?ical=1` | often stale: an empty feed is ok with 0 events (`mayBeEmpty`) |

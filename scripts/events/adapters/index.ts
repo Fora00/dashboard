@@ -26,6 +26,7 @@ import { filarmonica } from './filarmonica.ts'
 import { arcadia } from './arcadia.ts'
 import { muse } from './muse.ts'
 import { supercinema } from './supercinema.ts'
+import { mymovies } from './mymovies.ts'
 import { recurring } from './recurring.ts'
 
 /** What a far town (Verona, Bolzano) is kept for. Owner's choice, 2026-10-14. */
@@ -191,6 +192,8 @@ export const ADAPTERS: Adapter[] = [
   muse,
   // Supercinema Rovereto film programme: one event per screening.
   supercinema,
+  // MyMovies: Trento, Cles, Pergine, Tesero halls (today only), see adapters/mymovies.ts.
+  mymovies,
   infinityboulder,
   santachiara,
   tebe,
