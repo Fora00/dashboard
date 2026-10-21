@@ -8,6 +8,7 @@ import { Snackbar } from '../../../components/Snackbar'
 import { CheckinRow } from './CheckinRow'
 import { CollapsibleSection } from './CollapsibleSection'
 import { ExportSection } from './ExportSection'
+import { DayFocusSection } from './DayFocusSection'
 import { FocusSection } from './FocusSection'
 import { FoodSection } from './FoodSection'
 import { ScreenTimeSection } from './ScreenTimeSection'
@@ -29,6 +30,8 @@ interface WeekBodyProps {
   /** On a read-only past week: the Sunday check and check-ins still take
    *  answers (last week, until Tuesday — see lateEdit.ts). */
   lateEdit?: boolean
+  /** The current week only: today's day key, for "Focus di oggi" (shown right before the weekly Focus). */
+  dayFocusDay?: string
 }
 
 /** Keeps the phone's single-column order (`order-N`, the grandchildren of the
@@ -42,7 +45,7 @@ function Slot({ n, children }: { n: number; children: ReactNode }) {
   )
 }
 
-export function WeekBody({ week, plan, entries, readOnly, lateEdit = false }: WeekBodyProps) {
+export function WeekBody({ week, plan, entries, readOnly, lateEdit = false, dayFocusDay }: WeekBodyProps) {
   const summary = useMemo(() => summarizeWeek(plan, entries), [plan, entries])
   // The meal diary's entries for this week (read-only here), live.
   const meals = useLiveQuery(() => db.meals.where('day').between(week, addDays(week, 6), true, true).toArray(), [week])
@@ -61,6 +64,12 @@ export function WeekBody({ week, plan, entries, readOnly, lateEdit = false }: We
   return (
     <div className="flex flex-col lg:grid lg:grid-cols-2 lg:items-start lg:gap-x-6 xl:grid-cols-3">
       <div className="contents lg:block">
+        {!readOnly && dayFocusDay && (
+          <Slot n={1}>
+            <DayFocusSection day={dayFocusDay} />
+          </Slot>
+        )}
+
         {plan.focus.length > 0 && (
           <Slot n={1}>
             <FocusSection

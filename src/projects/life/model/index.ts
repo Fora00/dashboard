@@ -26,6 +26,7 @@ export {
   type ThingsUrlOptions,
 } from './things.ts'
 export { buildExportMarkdown } from './export.ts'
+export { dayFocusId, parseFocusLines, freeSlots } from './dayFocus.ts'
 export { fenceFor, extractJsonFence } from './fence.ts'
 export { summarizeSavedEvents, type SavedEventsNextWeek } from './events.ts'
 export { summarizeMealsWeek, type MealsWeek, type MealsDay } from './meals.ts'

@@ -2,6 +2,7 @@ import {
   db,
   type LifeAnswer,
   type LifeCheckinEntry,
+  type LifeDayFocus,
   type LifeEntry,
   type LifeFocusEntry,
   type LifePlan,
@@ -12,7 +13,16 @@ import {
 } from './db'
 import { createCloudSync, type TableSync } from './cloudSync'
 import { useSyncStatus } from './useSyncStatus'
-import { LIFE_CAPS, dayKey, entryId, isEnergy, validatePlan, withCheckinIds } from '../projects/life/model'
+import {
+  LIFE_CAPS,
+  dayFocusId,
+  dayKey,
+  entryId,
+  freeSlots,
+  isEnergy,
+  validatePlan,
+  withCheckinIds,
+} from '../projects/life/model'
 
 // Local-first sync for the Life project (owner-only), built on the generic
 // engine in cloudSync.ts. Copied from src/lib/linksSync.ts — see
@@ -20,6 +30,9 @@ import { LIFE_CAPS, dayKey, entryId, isEnergy, validatePlan, withCheckinIds } fr
 //
 // Two tables so concurrent logging never collides:
 //   life_weeks    one row per week, replaced wholesale on import (plan only).
+//   life_day_focus  "Focus di oggi": up to 3 free-text lines per day, id
+//                 `${day}:${slot}` (slot 0-2, so a day never exceeds 3), edited
+//                 in place, deleted for real. Not part of the week plan/export.
 //   life_entries  one row per logged thing. Tracker +1s are append-only rows
 //                 with random ids; focus-done / Sunday answer / task-sent /
 //                 check-in done+note use
@@ -107,9 +120,48 @@ const entriesTable: TableSync<LifeEntry, LifeEntryRow> = {
     }) as LifeEntry,
 }
 
+interface LifeDayFocusRow {
+  id: string
+  day: string
+  slot: number
+  title: string
+  done: boolean
+  created_at: number
+  updated_at: number
+}
+
+const dayFocusTable: TableSync<LifeDayFocus, LifeDayFocusRow> = {
+  remote: 'life_day_focus',
+  table: () => db.lifeDayFocus,
+  columns: 'id, day, slot, title, done, created_at, updated_at',
+  realtime: true,
+  updatedAt: (f) => f.updatedAt,
+  toRow: (f) => ({
+    id: f.id,
+    day: f.day,
+    slot: f.slot,
+    title: f.title,
+    done: f.done,
+    created_at: f.createdAt,
+    updated_at: f.updatedAt,
+  }),
+  fromRow: (r) => {
+    if (typeof r.title !== 'string' || typeof r.day !== 'string') throw new Error('life_day_focus: bad row')
+    return {
+      id: r.id,
+      day: r.day,
+      slot: Number(r.slot),
+      title: r.title,
+      done: Boolean(r.done),
+      createdAt: Number(r.created_at),
+      updatedAt: Number(r.updated_at),
+    }
+  },
+}
+
 const engine = createCloudSync({
   projectId: 'life',
-  tables: [weeksTable, entriesTable],
+  tables: [weeksTable, entriesTable, dayFocusTable],
 })
 
 // --- Local mutations (used by the UI; safe with or without sync) -----------
@@ -325,6 +377,52 @@ export async function markTasksSent(week: string, taskIds: string[], sent = true
     updatedAt: now,
   }))
   await engine.upsertMany('life_entries', rows)
+}
+
+// --- Today's focus ("Focus di oggi") ----------------------------------------
+
+/**
+ * Add focus lines to a day, each into the lowest free slot, up to
+ * LIFE_CAPS.dayFocus per day. Blank titles are skipped, titles are trimmed and
+ * capped. Returns how many were added (the rest did not fit).
+ */
+export async function addDayFocus(day: string, titles: string[]): Promise<number> {
+  const clean = titles.map((t) => t.trim().slice(0, LIFE_CAPS.dayFocusTitle)).filter((t) => t.length > 0)
+  const rows = await db.lifeDayFocus.where('day').equals(day).toArray()
+  const slots = freeSlots(rows.map((r) => r.slot))
+  const now = Date.now()
+  const added = clean.slice(0, slots.length).map((title, i): LifeDayFocus => ({
+    id: dayFocusId(day, slots[i] ?? 0),
+    day,
+    slot: slots[i] ?? 0,
+    title,
+    done: false,
+    createdAt: now,
+    updatedAt: now,
+  }))
+  if (added.length > 0) await engine.upsertMany('life_day_focus', added)
+  return added.length
+}
+
+/** Tick / untick a day-focus line. Returns the new state (null if it is gone). */
+export async function toggleDayFocus(id: string): Promise<boolean | null> {
+  const row = await db.lifeDayFocus.get(id)
+  if (!row) return null
+  await engine.upsert('life_day_focus', { ...row, done: !row.done, updatedAt: Date.now() })
+  return !row.done
+}
+
+/** Rename a day-focus line. An empty title is ignored (use removeDayFocus). */
+export async function editDayFocus(id: string, title: string): Promise<void> {
+  const row = await db.lifeDayFocus.get(id)
+  const next = title.trim().slice(0, LIFE_CAPS.dayFocusTitle)
+  if (!row || !next || next === row.title) return
+  await engine.upsert('life_day_focus', { ...row, title: next, updatedAt: Date.now() })
+}
+
+/** Delete a day-focus line (its slot becomes free). */
+export async function removeDayFocus(id: string): Promise<void> {
+  await engine.remove('life_day_focus', id)
 }
 
 // --- Sync engine ------------------------------------------------------------

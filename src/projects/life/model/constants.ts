@@ -18,6 +18,9 @@ export const LIFE_CAPS = {
   planBytes: 65536,
   focus: 3,
   focusTitle: 200,
+  /** Today's focus lines per day and their length (SQL: life_day_focus). */
+  dayFocus: 3,
+  dayFocusTitle: 200,
   rules: 20,
   rule: 300,
   tasks: 50,

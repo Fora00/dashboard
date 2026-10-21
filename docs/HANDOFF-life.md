@@ -65,6 +65,18 @@ entries; `life-things-status.ts` ignores it). Code: `model/meals.ts`
 stored in Life tables: the diary stays the source of truth. Estimates are
 marked `≈`; `/meal-reconcile` fills missing values before exporting.
 
+## Focus di oggi (today's focus)
+
+Up to 3 free-text lines for the current day, shown right above the weekly
+Focus on `#/life` (also when the week has no plan). Added by hand or pasted
+(one per line; bullets, numbering and a leading target emoji are stripped),
+ticked, edited, deleted. Only today's list is shown; nothing carries over to
+the next day. Its own table `life_day_focus` (migration
+`20261021120000_life_day_focus.sql`, RLS `is_owner()` like the other Life
+tables), id `${day}:${slot}` with slot 0-2 so a day can never exceed 3 rows.
+It is NOT in the week plan JSON, the summary or the export. Code:
+`week/DayFocusSection.tsx`, `model/dayFocus.ts`, mutations in `lifeSync.ts`.
+
 ## 2.1 Import the week (pasted JSON)
 
 Life → "Import week": paste, validate, preview (with the diff), save.

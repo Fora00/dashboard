@@ -308,6 +308,20 @@ export interface LifeWeek {
   updatedAt: number
 }
 
+// Today's focus (up to 3 lines per day, typed or pasted by hand). Its own
+// table, NOT a life_entries kind: it is per day, not per week, and must stay
+// out of the week summary and export. `id` is `${day}:${slot}` with slot 0-2,
+// so two devices can never grow a day past 3 lines.
+export interface LifeDayFocus {
+  id: string
+  day: string // local 'YYYY-MM-DD'
+  slot: number // 0-2
+  title: string
+  done: boolean
+  createdAt: number
+  updatedAt: number
+}
+
 export type LifeEntryKind = 'focus' | 'tracker' | 'sunday' | 'sent' | 'checkin'
 
 export type LifeAnswer = number | boolean | string | null
@@ -372,6 +386,7 @@ export interface OutboxMap {
   links: LinkItem
   life_weeks: LifeWeek
   life_entries: LifeEntry
+  life_day_focus: LifeDayFocus
   meal_entries: MealEntry
   trip_ideas: TripIdea
   trip_companions: TripCompanion
@@ -496,6 +511,7 @@ export const db = new Dexie('dashboard') as Dexie & {
   projectStats: EntityTable<ProjectStat, 'id'>
   lifeWeeks: EntityTable<LifeWeek, 'id'>
   lifeEntries: EntityTable<LifeEntry, 'id'>
+  lifeDayFocus: EntityTable<LifeDayFocus, 'id'>
   eventsCache: EntityTable<EventsCacheRow, 'id'>
   eventMarks: EntityTable<EventMark, 'id'>
   eventPrefs: EntityTable<EventPrefs, 'id'>
@@ -966,6 +982,37 @@ db.version(19).stores({
   projectPrefs: 'id',
   eventInterest: 'id, value',
   eventInterestProfile: 'id',
+})
+
+// v20: lifeDayFocus, today's focus lines (lifeSync.ts). A brand-new empty
+// table: no upgrade callback.
+db.version(20).stores({
+  files: 'id, name, createdAt, synced',
+  shopItems: 'id, done, createdAt, areaId',
+  shopAreas: 'id, createdAt',
+  outbox: '++seq, rowId',
+  climbSessions: 'id, date',
+  climbs: 'id, sessionId, date',
+  habits: 'id, createdAt',
+  habitChecks: 'id, habitId, day, [habitId+day]',
+  todos: 'id, done, createdAt',
+  bookIdeas: 'id, createdAt',
+  boardgameIdeas: 'id, createdAt',
+  links: 'id, read, createdAt, *tags',
+  projectStats: 'id, opens',
+  lifeWeeks: 'id, importedAt',
+  lifeEntries: 'id, week, [week+kind]',
+  eventsCache: 'id',
+  eventMarks: 'id, state, updatedAt',
+  eventPrefs: 'id',
+  tripIdeas: 'id, done, createdAt, *companionIds',
+  tripCompanions: 'id, createdAt',
+  customEvents: 'id, start, updatedAt',
+  meals: 'id, day, createdAt',
+  projectPrefs: 'id',
+  eventInterest: 'id, value',
+  eventInterestProfile: 'id',
+  lifeDayFocus: 'id, day',
 })
 
 // Ask the browser not to evict our data under storage pressure (important on iOS).

@@ -38,7 +38,7 @@ queue: `ROADMAP.md` (`npm run roadmap` lists the open tasks).
 | `customEventsSync.ts` / `eventMarksSync.ts` | `custom_events` / `event_marks` (+ `event_prefs`) (owner-only) |
 | `eventInterestSync.ts` | `event_interest` (owner-only: the 👍 / 👎 on /events with a feature snapshot; a 👎 also writes an `event_marks` hide; never pruned with the events) |
 | `eventInterestProfileSync.ts` | `event_interest_profile` (owner-only: per feature key of the interest model, the seed, a starting guess that fades, and the up/down/mute pins; edited on `/events/interests`, scored by `src/projects/events/interestScore.ts`) |
-| `lifeSync.ts` | `life_entries`, `life_weeks` (owner-only) |
+| `lifeSync.ts` | `life_entries`, `life_weeks`, `life_day_focus` (owner-only) |
 | `mealDiarySync.ts` | `meal_entries` (owner-only) |
 | `projectPrefsSync.ts` | `project_prefs` (per user: the home grid's `starred`/`hidden`; open counts stay in local-only Dexie `projectStats`) |
 | `projectInvites.ts` | `project_invites`, `shareable_projects` + invite RPCs (not an engine table; per-project invite links) |

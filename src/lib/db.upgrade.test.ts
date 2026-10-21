@@ -78,7 +78,7 @@ describe('db upgrade paths', () => {
       },
     )
     await db.open()
-    expect(db.verno).toBe(19)
+    expect(db.verno).toBe(20)
     expect((await db.shopAreas.get(DEFAULT_AREA_ID))?.name).toBe('Groceries')
     const items = await db.shopItems.orderBy('createdAt').toArray()
     expect(items.map((i) => [i.id, i.text, i.areaId])).toEqual([
@@ -119,7 +119,7 @@ describe('db upgrade paths', () => {
       await old.table('outbox').add({ table: 'links', op: 'upsert', rowId: 'l1', ts: 1 })
     })
     await db.open()
-    expect(db.verno).toBe(19)
+    expect(db.verno).toBe(20)
     expect(await db.eventMarks.count()).toBe(2)
     // Prefs written before v15 get updatedAt 0 ("merge me" on the server).
     expect(await db.eventPrefs.get('prefs')).toEqual({ id: 'prefs', favouriteCategories: ['music'], updatedAt: 0 })
@@ -157,7 +157,7 @@ describe('db upgrade paths', () => {
       await old.table('outbox').add({ table: 'links', op: 'upsert', rowId: 'l1', ts: 1 })
     })
     await db.open()
-    expect(db.verno).toBe(19)
+    expect(db.verno).toBe(20)
     expect(await db.projectPrefs.orderBy('id').toArray()).toEqual([
       { id: 'events', starred: 0, hidden: 1, updatedAt: 0 },
       { id: 'links', starred: 1, hidden: null, updatedAt: 0 },
@@ -205,7 +205,7 @@ describe('db upgrade paths', () => {
       await old.table('outbox').add({ table: 'event_marks', op: 'upsert', rowId: 'e1', ts: 1 })
     })
     await db.open()
-    expect(db.verno).toBe(19)
+    expect(db.verno).toBe(20)
     expect(await db.eventInterest.count()).toBe(0)
     expect(await db.eventMarks.get('e1')).toMatchObject({ state: 'hidden', updatedAt: 5 })
     expect(await db.projectPrefs.get('links')).toEqual({ id: 'links', starred: 1, hidden: null, updatedAt: 3 })
@@ -223,7 +223,7 @@ describe('db upgrade paths', () => {
       await old.table('outbox').add({ table: 'event_interest', op: 'upsert', rowId: 'e1', ts: 1 })
     })
     await db.open()
-    expect(db.verno).toBe(19)
+    expect(db.verno).toBe(20)
     expect(await db.eventInterestProfile.count()).toBe(0)
     expect(await db.eventInterest.get('e1')).toMatchObject({ value: -1, updatedAt: 7 })
     expect(await db.eventMarks.get('e1')).toMatchObject({ state: 'hidden', updatedAt: 7 })

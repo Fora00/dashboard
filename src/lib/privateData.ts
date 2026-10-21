@@ -10,6 +10,7 @@ import { db, type OutboxTable } from './db'
 const PRIVATE_TABLES = [
   db.lifeWeeks,
   db.lifeEntries,
+  db.lifeDayFocus,
   db.meals,
   db.customEvents,
   db.eventMarks,
@@ -22,6 +23,7 @@ const PRIVATE_TABLES = [
 const PRIVATE_REMOTES = new Set<OutboxTable>([
   'life_weeks',
   'life_entries',
+  'life_day_focus',
   'meal_entries',
   'custom_events',
   'event_marks',

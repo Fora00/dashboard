@@ -14,6 +14,7 @@ import { HistoryList } from './week/HistoryList'
 import { MonthView } from './week/MonthView'
 import { LastWeekCard } from './week/LastWeekCard'
 import { PastWeek } from './week/PastWeek'
+import { DayFocusSection } from './week/DayFocusSection'
 import { WeekBody } from './week/WeekBody'
 
 // Week screen for the Life project (spec: docs/HANDOFF-life.md). Local-first:
@@ -110,6 +111,7 @@ export function Life() {
       <div>
         {header}
         {lastWeek}
+        <DayFocusSection day={today} />
         <EmptyState
           emoji="🧭"
           title="No plan for this week"
@@ -134,7 +136,7 @@ export function Life() {
     <div>
       {header}
       {lastWeek}
-      <WeekBody week={week} plan={weekRow.plan} entries={entries} readOnly={false} />
+      <WeekBody week={week} plan={weekRow.plan} entries={entries} readOnly={false} dayFocusDay={today} />
       <div className="mt-6">
         <SyncCard sync={sync} />
       </div>

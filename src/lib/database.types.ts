@@ -358,6 +358,36 @@ export type Database = {
         }
         Relationships: []
       }
+      life_day_focus: {
+        Row: {
+          created_at: number
+          day: string
+          done: boolean
+          id: string
+          slot: number
+          title: string
+          updated_at: number
+        }
+        Insert: {
+          created_at: number
+          day: string
+          done?: boolean
+          id: string
+          slot: number
+          title: string
+          updated_at: number
+        }
+        Update: {
+          created_at?: number
+          day?: string
+          done?: boolean
+          id?: string
+          slot?: number
+          title?: string
+          updated_at?: number
+        }
+        Relationships: []
+      }
       life_entries: {
         Row: {
           created_at: number

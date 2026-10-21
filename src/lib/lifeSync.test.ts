@@ -5,15 +5,19 @@ import { drain } from '../test/drain'
 import type { LifePlan } from './db'
 import { LIFE_CAPS } from '../projects/life/model'
 import {
+  addDayFocus,
+  editDayFocus,
   importWeek,
   logTracker,
   markTasksSent,
+  removeDayFocus,
   removeTrackerEntry,
   restoreEntry,
   setCheckin,
   setFocusDone,
   setSundayAnswer,
   setTrackerEnergy,
+  toggleDayFocus,
   toggleFocus,
 } from './lifeSync'
 
@@ -148,5 +152,46 @@ describe('keyed entries', () => {
     expect(after.kind === 'sent' && after.value.sends).toHaveLength(10)
     const b = (await db.lifeEntries.get(`${WEEK}:sent:b`))!
     expect(b.kind === 'sent' && b.value.sends).toHaveLength(1)
+  })
+})
+
+describe("today's focus (life_day_focus)", () => {
+  const DAY = '2026-10-21'
+  const ops = async () => (await db.outbox.toArray()).filter((o) => o.table === 'life_day_focus')
+
+  it('adds up to 3 lines per day into slots; the rest does not fit', async () => {
+    expect(await addDayFocus(DAY, ['Esempio A', '  Esempio B ', '', 'Esempio C', 'Esempio D'])).toBe(3)
+    const rows = await db.lifeDayFocus.where('day').equals(DAY).sortBy('slot')
+    expect(rows.map((r) => [r.id, r.title, r.done])).toEqual([
+      [`${DAY}:0`, 'Esempio A', false],
+      [`${DAY}:1`, 'Esempio B', false],
+      [`${DAY}:2`, 'Esempio C', false],
+    ])
+    expect(await addDayFocus(DAY, ['Esempio E'])).toBe(0)
+    expect(await ops()).toHaveLength(3)
+  })
+
+  it('toggle, edit and delete; a freed slot is reused', async () => {
+    await addDayFocus(DAY, ['Esempio A', 'Esempio B'])
+    expect(await toggleDayFocus(`${DAY}:0`)).toBe(true)
+    expect(await toggleDayFocus(`${DAY}:0`)).toBe(false)
+    await toggleDayFocus(`${DAY}:0`)
+    expect((await db.lifeDayFocus.get(`${DAY}:0`))?.done).toBe(true)
+    await editDayFocus(`${DAY}:1`, ' Esempio B2 ')
+    await editDayFocus(`${DAY}:1`, '   ')
+    expect((await db.lifeDayFocus.get(`${DAY}:1`))?.title).toBe('Esempio B2')
+    await removeDayFocus(`${DAY}:0`)
+    expect(await db.lifeDayFocus.get(`${DAY}:0`)).toBeUndefined()
+    expect(await toggleDayFocus(`${DAY}:0`)).toBeNull()
+    await addDayFocus(DAY, ['Esempio F'])
+    expect((await db.lifeDayFocus.get(`${DAY}:0`))?.title).toBe('Esempio F')
+    expect((await ops()).some((o) => o.op === 'delete')).toBe(true)
+  })
+
+  it('days are independent: nothing is carried over, and the week log is untouched', async () => {
+    await addDayFocus('2026-10-20', ['Esempio A'])
+    await addDayFocus(DAY, ['Esempio B'])
+    expect((await db.lifeDayFocus.where('day').equals(DAY).toArray()).map((r) => r.title)).toEqual(['Esempio B'])
+    expect(await db.lifeEntries.count()).toBe(0)
   })
 })
