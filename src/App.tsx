@@ -36,6 +36,7 @@ const EventInterests = page(() => import('./projects/events/Interests'), 'Intere
 const JoinProject = page(() => import('./projects/join/JoinProject'), 'JoinProject')
 const Life = page(() => import('./projects/life/Life'), 'Life')
 const LifeEditor = page(() => import('./projects/life/LifeEditor'), 'LifeEditor')
+const LifeToday = page(() => import('./projects/life/LifeToday'), 'LifeToday')
 const LifeImport = page(() => import('./projects/life/LifeImport'), 'LifeImport')
 const Links = page(() => import('./projects/links/Links'), 'Links')
 const LocalTransfer = page(() => import('./projects/local-transfer/LocalTransfer'), 'LocalTransfer')
@@ -98,6 +99,7 @@ export default function App() {
           <Route path="/events/shows" element={<Shows />} />
           <Route path="/events/interests" element={<EventInterests />} />
           <Route path="/life" element={<Life />} />
+          <Route path="/life/oggi" element={<LifeToday />} />
           <Route path="/life/import" element={<LifeImport />} />
           <Route path="/life/edit" element={<LifeEditor />} />
           <Route path="/settings" element={<Settings />} />

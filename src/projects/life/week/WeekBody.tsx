@@ -30,7 +30,7 @@ interface WeekBodyProps {
   /** On a read-only past week: the Sunday check and check-ins still take
    *  answers (last week, until Tuesday — see lateEdit.ts). */
   lateEdit?: boolean
-  /** The current week only: today's day key, for "Focus di oggi" (shown right before the weekly Focus). */
+  /** The current week only: today's day key, for "Oggi" (shown right before the weekly Focus). */
   dayFocusDay?: string
 }
 

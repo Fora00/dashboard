@@ -404,6 +404,31 @@ export async function addDayFocus(day: string, titles: string[]): Promise<number
   return added.length
 }
 
+/**
+ * Make a day's focus exactly `titles` (the /oggi command's result): slot i
+ * gets titles[i], a line that is unchanged keeps its done state, slots past
+ * the end are deleted. Blank titles are skipped, at most LIFE_CAPS.dayFocus.
+ */
+export async function setDayFocus(day: string, titles: string[]): Promise<void> {
+  const clean = titles
+    .map((t) => t.trim().slice(0, LIFE_CAPS.dayFocusTitle))
+    .filter((t) => t.length > 0)
+    .slice(0, LIFE_CAPS.dayFocus)
+  const prev = await db.lifeDayFocus.where('day').equals(day).toArray()
+  const bySlot = new Map(prev.map((r) => [r.slot, r]))
+  const now = Date.now()
+  const rows = clean.flatMap((title, slot): LifeDayFocus[] => {
+    const old = bySlot.get(slot)
+    if (old && old.title === title) return []
+    return [
+      { id: dayFocusId(day, slot), day, slot, title, done: false, createdAt: old?.createdAt ?? now, updatedAt: now },
+    ]
+  })
+  if (rows.length > 0) await engine.upsertMany('life_day_focus', rows)
+  const stale = prev.filter((r) => r.slot >= clean.length).map((r) => r.id)
+  if (stale.length > 0) await engine.removeMany('life_day_focus', stale)
+}
+
 /** Tick / untick a day-focus line. Returns the new state (null if it is gone). */
 export async function toggleDayFocus(id: string): Promise<boolean | null> {
   const row = await db.lifeDayFocus.get(id)

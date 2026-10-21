@@ -65,17 +65,20 @@ entries; `life-things-status.ts` ignores it). Code: `model/meals.ts`
 stored in Life tables: the diary stays the source of truth. Estimates are
 marked `≈`; `/meal-reconcile` fills missing values before exporting.
 
-## Focus di oggi (today's focus)
+## Oggi (today's focus)
 
-Up to 3 free-text lines for the current day, shown right above the weekly
-Focus on `#/life` (also when the week has no plan). Added by hand or pasted
-(one per line; bullets, numbering and a leading target emoji are stripped),
-ticked, edited, deleted. Only today's list is shown; nothing carries over to
-the next day. Its own table `life_day_focus` (migration
-`20261021120000_life_day_focus.sql`, RLS `is_owner()` like the other Life
-tables), id `${day}:${slot}` with slot 0-2 so a day can never exceed 3 rows.
-It is NOT in the week plan JSON, the summary or the export. Code:
-`week/DayFocusSection.tsx`, `model/dayFocus.ts`, mutations in `lifeSync.ts`.
+Up to 3 free-text lines for the current day, shown as an amber "☀️ Oggi" card
+right above the weekly Focus on `#/life` (also when the week has no plan).
+There is no input: the `/oggi` command picks the lines from Things and prints a
+link `#/life/oggi?d=<base64url {day,lines}>` (`npm run life:oggi-link`). The
+owner opens it on the Mac, previews, taps Save (replaces that day's lines,
+keeps ticks of unchanged lines); sync carries it to the phone. On the page the
+lines can be ticked or deleted. Only today's list is shown; nothing carries
+over. Own table `life_day_focus` (migration `20261021120000_life_day_focus.sql`,
+RLS `is_owner()`), id `${day}:${slot}` with slot 0-2 so a day never exceeds 3
+rows. NOT in the week plan JSON, the summary or the export. Code:
+`week/DayFocusSection.tsx`, `LifeToday.tsx`, `model/dayFocus.ts`,
+`model/dayFocusLink.ts`, `setDayFocus` in `lifeSync.ts`.
 
 ## 2.1 Import the week (pasted JSON)
 
