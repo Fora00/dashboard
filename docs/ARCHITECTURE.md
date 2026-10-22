@@ -10,6 +10,7 @@ queue: `ROADMAP.md` (`npm run roadmap` lists the open tasks).
 | `src/lib/projects.ts` | Registry (home grid); `isInvitable()` decides what `/sharing` can grant |
 | `src/App.tsx` | One route per project (HashRouter, `base: '/dashboard/'`) |
 | `src/projects/<id>/` | One folder per project (UI, model, tests) |
+| `src/projects/learning/` | Course engine: static content in `courses/` (one data file + one line per course), learner state in Dexie (`learning*` tables, synced owner-only by `learningSync.ts`) |
 | `src/lib/db.ts` | The ONE shared Dexie database (local-first, every page works offline/signed out) |
 | `src/lib/cloudSync.ts` | Generic sync engine: Dexie outbox, flush on reconnect/foreground, pull remote as truth, realtime |
 | `src/lib/*Sync.ts` | Per-project glue on top of the engine (below) |
@@ -38,6 +39,7 @@ queue: `ROADMAP.md` (`npm run roadmap` lists the open tasks).
 | `customEventsSync.ts` / `eventMarksSync.ts` | `custom_events` / `event_marks` (+ `event_prefs`) (owner-only) |
 | `eventInterestSync.ts` | `event_interest` (owner-only: the 👍 / 👎 on /events with a feature snapshot; a 👎 also writes an `event_marks` hide; never pruned with the events) |
 | `eventInterestProfileSync.ts` | `event_interest_profile` (owner-only: per feature key of the interest model, the seed, a starting guess that fades, and the up/down/mute pins; edited on `/events/interests`, scored by `src/projects/events/interestScore.ts`) |
+| `learningSync.ts` | `learning_quiz`, `learning_cards`, `learning_practice` (owner-only: the learner's progress; content is static bundle data) |
 | `lifeSync.ts` | `life_entries`, `life_weeks`, `life_day_focus` (owner-only) |
 | `mealDiarySync.ts` | `meal_entries` (owner-only) |
 | `projectPrefsSync.ts` | `project_prefs` (per user: the home grid's `starred`/`hidden`; open counts stay in local-only Dexie `projectStats`) |
@@ -50,7 +52,7 @@ queue: `ROADMAP.md` (`npm run roadmap` lists the open tasks).
   invite links (`#/join/p/<token>`). Applies to almost every synced project.
   A new synced project needs a row in `public.shareable_projects`.
 - **`shop_area_members`**: per shop area (shop-list only), its own invite links.
-- **Owner-only**: Life and meal-diary (`ownerOnly` in the registry), plus `/sharing`; settings is device-only.
+- **Owner-only**: Life, Learning and meal-diary (`ownerOnly` in the registry), plus `/sharing`; settings is device-only.
   Also gated by `is_owner()` while their page is public: the events tables
   `custom_events`, `event_marks`, `event_prefs`, `event_interest` and
   `event_interest_profile`. On any

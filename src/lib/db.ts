@@ -322,6 +322,41 @@ export interface LifeDayFocus {
   updatedAt: number
 }
 
+// Learning (src/projects/learning): the learner's state (synced, owner-only,
+// via learningSync.ts).
+// Course content is static bundle data; `id` is `${courseId}:${moduleId}:${itemId}`
+// (see learning/progress.ts `itemKey`, itemId = the item's stable id in the
+// course data), so one row per item, two devices answering the same item
+// converge on one row, and the engine addresses rows by id alone (lifeSync.ts
+// pattern, owner-only). A card row exists only while the card is known.
+export interface LearningQuizAnswer {
+  id: string
+  courseId: string
+  moduleId: string
+  itemId: string
+  selected: number
+  correct: 0 | 1
+  updatedAt: number
+}
+
+export interface LearningCard {
+  id: string
+  courseId: string
+  moduleId: string
+  itemId: string
+  updatedAt: number
+}
+
+export interface LearningPractice {
+  id: string
+  courseId: string
+  moduleId: string
+  itemId: string
+  done: 0 | 1
+  notes: string
+  updatedAt: number
+}
+
 export type LifeEntryKind = 'focus' | 'tracker' | 'sunday' | 'sent' | 'checkin'
 
 export type LifeAnswer = number | boolean | string | null
@@ -387,6 +422,9 @@ export interface OutboxMap {
   life_weeks: LifeWeek
   life_entries: LifeEntry
   life_day_focus: LifeDayFocus
+  learning_quiz: LearningQuizAnswer
+  learning_cards: LearningCard
+  learning_practice: LearningPractice
   meal_entries: MealEntry
   trip_ideas: TripIdea
   trip_companions: TripCompanion
@@ -512,6 +550,9 @@ export const db = new Dexie('dashboard') as Dexie & {
   lifeWeeks: EntityTable<LifeWeek, 'id'>
   lifeEntries: EntityTable<LifeEntry, 'id'>
   lifeDayFocus: EntityTable<LifeDayFocus, 'id'>
+  learningQuiz: EntityTable<LearningQuizAnswer, 'id'>
+  learningCards: EntityTable<LearningCard, 'id'>
+  learningPractice: EntityTable<LearningPractice, 'id'>
   eventsCache: EntityTable<EventsCacheRow, 'id'>
   eventMarks: EntityTable<EventMark, 'id'>
   eventPrefs: EntityTable<EventPrefs, 'id'>
@@ -1013,6 +1054,41 @@ db.version(20).stores({
   eventInterest: 'id, value',
   eventInterestProfile: 'id',
   lifeDayFocus: 'id, day',
+})
+
+// v21: learning progress (src/projects/learning, synced owner-only by
+// learningSync.ts). Brand-new empty
+// tables: no upgrade callback.
+db.version(21).stores({
+  files: 'id, name, createdAt, synced',
+  shopItems: 'id, done, createdAt, areaId',
+  shopAreas: 'id, createdAt',
+  outbox: '++seq, rowId',
+  climbSessions: 'id, date',
+  climbs: 'id, sessionId, date',
+  habits: 'id, createdAt',
+  habitChecks: 'id, habitId, day, [habitId+day]',
+  todos: 'id, done, createdAt',
+  bookIdeas: 'id, createdAt',
+  boardgameIdeas: 'id, createdAt',
+  links: 'id, read, createdAt, *tags',
+  projectStats: 'id, opens',
+  lifeWeeks: 'id, importedAt',
+  lifeEntries: 'id, week, [week+kind]',
+  eventsCache: 'id',
+  eventMarks: 'id, state, updatedAt',
+  eventPrefs: 'id',
+  tripIdeas: 'id, done, createdAt, *companionIds',
+  tripCompanions: 'id, createdAt',
+  customEvents: 'id, start, updatedAt',
+  meals: 'id, day, createdAt',
+  projectPrefs: 'id',
+  eventInterest: 'id, value',
+  eventInterestProfile: 'id',
+  lifeDayFocus: 'id, day',
+  learningQuiz: 'id, courseId, [courseId+moduleId]',
+  learningCards: 'id, courseId, [courseId+moduleId]',
+  learningPractice: 'id, courseId, [courseId+moduleId]',
 })
 
 // Ask the browser not to evict our data under storage pressure (important on iOS).

@@ -29,6 +29,7 @@ test('every route renders without an error screen, signed out', async ({ page })
     'shop-list',
     'links',
     'life',
+    'learning',
     'meal-diary',
     'events',
     'events/interests',

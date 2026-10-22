@@ -8,6 +8,7 @@ import { sync as eventInterest } from './eventInterestSync'
 import { sync as eventInterestProfile } from './eventInterestProfileSync'
 import { sync as eventMarks } from './eventMarksSync'
 import { sync as habits } from './habitSync'
+import { sync as learning } from './learningSync'
 import { sync as life } from './lifeSync'
 import { sync as links } from './linksSync'
 import { sync as mealDiary } from './mealDiarySync'
@@ -34,6 +35,7 @@ export const watchedEngines: readonly WatchedEngine[] = [
   { label: 'Boardgame ideas', path: '/boardgame-ideas', sync: boardgameIdeas },
   { label: 'Links', path: '/links', sync: links },
   { label: 'Life', path: '/life', sync: life },
+  { label: 'Learning', path: '/learning', sync: learning },
   { label: 'Meal diary', path: '/meal-diary', sync: mealDiary },
   { label: 'Trips', path: '/trips', sync: trips },
   { label: 'Events', path: '/events', sync: customEvents },

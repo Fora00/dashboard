@@ -93,6 +93,11 @@
       "icon": "dice-5",
       "color": "#ef4444",
       "area": "svago"
+    },
+    "learning": {
+      "icon": "graduation-cap",
+      "color": "#8b5cf6",
+      "area": "organizzazione"
     }
   },
   "extras": {

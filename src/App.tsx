@@ -9,6 +9,7 @@ import { startEventInterestSync } from './lib/eventInterestSync'
 import { startEventInterestProfileSync } from './lib/eventInterestProfileSync'
 import { startEventMarksSync } from './lib/eventMarksSync'
 import { startHabitSync } from './lib/habitSync'
+import { startLearningSync } from './lib/learningSync'
 import { startLifeSync } from './lib/lifeSync'
 import { startLinksSync } from './lib/linksSync'
 import { startMealDiarySync } from './lib/mealDiarySync'
@@ -38,6 +39,7 @@ const Life = page(() => import('./projects/life/Life'), 'Life')
 const LifeEditor = page(() => import('./projects/life/LifeEditor'), 'LifeEditor')
 const LifeToday = page(() => import('./projects/life/LifeToday'), 'LifeToday')
 const LifeImport = page(() => import('./projects/life/LifeImport'), 'LifeImport')
+const Learning = page(() => import('./projects/learning/Learning'), 'Learning')
 const Links = page(() => import('./projects/links/Links'), 'Links')
 const LocalTransfer = page(() => import('./projects/local-transfer/LocalTransfer'), 'LocalTransfer')
 const Settings = page(() => import('./projects/settings/Settings'), 'Settings')
@@ -67,6 +69,7 @@ export default function App() {
       startBoardgameIdeasSync(),
       startLinksSync(),
       startLifeSync(),
+      startLearningSync(),
       startMealDiarySync(),
       startTripsSync(),
       startCustomEventsSync(),
@@ -98,6 +101,7 @@ export default function App() {
           <Route path="/events" element={<Events />} />
           <Route path="/events/shows" element={<Shows />} />
           <Route path="/events/interests" element={<EventInterests />} />
+          <Route path="/learning/*" element={<Learning />} />
           <Route path="/life" element={<Life />} />
           <Route path="/life/oggi" element={<LifeToday />} />
           <Route path="/life/import" element={<LifeImport />} />

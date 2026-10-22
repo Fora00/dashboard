@@ -1,6 +1,6 @@
 // Icon data for the project registry.
 //
-// These 14 icons are copied from Lucide (https://lucide.dev), licensed under
+// These 15 icons are copied from Lucide (https://lucide.dev), licensed under
 // the ISC licence: https://github.com/lucide-icons/lucide/blob/main/LICENSE
 // (Copyright (c) Lucide Contributors; portions Copyright (c) 2013-2022 Cole
 // Bemis, MIT/Feather). All are 24x24, stroke currentColor, stroke width 2.
@@ -113,6 +113,16 @@ export const projectIcons: Record<string, readonly IconElement[]> = {
       },
     ],
     ['circle', { cx: '12', cy: '10', r: '3' }],
+  ],
+  'graduation-cap': [
+    [
+      'path',
+      {
+        d: 'M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z',
+      },
+    ],
+    ['path', { d: 'M22 10v6' }],
+    ['path', { d: 'M6 12.5V16a6 3 0 0 0 12 0v-3.5' }],
   ],
   'book-open': [
     ['path', { d: 'M12 5v16' }],

@@ -194,6 +194,20 @@ export const projects: ProjectMeta[] = [
     ownerOnly: true,
   },
   {
+    id: 'learning',
+    name: 'Learning',
+    emoji: '🎓',
+    area: 'organizzazione',
+    icon: 'graduation-cap',
+    color: '#8b5cf6',
+    description:
+      'Courses with lessons, quizzes, flashcards and spoken practice. Synced across your devices. Owner only.',
+    path: '/learning',
+    status: 'live',
+    layout: 'narrow',
+    ownerOnly: true,
+  },
+  {
     id: 'settings',
     name: 'Settings',
     emoji: '⚙️',

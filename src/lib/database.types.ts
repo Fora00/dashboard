@@ -358,6 +358,90 @@ export type Database = {
         }
         Relationships: []
       }
+      learning_cards: {
+        Row: {
+          course_id: string
+          id: string
+          item_id: string
+          module_id: string
+          updated_at: number
+        }
+        Insert: {
+          course_id: string
+          id: string
+          item_id: string
+          module_id: string
+          updated_at: number
+        }
+        Update: {
+          course_id?: string
+          id?: string
+          item_id?: string
+          module_id?: string
+          updated_at?: number
+        }
+        Relationships: []
+      }
+      learning_practice: {
+        Row: {
+          course_id: string
+          done: boolean
+          id: string
+          item_id: string
+          module_id: string
+          notes: string
+          updated_at: number
+        }
+        Insert: {
+          course_id: string
+          done?: boolean
+          id: string
+          item_id: string
+          module_id: string
+          notes?: string
+          updated_at: number
+        }
+        Update: {
+          course_id?: string
+          done?: boolean
+          id?: string
+          item_id?: string
+          module_id?: string
+          notes?: string
+          updated_at?: number
+        }
+        Relationships: []
+      }
+      learning_quiz: {
+        Row: {
+          correct: boolean
+          course_id: string
+          id: string
+          item_id: string
+          module_id: string
+          selected: number
+          updated_at: number
+        }
+        Insert: {
+          correct: boolean
+          course_id: string
+          id: string
+          item_id: string
+          module_id: string
+          selected: number
+          updated_at: number
+        }
+        Update: {
+          correct?: boolean
+          course_id?: string
+          id?: string
+          item_id?: string
+          module_id?: string
+          selected?: number
+          updated_at?: number
+        }
+        Relationships: []
+      }
       life_day_focus: {
         Row: {
           created_at: number

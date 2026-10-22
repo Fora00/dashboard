@@ -4,13 +4,16 @@ import { db, type OutboxTable } from './db'
 // (local-first: signing out never deletes anything by itself). SyncCard offers
 // to remove it from the device right after a sign-out; it is NEVER run
 // automatically. Keep in sync with the owner-only synced tables (Life, Meal
-// Diary, the owner's custom events, event marks/prefs, event interests and the interest profile).
+// Diary, Learning progress, the owner's custom events, event marks/prefs, event interests and the interest profile).
 
 /** Local Dexie tables holding owner-only data. */
 const PRIVATE_TABLES = [
   db.lifeWeeks,
   db.lifeEntries,
   db.lifeDayFocus,
+  db.learningQuiz,
+  db.learningCards,
+  db.learningPractice,
   db.meals,
   db.customEvents,
   db.eventMarks,
@@ -24,6 +27,9 @@ const PRIVATE_REMOTES = new Set<OutboxTable>([
   'life_weeks',
   'life_entries',
   'life_day_focus',
+  'learning_quiz',
+  'learning_cards',
+  'learning_practice',
   'meal_entries',
   'custom_events',
   'event_marks',
