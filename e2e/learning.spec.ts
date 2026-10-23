@@ -4,7 +4,7 @@ import { expect, test } from '@playwright/test'
 
 test('a quiz answer persists across a reload and moves the progress', async ({ page }) => {
   await page.goto('#/learning')
-  await page.getByRole('link', { name: /Backend Interview Lab/ }).click()
+  await page.getByRole('link', { name: /Interview Lab/ }).click()
   await expect(page.getByRole('progressbar', { name: 'Progresso complessivo' })).toHaveAttribute('aria-valuenow', '0')
 
   await page
@@ -28,7 +28,7 @@ test('a quiz answer persists across a reload and moves the progress', async ({ p
 
 test('flashcards: "Lo so" removes the card from the deck and survives a reload', async ({ page }) => {
   await page.goto('#/learning')
-  await page.getByRole('link', { name: /Backend Interview Lab/ }).click()
+  await page.getByRole('link', { name: /Interview Lab/ }).click()
   await page
     .getByRole('link', { name: /HTTP e REST/ })
     .first()

@@ -1594,13 +1594,1740 @@ export const modules: CourseModule[] = [
     ],
   },
   {
+    id: 'jsts',
+    title: 'JavaScript e TypeScript a fondo',
+    subtitle: 'Closure, this, event loop del browser, coercion, Promise, tipi avanzati',
+    group: 'fe',
+    vault:
+      'Nel vault: <b>javascript/closures-scope</b>, <b>async-promises</b>, <b>javascript-gotchas</b>, <b>iterators-generators</b>, <b>sets-and-maps</b> e <b>typescript</b> (advanced types, Zod).',
+    lesson:
+      '<p class="lead">Anche se il colloquio non è profondo sul linguaggio, queste domande escono sempre come aperture. Le risposte devono durare trenta secondi e avere un esempio.</p>\n<h3>Closure</h3><p>Una funzione che ricorda le variabili dello scope in cui è stata creata, anche dopo che quello scope è finito. Serve per stato privato, factory, debounce, hook.</p>\n<pre><code>function counter() {\n  let n = 0;\n  return () =&gt; ++n;      // n sopravvive tra le chiamate\n}\nconst c = counter(); c(); c(); // 1, 2\n\nfor (var i = 0; i &lt; 3; i++) setTimeout(() =&gt; console.log(i)); // 3 3 3\nfor (let i = 0; i &lt; 3; i++) setTimeout(() =&gt; console.log(i)); // 0 1 2</code></pre>\n<p>Con <code>var</code> c\'è una sola variabile per tutto il ciclo; con <code>let</code> ogni iterazione ha la sua.</p>\n<h3>this: quattro regole in ordine</h3><ol><li><code>new F()</code>: <code>this</code> è l\'oggetto nuovo.</li><li><code>call / apply / bind</code>: <code>this</code> è quello passato.</li><li>Chiamata come metodo <code>obj.f()</code>: <code>this</code> è <code>obj</code>.</li><li>Altrimenti: <code>undefined</code> (strict) o l\'oggetto globale.</li></ol>\n<p>Le <b>arrow function</b> non hanno un loro <code>this</code>: prendono quello dello scope in cui sono scritte. Per questo sono ottime nelle callback e sbagliate come metodi di un oggetto.</p>\n<h3>Prototipi</h3><p>Ogni oggetto ha un link nascosto a un altro oggetto (il prototipo). Se una proprietà non c\'è, JS risale la catena. <code>class</code> è zucchero sintattico sui prototipi; i metodi stanno sul prototipo, non su ogni istanza.</p>\n<h3>Event loop nel browser</h3><p>Ordine: codice sincrono, poi <b>tutte</b> le microtask (promise, <code>queueMicrotask</code>), poi eventualmente il rendering, poi <b>una</b> macrotask (<code>setTimeout</code>, eventi, I/O). Le microtask passano davanti ai timer anche con ritardo 0.</p>\n<pre><code>console.log(1);\nsetTimeout(() =&gt; console.log(2), 0);\nPromise.resolve().then(() =&gt; console.log(3));\nconsole.log(4);\n// 1 4 3 2</code></pre>\n<p>Conseguenza pratica: un lavoro lungo sul main thread blocca input e rendering. Si spezza, si sposta in un Web Worker o si usa <code>requestIdleCallback</code>.</p>\n<h3>Coercion e confronti</h3><ul><li>Usa <code>===</code>. <code>null == undefined</code> è l\'unico <code>==</code> accettabile.</li><li><code>typeof null === "object"</code>, <code>NaN !== NaN</code> (usa <code>Number.isNaN</code>).</li><li><code>[10, 9, 1].sort()</code> ordina come stringhe: <code>[1, 10, 9]</code>. Serve <code>(a, b) =&gt; a - b</code>.</li><li>Valori falsy: <code>false, 0, "", null, undefined, NaN, 0n</code>. <code>[]</code> e <code>{}</code> sono truthy.</li></ul>\n<h3>Promise: combinatori</h3><div class="tblw"><table><tr><th>Metodo</th><th>Risolve quando</th><th>Rifiuta quando</th></tr><tr><td>all</td><td>tutte ok</td><td>la prima fallisce</td></tr><tr><td>allSettled</td><td>tutte finite (ok o no)</td><td>mai</td></tr><tr><td>race</td><td>la prima finisce</td><td>se la prima è un errore</td></tr><tr><td>any</td><td>la prima ok</td><td>tutte falliscono</td></tr></table></div>\n<p>Errore tipico: <code>await</code> dentro un <code>for</code> quando le richieste sono indipendenti. Sono sequenziali; con <code>Promise.all(items.map(...))</code> partono insieme.</p>\n<h3>TypeScript che si chiede davvero</h3><ul><li><b>unknown vs any</b>: <code>any</code> spegne il controllo; <code>unknown</code> obbliga a restringere il tipo prima dell\'uso. Le risposte API sono <code>unknown</code> finché non le validi (Zod).</li><li><b>Narrowing</b>: <code>typeof</code>, <code>in</code>, <code>instanceof</code>, controlli di uguaglianza, type guard <code>x is T</code>.</li><li><b>Discriminated union</b>: un campo letterale comune che permette di restringere. Ottimo per gli stati di una richiesta.</li><li><b>Generics</b>: tipi che dipendono da un parametro, con vincoli (<code>T extends { id: string }</code>).</li><li><b>Utility types</b>: <code>Partial, Required, Pick, Omit, Record, ReturnType, Awaited, NonNullable</code>.</li><li><b>as const</b> e <b>satisfies</b>: mantieni i letterali, controlla la forma senza allargare il tipo.</li><li>I tipi sono <b>cancellati a runtime</b>: non proteggono dai dati che arrivano dalla rete.</li></ul>\n<pre><code>type State&lt;T&gt; =\n  | { status: "loading" }\n  | { status: "error"; error: Error }\n  | { status: "ok"; data: T };\n\nfunction render(s: State&lt;User&gt;) {\n  switch (s.status) {\n    case "loading": return "...";\n    case "error":   return s.error.message;   // qui s ha error\n    case "ok":      return s.data.name;       // qui s ha data\n  }\n}</code></pre>\n<div class="say"><b>Come dirlo</b>"Preferisco unknown ad any e valido ai confini con Zod: i tipi spariscono a runtime, quindi il confine con la rete va controllato, non solo tipizzato."</div>',
+    quiz: [
+      {
+        id: 'q1',
+        q: 'Cosa stampa: for (var i=0;i<3;i++) setTimeout(()=>console.log(i))?',
+        options: ['3 3 3', 'Niente', '0 1 2', '2 2 2'],
+        answer: 0,
+        explanation:
+          'Una sola <code>i</code> condivisa: quando i timer partono il ciclo è finito e <code>i</code> vale 3. Con <code>let</code> sarebbe 0 1 2.',
+      },
+      {
+        id: 'q2',
+        q: 'Ordine di output: log 1; setTimeout(log 2, 0); Promise.then(log 3); log 4.',
+        options: ['1 4 3 2', '1 2 3 4', '1 3 4 2', '1 4 2 3'],
+        answer: 0,
+        explanation: 'Prima il sincrono (1, 4), poi le microtask (3), poi la macrotask del timer (2).',
+      },
+      {
+        id: 'q3',
+        q: 'const o = { n: 1, f: () => this.n }; Cosa dà o.f()?',
+        options: ['undefined (o un errore)', '1', 'o', 'null'],
+        answer: 0,
+        explanation:
+          "L'arrow function non ha il suo <code>this</code>: usa quello dello scope esterno, non <code>o</code>. Qui non è <code>o.n</code>.",
+      },
+      {
+        id: 'q4',
+        q: 'Qual è il risultato di [10, 9, 1].sort()?',
+        options: ['[10, 9, 1]', '[1, 9, 10]', '[1, 10, 9]', 'Errore'],
+        answer: 2,
+        explanation: 'Senza comparatore ordina come stringhe: "1" &lt; "10" &lt; "9".',
+      },
+      {
+        id: 'q5',
+        q: 'Hai tre richieste indipendenti e vuoi i risultati anche se una fallisce. Cosa usi?',
+        options: ['Promise.race', 'Promise.all', 'await in un for', 'Promise.allSettled'],
+        answer: 3,
+        explanation:
+          '<code>allSettled</code> non rifiuta mai e restituisce stato e valore/motivo di ciascuna. <code>all</code> si ferma alla prima fallita.',
+      },
+      {
+        id: 'q6',
+        q: 'Perché una risposta API tipizzata in TS può comunque rompersi a runtime?',
+        options: [
+          'I tipi sono cancellati in compilazione e non validano i dati reali',
+          'I generics non funzionano con fetch',
+          'TS è lento',
+          'Per colpa di any soltanto',
+        ],
+        answer: 0,
+        explanation:
+          'Il tipo è una promessa fatta dal programmatore. Per verificarla serve validazione a runtime (Zod, valibot) ai confini.',
+      },
+    ],
+    cards: [
+      {
+        id: 'c1',
+        front: "Cos'è una closure?",
+        back: 'Una funzione che mantiene accesso alle variabili del suo scope di creazione anche dopo la sua uscita. Esempio: counter(), debounce, hook di React (e il loro bug classico: stale closure).',
+      },
+      {
+        id: 'c2',
+        front: 'Come si decide this?',
+        back: 'new, poi call/apply/bind, poi chiamata come metodo, altrimenti undefined/globale. Le arrow lo prendono dallo scope lessicale.',
+      },
+      {
+        id: 'c3',
+        front: 'Microtask vs macrotask',
+        back: 'Microtask (promise, queueMicrotask) si svuotano tutte prima del rendering e prima della prossima macrotask (timer, eventi, I/O).',
+      },
+      {
+        id: 'c4',
+        front: 'unknown vs any',
+        back: 'any disattiva i controlli. unknown accetta tutto ma obbliga a restringere prima di usarlo. Preferisci unknown ai confini.',
+      },
+      {
+        id: 'c5',
+        front: 'Discriminated union',
+        back: 'Unione di oggetti con un campo letterale comune (status, type). Lo switch su quel campo restringe il tipo. Ideale per loading/error/ok.',
+      },
+      {
+        id: 'c6',
+        front: 'Utility types da sapere',
+        back: 'Partial, Required, Pick, Omit, Record, ReturnType, Awaited, NonNullable. Esempio: Omit&lt;User, "password"&gt; per la risposta pubblica.',
+      },
+      {
+        id: 'c7',
+        front: 'Differenza tra == e ===',
+        back: '== fa coercion, === no. Usa sempre === (eccezione: x == null per null o undefined).',
+      },
+    ],
+    practice: [
+      {
+        id: 'p1',
+        question: "Spiegami l'event loop del browser con un esempio.",
+        answer:
+          "Un thread per il JS. Dopo il sincrono si svuotano le microtask (promise), poi il browser può renderizzare, poi una macrotask (timer, evento). Fai l'esempio 1 4 3 2 e chiudi con la conseguenza: non bloccare il main thread (task lunghi, Web Worker, spezzare il lavoro).",
+      },
+      {
+        id: 'p2',
+        question: "Cos'è una closure e dove la usi davvero?",
+        answer:
+          'Definizione in una frase, poi due usi concreti: debounce (il timer vive nella closure) e gli hook di React (ogni render ha le sue variabili, da cui lo stale closure nelle useEffect). Mostra che sai anche il bug.',
+      },
+      {
+        id: 'p3',
+        question: "Come tipizzi la risposta di un'API che non controlli?",
+        answer:
+          'La tratto come unknown, la valido con uno schema Zod ai confini e ricavo il tipo con z.infer. Così tipo e validazione non divergono. Aggiungi: lo stesso schema può servire anche al backend (se condividono il pacchetto).',
+      },
+    ],
+  },
+  {
+    id: 'react',
+    title: 'React a livello senior',
+    subtitle: 'Render e commit, key, hook, useEffect, composizione, React 18/19',
+    group: 'fe',
+    vault:
+      'Nel vault: <b>react/react-rendering-internals</b>, <b>hooks</b>, <b>performance</b>, <b>error-boundaries-suspense</b>, <b>react-refs-imperative-patterns</b>, <b>component-api-design</b>, <b>server-components</b>.',
+    lesson:
+      '<p class="lead">Il livello senior in React non è conoscere più hook, è sapere <b>quando un componente si ridisegna e perché</b>, e quando non serve un effetto.</p>\n<h3>Render e commit</h3><ol><li><b>Render</b>: React chiama le funzioni dei componenti e costruisce il nuovo albero di elementi. Deve essere puro e può essere interrotto.</li><li><b>Reconciliation</b>: confronta il nuovo albero con il vecchio (O(n): tipo diverso = rimonta, stessa posizione e stessa key = aggiorna).</li><li><b>Commit</b>: applica al DOM solo le differenze, poi esegue <code>useLayoutEffect</code> (prima del paint) e <code>useEffect</code> (dopo).</li></ol>\n<p>"Il componente si è ridisegnato" non significa "il DOM è cambiato".</p>\n<h3>Quando un componente si ridisegna</h3><ul><li>Il suo stato cambia (con un nuovo riferimento: un oggetto uguale ma nuovo conta come cambiamento).</li><li>Il <b>genitore</b> si ridisegna, anche se le props sono identiche (a meno di <code>React.memo</code>).</li><li>Un <b>context</b> che consuma cambia valore (tutti i consumer, anche se leggono una parte sola).</li></ul>\n<h3>Le key</h3><p>La key è l\'identità. Con indice come key, inserire in testa fa "scivolare" stato e focus sulla riga sbagliata. Cambiare la key di un componente è il modo corretto per <b>resettarlo</b> (es. form di un\'altra entità).</p>\n<h3>useEffect: la regola</h3><p>Un effetto serve per <b>sincronizzarsi con qualcosa fuori da React</b> (rete, DOM, timer, subscription). Non serve per derivare stato da altro stato né per rispondere a un click.</p>\n<pre><code>// Sbagliato: stato derivato in un effetto (render in più, più bug)\nuseEffect(() =&gt; setFull(first + " " + last), [first, last]);\n// Giusto: calcolalo nel render\nconst full = first + " " + last;\n\n// Fetch con cleanup (race condition evitata)\nuseEffect(() =&gt; {\n  const ctrl = new AbortController();\n  fetch("/api/u/" + id, { signal: ctrl.signal }).then(r =&gt; r.json()).then(setUser);\n  return () =&gt; ctrl.abort();\n}, [id]);</code></pre>\n<ul><li><b>Stale closure</b>: l\'effetto vede lo stato del render in cui è nato. Soluzioni: dipendenze corrette, forma funzionale <code>setX(x =&gt; x + 1)</code>, ref.</li><li><b>Dipendenze</b>: un oggetto/array/funzione creato nel render è "nuovo" a ogni render. Stabilizza o sposta fuori.</li><li><b>StrictMode</b> in sviluppo esegue effetti due volte per scovare cleanup mancanti. Non è un bug.</li></ul>\n<h3>Memoizzazione: quando sì</h3><p>Prima misura (Profiler). <code>useMemo / useCallback / memo</code> servono se: il valore è dipendenza di un altro hook, viene passato a un figlio in <code>memo</code>, o il calcolo è davvero costoso. Spesso basta <b>spostare lo stato più in basso</b> o passare i figli come <code>children</code>.</p>\n<h3>Composizione e API dei componenti</h3><ul><li><b>children</b> e slot al posto di mille prop booleane.</li><li><b>Compound components</b> (<code>&lt;Tabs&gt;&lt;Tabs.List/&gt;</code>) con context interno.</li><li><b>Controlled vs uncontrolled</b>: il valore vive nel genitore (<code>value + onChange</code>) o nel DOM/componente (<code>defaultValue</code>, ref).</li><li><b>Custom hook</b> per riusare logica con stato, non per nascondere un effetto.</li></ul>\n<h3>React 18 e 19 in breve</h3><ul><li><code>useTransition / useDeferredValue</code>: aggiornamenti non urgenti, l\'input resta fluido.</li><li>Rendering concorrente e batching automatico.</li><li><b>Suspense</b> per attesa dichiarativa; <b>Error Boundary</b> per errori di render (non coprono eventi e codice async).</li><li>React 19: <code>use</code>, Actions e <code>useActionState</code>, <code>useOptimistic</code>, <code>ref</code> come prop. Citali solo se li hai provati.</li></ul>\n<div class="say"><b>Come dirlo</b>"Prima di aggiungere memo guardo il Profiler. Di solito il problema è dove vive lo stato, non la mancanza di memoizzazione."</div>',
+    quiz: [
+      {
+        id: 'q1',
+        q: 'Un componente padre si ridisegna. I figli con props identiche...',
+        options: [
+          'Si ridisegnano, salvo React.memo',
+          'Si rimontano',
+          'Non si ridisegnano mai',
+          'Si ridisegnano solo se usano state',
+        ],
+        answer: 0,
+        explanation:
+          'Per default il re-render scende a tutti i discendenti. <code>React.memo</code> lo interrompe se le props sono shallow-uguali.',
+      },
+      {
+        id: 'q2',
+        q: "Perché usare l'indice come key in una lista riordinabile è un problema?",
+        options: [
+          'React abbina i nodi per posizione: stato e focus finiscono sulla riga sbagliata',
+          'È lento',
+          'Non compila',
+          'Duplica il DOM',
+        ],
+        answer: 0,
+        explanation: "La key è l'identità. Con l'indice l'identità cambia quando cambia l'ordine.",
+      },
+      {
+        id: 'q3',
+        q: 'Dove va il calcolo di fullName = first + " " + last?',
+        options: ['Direttamente nel render', 'In un context', 'In useMemo sempre', 'In useEffect con setState'],
+        answer: 0,
+        explanation:
+          'Lo stato derivato si calcola durante il render. Un effetto aggiunge un render inutile e può mostrare un valore vecchio.',
+      },
+      {
+        id: 'q4',
+        q: "Come resetti tutto lo stato interno di un form quando cambia l'utente selezionato?",
+        options: [
+          'Cambi la key del componente',
+          'Non si può',
+          'useEffect che chiama setState per ogni campo',
+          'Usi useMemo',
+        ],
+        answer: 0,
+        explanation: "Una key diversa rimonta l'istanza e azzera lo stato interno.",
+      },
+      {
+        id: 'q5',
+        q: 'Un setInterval in useEffect con [] stampa sempre lo stesso count. Perché?',
+        options: [
+          'Manca il cleanup',
+          'Bug di React',
+          "Stale closure: l'effetto ha catturato il count del primo render",
+          'Il timer è lento',
+        ],
+        answer: 2,
+        explanation: 'Soluzioni: forma funzionale <code>setCount(c =&gt; c + 1)</code>, dipendenze corrette o un ref.',
+      },
+      {
+        id: 'q6',
+        q: 'Un Error Boundary intercetta...',
+        options: ['Errori durante il render dei figli', 'Tutto', 'Errori in una fetch async', 'Errori in onClick'],
+        answer: 0,
+        explanation:
+          'Solo errori di render, lifecycle e costruttori dei discendenti. Eventi e codice async vanno in try/catch.',
+      },
+    ],
+    cards: [
+      {
+        id: 'c1',
+        front: 'Render phase vs commit phase',
+        back: "Render: puro, calcola l'albero, interrompibile. Commit: tocca il DOM, esegue layout effect poi effect, sincrono.",
+      },
+      {
+        id: 'c2',
+        front: 'Quando serve davvero useEffect?',
+        back: 'Per sincronizzarsi con sistemi esterni: rete, DOM, timer, subscription. Non per stato derivato o gestori di eventi.',
+      },
+      {
+        id: 'c3',
+        front: 'useMemo/useCallback: quando?',
+        back: 'Dipendenza di un altro hook, prop per un figlio in memo, calcolo costoso misurato. Altrimenti è rumore.',
+      },
+      {
+        id: 'c4',
+        front: 'Controlled vs uncontrolled',
+        back: "Controlled: valore nello stato React, value + onChange. Uncontrolled: lo tiene il DOM, lo leggi con ref o FormData. Per form grandi l'uncontrolled (react-hook-form) evita re-render a ogni tasto.",
+      },
+      {
+        id: 'c5',
+        front: 'Perché il context fa re-render',
+        back: 'Ogni consumer si ridisegna quando cambia il value, anche se usa una parte sola. Dividi i context per frequenza di cambio e memoizza il value.',
+      },
+      {
+        id: 'c6',
+        front: 'useTransition',
+        back: "Segna un aggiornamento come non urgente: React può interromperlo per input più importanti. L'input resta reattivo mentre la lista pesante si aggiorna.",
+      },
+      {
+        id: 'c7',
+        front: 'useLayoutEffect vs useEffect',
+        back: 'Layout: sincrono dopo il DOM e prima del paint (misure, evitare flicker). Effect: dopo il paint, per tutto il resto.',
+      },
+    ],
+    practice: [
+      {
+        id: 'p1',
+        question: 'La lista della pagina è lenta quando scrivo in un campo di ricerca. Come indaghi?',
+        answer:
+          "Profiler per vedere cosa si ridisegna e quanto costa. Poi: sposta lo stato dell'input in un componente figlio, debounce o useDeferredValue sulla query, memo sulle righe con key stabili, virtualizzazione se le righe sono migliaia. Misura prima e dopo.",
+      },
+      {
+        id: 'p2',
+        question: 'Differenza tra stato locale, context, store e server state: come scegli?',
+        answer:
+          'Locale se serve a un componente. Context per valori stabili (tema, utente). Store (Zustand/Redux) per stato UI condiviso e frequente. Server state in TanStack Query, mai copiato in uno store. URL per filtri e paginazione condivisibili.',
+      },
+      {
+        id: 'p3',
+        question: 'Cosa è cambiato in React 18/19 che ti ha influenzato di più?',
+        answer:
+          'Scegli ciò che hai usato davvero: batching automatico e useTransition, Suspense, oppure Actions/useOptimistic. Se non li hai usati, dillo e spiega il problema che risolvono.',
+      },
+    ],
+  },
+  {
+    id: 'state',
+    title: 'Stato, dati dal server e form',
+    subtitle: 'TanStack Query, store, URL come stato, form e validazione',
+    group: 'fe',
+    vault:
+      'Nel vault: <b>react/tanstack-query</b> (queries-mutations, optimistic-infinite-prefetch), <b>state-alternatives</b> (Zustand, Jotai), <b>redux</b>, <b>react/forms</b>, <b>offline-first-sync-engine</b>.',
+    lesson:
+      '<p class="lead">Metà dei bug frontend nasce dal mettere lo stato nel posto sbagliato. Qui hai una regola per ogni tipo di stato.</p>\n<h3>Quattro tipi di stato</h3><div class="tblw"><table><tr><th>Tipo</th><th>Dove</th><th>Esempio</th></tr><tr><td>Server state</td><td>TanStack Query (o SWR)</td><td>lista ordini, profilo</td></tr><tr><td>UI condivisa</td><td>Zustand / Context / Redux</td><td>sidebar, tema, modali</td></tr><tr><td>Locale</td><td>useState / useReducer</td><td>campo di input, toggle</td></tr><tr><td>URL</td><td>query string, router</td><td>filtri, pagina, ordinamento</td></tr></table></div>\n<h3>Server state: cosa risolve TanStack Query</h3><ul><li><b>Cache per queryKey</b>: la stessa chiave condivide i dati tra componenti.</li><li><b>staleTime</b>: per quanto i dati sono "freschi" (nessun refetch). <b>gcTime</b>: quanto resta in memoria senza osservatori.</li><li>Refetch su focus, riconnessione, mount; retry con backoff; deduplica delle richieste.</li><li><b>Mutation + invalidazione</b>: dopo una scrittura invalidi le chiavi coinvolte e i dati si aggiornano.</li><li><b>Optimistic update</b>: aggiorni la cache subito, salvi il vecchio valore, se la mutation fallisce fai rollback, a fine operazione invalidi.</li></ul>\n<pre><code>const { data, isPending, error } = useQuery({\n  queryKey: ["orders", { page, status }],\n  queryFn: () =&gt; api.getOrders({ page, status }),\n  staleTime: 30_000,\n});\n\nconst qc = useQueryClient();\nconst create = useMutation({\n  mutationFn: api.createOrder,\n  onSuccess: () =&gt; qc.invalidateQueries({ queryKey: ["orders"] }),\n});</code></pre>\n<h3>Store: quando</h3><p>Zustand per stato UI condiviso e frequente, con selettori (<code>useStore(s =&gt; s.count)</code>) così il componente si ridisegna solo per quel pezzo. Redux Toolkit se il team lo usa già, serve tracciabilità (devtools) o logica complessa. Context solo per valori stabili.</p>\n<h3>URL come stato</h3><p>Filtri, ordinamento, pagina e tab nell\'URL: link condivisibili, tasto indietro che funziona, refresh senza perdere nulla.</p>\n<h3>Form</h3><ul><li><b>react-hook-form</b> (uncontrolled, pochi re-render) + <b>Zod</b> come schema, lo stesso tipo per validazione e TypeScript.</li><li>Validazione sul client per l\'esperienza, sul server per la sicurezza. Mostra errori del server accanto ai campi.</li><li>Stati da gestire: loading, errore, disabilita il bottone durante l\'invio, evita doppio submit.</li><li>Accessibilità: label collegata, errore con <code>aria-describedby</code>, focus sul primo errore.</li></ul>\n<div class="say"><b>Come dirlo</b>"Non copio i dati del server in uno store: li lascio nella cache di TanStack Query, che sa già quando sono vecchi, quando rifare la fetch e come invalidarli."</div>',
+    quiz: [
+      {
+        id: 'q1',
+        q: "Dove metti la lista di ordini che arriva dall'API?",
+        options: ['In Context', 'In Redux', 'In una cache di server state (TanStack Query)', 'In localStorage'],
+        answer: 2,
+        explanation:
+          'I dati del server hanno problemi propri (staleness, deduplica, invalidazione, retry) che una libreria dedicata risolve.',
+      },
+      {
+        id: 'q2',
+        q: 'staleTime vs gcTime',
+        options: [
+          'staleTime: quanto i dati sono freschi; gcTime: quanto restano in memoria senza osservatori',
+          'Sono sinonimi',
+          'gcTime è il timeout della rete',
+          'staleTime è per le mutation',
+        ],
+        answer: 0,
+        explanation: 'Con staleTime alto non fa refetch; gcTime decide quando la cache inattiva viene eliminata.',
+      },
+      {
+        id: 'q3',
+        q: 'Dopo una POST riuscita, come aggiorni la lista?',
+        options: [
+          'Cambio la key del componente',
+          'Ricarico la pagina',
+          'invalidateQueries sulla chiave della lista',
+          'setState globale a mano',
+        ],
+        answer: 2,
+        explanation: "L'invalidazione marca i dati come vecchi e rilancia la query attiva.",
+      },
+      {
+        id: 'q4',
+        q: 'Dove va il filtro "stato = pagato" di una tabella?',
+        options: ['In una ref', 'useState nel componente', "Nell'URL (query string)", 'Nello store globale'],
+        answer: 2,
+        explanation: "Nell'URL è condivisibile, sopravvive al refresh e il tasto indietro funziona.",
+      },
+      {
+        id: 'q5',
+        q: 'Perché react-hook-form è comodo nei form grandi?',
+        options: [
+          'Valida solo sul server',
+          'Usa input uncontrolled: niente re-render a ogni tasto',
+          'Funziona senza JS',
+          'Sostituisce Zod',
+        ],
+        answer: 1,
+        explanation: 'Registra i campi con ref e legge il valore quando serve, riducendo i render.',
+      },
+    ],
+    cards: [
+      {
+        id: 'c1',
+        front: 'Optimistic update: i passi',
+        back: 'onMutate: cancella le query, salva lo snapshot, aggiorna la cache. onError: ripristina lo snapshot. onSettled: invalida per riallinearti al server.',
+      },
+      {
+        id: 'c2',
+        front: 'Perché non copiare server state in Redux',
+        back: 'Duplichi la fonte di verità e riscrivi a mano cache, invalidazione, loading e retry. Meglio una libreria di server state.',
+      },
+      {
+        id: 'c3',
+        front: 'Selettori in Zustand',
+        back: 'useStore(s =&gt; s.campo) fa ridisegnare il componente solo se quel campo cambia. Senza selettore si ridisegna a ogni modifica.',
+      },
+      {
+        id: 'c4',
+        front: 'Zod: perché',
+        back: "Una definizione sola per validare a runtime e ricavare il tipo (z.infer). Va usato ai confini: form, risposte API, variabili d'ambiente.",
+      },
+      {
+        id: 'c5',
+        front: 'Form accessibile',
+        back: 'label htmlFor, errori legati con aria-describedby, aria-invalid, focus sul primo errore, messaggi chiari e non solo colore.',
+      },
+      {
+        id: 'c6',
+        front: 'Race condition nelle fetch',
+        back: 'Due richieste in volo, risponde prima la vecchia. Soluzioni: AbortController nel cleanup, o una libreria che gestisce la queryKey.',
+      },
+    ],
+    practice: [
+      {
+        id: 'p1',
+        question:
+          'Progetta la gestione dello stato per una dashboard con filtri, tabella paginata e una modale di modifica.',
+        answer:
+          "Filtri e pagina nell'URL; tabella con useQuery sulla chiave [risorsa, filtri, pagina] con keepPreviousData; modale con stato locale o piccolo store; form con react-hook-form + Zod; la mutation invalida la chiave e, se serve, aggiorna in modo ottimistico.",
+      },
+      {
+        id: 'p2',
+        question: 'Come gestisci errori e caricamento in modo coerente?',
+        answer:
+          'Stati espliciti (pending, error, empty, success) per ogni vista, Suspense e Error Boundary per i livelli alti, messaggi che dicono cosa fare, retry, skeleton al posto di spinner a tutta pagina. Un punto solo per la gestione globale degli errori (401, rete).',
+      },
+      {
+        id: 'p3',
+        question: 'Quando sceglieresti Redux invece di Zustand?',
+        answer:
+          "Se il team lo usa già o l'app ha molta logica condivisa, bisogno di devtools e time travel, middleware, regole strette. Per stato UI piccolo e medio Zustand è più leggero. Il server state resta comunque a TanStack Query (o RTK Query).",
+      },
+    ],
+  },
+  {
+    id: 'next',
+    title: 'Rendering: CSR, SSR, SSG, RSC e Next.js',
+    subtitle: "Dove e quando si produce l'HTML, hydration, streaming, cache",
+    group: 'fe',
+    vault:
+      'Nel vault: <b>nextjs-app-router</b>, <b>nextjs-streaming</b>, <b>nextjs-server-actions</b>, <b>nextjs15-migration</b>, <b>react/server-components</b>, <b>browser-rendering</b>, <b>astro</b>.',
+    lesson:
+      '<p class="lead">Non sai se Open Move usa Next. Impara comunque il ragionamento: dove si produce l\'HTML, quanto costa e chi paga.</p>\n<h3>Le strategie</h3><div class="tblw"><table><tr><th>Sigla</th><th>HTML prodotto</th><th>Pro</th><th>Contro</th></tr><tr><td>CSR</td><td>nel browser</td><td>semplice, hosting statico</td><td>primo paint lento, SEO debole</td></tr><tr><td>SSR</td><td>sul server a ogni richiesta</td><td>dati freschi, SEO</td><td>latenza e costo server</td></tr><tr><td>SSG</td><td>in build</td><td>velocissimo, CDN</td><td>dati vecchi fino al prossimo build</td></tr><tr><td>ISR</td><td>in build + rigenerato</td><td>statico ma aggiornabile</td><td>complessità della cache</td></tr></table></div>\n<h3>Hydration</h3><p>Il server manda HTML già pronto; il browser scarica il JS e lo "collega" agli elementi. Se l\'HTML del server e il primo render del client differiscono (data, <code>Math.random</code>, <code>window</code>), si ha un hydration mismatch. Il costo è il JS da eseguire prima che la pagina sia interattiva (INP).</p>\n<h3>Server Components (RSC)</h3><ul><li>Girano solo sul server: accedono a DB e segreti, <b>non spediscono JS</b> al client.</li><li>I <b>Client Components</b> (<code>"use client"</code>) servono per stato, effetti, eventi, API del browser.</li><li>Regola: server di default, client solo dove serve interattività, e il più in basso possibile nell\'albero.</li><li>I dati passano da server a client come props serializzabili (niente funzioni).</li></ul>\n<h3>Streaming e Suspense</h3><p>Il server invia subito la shell della pagina e il resto man mano che i dati sono pronti. L\'utente vede contenuto prima; ogni sezione lenta ha il suo fallback.</p>\n<h3>Server Actions e cache</h3><ul><li>Una funzione server chiamata da un form o da un evento, con validazione e autorizzazione <b>nella funzione</b> (è un endpoint pubblico).</li><li>La cache di Next ha livelli (richieste, rotte, router client) e cambia tra versioni: sapere che esiste e come si invalida (<code>revalidatePath / revalidateTag</code>) conta più dei dettagli.</li></ul>\n<h3>Come scegliere</h3><ul><li>Pagina pubblica che cambia poco: SSG o ISR.</li><li>Pagina personalizzata o con dati in tempo reale: SSR o CSR con API.</li><li>App dietro login (dashboard): CSR va bene, la SEO non conta.</li></ul>\n<div class="say"><b>Come dirlo</b>"Scelgo dove produrre l\'HTML in base a SEO, freschezza dei dati e costo: contenuti pubblici statici, dashboard in CSR, e Server Components per non spedire JS che non serve."</div>',
+    quiz: [
+      {
+        id: 'q1',
+        q: 'Quale strategia è la migliore per un blog che cambia una volta al giorno?',
+        options: ['SSR a ogni richiesta', 'Server Actions', 'SSG o ISR', 'CSR'],
+        answer: 2,
+        explanation: 'Contenuto pubblico e poco dinamico: HTML statico dalla CDN, rigenerato quando serve.',
+      },
+      {
+        id: 'q2',
+        q: 'Cosa è un hydration mismatch?',
+        options: [
+          'Una query lenta',
+          'Un errore CORS',
+          'HTML del server diverso dal primo render del client',
+          'Un bug del bundler',
+        ],
+        answer: 2,
+        explanation: 'Cause tipiche: date, numeri casuali, accesso a window o localStorage durante il render.',
+      },
+      {
+        id: 'q3',
+        q: 'Un Server Component può usare useState?',
+        options: ['Solo con use', 'Sì', 'No: stato ed eventi richiedono un Client Component', 'Solo in dev'],
+        answer: 2,
+        explanation: 'Gli hook di stato/effetto e i gestori di eventi stanno nei Client Components.',
+      },
+      {
+        id: 'q4',
+        q: 'Una Server Action...',
+        options: [
+          'Non può scrivere sul DB',
+          'È privata perché sta nel codice server',
+          'È un endpoint pubblico: va validata e autorizzata',
+          'Sostituisce il client',
+        ],
+        answer: 2,
+        explanation:
+          'Chiunque può chiamarla con un POST costruito a mano: controlla input e permessi dentro la funzione.',
+      },
+      {
+        id: 'q5',
+        q: 'Quale vantaggio dà lo streaming?',
+        options: [
+          'Vedi la shell subito e le parti lente arrivano dopo',
+          'Niente cache',
+          'Meno codice',
+          'Elimina il JS',
+        ],
+        answer: 0,
+        explanation: 'Migliora il tempo al primo contenuto senza aspettare la query più lenta.',
+      },
+    ],
+    cards: [
+      {
+        id: 'c1',
+        front: 'CSR vs SSR in una frase',
+        back: 'CSR: il browser costruisce la pagina dal JS. SSR: il server manda HTML pronto, poi il JS lo rende interattivo (hydration).',
+      },
+      {
+        id: 'c2',
+        front: "Cos'è hydration",
+        back: "Attaccare gestori e stato React all'HTML generato dal server. Costa JS e tempo; in mezzo la pagina è visibile ma non interattiva.",
+      },
+      {
+        id: 'c3',
+        front: '"use client" cosa fa',
+        back: 'Segna il confine: il file e ciò che importa vengono spediti al browser. Mettilo il più in basso possibile.',
+      },
+      {
+        id: 'c4',
+        front: 'ISR',
+        back: 'Pagine statiche rigenerate in background dopo un intervallo o su richiesta (revalidate). Statico con dati non troppo vecchi.',
+      },
+      {
+        id: 'c5',
+        front: 'Quando CSR va bene',
+        back: 'App dietro login, dashboard, strumenti interni: la SEO non conta e le pagine sono molto interattive.',
+      },
+      {
+        id: 'c6',
+        front: 'Astro vs Next in breve',
+        back: 'Astro: contenuto statico, islands, poco JS. Next: app React complete con routing, dati e server integrati.',
+      },
+    ],
+    practice: [
+      {
+        id: 'p1',
+        question: 'Come scegli tra SSR, SSG e CSR per una nuova pagina?',
+        answer:
+          'Tre domande: serve SEO? Quanto cambia il dato e per chi? Quanto costa il server? Contenuto pubblico stabile: SSG/ISR. Personalizzato o in tempo reale: SSR o CSR. Dashboard dietro login: CSR. Cita un caso reale del tuo lavoro.',
+      },
+      {
+        id: 'p2',
+        question: 'Cosa sono i Server Components e perché li useresti?',
+        answer:
+          "Componenti che girano solo sul server, accedono ai dati senza API intermedia e non aggiungono JS al bundle. Li uso per contenuto e dati, e isolo l'interattività in piccoli Client Components. Cita il limite: niente stato né eventi.",
+      },
+      {
+        id: 'p3',
+        question: 'Hai notato un hydration error: come lo risolvi?',
+        answer:
+          'Trovo cosa differisce tra server e client (date, random, window, locale). Rendo deterministico il primo render, sposto il codice solo-browser in un effetto o dentro un componente caricato solo sul client.',
+      },
+    ],
+  },
+  {
+    id: 'perf',
+    title: 'Performance web',
+    subtitle: 'Core Web Vitals, bundle, immagini, rendering, misure',
+    group: 'fe',
+    vault:
+      'Nel vault: <b>core-web-vitals</b>, <b>bundle-analysis</b>, <b>devtools-profiling</b>, <b>browser-rendering</b>, <b>react/performance</b>, <b>vite</b>.',
+    lesson:
+      '<p class="lead">La regola d\'oro: misura prima di ottimizzare. L\'intervistatore vuole sentire un metodo, non una lista di trucchi.</p>\n<h3>Core Web Vitals</h3><div class="tblw"><table><tr><th>Metrica</th><th>Misura</th><th>Buono</th></tr><tr><td>LCP</td><td>quando appare l\'elemento principale</td><td>≤ 2,5 s</td></tr><tr><td>INP</td><td>reattività alle interazioni (ha sostituito FID)</td><td>≤ 200 ms</td></tr><tr><td>CLS</td><td>spostamenti di layout inattesi</td><td>≤ 0,1</td></tr></table></div>\n<h3>Metodo</h3><ol><li>Misura con Lighthouse e <b>dati reali</b> (RUM, Search Console, web-vitals).</li><li>Individua il collo di bottiglia: rete, JS, rendering, immagini.</li><li>Cambia una cosa, rimisura.</li></ol>\n<h3>LCP: cosa si fa</h3><ul><li>Immagine principale: formato moderno (AVIF/WebP), dimensioni corrette (<code>srcset / sizes</code>), <code>fetchpriority="high"</code>, niente lazy sull\'immagine above the fold.</li><li>Riduci TTFB (CDN, cache, SSR veloce), evita richieste a catena (waterfall).</li><li>Font: <code>font-display: swap</code>, preload dei font critici, sottoinsiemi.</li><li>CSS critico, niente script che blocca il render (<code>defer / async</code>).</li></ul>\n<h3>INP: cosa si fa</h3><ul><li>Spezza i task lunghi (&gt; 50 ms) con <code>scheduler.yield</code>/<code>setTimeout</code>/Web Worker.</li><li>Debounce su input, <code>useTransition</code> sugli aggiornamenti pesanti, liste virtualizzate.</li><li>Meno JS: ogni kilobyte va scaricato, parsato, eseguito.</li></ul>\n<h3>CLS: cosa si fa</h3><p>Riserva lo spazio: width/height o <code>aspect-ratio</code> per immagini e video, skeleton con altezza fissa, niente contenuti inseriti sopra quelli visibili, animazioni con <code>transform</code>.</p>\n<h3>Bundle e caricamento</h3><ul><li><b>Code splitting</b> per rotta (<code>lazy</code> + <code>import()</code>) e per componenti pesanti.</li><li><b>Tree shaking</b> (import ES nominali), niente librerie intere per una funzione (lodash → lodash-es o nativo).</li><li>Analizza il bundle (visualizer di Vite/webpack) e cerca duplicati.</li><li><b>Prefetch</b> delle rotte probabili, <code>preconnect</code> alle origini critiche.</li></ul>\n<h3>Rendering del browser</h3><p>Pipeline: JS → stile → layout → paint → composite. Cambiare <code>width</code> o <code>top</code> forza layout; <code>transform</code> e <code>opacity</code> restano sul compositor. Evita il <b>layout thrashing</b> (leggere e scrivere il DOM alternati in un ciclo).</p>\n<h3>Rete</h3><p>Cache HTTP (<code>Cache-Control</code>, ETag, file con hash nel nome e cache lunga), compressione Brotli, HTTP/2, CDN. Service worker per l\'offline.</p>\n<div class="say"><b>Come dirlo</b>"Parto dai dati reali, trovo la metrica peggiore, la collego a una causa (rete, JS, immagini) e cambio una cosa alla volta rimisurando."</div>',
+    quiz: [
+      {
+        id: 'q1',
+        q: 'Quale metrica ha sostituito FID?',
+        options: ['TTFB', 'INP', 'LCP', 'CLS'],
+        answer: 1,
+        explanation: 'INP misura la reattività su tutte le interazioni della visita, non solo la prima.',
+      },
+      {
+        id: 'q2',
+        q: 'Quale animazione è più economica per il browser?',
+        options: ['top/left', 'margin', 'width', 'transform'],
+        answer: 3,
+        explanation:
+          '<code>transform</code> e <code>opacity</code> possono restare sul compositor senza ricalcolare il layout.',
+      },
+      {
+        id: 'q3',
+        q: "L'immagine hero è sopra la piega. Cosa NON fai?",
+        options: ['loading="lazy"', 'fetchpriority="high"', 'Formato AVIF/WebP', 'Dimensioni esplicite'],
+        answer: 0,
+        explanation: "Il lazy loading ritarda proprio l'elemento che determina l'LCP.",
+      },
+      {
+        id: 'q4',
+        q: "Come eviti il CLS di un'immagine che carica tardi?",
+        options: [
+          'Riservi lo spazio con width/height o aspect-ratio',
+          'Niente immagini',
+          'Metti display:none',
+          'Usi più JS',
+        ],
+        answer: 0,
+        explanation: "Il browser calcola lo spazio prima che l'immagine arrivi.",
+      },
+      {
+        id: 'q5',
+        q: 'Cosa è un task lungo?',
+        options: [
+          'Un task sul main thread &gt; 50 ms che blocca input e rendering',
+          'Un job nel backend',
+          'Un timer',
+          'Una richiesta lenta',
+        ],
+        answer: 0,
+        explanation: 'Va spezzato o spostato in un worker: è la causa principale di un INP alto.',
+      },
+    ],
+    cards: [
+      {
+        id: 'c1',
+        front: 'Soglie CWV',
+        back: 'LCP ≤ 2,5 s, INP ≤ 200 ms, CLS ≤ 0,1 (al 75° percentile dei dati reali).',
+      },
+      {
+        id: 'c2',
+        front: 'Code splitting',
+        back: 'Dividere il bundle per rotta o componente e caricare con import() dinamico. Riduce il JS iniziale.',
+      },
+      {
+        id: 'c3',
+        front: 'Layout thrashing',
+        back: 'Alternare letture (offsetHeight) e scritture di stile in un ciclo: forza layout ripetuti. Raggruppa prima le letture, poi le scritture.',
+      },
+      {
+        id: 'c4',
+        front: 'Cache dei file statici',
+        back: "Nome con hash del contenuto + Cache-Control: max-age lungo e immutable. L'HTML invece breve o con revalidation.",
+      },
+      {
+        id: 'c5',
+        front: 'Virtualizzazione',
+        back: 'Renderizzare solo le righe visibili di una lista lunga (TanStack Virtual, react-window; FlashList su mobile).',
+      },
+      {
+        id: 'c6',
+        front: 'defer vs async',
+        back: 'Entrambi non bloccano il parsing. defer: esegue in ordine dopo il parsing. async: esegue appena scaricato, ordine non garantito.',
+      },
+    ],
+    practice: [
+      {
+        id: 'p1',
+        question: 'Una pagina carica in 8 secondi. Come procedi?',
+        answer:
+          'Misuro: Lighthouse più dati reali; waterfall nel pannello Network e Performance. Individuo la causa: JS troppo grande, immagini, richieste a catena, TTFB. Intervengo in ordine di impatto (immagini e JS di solito) e rimisuro dopo ogni modifica.',
+      },
+      {
+        id: 'p2',
+        question: 'Come riduci la dimensione di un bundle JS?',
+        answer:
+          'Analizzo il bundle, spezzo per rotta, tolgo dipendenze pesanti o duplicate, tree shaking, import dinamici per cose rare, compressione Brotli, rimuovo codice morto (knip). Poi controllo che la dimensione non risalga con un budget in CI.',
+      },
+      {
+        id: 'p3',
+        question: 'Come garantisci che la performance non peggiori nel tempo?',
+        answer:
+          'Budget di bundle in CI, Lighthouse CI su pagine chiave, monitoraggio RUM (web-vitals) con alert, e revisione dei costi delle nuove dipendenze nelle PR.',
+      },
+    ],
+  },
+  {
+    id: 'websec',
+    title: 'Browser, rete e sicurezza lato client',
+    subtitle: 'XSS, CSRF, cookie vs token, CORS, CSP, storage, fetch',
+    group: 'fe',
+    vault:
+      'Nel vault: <b>frontend-security</b>, <b>web-security</b>, <b>browser-storage-and-auth</b>, <b>nextauth-jwt-periodic-revalidation</b>, <b>iframe-postmessage-embedding</b>.',
+    lesson:
+      '<p class="lead">Questo modulo è il ponte tra frontend e backend: ciò che chiede chi cerca un full stack. Le risposte stanno in poche regole.</p>\n<h3>XSS</h3><p>Codice dell\'attaccante eseguito nella tua pagina, con i tuoi cookie e permessi. Tre tipi: <b>stored</b> (salvato nel DB), <b>reflected</b> (nell\'URL), <b>DOM-based</b> (il tuo JS lo inserisce).</p><ul><li>React fa l\'escape di default. Il rischio sta in <code>dangerouslySetInnerHTML</code>, <code>innerHTML</code>, <code>href="javascript:..."</code>, <code>eval</code>.</li><li>Se devi mostrare HTML di terzi: sanificalo con <b>DOMPurify</b>.</li><li>Difesa a strati: escape, sanificazione, <b>CSP</b>, cookie <code>HttpOnly</code>.</li></ul>\n<h3>CSRF</h3><p>Un altro sito fa partire una richiesta verso il tuo backend e il browser allega i cookie. Difese: cookie <code>SameSite=Lax/Strict</code>, token CSRF, controllo di <code>Origin</code>, header custom. Non esiste se l\'autenticazione è un header <code>Authorization</code> che il browser non allega da solo.</p>\n<h3>Dove tieni il token?</h3><div class="tblw"><table><tr><th>Posto</th><th>Pro</th><th>Contro</th></tr><tr><td>Cookie HttpOnly + Secure + SameSite</td><td>JS non lo legge: XSS non lo ruba</td><td>serve protezione CSRF</td></tr><tr><td>localStorage</td><td>semplice</td><td>qualsiasi XSS lo legge</td></tr><tr><td>Memoria + refresh in cookie HttpOnly</td><td>compromesso comune per SPA</td><td>più lavoro</td></tr></table></div>\n<p>Risposta senior: access token breve in memoria, refresh token in cookie HttpOnly, rotazione del refresh.</p>\n<h3>CORS dal lato client</h3><p>Il browser blocca la <b>lettura</b> della risposta cross-origin se il server non la permette. Richieste "non semplici" (metodo diverso da GET/POST semplice, header custom, JSON) fanno prima una <b>preflight OPTIONS</b>. Con <code>credentials: "include"</code> il server non può rispondere <code>Access-Control-Allow-Origin: *</code>. In sviluppo si evita con un proxy del dev server. CORS non protegge il server: protegge l\'utente.</p>\n<h3>CSP e altri header</h3><p><code>Content-Security-Policy</code> limita da dove si caricano script e risorse (nonce per gli inline). Poi <code>Strict-Transport-Security</code>, <code>X-Content-Type-Options: nosniff</code>, <code>Referrer-Policy</code>, <code>frame-ancestors</code> contro il clickjacking.</p>\n<h3>fetch: cose che si chiedono</h3><ul><li><code>fetch</code> <b>non rifiuta</b> per 404 o 500: controlla <code>res.ok</code>.</li><li>Annullare: <code>AbortController</code>. Timeout: <code>AbortSignal.timeout(ms)</code>.</li><li>Retry solo su richieste idempotenti, con backoff e jitter.</li><li>Un client API unico: base URL, token, gestione 401 (refresh e ripeti una volta), errori tipizzati.</li></ul>\n<h3>Altre cose da conoscere</h3><ul><li><b>Storage</b>: localStorage (sincrono, ~5 MB, stringhe), sessionStorage, IndexedDB (async, strutturato), Cache API/service worker.</li><li><b>postMessage</b> tra finestre/iframe: controlla sempre <code>event.origin</code>.</li><li><b>Validazione</b>: mai fidarsi del client. Ogni controllo di UI va ripetuto sul server.</li><li><b>Dipendenze</b>: <code>npm audit</code>, lockfile, attenzione al supply chain.</li></ul>\n<div class="say"><b>Come dirlo</b>"Il client non è un confine di sicurezza: tutto ciò che controllo nella UI lo ricontrollo sul server. Per i token preferisco cookie HttpOnly con SameSite e protezione CSRF."</div>',
+    quiz: [
+      {
+        id: 'q1',
+        q: 'Cosa protegge un cookie HttpOnly?',
+        options: ['Dalla lettura del cookie da parte di JS (quindi da furto via XSS)', 'Da MITM', 'Da CSRF', 'Da CORS'],
+        answer: 0,
+        explanation:
+          'Contro CSRF serve SameSite o un token. HttpOnly impedisce a <code>document.cookie</code> di leggerlo.',
+      },
+      {
+        id: 'q2',
+        q: 'fetch("/api/x") riceve un 500. Cosa succede alla promise?',
+        options: ['Lancia un TypeError', 'Viene rifiutata', 'Va in timeout', 'Si risolve; res.ok è false'],
+        answer: 3,
+        explanation: 'fetch rifiuta solo per errori di rete. Controlla <code>res.ok</code> o lo status.',
+      },
+      {
+        id: 'q3',
+        q: 'Chi applica la policy CORS?',
+        options: ['Il DNS', 'Il server', 'Il browser', 'Il proxy'],
+        answer: 2,
+        explanation:
+          'Il browser impedisce di leggere la risposta; il server aggiunge solo gli header che lo consentono. Curl non ha CORS.',
+      },
+      {
+        id: 'q4',
+        q: 'Con credentials: "include" il server può rispondere Access-Control-Allow-Origin: *?',
+        options: ["No: serve l'origine esplicita", 'Solo con GET', 'Solo in HTTPS', 'Sì'],
+        answer: 0,
+        explanation:
+          "Con le credenziali il wildcard è vietato; il server deve restituire l'origine e <code>Allow-Credentials: true</code>.",
+      },
+      {
+        id: 'q5',
+        q: 'React è immune da XSS?',
+        options: [
+          'Solo con TypeScript',
+          'Sì sempre',
+          'No: dangerouslySetInnerHTML, href javascript:, librerie di terzi',
+          'Solo in produzione',
+        ],
+        answer: 2,
+        explanation: 'Fa escape del testo, ma gli sink pericolosi restano.',
+      },
+    ],
+    cards: [
+      {
+        id: 'c1',
+        front: 'XSS vs CSRF',
+        back: "XSS: codice dell'attaccante gira nella tua pagina. CSRF: l'attaccante fa fare una richiesta all'utente autenticato da un altro sito.",
+      },
+      {
+        id: 'c2',
+        front: 'SameSite',
+        back: 'Strict: il cookie non parte mai cross-site. Lax (default dei browser): parte solo su navigazioni top-level GET. None: sempre, richiede Secure.',
+      },
+      {
+        id: 'c3',
+        front: 'Preflight',
+        back: 'Richiesta OPTIONS che il browser manda prima di una cross-origin non semplice, per chiedere al server se il metodo e gli header sono ammessi.',
+      },
+      {
+        id: 'c4',
+        front: 'Dove metto il token',
+        back: 'Meglio cookie HttpOnly+Secure+SameSite. In alternativa access token in memoria e refresh in cookie HttpOnly. localStorage espone a XSS.',
+      },
+      {
+        id: 'c5',
+        front: 'Clickjacking',
+        back: 'La tua pagina viene messa in un iframe invisibile. Difesa: <code>frame-ancestors</code> nella CSP o X-Frame-Options.',
+      },
+      {
+        id: 'c6',
+        front: 'Refresh token flow',
+        back: 'Access token breve; su 401 il client chiede un nuovo access con il refresh (rotazione); se fallisce, logout. Una sola richiesta di refresh alla volta.',
+      },
+    ],
+    practice: [
+      {
+        id: 'p1',
+        question: "Come gestisci l'autenticazione in una SPA con un backend separato?",
+        answer:
+          'Login, access token breve in memoria, refresh token in cookie HttpOnly+Secure+SameSite con rotazione, CSRF protetto, client API che su 401 prova un refresh e ripete la richiesta una volta sola. Rotte protette sia nel client (UX) sia nel server (sicurezza).',
+      },
+      {
+        id: 'p2',
+        question: "Cos'è CORS e come lo risolvi quando il frontend non riesce a chiamare l'API?",
+        answer:
+          'È una policy del browser sulle risposte cross-origin. Si risolve sul server con gli header giusti (origini esplicite, metodi, credenziali), in dev con un proxy. Non con no-cors e non con * insieme alle credenziali.',
+      },
+      {
+        id: 'p3',
+        question: "Come difendi un'app React da XSS?",
+        answer:
+          'Niente innerHTML su dati non fidati, DOMPurify se serve HTML, validare e codificare in uscita, CSP con nonce, cookie HttpOnly, dipendenze controllate, e review dei punti con dangerouslySetInnerHTML.',
+      },
+    ],
+  },
+  {
+    id: 'css',
+    title: 'CSS, layout e accessibilità',
+    subtitle: 'Flex, grid, responsive, specificità, a11y di base, design system',
+    group: 'fe',
+    vault:
+      'Nel vault: <b>css-layout</b>, <b>css-container-queries</b>, <b>css-units</b>, <b>accessibility</b>, <b>accessibility-testing</b>, <b>design-tokens</b>, <b>design-system-distribution</b>, <b>semantic-html-and-forms</b>.',
+    lesson:
+      "<p class=\"lead\">È il tuo terreno forte: usalo per dare l'impressione di profondità. Qui trovi le domande classiche e le risposte brevi.</p>\n<h3>Layout</h3><ul><li><b>Flexbox</b>: una dimensione (riga o colonna). <code>justify-content</code> sull'asse principale, <code>align-items</code> sull'incrociato, <code>gap</code>, <code>flex: 1 1 0</code>. Attenzione a <code>min-width: 0</code> per far restringere i figli.</li><li><b>Grid</b>: due dimensioni. <code>grid-template-columns: repeat(auto-fit, minmax(240px, 1fr))</code> è un layout responsive senza media query.</li><li><b>Container queries</b>: il componente si adatta al suo contenitore, non alla finestra.</li><li><b>Box model</b>: <code>box-sizing: border-box</code> ovunque. Margin collapsing solo in verticale.</li></ul>\n<h3>Specificità e cascata</h3><p>Ordine: !important, inline, id, classi/attributi/pseudo-classi, elementi. A parità vince la regola dichiarata dopo. Strumenti moderni: <code>@layer</code>, <code>:where()</code> (specificità zero), custom properties.</p>\n<h3>Unità</h3><p><code>rem</code> per testo e spaziature (rispetta le impostazioni dell'utente), <code>em</code> relativo al componente, <code>%</code> relativo al genitore, <code>vh/vw</code> (su mobile preferisci <code>dvh</code>), <code>clamp(min, ideale, max)</code> per tipografia fluida, <code>px</code> per bordi sottili.</p>\n<h3>Responsive</h3><p>Mobile first con <code>min-width</code>, meta viewport, immagini <code>srcset</code>, target touch di almeno 44 px, nessuna dipendenza da <code>hover</code>, safe-area su iPhone (<code>env(safe-area-inset-*)</code>).</p>\n<h3>Design system e token</h3><p>Token (colore, spazio, tipografia, raggi) come CSS variables; tema scuro con <code>prefers-color-scheme</code> e un attributo sul root. Componenti documentati (Storybook), varianti tramite props, accessibilità incorporata nei primitivi (Radix, React Aria).</p>\n<h3>Accessibilità: le basi che si chiedono</h3><ul><li><b>HTML semantico prima</b>: <code>button</code>, <code>a</code>, <code>nav</code>, <code>main</code>, <code>label</code>. Un <code>div onClick</code> non è focalizzabile né attivabile da tastiera.</li><li><b>ARIA</b> solo quando l'HTML non basta; il primo principio è non usarla male (meglio nessun ARIA che ARIA sbagliato).</li><li><b>Tastiera</b>: tutto raggiungibile con Tab, focus visibile, ordine logico, Esc chiude, frecce nei menu.</li><li><b>Modale</b>: sposta il focus dentro, intrappolalo, Esc chiude, ripristina il focus all'elemento che l'ha aperta (<code>dialog</code> nativo).</li><li><b>Contrasto</b> WCAG AA: 4,5:1 per il testo, 3:1 per il testo grande e le componenti UI.</li><li>Testi alternativi sulle immagini, stati non solo con il colore, <code>prefers-reduced-motion</code>.</li><li>Test: axe, Lighthouse, navigazione solo da tastiera, un lettore di schermo.</li></ul>\n<div class=\"say\"><b>Come dirlo</b>\"Parto dall'HTML semantico e dalla tastiera; ARIA lo aggiungo solo dove l'HTML non basta. Testo l'accessibilità con axe e provando senza mouse.\"</div>",
+    quiz: [
+      {
+        id: 'q1',
+        q: 'Quale layout usi per una galleria di card che va a capo da sola?',
+        options: ['Grid con repeat(auto-fit, minmax(...))', 'position: absolute', 'Tabelle', 'Flex con float'],
+        answer: 0,
+        explanation: 'Grid con auto-fit e minmax crea colonne responsive senza media query.',
+      },
+      {
+        id: 'q2',
+        q: 'Un figlio flex con testo lungo non si restringe. Cosa manca?',
+        options: ['flex-wrap: nowrap', 'display: block', 'overflow: scroll sul padre', 'min-width: 0 sul figlio'],
+        answer: 3,
+        explanation:
+          'I flex item hanno <code>min-width: auto</code>: non scendono sotto il contenuto. <code>min-width: 0</code> lo consente.',
+      },
+      {
+        id: 'q3',
+        q: 'Come rendi cliccabile un elemento in modo accessibile?',
+        options: ['span con role=button e basta', 'Un button (o un a se naviga)', 'div con onClick', 'img con alt'],
+        answer: 1,
+        explanation: 'Il button ha focus, tastiera (Invio, Spazio) e semantica gratis.',
+      },
+      {
+        id: 'q4',
+        q: 'Contrasto minimo WCAG AA per testo normale?',
+        options: ['7:1', '2:1', '4,5:1', '3:1'],
+        answer: 2,
+        explanation: 'AA: 4,5:1 (testo normale), 3:1 (testo grande e componenti UI). AAA: 7:1.',
+      },
+      {
+        id: 'q5',
+        q: 'Quale unità per una tipografia fluida?',
+        options: ['vh', 'px fissi', 'pt', 'clamp() con rem e vw'],
+        answer: 3,
+        explanation: '<code>clamp(1rem, 1rem + 1vw, 1.5rem)</code> cresce con la finestra entro limiti.',
+      },
+    ],
+    cards: [
+      {
+        id: 'c1',
+        front: 'Flex vs Grid',
+        back: 'Flex: una dimensione, contenuto che guida il layout. Grid: due dimensioni, layout che guida il contenuto. Si combinano.',
+      },
+      {
+        id: 'c2',
+        front: "Specificità: l'ordine",
+        back: "!important &gt; inline &gt; id &gt; classe/attributo/pseudo-classe &gt; elemento. A parità, l'ultima regola. :where() ha specificità 0.",
+      },
+      {
+        id: 'c3',
+        front: 'Mobile first',
+        back: 'Stili base per mobile, poi min-width per allargare. Meno override e meno CSS da scaricare sul telefono.',
+      },
+      {
+        id: 'c4',
+        front: 'Focus trap',
+        back: "In una modale il Tab non deve uscire dal dialog. Alla chiusura il focus torna all'elemento che l'ha aperta. Il dialog nativo lo fa quasi tutto.",
+      },
+      {
+        id: 'c5',
+        front: 'aria-label vs label',
+        back: 'Una label visibile collegata (htmlFor) è meglio. aria-label per controlli senza testo (icona). aria-labelledby per riusare un testo esistente.',
+      },
+      {
+        id: 'c6',
+        front: 'Stacking context',
+        back: 'z-index vale solo nel contesto di impilamento (position + z-index, transform, opacity &lt; 1, ecc.). Un z-index enorme non esce dal suo contesto.',
+      },
+    ],
+    practice: [
+      {
+        id: 'p1',
+        question: 'Costruisci a voce un layout con header fisso, sidebar e contenuto scorrevole.',
+        answer:
+          'Grid sul contenitore (righe auto/1fr, colonne sidebar/1fr), header sticky o fisso, area contenuto con overflow auto e min-height 0. Su mobile la sidebar diventa drawer. Dichiara safe area, focus e navigazione da tastiera.',
+      },
+      {
+        id: 'p2',
+        question: 'Come rendi accessibile una modale o un menu a tendina?',
+        answer:
+          'dialog nativo o ruolo dialog con aria-modal, titolo collegato con aria-labelledby, focus iniziale dentro, trap, Esc chiude, ripristino del focus. Per il menu: pulsante con aria-expanded, frecce e Esc. Meglio usare un primitivo già testato (Radix, React Aria).',
+      },
+      {
+        id: 'p3',
+        question: 'Come strutturi un design system in un team?',
+        answer:
+          'Token come CSS variables, primitivi accessibili, componenti con API piccola e varianti, documentazione in Storybook, test visuali, versionamento e un pacchetto distribuito (monorepo o registry). Decidi chi lo mantiene e come si propongono modifiche.',
+      },
+    ],
+  },
+  {
+    id: 'fetest',
+    title: 'Test e tooling frontend',
+    subtitle: 'Testing Library, Vitest/Jest, mock, Playwright, Vite, CI',
+    group: 'fe',
+    vault:
+      'Nel vault: <b>react-testing-library</b> (queries, async, user-interactions, mocking), <b>jest-vitest</b>, <b>playwright</b> (how-to, fixtures, routes), <b>testing-fundamentals</b>, <b>visual-regression-testing</b>, <b>vite</b>, <b>storybook</b>.',
+    lesson:
+      '<p class="lead">Dire "testo il comportamento, non l\'implementazione" è il segnale che cercano. Sotto ci sono gli strumenti e gli errori comuni.</p>\n<h3>La piramide, versione frontend</h3><div class="tblw"><table><tr><th>Livello</th><th>Strumento</th><th>Cosa prova</th></tr><tr><td>Unit</td><td>Vitest / Jest</td><td>funzioni pure, reducer, utility</td></tr><tr><td>Componente</td><td>Testing Library</td><td>cosa vede e fa l\'utente</td></tr><tr><td>Integrazione</td><td>Testing Library + MSW</td><td>componente + rete simulata</td></tr><tr><td>E2E</td><td>Playwright</td><td>flussi veri nel browser</td></tr><tr><td>Visivo</td><td>Playwright / Storybook</td><td>regressioni grafiche</td></tr></table></div>\n<h3>Testing Library: principi</h3><ul><li>Cerca gli elementi come un utente: <code>getByRole</code> (prima scelta), <code>getByLabelText</code>, <code>getByText</code>. <code>getByTestId</code> è l\'ultima risorsa.</li><li><code>userEvent</code> (simula sequenze reali) meglio di <code>fireEvent</code>.</li><li>Async: <code>findBy*</code> e <code>waitFor</code>, mai <code>sleep</code> fissi.</li><li>Non testare lo stato interno né i dettagli di implementazione: un refactor non deve rompere i test.</li></ul>\n<pre><code>test("mostra l\'errore se il login fallisce", async () =&gt; {\n  server.use(http.post("/api/login", () =&gt; new HttpResponse(null, { status: 401 })));\n  render(&lt;Login /&gt;);\n  await userEvent.type(screen.getByLabelText(/email/i), "a@b.it");\n  await userEvent.click(screen.getByRole("button", { name: /accedi/i }));\n  expect(await screen.findByRole("alert")).toHaveTextContent(/credenziali/i);\n});</code></pre>\n<h3>Mock</h3><p>Mocka ai <b>confini</b>: rete con <b>MSW</b> (intercetta le richieste vere), timer con fake timers, data con orologio finto. Evita di mockare i tuoi stessi moduli: i test diventano specchi dell\'implementazione.</p>\n<h3>Playwright</h3><ul><li>Auto-waiting, locator per ruolo, trace viewer, esecuzione parallela, più browser.</li><li>Test stabili: dati di test controllati, login riusato (storage state), niente <code>waitForTimeout</code>.</li><li>Page object o fixture per non ripetere i passaggi.</li><li>Pochi E2E sui flussi critici (login, checkout), il resto a livelli più bassi.</li></ul>\n<h3>Tooling e CI</h3><ul><li><b>Vite</b>: dev server con ESM nativo, build con Rollup, plugin, variabili <code>import.meta.env</code>.</li><li>ESLint + Prettier + <code>tsc --noEmit</code> in pre-commit e in CI.</li><li>Pipeline: install con cache, lint, typecheck, unit, build, E2E su preview, deploy.</li><li>Storybook per sviluppare e documentare i componenti.</li></ul>\n<div class="say"><b>Come dirlo</b>"Scrivo test che un refactor non rompe: cerco per ruolo come un utente, simulo la rete con MSW e tengo pochi E2E sui flussi critici."</div>',
+    quiz: [
+      {
+        id: 'q1',
+        q: 'Qual è la query preferita in Testing Library?',
+        options: ['getByRole', 'querySelector', 'getByTestId', 'getByClassName'],
+        answer: 0,
+        explanation:
+          'getByRole rispecchia come utenti e tecnologie assistive vedono la pagina, ed è un test di accessibilità implicito.',
+      },
+      {
+        id: 'q2',
+        q: 'Come aspetti un elemento che appare dopo una fetch?',
+        options: ['await screen.findBy...', 'Nessun modo', 'setTimeout di 1 secondo', 'Un ciclo while'],
+        answer: 0,
+        explanation: "<code>findBy</code> ritenta finché l'elemento compare o scade il timeout.",
+      },
+      {
+        id: 'q3',
+        q: 'Dove mocki di preferenza?',
+        options: [
+          'Ai confini (rete con MSW, timer, orologio)',
+          'Dappertutto',
+          'Nei tuoi componenti interni',
+          'In nessun posto',
+        ],
+        answer: 0,
+        explanation:
+          "I mock interni legano i test all'implementazione. Quelli ai confini rimangono validi dopo un refactor.",
+      },
+      {
+        id: 'q4',
+        q: 'Un test Playwright è instabile per attese a tempo fisso. Cosa fai?',
+        options: [
+          'Uso locator e asserzioni con auto-waiting',
+          'Aumento il timeout',
+          'Rilancio finché passa',
+          'Lo elimino',
+        ],
+        answer: 0,
+        explanation:
+          'Playwright attende da solo lo stato giusto; i <code>waitForTimeout</code> sono la causa tipica di flakiness.',
+      },
+      {
+        id: 'q5',
+        q: 'Quanti E2E scrivi?',
+        options: ['Nessuno', 'Tanti, sostituiscono gli unit', 'Pochi, sui flussi critici', 'Uno per componente'],
+        answer: 2,
+        explanation: 'Sono lenti e costosi: coprono i percorsi che non devono mai rompersi, il resto sta più in basso.',
+      },
+    ],
+    cards: [
+      {
+        id: 'c1',
+        front: 'Testare il comportamento',
+        back: "Verifica ciò che l'utente vede e fa, non stato interno o nomi di funzioni. Un refactor che non cambia il comportamento non deve rompere i test.",
+      },
+      {
+        id: 'c2',
+        front: 'MSW',
+        back: 'Mock Service Worker: intercetta le richieste di rete a livello di rete, quindi il codice usa fetch vero. Stessi handler in test, Storybook e sviluppo.',
+      },
+      {
+        id: 'c3',
+        front: 'Flaky test: cause',
+        back: 'Attese a tempo fisso, dati condivisi, ordine dei test, rete reale, animazioni. Cura: attese su condizioni, dati isolati, rete simulata.',
+      },
+      {
+        id: 'c4',
+        front: 'userEvent vs fireEvent',
+        back: 'userEvent riproduce la sequenza reale (focus, tasti, click); fireEvent lancia un solo evento DOM.',
+      },
+      {
+        id: 'c5',
+        front: 'Coverage',
+        back: "È un indicatore, non l'obiettivo. 100% con test che non asseriscono nulla non vale niente. Meglio coprire i percorsi critici.",
+      },
+      {
+        id: 'c6',
+        front: 'Test visivo',
+        back: 'Confronta screenshot con una baseline. Utile per design system; stabilizza font, dati e animazioni.',
+      },
+    ],
+    practice: [
+      {
+        id: 'p1',
+        question: "Come testi un componente che carica dati da un'API?",
+        answer:
+          "Rendo il componente con i provider necessari (query client, router), simulo l'API con MSW, aspetto con findBy, verifico loading, successo ed errore, e il retry. Niente mock dell'hook interno.",
+      },
+      {
+        id: 'p2',
+        question: 'Come impedisci che i test E2E diventino instabili?',
+        answer:
+          'Dati di test isolati e stato noto, login riusato, locator per ruolo, attese automatiche, rete controllata dove serve, trace attiva sui fallimenti in CI e quarantena dei test flaky con un ticket.',
+      },
+      {
+        id: 'p3',
+        question: 'Cosa metti nella pipeline CI di un frontend?',
+        answer:
+          'Install con cache, lint, typecheck, unit e componente, build, E2E su una preview, controllo del bundle, deploy. Se manca tempo, parti dalla velocità: parallelizza e cache.',
+      },
+    ],
+  },
+  {
+    id: 'fesd',
+    title: 'System design frontend',
+    subtitle: 'Autocomplete, feed infinito, form complessi, componenti da zero',
+    group: 'fe',
+    vault:
+      'Nel vault: <b>career/technical-interview-prep</b> (autocomplete sketch), <b>frontend-architecture</b>, <b>component-api-design</b>, <b>offline-first-sync-engine</b>, <b>tanstack-query/optimistic-infinite-prefetch</b>.',
+    lesson:
+      '<p class="lead">Si ragiona ad alta voce. Usa sempre lo stesso schema e fa meno paura.</p>\n<h3>Schema in sei punti (RADIO)</h3><ol><li><b>Requisiti</b>: funzionali, dispositivi, accessibilità, scala, offline.</li><li><b>Architettura</b>: componenti, responsabilità, dove vive lo stato.</li><li><b>Dati</b>: forma delle entità, cache, normalizzazione.</li><li><b>Interfaccia API</b>: endpoint, paginazione, errori.</li><li><b>Ottimizzazioni</b>: performance, rete, rendering.</li><li><b>Dettagli</b>: accessibilità, i18n, sicurezza, test.</li></ol>\n<h3>Esempio 1: autocomplete</h3><ul><li><b>Client</b>: input controllato, debounce 150-300 ms, <code>AbortController</code> per annullare la richiesta precedente, cache delle ultime query, gestione di loading/vuoto/errore, evidenzia il testo corrispondente.</li><li><b>Server</b>: indice per prefisso o servizio di ricerca, rate limit, risultati limitati.</li><li><b>A11y</b>: pattern combobox (<code>role="combobox"</code>, <code>aria-expanded</code>, <code>aria-activedescendant</code>), frecce, Invio, Esc.</li><li>Race condition: risposta vecchia che arriva dopo una nuova (si risolve con annullamento o confronto della query).</li></ul>\n<h3>Esempio 2: feed con scroll infinito</h3><ul><li><b>Paginazione a cursore</b> (non offset: i dati cambiano mentre scorri).</li><li><code>IntersectionObserver</code> su un sentinella in fondo; <code>useInfiniteQuery</code>.</li><li><b>Virtualizzazione</b> quando le righe sono molte; altezze variabili e posizione di scroll mantenuta.</li><li>Aggiornamenti ottimistici (like), nuovi elementi in cima senza far saltare lo scroll, stati vuoto/errore/fine lista.</li><li>A11y: un\'alternativa al solo scroll ("Carica altri") e annuncio dei nuovi contenuti.</li></ul>\n<h3>Esempio 3: form multi-step</h3><ul><li>Stato del wizard in un reducer o store, bozza salvata (localStorage/IndexedDB o server) per non perdere i dati.</li><li>Validazione per passo con schema Zod, errori accanto ai campi, riepilogo finale.</li><li>Invio idempotente (chiave) per evitare doppie creazioni, gestione offline e riprova.</li></ul>\n<h3>Esempio 4: componenti da costruire a mano</h3><p>Modale, tabs, accordion, carousel, tooltip, toast, tabella ordinabile. Per ognuno: struttura semantica, stato minimo, tastiera, focus, API del componente (controlled/uncontrolled), cleanup.</p>\n<h3>Cose da citare sempre</h3><ul><li>Cosa succede con rete lenta, offline, errore, lista vuota, dati enormi.</li><li>Dove sta la fonte di verità (server) e come ti riallinei.</li><li>Cosa lasceresti per dopo e perché.</li></ul>\n<div class="say"><b>Come dirlo</b>"Prima chiarisco requisiti e dispositivi, poi disegno componenti e dove vive lo stato, e solo dopo ottimizzo. Mi fermo sempre sui casi di errore, vuoto e rete lenta."</div>',
+    quiz: [
+      {
+        id: 'q1',
+        q: 'Perché in un feed infinito usi una paginazione a cursore?',
+        options: [
+          'Con offset, inserimenti e cancellazioni durante lo scroll causano duplicati o salti',
+          'Riduce il CSS',
+          'Il browser lo richiede',
+          'È più veloce da scrivere',
+        ],
+        answer: 0,
+        explanation:
+          'Il cursore punta a una posizione stabile (ultimo id/timestamp) e non si sposta quando cambia la lista.',
+      },
+      {
+        id: 'q2',
+        q: 'Autocomplete: la risposta della query "ca" arriva dopo quella di "casa". Come eviti il flicker?',
+        options: [
+          "Annullo la richiesta precedente o scarto le risposte non corrispondenti all'input",
+          'Uso più debounce',
+          'Ignoro il problema',
+          'Uso localStorage',
+        ],
+        answer: 0,
+        explanation:
+          'AbortController o un controllo sul valore corrente impediscono a una risposta vecchia di sovrascrivere la nuova.',
+      },
+      {
+        id: 'q3',
+        q: 'Come rilevi la fine della lista per caricare altro?',
+        options: [
+          'setInterval',
+          'Evento scroll con calcoli a ogni pixel',
+          'IntersectionObserver su un sentinella',
+          'Ricarico tutto',
+        ],
+        answer: 2,
+        explanation: 'IntersectionObserver non pesa sul main thread come un listener di scroll non ottimizzato.',
+      },
+      {
+        id: 'q4',
+        q: 'Perché una chiave di idempotenza nel submit di un form?',
+        options: [
+          "Per evitare doppie creazioni se l'utente riprova o la rete cade",
+          'Per la SEO',
+          'Per i test',
+          'Per il caching',
+        ],
+        answer: 0,
+        explanation: 'Il server riconosce la stessa operazione ripetuta e risponde con lo stesso risultato.',
+      },
+    ],
+    cards: [
+      {
+        id: 'c1',
+        front: 'Schema RADIO',
+        back: 'Requisiti, Architettura, Dati, Interfaccia (API), Ottimizzazioni, e i dettagli (a11y, i18n, sicurezza).',
+      },
+      {
+        id: 'c2',
+        front: 'Debounce vs throttle',
+        back: 'Debounce: esegue dopo che gli eventi si fermano (ricerca). Throttle: al massimo una volta ogni N ms (scroll, resize).',
+      },
+      {
+        id: 'c3',
+        front: 'Cursore vs offset',
+        back: "Offset salta N righe (instabile con dati che cambiano, lento su tabelle grandi). Cursore riparte dall'ultimo elemento visto (stabile, veloce).",
+      },
+      {
+        id: 'c4',
+        front: 'Stati da gestire sempre',
+        back: 'Caricamento, vuoto, errore (con retry), parziale, offline, lento, dati enormi.',
+      },
+      {
+        id: 'c5',
+        front: 'Normalizzare i dati',
+        back: 'Entità per id in una mappa, liste di id. Un aggiornamento cambia un posto solo. TanStack Query lo fa per chiave; Redux con entity adapter.',
+      },
+      {
+        id: 'c6',
+        front: 'Optimistic UI',
+        back: "Mostri l'esito atteso subito e fai rollback se il server rifiuta. Ottimo per like, toggle, riordino.",
+      },
+    ],
+    practice: [
+      {
+        id: 'p1',
+        question: 'Progetta un autocomplete per una ricerca di prodotti.',
+        answer:
+          'Requisiti, componente controllato con debounce, AbortController, cache per query, stati loading/vuoto/errore, pattern combobox accessibile con tastiera, ranking e highlight lato server. Cita le race condition e i limiti (rate limit, risultati max).',
+      },
+      {
+        id: 'p2',
+        question: 'Progetta la pagina di un feed con scroll infinito e like.',
+        answer:
+          'Cursore, useInfiniteQuery, IntersectionObserver, virtualizzazione se serve, like ottimistico con rollback, nuovi post senza far saltare lo scroll, stati vuoto/errore, alternativa accessibile "Carica altri".',
+      },
+      {
+        id: 'p3',
+        question: 'Come progetti un wizard di 5 passi con salvataggio della bozza?',
+        answer:
+          'Reducer con passi e dati, schema Zod per passo, bozza in IndexedDB o sul server con autosave debounced, ripresa dal punto in cui eri, invio finale idempotente, errori accanto ai campi, test del percorso con Playwright.',
+      },
+    ],
+  },
+  {
+    id: 'projui',
+    title: 'Mini-progetto: la UI (web e mobile)',
+    subtitle: 'Un client React e una app Expo per il servizio ordini, da raccontare al colloquio',
+    group: 'fe',
+    vault:
+      'Salva il codice in un repo personale e aggiungi una nota nel vault (<b>Work/What</b>) con le scelte. Riusa le note <b>tanstack-query</b>, <b>react-testing-library</b>, <b>playwright</b> e <b>react-native</b>.',
+    lesson:
+      '<p class="lead">Il mini-progetto backend (servizio ordini) diventa una storia completa se ha una faccia. Una UI web e una piccola app mobile che parlano con le stesse API ti permettono di raccontare "dal click al database".</p>\n<h3>Cosa costruire</h3><ul><li><b>Web (React + TypeScript + Vite)</b>: lista ordini con filtri nell\'URL, paginazione a cursore, dettaglio, creazione con react-hook-form + Zod, TanStack Query, stati vuoto/errore/caricamento, modalità scura, accessibilità di base.</li><li><b>Client API tipizzato</b>: tipi generati da OpenAPI (o schemi Zod condivisi), gestione 401 e retry con backoff.</li><li><b>Mobile (Expo + React Native)</b>: stessa lista e creazione ordine, navigazione con Expo Router, token in <code>expo-secure-store</code>, pull to refresh, FlashList, stato offline semplice.</li><li><b>Test</b>: Testing Library + MSW sul form, un E2E Playwright sul flusso "crea ordine".</li></ul>\n<h3>Ordine di lavoro (una settimana, dopo il backend)</h3><div class="tblw"><table><tr><th>Giorno</th><th>Cosa</th></tr><tr><td>1</td><td>Vite + React + client API + lista con TanStack Query</td></tr><tr><td>2</td><td>Form di creazione con Zod, errori del server, optimistic update</td></tr><tr><td>3</td><td>Test (Testing Library + MSW) e un E2E</td></tr><tr><td>4</td><td>Accessibilità, tema, performance (bundle, Lighthouse)</td></tr><tr><td>5</td><td>App Expo: login, lista, creazione</td></tr><tr><td>6</td><td>Offline di base, pull to refresh, test su dispositivo</td></tr><tr><td>7</td><td>README, schema dell\'architettura, prova a voce</td></tr></table></div>\n<h3>Cosa dirai al colloquio</h3><ul><li>Perché hai diviso stato server e stato UI, e cosa ti ha dato la cache.</li><li>Come hai gestito errori di rete, doppio invio e conflitti.</li><li>Cosa condividono web e mobile (tipi, client, schemi) e cosa no (navigazione, storage, componenti).</li><li>Cosa cambieresti con più tempo.</li></ul>',
+    quiz: [],
+    cards: [
+      {
+        id: 'c1',
+        front: 'Cosa si condivide tra web e mobile',
+        back: 'Tipi, schemi Zod, client API, logica di dominio e hook di dati. Non la UI né la navigazione né lo storage.',
+      },
+      {
+        id: 'c2',
+        front: 'Perché tipi generati da OpenAPI',
+        back: 'Il contratto è la fonte di verità: il client e il server non divergono, e un cambio rompe la build invece della produzione.',
+      },
+      {
+        id: 'c3',
+        front: 'Dove salvi il token su mobile',
+        back: 'Nel keychain/keystore tramite expo-secure-store, non in AsyncStorage (non cifrato).',
+      },
+      {
+        id: 'c4',
+        front: 'Come racconti il progetto',
+        back: 'Cinque beat: contesto, problema, scelta con alternative, risultato, cosa cambieresti. Dal click al database in due minuti.',
+      },
+    ],
+    practice: [
+      {
+        id: 'p1',
+        question: 'Raccontami il progetto full stack che hai costruito.',
+        answer:
+          "Parti dal flusso: l'utente crea un ordine, la UI valida con Zod e invia con chiave di idempotenza, l'API Fastify scrive in Postgres con outbox, il worker aggiorna il read model in Mongo, la UI si riallinea con l'invalidazione. Scegli una decisione per lato e chiudi con cosa cambieresti.",
+      },
+      {
+        id: 'p2',
+        question: 'Come mantieni coerenti frontend e backend?',
+        answer:
+          'Contratto OpenAPI o schemi condivisi, tipi generati, test di contratto, versioning additivo, mock con MSW basati sullo stesso contratto, CI che fallisce se il contratto cambia in modo incompatibile.',
+      },
+    ],
+  },
+  {
+    id: 'rn',
+    title: 'React Native ed Expo',
+    subtitle: 'Come funziona, differenze dal web, liste, navigazione, stile, performance',
+    group: 'mob',
+    vault:
+      'Nel vault: <b>react-native/react-native_index</b> (architettura JSI/Fabric, Expo vs bare, navigazione, pitfall) e tutto <b>react/</b>, che qui vale quasi identico.',
+    lesson:
+      '<p class="lead">Se sai React, sai l\'80% di React Native. Il colloquio chiede cosa cambia: rendering nativo, stile, liste, navigazione e prestazioni.</p>\n<h3>Come funziona</h3><p>Scrivi componenti React in JavaScript/TypeScript. Il JS gira in un motore (<b>Hermes</b>) e descrive un albero di viste che viene mappato su <b>viste native vere</b> (UIView su iOS, android.view.View su Android). Non c\'è un DOM né un WebView.</p>\n<h3>Architettura: bridge vs nuova architettura</h3><ul><li><b>Vecchia</b>: JS e nativo comunicavano con messaggi JSON asincroni sul bridge. Collo di bottiglia su gesture e animazioni.</li><li><b>Nuova</b> (default dalle versioni recenti): <b>JSI</b> (JS tiene riferimenti diretti a oggetti nativi, chiamate sincrone possibili), <b>Fabric</b> (nuovo renderer) e <b>TurboModules</b> (moduli nativi caricati quando servono).</li></ul>\n<h3>Cosa cambia dal web</h3><div class="tblw"><table><tr><th>Web</th><th>React Native</th></tr><tr><td>div, span, p</td><td>View, Text (il testo va sempre in Text)</td></tr><tr><td>CSS</td><td>StyleSheet con oggetti JS, Flexbox (colonna di default), niente cascata</td></tr><tr><td>onClick</td><td>onPress (Pressable)</td></tr><tr><td>img</td><td>Image / expo-image</td></tr><tr><td>localStorage</td><td>AsyncStorage, MMKV, SecureStore</td></tr><tr><td>react-router</td><td>React Navigation o Expo Router</td></tr><tr><td>overflow scroll</td><td>ScrollView / FlatList</td></tr></table></div>\n<h3>Expo o bare?</h3><p>Parti da <b>Expo</b>: SDK con camera, notifiche, file system, sensori; <b>EAS Build</b> compila nel cloud, <b>EAS Update</b> invia aggiornamenti JS senza passare dallo store, <b>Expo Router</b> dà routing a file come Next.js. Con <code>prebuild</code> e dev client puoi usare moduli nativi custom. Il bare serve solo se Expo diventa un ostacolo.</p>\n<h3>Liste</h3><p>Mai <code>ScrollView</code> con migliaia di elementi (renderizza tutto). Usa <code>FlatList</code> o <b>FlashList</b>: virtualizzano. Regole: <code>keyExtractor</code> stabile, righe leggere e memoizzate, <code>getItemLayout</code> se le altezze sono fisse, niente funzioni inline pesanti nel render.</p>\n<h3>Navigazione</h3><p>Stack, tab, drawer. Parametri tipizzati, deep link configurati nella navigazione, stato di navigazione persistibile. Con Expo Router la struttura delle cartelle è la mappa delle rotte.</p>\n<h3>Prestazioni</h3><ul><li>Due thread che contano: <b>JS</b> e <b>UI</b>. Se il JS è occupato i tocchi e le animazioni JS si bloccano.</li><li><b>Reanimated</b> esegue le animazioni sul thread UI (worklet) senza passare dal JS.</li><li>Evita re-render inutili (stessi strumenti di React), immagini ridimensionate e in cache, Hermes con bytecode, <code>InteractionManager</code> per il lavoro dopo le transizioni.</li><li>Misura con il profiler di React DevTools, Flipper/RN DevTools e con test su un dispositivo reale e <b>lento</b> (non solo il simulatore).</li></ul>\n<h3>Differenze tra piattaforme</h3><p><code>Platform.select</code>, file <code>.ios.tsx / .android.tsx</code>, ombre diverse (shadow* su iOS, elevation su Android), tastiera (<code>KeyboardAvoidingView</code> con behavior diverso), safe area (<code>react-native-safe-area-context</code>), tasto indietro su Android, permessi.</p>\n<h3>Test</h3><p>Jest + React Native Testing Library per i componenti; <b>Maestro</b> o Detox per E2E sul dispositivo.</p>\n<div class="say"><b>Come dirlo</b>"React Native mi permette di riusare React, i tipi e la logica di dati. Il lavoro vero sta nelle differenze: liste, navigazione, prestazioni sul thread JS e comportamento per piattaforma."</div>',
+    quiz: [
+      {
+        id: 'q1',
+        q: 'In React Native, dove deve stare una stringa di testo?',
+        options: ['Ovunque', 'Dentro un View', 'Dentro un Text', 'Dentro un div'],
+        answer: 2,
+        explanation: 'Una stringa fuori da <code>&lt;Text&gt;</code> genera un errore a runtime.',
+      },
+      {
+        id: 'q2',
+        q: 'Lista di 5.000 elementi: cosa usi?',
+        options: ['FlatList o FlashList', 'WebView', 'Un ciclo for con View', 'ScrollView con map'],
+        answer: 0,
+        explanation: 'Le liste virtualizzate renderizzano solo gli elementi vicini alla finestra visibile.',
+      },
+      {
+        id: 'q3',
+        q: 'Cosa è JSI?',
+        options: [
+          'Un router',
+          'Un bundler',
+          'Un linguaggio',
+          'Un layer C++ che permette al JS di riferirsi direttamente a oggetti nativi, senza serializzare su un bridge',
+        ],
+        answer: 3,
+        explanation: 'Insieme a Fabric e TurboModules forma la nuova architettura.',
+      },
+      {
+        id: 'q4',
+        q: 'Dove salvi un token di autenticazione?',
+        options: ['Un file di testo', 'AsyncStorage', 'expo-secure-store (keychain/keystore)', 'Una variabile globale'],
+        answer: 2,
+        explanation: 'AsyncStorage non è cifrato. Il secure store usa keychain su iOS e keystore su Android.',
+      },
+      {
+        id: 'q5',
+        q: 'Perché usare Reanimated per le animazioni?',
+        options: [
+          'Sostituisce React',
+          'È più bella',
+          'Le anima sul thread UI, senza dipendere dal thread JS',
+          'Non serve Hermes',
+        ],
+        answer: 2,
+        explanation: "Un thread JS occupato non fa saltare i frame di un'animazione che vive sul thread UI.",
+      },
+    ],
+    cards: [
+      {
+        id: 'c1',
+        front: 'Differenza tra React Native e un WebView/Ionic',
+        back: 'RN usa viste native vere comandate dal JS; Ionic/Cordova mostra una pagina web dentro un WebView.',
+      },
+      {
+        id: 'c2',
+        front: 'Expo: cosa dà',
+        back: 'SDK di moduli, EAS Build (build nel cloud), EAS Update (aggiornamenti JS over the air), Expo Router (routing a file), dev client.',
+      },
+      {
+        id: 'c3',
+        front: 'FlatList vs FlashList',
+        back: 'Entrambe virtualizzano. FlashList (Shopify) ricicla le celle come le liste native ed è spesso più fluida; richiede una stima della dimensione.',
+      },
+      {
+        id: 'c4',
+        front: 'Platform differences',
+        back: 'Ombre, tastiera, safe area, tasto indietro Android, permessi e notifiche. Si gestiscono con Platform.select e file per piattaforma.',
+      },
+      {
+        id: 'c5',
+        front: "Che cos'è Hermes",
+        back: 'Il motore JS di RN: precompila in bytecode, parte più in fretta, usa meno memoria.',
+      },
+      {
+        id: 'c6',
+        front: 'OTA update: limiti',
+        back: "Puoi cambiare il JS e gli asset, non il codice nativo. Rispetta le regole degli store (nessun cambio sostanziale della funzione dell'app).",
+      },
+    ],
+    practice: [
+      {
+        id: 'p1',
+        question: 'Perché React Native e non due app native?',
+        answer:
+          'Un team, una codebase condivisa (logica, tipi, dati), tempi più rapidi, riuso delle competenze React. Costi: dipendenza da librerie, prestazioni da curare, accesso a funzioni native più nuove con ritardo. Va bene per app di prodotto/contenuti, meno per grafica pesante.',
+      },
+      {
+        id: 'p2',
+        question: 'Una lista in React Native va a scatti. Come procedi?',
+        answer:
+          'Verifico su un dispositivo reale, controllo se la lista è virtualizzata, keyExtractor stabile, righe memoizzate, immagini ridimensionate, nessuna funzione costosa nel render; valuto FlashList e di spostare animazioni su Reanimated. Misuro con il profiler.',
+      },
+      {
+        id: 'p3',
+        question: 'Come gestisci una funzione nativa che non esiste in Expo?',
+        answer:
+          'Cerco un modulo della community o un config plugin, uso un dev client con prebuild; se manca, scrivo un modulo nativo (Expo Modules API o TurboModule) per la parte minima. Documento e isolo il codice nativo.',
+      },
+    ],
+  },
+  {
+    id: 'mobcore',
+    title: 'Concetti mobile (qualsiasi framework)',
+    subtitle: 'Ciclo di vita, offline, notifiche, deep link, release, store, sicurezza',
+    group: 'mob',
+    vault:
+      'Nel vault: <b>offline-first-sync-engine</b>, <b>indexeddb-offline-queue-ios-pwa</b>, <b>local-first-schema-evolution</b> e <b>error-monitoring</b>.',
+    lesson:
+      '<p class="lead">Queste domande non dipendono dal framework. Dimostrano che hai pensato a cosa significa avere codice sul telefono di un utente.</p>\n<h3>Ciclo di vita</h3><p>Un\'app può essere in <b>primo piano</b>, in <b>background</b> (sospesa dopo pochi secondi) o <b>terminata</b> dal sistema per liberare memoria. Salva lo stato importante presto, non fare lavoro lungo in background (esistono task limitati), ripristina la navigazione alla riapertura. In RN: <code>AppState</code>.</p>\n<h3>Permessi</h3><p>Chiedili <b>al momento del bisogno</b> con una spiegazione, non all\'avvio. Gestisci "negato" e "negato per sempre" (rimanda alle impostazioni). Chiedi il minimo necessario.</p>\n<h3>Notifiche push</h3><ul><li>Il tuo server invia a <b>APNs</b> (Apple) o <b>FCM</b> (Google) con un device token; il sistema consegna anche ad app chiusa.</li><li>Tipi: notifica visibile, silenziosa/di dati. Token da registrare e aggiornare lato server, cancellare al logout.</li><li>Gestisci il tocco sulla notifica con un deep link verso la schermata giusta.</li></ul>\n<h3>Deep link</h3><p><b>Universal Links</b> (iOS) e <b>App Links</b> (Android) aprono l\'app da un URL https; richiedono un file sul tuo dominio (<code>apple-app-site-association</code>, <code>assetlinks.json</code>). I vecchi schemi custom (<code>myapp://</code>) sono più semplici ma meno sicuri. Se l\'app non è installata, il link porta al sito o allo store.</p>\n<h3>Offline e sincronizzazione</h3><ul><li><b>Offline-first</b>: l\'app legge e scrive su un database locale (SQLite, WatermelonDB, MMKV) e sincronizza in background.</li><li><b>Coda in uscita</b> (outbox): ogni scrittura è salvata e inviata quando c\'è rete, con id univoci e idempotenza.</li><li><b>Conflitti</b>: last write wins con timestamp, merge per campo, CRDT nei casi complessi. Decidi dove vive la verità (il server).</li><li>Migrazioni dello schema locale: l\'utente ha versioni vecchie dell\'app e dati vecchi.</li></ul>\n<h3>Sicurezza</h3><p>Token in keychain/keystore, TLS e (se serve) certificate pinning, niente segreti nel bundle (si possono estrarre), biometria per le azioni sensibili, offuscamento come difesa debole, API con rate limit e controlli lato server.</p>\n<h3>Rilascio</h3><ul><li><b>Store</b>: App Store Connect e Google Play Console, revisione (Apple spesso 1-2 giorni, può rifiutare), versioni e numero di build, note di rilascio.</li><li><b>TestFlight</b> e test interni/chiusi su Google Play per beta.</li><li><b>Rollout graduale</b> (staged), flag remoti, <b>aggiornamento forzato</b> per versioni incompatibili con le API.</li><li>Compatibilità all\'indietro: il backend deve supportare le app vecchie, quindi versioning additivo delle API.</li><li>Crash e analytics: Sentry/Crashlytics, rilascio con source map.</li></ul>\n<h3>Nativo, cross-platform o PWA?</h3><div class="tblw"><table><tr><th>Scelta</th><th>Quando</th></tr><tr><td>Nativo (Swift/Kotlin)</td><td>massime prestazioni, funzioni di sistema nuove, grafica pesante</td></tr><tr><td>React Native / Flutter</td><td>app di prodotto, un team, una codebase</td></tr><tr><td>PWA</td><td>contenuti, nessuno store, funzioni di sistema limitate (su iOS ancora più limitate)</td></tr></table></div>\n<div class="say"><b>Come dirlo</b>"Sul mobile il codice vive nel telefono dell\'utente per mesi: pensare a compatibilità all\'indietro, aggiornamenti forzati e offline fa la differenza con il web."</div>',
+    quiz: [
+      {
+        id: 'q1',
+        q: 'Quando chiedi il permesso di accedere alla fotocamera?',
+        options: [
+          "Al momento in cui l'utente usa la funzione, con una spiegazione",
+          "All'avvio dell'app",
+          'Dopo la registrazione sempre',
+          'Mai',
+        ],
+        answer: 0,
+        explanation: "Un permesso chiesto in contesto viene accettato più spesso e rispetta l'utente.",
+      },
+      {
+        id: 'q2',
+        q: "Chi consegna una push a un'app chiusa?",
+        options: [
+          'Il service worker',
+          'Il tuo server direttamente',
+          'APNs (Apple) o FCM (Google), a cui il tuo server invia',
+          'Il WebSocket',
+        ],
+        answer: 2,
+        explanation: 'Il tuo server parla con APNs/FCM usando il device token; il sistema operativo la consegna.',
+      },
+      {
+        id: 'q3',
+        q: 'Perché il backend deve restare compatibile con le app vecchie?',
+        options: [
+          'Per la SEO',
+          'Per abitudine',
+          'Lo richiede Apple',
+          "Gli utenti non aggiornano subito e non puoi forzare l'update di tutti",
+        ],
+        answer: 3,
+        explanation: 'Versioning additivo, deprecazioni lente e, per i casi estremi, aggiornamento forzato.',
+      },
+      {
+        id: 'q4',
+        q: "Cos'è una outbox lato app?",
+        options: [
+          "Una coda locale di scritture da inviare appena c'è rete",
+          'Un tipo di notifica',
+          'Una cartella di log',
+          'Un database remoto',
+        ],
+        answer: 0,
+        explanation: 'Ogni scrittura viene salvata in locale con un id univoco e inviata in modo idempotente.',
+      },
+      {
+        id: 'q5',
+        q: 'Dove NON metti segreti API?',
+        options: ["Nel bundle dell'app", 'In un secret manager', "In variabili d'ambiente del backend", 'Sul server'],
+        answer: 0,
+        explanation: "Il bundle si può decompilare: chiavi vere vanno sul server, l'app usa token per utente.",
+      },
+    ],
+    cards: [
+      {
+        id: 'c1',
+        front: 'Universal Links / App Links',
+        back: "URL https che aprono l'app. Richiedono un file di associazione sul dominio (AASA, assetlinks.json). Fallback al sito se l'app manca.",
+      },
+      {
+        id: 'c2',
+        front: 'Forced update',
+        back: "Il backend restituisce la versione minima supportata; l'app, se più vecchia, mostra una schermata che rimanda allo store.",
+      },
+      {
+        id: 'c3',
+        front: 'Staged rollout',
+        back: 'Rilasci la versione al 5-10% degli utenti, osservi crash e metriche, poi allarghi o blocchi.',
+      },
+      {
+        id: 'c4',
+        front: 'Conflitti di sincronizzazione',
+        back: 'Last write wins, merge per campo, o CRDT. Il server decide; il client mostra o risolve i casi dubbi.',
+      },
+      {
+        id: 'c5',
+        front: 'TestFlight',
+        back: 'Distribuzione beta iOS (interni fino a 100, esterni fino a 10.000) con revisione leggera per i test esterni.',
+      },
+      {
+        id: 'c6',
+        front: 'Background su iOS',
+        back: 'Pochi secondi dopo la chiusura; task di background limitati e decisi dal sistema. Per la sync usa notifiche silenziose o background fetch, senza fare affidamento sul timing.',
+      },
+    ],
+    practice: [
+      {
+        id: 'p1',
+        question: "Come progetti il funzionamento offline di un'app che crea ordini?",
+        answer:
+          'DB locale come fonte di lettura, coda di scritture con id univoci, invio in background con retry e backoff, idempotenza lato server, riallineamento con pull del server, conflitti decisi dal server, indicatore di stato (in sync / in attesa) e test con rete assente.',
+      },
+      {
+        id: 'p2',
+        question: 'Hai rilasciato una versione con un bug grave. Cosa fai?',
+        answer:
+          'Fermo il rollout graduale, se serve uso un flag remoto per disattivare la funzione, rilascio un hotfix (OTA se è solo JS, altrimenti nuova build con review accelerata), comunico, poi analizzo la causa e miglioro test e monitoraggio.',
+      },
+      {
+        id: 'p3',
+        question: 'Come gestisci un cambio di API che rompe le app già installate?',
+        answer:
+          'Non rompo: modifico in modo additivo, tengo la vecchia versione per un periodo, misuro quali app la usano, introduco la versione minima con aggiornamento forzato solo come ultima soluzione.',
+      },
+    ],
+  },
+  {
+    id: 'flutter',
+    title: 'Flutter e confronto con React Native',
+    subtitle: 'Widget, rendering proprio, Dart per chi viene da JS, quando sceglierlo',
+    group: 'mob',
+    vault:
+      'Nel vault: <b>flutter/flutter_index</b> e <b>react-native_index</b>, con la tabella di confronto e i pitfall.',
+    lesson:
+      '<p class="lead">Non devi saperlo programmare, devi saper spiegare in che cosa è diverso e quando lo sceglieresti.</p>\n<h3>Idea di base</h3><p>Flutter (Google, linguaggio <b>Dart</b>) <b>non usa componenti nativi</b>: ha un proprio motore (Impeller, prima Skia) che disegna ogni pixel. Il risultato è identico su iOS e Android; il prezzo è che l\'aspetto "nativo" va imitato (Material e Cupertino).</p>\n<h3>Livelli</h3><ul><li><b>Framework</b> (Dart): widget, gesture, animazioni.</li><li><b>Engine</b> (C++): rendering, layout del testo, I/O.</li><li><b>Embedder</b>: integrazione con la piattaforma.</li></ul>\n<h3>Widget</h3><p>Tutto è un widget, immutabile. <code>StatelessWidget</code> dipende solo dai parametri; <code>StatefulWidget</code> ha un oggetto <code>State</code> e usa <code>setState</code> per ridisegnare. Costruisci l\'interfaccia componendo widget (Column, Row, Stack, ListView). Usa costruttori <code>const</code> per saltare ricostruzioni.</p>\n<h3>Stato</h3><p>setState (locale), Provider, <b>Riverpod</b> (oggi il consenso per nuovi progetti), Bloc (team grandi, regole rigide).</p>\n<h3>Dart per chi viene da TypeScript</h3><ul><li>Tipizzato con null safety solida (<code>String?</code>, <code>!</code>, <code>required</code>).</li><li><code>Future</code> come Promise, <code>async/await</code> identico, <code>Stream</code> per sequenze di eventi.</li><li>Compilazione AOT in release, hot reload in sviluppo.</li></ul>\n<h3>Confronto</h3><div class="tblw"><table><tr><th></th><th>React Native</th><th>Flutter</th></tr><tr><td>Linguaggio</td><td>JS/TS</td><td>Dart</td></tr><tr><td>UI</td><td>viste native</td><td>disegnata dal motore</td></tr><tr><td>Riuso dal web</td><td>molto (React, librerie, team)</td><td>poco</td></tr><tr><td>Coerenza visiva</td><td>dipende dalla piattaforma</td><td>identica</td></tr><tr><td>Ecosistema</td><td>enorme (npm)</td><td>ampio (pub.dev)</td></tr><tr><td>Animazioni/grafica</td><td>buone (Reanimated, Skia)</td><td>ottime e nativamente integrate</td></tr></table></div>\n<div class="say"><b>Come dirlo</b>"Per un team React con TypeScript scelgo React Native per riuso e assunzioni. Flutter se la coerenza visiva e le animazioni sono centrali e il team può imparare Dart."</div>',
+    quiz: [
+      {
+        id: 'q1',
+        q: 'Cosa distingue Flutter da React Native?',
+        options: [
+          'Disegna la UI con un proprio motore invece di usare viste native',
+          'Usa il WebView',
+          'Non compila',
+          'Usa JavaScript',
+        ],
+        answer: 0,
+        explanation: 'Flutter non ha bridge né widget nativi: controlla il rendering.',
+      },
+      {
+        id: 'q2',
+        q: 'Quale linguaggio usa Flutter?',
+        options: ['Swift', 'TypeScript', 'Kotlin', 'Dart'],
+        answer: 3,
+        explanation: 'Dart: tipizzato, null safe, compilato AOT in release.',
+      },
+      {
+        id: 'q3',
+        q: 'A cosa serve il costruttore const di un widget?',
+        options: [
+          'Flutter salta la ricostruzione del sottoalbero costante',
+          'Lo rende nativo',
+          'Niente',
+          'Abilita lo stato',
+        ],
+        answer: 0,
+        explanation: "È l'equivalente concettuale di una memoizzazione per sottoalberi immutabili.",
+      },
+    ],
+    cards: [
+      {
+        id: 'c1',
+        front: 'StatelessWidget vs StatefulWidget',
+        back: 'Stateless: dipende solo dai parametri. Stateful: ha un oggetto State e setState per ridisegnare.',
+      },
+      {
+        id: 'c2',
+        front: 'Riverpod in breve',
+        back: 'Gestione dello stato senza dipendere dal BuildContext, con provider componibili e selezione fine per ridurre le ricostruzioni.',
+      },
+      {
+        id: 'c3',
+        front: 'Impeller',
+        back: 'Il nuovo motore di rendering di Flutter che sostituisce Skia, con shader precompilati per evitare scatti al primo frame.',
+      },
+      {
+        id: 'c4',
+        front: 'Quando preferire Flutter',
+        back: 'UI molto personalizzata e animata, coerenza identica sulle piattaforme, team disposto ad adottare Dart.',
+      },
+    ],
+    practice: [
+      {
+        id: 'p1',
+        question: "React Native o Flutter per un'app di prodotto, e perché?",
+        answer:
+          'Dipende dal team: con competenze React/TS scelgo RN (riuso di tipi, logica, persone); con requisiti di UI molto custom e coerenza assoluta valuto Flutter. Chiudi con criteri chiari e un prototipo di una settimana per decidere.',
+      },
+    ],
+  },
+  {
+    id: 'live',
+    title: 'Live coding: il metodo',
+    subtitle: 'Come ragionare ad alta voce, i sei passi, cosa dire quando ti blocchi, i componenti classici',
+    group: 'lg',
+    vault:
+      'Nel vault: <b>career/technical-interview-prep</b>, <b>algorithmic-interview-patterns</b>, <b>big-o-notation</b>, <b>data-structures-algorithms</b>. Siti per esercitarti: GreatFrontEnd, BFE.dev, JavaScript30.',
+    lesson:
+      '<p class="lead">In un colloquio meno profondo sul linguaggio, il live coding serve a vedere <b>come pensi</b>. Un metodo fisso ti toglie metà dell\'ansia.</p>\n<h3>I sei passi</h3><ol><li><b>Ripeti il problema</b> con parole tue e chiedi gli input: tipi, limiti, valori vuoti, duplicati, ordinati o no.</li><li><b>Un esempio piccolo</b> a mano (e un caso limite). Scrivilo in un commento.</li><li><b>Soluzione ingenua</b> detta a voce, con la sua complessità.</li><li><b>Migliora</b>: quale struttura dati toglie il lavoro ripetuto? (hashmap, due puntatori, finestra, stack).</li><li><b>Scrivi</b> in modo leggibile, nomi chiari, funzioni piccole. Spiega mentre scrivi.</li><li><b>Prova</b> con l\'esempio, poi i casi limite. Dì la complessità finale in tempo e spazio.</li></ol>\n<h3>Pattern da riconoscere</h3><div class="tblw"><table><tr><th>Indizio nel testo</th><th>Pattern</th></tr><tr><td>cerca un elemento/duplicato/coppia</td><td>hashmap o set</td></tr><tr><td>array ordinato, coppie</td><td>due puntatori, ricerca binaria</td></tr><tr><td>sottostringa/sottoarray contiguo</td><td>finestra scorrevole</td></tr><tr><td>parentesi, annidamento, "prossimo maggiore"</td><td>stack</td></tr><tr><td>livelli, cammino minimo non pesato</td><td>BFS con coda</td></tr><tr><td>tutte le combinazioni</td><td>backtracking</td></tr><tr><td>"quanti modi", ottimizzare con sottoproblemi</td><td>programmazione dinamica</td></tr></table></div>\n<h3>Quando ti blocchi</h3><ul><li>Dillo e riparti dall\'esempio piccolo: "provo a farlo a mano per vedere cosa ripeto".</li><li>Dai la soluzione ingenua: un codice che funziona vale più di uno perfetto incompleto.</li><li>Chiedi un indizio con calma. Si valuta come reagisci.</li><li>Non restare in silenzio più di venti secondi.</li></ul>\n<h3>Complessità: la tabella</h3><div class="tblw"><table><tr><th>Operazione</th><th>Costo</th></tr><tr><td>accesso a indice di array, Map/Set get/set</td><td>O(1) in media</td></tr><tr><td>ricerca in array non ordinato, filter, map</td><td>O(n)</td></tr><tr><td>sort</td><td>O(n log n)</td></tr><tr><td>ricerca binaria</td><td>O(log n)</td></tr><tr><td>due cicli annidati sullo stesso input</td><td>O(n²)</td></tr><tr><td>shift/unshift su array, spread in un ciclo</td><td>O(n) (attenzione: O(n²) nel ciclo)</td></tr></table></div>\n<h3>Componenti classici da costruire</h3><ul><li><b>Autocomplete</b>, <b>modale</b>, <b>tabs</b>, <b>accordion</b>, <b>carousel</b>, <b>toast</b>, <b>star rating</b>, <b>tabella ordinabile</b>, <b>todo list</b>, <b>timer/countdown</b>.</li><li>Scheletro da dire: struttura HTML semantica → stato minimo → eventi → tastiera e focus → stati vuoto/errore/caricamento → cleanup degli effetti.</li><li>Prima fai funzionare il caso base, poi accessibilità e rifiniture; dì cosa lasceresti per dopo.</li></ul>\n<h3>Cosa dire all\'inizio</h3><div class="say"><b>Apertura</b>"Mi faccio un esempio per essere sicuro di aver capito. Poi parto da una soluzione semplice e la miglioro se serve. Dimmi se preferisci che dia priorità alla leggibilità o alle prestazioni."</div>',
+    quiz: [
+      {
+        id: 'q1',
+        q: 'Cosa fai per primo in un problema di live coding?',
+        options: [
+          "Cerco l'algoritmo perfetto",
+          'Aspetto in silenzio',
+          'Ripeto il problema e chiedo input e casi limite',
+          'Scrivo subito il codice',
+        ],
+        answer: 2,
+        explanation: 'Chiarire evita di risolvere il problema sbagliato e mostra metodo.',
+      },
+      {
+        id: 'q2',
+        q: 'Trovare una sottostringa contigua con un vincolo (lunghezza max, caratteri unici)...',
+        options: ['Finestra scorrevole', 'Backtracking', 'BFS', 'Ordinamento'],
+        answer: 0,
+        explanation: 'Due indici che espandono e restringono la finestra: O(n).',
+      },
+      {
+        id: 'q3',
+        q: 'Verificare le parentesi bilanciate...',
+        options: ['Una coda', 'Un sort', 'Uno stack', 'Una hashmap'],
+        answer: 2,
+        explanation: 'Apri = push, chiudi = pop e confronta: O(n).',
+      },
+      {
+        id: 'q4',
+        q: 'Complessità di usare shift() dentro un ciclo su un array di n elementi?',
+        options: ['O(n²)', 'O(n)', 'O(n log n)', 'O(1)'],
+        answer: 0,
+        explanation: 'Ogni shift sposta tutti gli elementi: n volte O(n). Con indice o una coda vera è O(n).',
+      },
+      {
+        id: 'q5',
+        q: 'Sei bloccato a metà. Cosa fai?',
+        options: [
+          'Chiedo di finire',
+          'Silenzio finché mi viene',
+          "Torno all'esempio piccolo, lo dico a voce e propongo la soluzione ingenua",
+          'Cambio problema',
+        ],
+        answer: 2,
+        explanation: "Si valuta il ragionamento e come gestisci l'incertezza.",
+      },
+    ],
+    cards: [
+      {
+        id: 'c1',
+        front: 'Sei passi del live coding',
+        back: 'Ripeti, esempio, ingenua, migliora, scrivi, prova (con casi limite e complessità).',
+      },
+      {
+        id: 'c2',
+        front: 'Casi limite da provare sempre',
+        back: 'Input vuoto, un solo elemento, duplicati, valori negativi o zero, tutti uguali, già ordinato, molto grande, null/undefined.',
+      },
+      {
+        id: 'c3',
+        front: 'Hashmap: il trucco',
+        back: 'Scambia tempo con memoria: trasforma una ricerca O(n) in O(1) memorizzando ciò che hai già visto.',
+      },
+      {
+        id: 'c4',
+        front: 'Come dire la complessità',
+        back: '"Tempo O(n) perché scorro una volta; spazio O(n) per la mappa nel caso peggiore."',
+      },
+      {
+        id: 'c5',
+        front: "Se non sai l'API",
+        back: 'Dillo: "scrivo la logica, la firma esatta la verifico". Meglio che inventare.',
+      },
+      {
+        id: 'c6',
+        front: 'Componente da zero: ordine',
+        back: 'HTML semantico, stato minimo, eventi, tastiera e focus, stati di errore e vuoto, cleanup.',
+      },
+    ],
+    practice: [
+      {
+        id: 'p1',
+        question: 'Ti chiedo di costruire un autocomplete in React in 30 minuti. Da dove parti?',
+        answer:
+          'Chiarisco: sorgente dei dati (array o API), limiti, accessibilità. Parto con input controllato e lista filtrata, poi debounce e AbortController se è API, tastiera (frecce, Invio, Esc), ruoli combobox, stati vuoto/errore. Dico cosa lascio fuori (virtualizzazione, cache).',
+      },
+      {
+        id: 'p2',
+        question: 'Come comunichi mentre scrivi codice?',
+        answer:
+          'Annuncio il piano prima, spiego le scelte in una frase, nomino i compromessi, controllo con l\'esempio, segnalo i dubbi. Niente monologo continuo: pause brevi per pensare, dette ad alta voce ("sto valutando se serve una mappa").',
+      },
+    ],
+  },
+  {
+    id: 'code',
+    title: 'Esercizi di codice (JS/TS)',
+    subtitle: '20 problemi classici con soluzione e complessità: prima prova, poi confronta',
+    group: 'lg',
+    vault:
+      'Nel vault: <b>async-promises</b> (debounce, retry, timeout), <b>sets-and-maps</b>, <b>closures-scope</b> e <b>algorithmic-interview-patterns</b>. Risolvi ognuno in un file tuo prima di guardare la traccia.',
+    lesson:
+      '<p class="lead">Venti esercizi in ordine di difficoltà. Metodo: leggi il testo, <b>scrivi la soluzione in un editor</b> con un timer di 15 minuti, poi apri la traccia e confronta. Nella scheda "Simulazione" spunta quelli che hai risolto davvero.</p>\n<h3>Gruppi</h3><ul><li><b>1-6</b>: utility JS che si chiedono sempre (debounce, throttle, memoize, deep clone, flatten, curry).</li><li><b>7-11</b>: async e Promise (Promise.all, pool, retry, event emitter, timeout).</li><li><b>12-18</b>: strutture dati e algoritmi leggeri (two sum, parentesi, anagrammi, intervalli, finestra, binaria, BFS).</li><li><b>19-20</b>: più strutturati (LRU cache, deep equal).</li></ul>\n<h3>Regole di allenamento</h3><ul><li>Parla ad alta voce mentre scrivi.</li><li>Prima l\'esempio e i casi limite, poi il codice.</li><li>Dopo la soluzione, scrivi tre test (console.log va bene).</li><li>Ripeti dopo tre giorni quelli che non ti sono usciti.</li></ul>',
+    quiz: [
+      {
+        id: 'q1',
+        q: 'Cosa stampa: console.log([1,2,3].map(parseInt))?',
+        options: ['[1, NaN, NaN]', '[1, 2, 3]', 'Errore', '[NaN, NaN, NaN]'],
+        answer: 0,
+        explanation: 'map passa (valore, indice, array): parseInt("2", 1) è NaN e parseInt("3", 2) è NaN.',
+      },
+      {
+        id: 'q2',
+        q: 'Quale struttura rende O(1) "ho già visto questo valore?"',
+        options: ['Stack', 'Linked list', 'Set', 'Array'],
+        answer: 2,
+        explanation: 'Un Set (o una Map) ha ricerca media O(1).',
+      },
+      {
+        id: 'q3',
+        q: 'Qual è il risultato di [..."ciao"].reverse().join("")?',
+        options: ['Errore', '"ciao"', '"oaic"', 'undefined'],
+        answer: 2,
+        explanation: 'Spread trasforma la stringa in array di caratteri, reverse lo inverte e join lo ricompone.',
+      },
+      {
+        id: 'q4',
+        q: 'Perché Math.max(...arr) può fallire?',
+        options: [
+          'Con array enormi supera il limite degli argomenti della chiamata',
+          'Con numeri negativi',
+          'Con stringhe',
+          'Mai',
+        ],
+        answer: 0,
+        explanation: 'Su array di centinaia di migliaia di elementi usa <code>reduce</code>.',
+      },
+    ],
+    cards: [
+      {
+        id: 'c1',
+        front: 'Promise.all a mano: idea',
+        back: 'Ritorna una nuova Promise; conta le risolte, salva i risultati per indice (non per ordine di arrivo), rifiuta alla prima che fallisce.',
+      },
+      {
+        id: 'c2',
+        front: 'Memoize: attenzione',
+        back: 'Serve una chiave dagli argomenti (JSON.stringify va bene per primitivi). Cache che cresce senza limite: pensa a una LRU.',
+      },
+      {
+        id: 'c3',
+        front: 'Deep clone',
+        back: 'structuredClone gestisce Date, Map, Set, cicli; JSON.parse(JSON.stringify()) perde Date, undefined, funzioni.',
+      },
+      {
+        id: 'c4',
+        front: 'Debounce con leading',
+        back: 'Opzione per eseguire subito alla prima chiamata e ignorare le successive per N ms.',
+      },
+    ],
+    practice: [
+      {
+        id: 'p1',
+        question: '1. Debounce: scrivi debounce(fn, ms).',
+        answer:
+          '<pre><code>function debounce(fn, ms) {\n  let timer;\n  return function (...args) {\n    clearTimeout(timer);\n    timer = setTimeout(() => fn.apply(this, args), ms);\n  };\n}\n</code></pre><p>Closure sul timer, <code>this</code> e argomenti preservati. Estensioni: <code>cancel()</code>, <code>leading</code>.</p>',
+      },
+      {
+        id: 'p2',
+        question: '2. Throttle: scrivi throttle(fn, ms) che esegue al massimo una volta ogni ms.',
+        answer:
+          "<pre><code>function throttle(fn, ms) {\n  let last = 0;\n  return function (...args) {\n    const now = Date.now();\n    if (now - last >= ms) {\n      last = now;\n      return fn.apply(this, args);\n    }\n  };\n}\n</code></pre><p>Versione semplice (leading). Una versione completa aggiunge l'esecuzione finale con un timer.</p>",
+      },
+      {
+        id: 'p3',
+        question: '3. Memoize: scrivi memoize(fn) per funzioni con argomenti primitivi.',
+        answer:
+          '<pre><code>function memoize(fn) {\n  const cache = new Map();\n  return function (...args) {\n    const key = JSON.stringify(args);\n    if (cache.has(key)) return cache.get(key);\n    const result = fn.apply(this, args);\n    cache.set(key, result);\n    return result;\n  };\n}\n</code></pre><p>Usa <code>has</code> e non il valore, così funziona anche se il risultato è falsy. Limite: cache illimitata (vedi LRU, n. 19).</p>',
+      },
+      {
+        id: 'p4',
+        question: '4. Deep clone di oggetti e array (senza structuredClone).',
+        answer:
+          '<pre><code>function deepClone(value, seen = new WeakMap()) {\n  if (value === null || typeof value !== "object") return value;\n  if (seen.has(value)) return seen.get(value);       // cicli\n  if (value instanceof Date) return new Date(value);\n  const copy = Array.isArray(value) ? [] : {};\n  seen.set(value, copy);\n  for (const key of Object.keys(value)) {\n    copy[key] = deepClone(value[key], seen);\n  }\n  return copy;\n}\n</code></pre><p>Tempo O(n) sui nodi. Dì che nella vita reale usi <code>structuredClone</code>, che gestisce anche Map, Set e cicli.</p>',
+      },
+      {
+        id: 'p5',
+        question: '5. Flatten: appiattisci un array annidato fino a una profondità data.',
+        answer:
+          '<pre><code>function flatten(arr, depth = Infinity) {\n  return arr.reduce((acc, item) =>\n    Array.isArray(item) &amp;&amp; depth > 0\n      ? acc.concat(flatten(item, depth - 1))\n      : acc.concat(item), []);\n}\n// flatten([1,[2,[3]]], 1) -> [1, 2, [3]]\n</code></pre><p>Equivale a <code>arr.flat(depth)</code>. Attenzione al costo di <code>concat</code> ripetuto: per input grandi usa un accumulatore con <code>push</code>.</p>',
+      },
+      {
+        id: 'p6',
+        question: '6. Curry: trasforma f(a, b, c) in f(a)(b)(c) (accetta anche chiamate parziali).',
+        answer:
+          '<pre><code>function curry(fn) {\n  return function curried(...args) {\n    if (args.length >= fn.length) return fn.apply(this, args);\n    return (...more) => curried.apply(this, [...args, ...more]);\n  };\n}\n// const add = curry((a, b, c) => a + b + c);\n// add(1)(2)(3) === add(1, 2)(3) === 6\n</code></pre><p>Si basa su <code>fn.length</code> (numero di parametri dichiarati).</p>',
+      },
+      {
+        id: 'p7',
+        question: '7. Promise.all a mano: promiseAll(promises).',
+        answer:
+          '<pre><code>function promiseAll(items) {\n  return new Promise((resolve, reject) => {\n    const results = new Array(items.length);\n    let done = 0;\n    if (items.length === 0) return resolve(results);\n    items.forEach((item, i) => {\n      Promise.resolve(item).then(value => {\n        results[i] = value;                 // per indice, non per arrivo\n        if (++done === items.length) resolve(results);\n      }, reject);\n    });\n  });\n}\n</code></pre><p>Casi: array vuoto, valori non-promise (<code>Promise.resolve</code>), ordine preservato, rifiuto alla prima.</p>',
+      },
+      {
+        id: 'p8',
+        question: '8. Promise pool: esegui una lista di funzioni async con al massimo N in parallelo.',
+        answer:
+          '<pre><code>async function pool(tasks, limit) {\n  const results = new Array(tasks.length);\n  let next = 0;\n  async function worker() {\n    while (next &lt; tasks.length) {\n      const i = next++;\n      results[i] = await tasks[i]();\n    }\n  }\n  const workers = Array.from({ length: Math.min(limit, tasks.length) }, worker);\n  await Promise.all(workers);\n  return results;\n}\n</code></pre><p>N "worker" prendono il prossimo task libero. <code>next++</code> è sicuro perché JS è single thread. Uso reale: upload, scraping, chiamate a un\'API con rate limit.</p>',
+      },
+      {
+        id: 'p9',
+        question: '9. Retry con backoff: riprova una funzione async fino a n volte.',
+        answer:
+          '<pre><code>async function retry(fn, { retries = 3, baseMs = 200 } = {}) {\n  let attempt = 0;\n  while (true) {\n    try {\n      return await fn();\n    } catch (err) {\n      if (attempt++ >= retries) throw err;\n      const delay = baseMs * 2 ** attempt + Math.random() * 100; // backoff + jitter\n      await new Promise(r => setTimeout(r, delay));\n    }\n  }\n}\n</code></pre><p>Ritenta solo errori transitori (rete, 5xx, 429) e operazioni idempotenti. Jitter per evitare che tutti i client riprovino insieme.</p>',
+      },
+      {
+        id: 'p10',
+        question: '10. EventEmitter minimo: on, off, emit, once.',
+        answer:
+          "<pre><code>class Emitter {\n  #handlers = new Map();\n  on(event, fn) {\n    if (!this.#handlers.has(event)) this.#handlers.set(event, new Set());\n    this.#handlers.get(event).add(fn);\n    return () => this.off(event, fn);       // restituisce l'unsubscribe\n  }\n  off(event, fn) { this.#handlers.get(event)?.delete(fn); }\n  emit(event, ...args) {\n    this.#handlers.get(event)?.forEach(fn => fn(...args));\n  }\n  once(event, fn) {\n    const off = this.on(event, (...args) => { off(); fn(...args); });\n    return off;\n  }\n}\n</code></pre><p>Set evita doppioni. Discussione: ordine di esecuzione, errori in un handler, memory leak se non fai <code>off</code>.</p>",
+      },
+      {
+        id: 'p11',
+        question: '11. withTimeout(promise, ms): rifiuta se la promise non finisce entro ms.',
+        answer:
+          '<pre><code>function withTimeout(promise, ms) {\n  let timer;\n  const timeout = new Promise((_, reject) => {\n    timer = setTimeout(() => reject(new Error("timeout")), ms);\n  });\n  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));\n}\n</code></pre><p>Il timeout non annulla il lavoro sotto: per le fetch combina con <code>AbortController</code> (<code>AbortSignal.timeout(ms)</code>).</p>',
+      },
+      {
+        id: 'p12',
+        question: '12. Two sum: dato un array e un target, restituisci gli indici di due numeri che sommano al target.',
+        answer:
+          '<pre><code>function twoSum(nums, target) {\n  const seen = new Map();               // valore -> indice\n  for (let i = 0; i &lt; nums.length; i++) {\n    const need = target - nums[i];\n    if (seen.has(need)) return [seen.get(need), i];\n    seen.set(nums[i], i);\n  }\n  return null;\n}\n</code></pre><p>Ingenua O(n²) con due cicli; con la mappa O(n) tempo, O(n) spazio. Cattura i duplicati (3 + 3 = 6) perché controlla prima di inserire.</p>',
+      },
+      {
+        id: 'p13',
+        question: '13. Parentesi bilanciate: "()[]{}" valido, "(]" no.',
+        answer:
+          '<pre><code>function isBalanced(s) {\n  const pairs = { ")": "(", "]": "[", "}": "{" };\n  const stack = [];\n  for (const ch of s) {\n    if (ch in pairs) {\n      if (stack.pop() !== pairs[ch]) return false;\n    } else if ("([{".includes(ch)) {\n      stack.push(ch);\n    }\n  }\n  return stack.length === 0;\n}\n</code></pre><p>O(n) tempo e spazio. Casi: stringa vuota, solo chiusure, parentesi non chiuse alla fine.</p>',
+      },
+      {
+        id: 'p14',
+        question: '14. Raggruppa gli anagrammi: ["eat","tea","tan","ate","nat","bat"].',
+        answer:
+          '<pre><code>function groupAnagrams(words) {\n  const groups = new Map();\n  for (const w of words) {\n    const key = [...w].sort().join("");   // chiave canonica\n    if (!groups.has(key)) groups.set(key, []);\n    groups.get(key).push(w);\n  }\n  return [...groups.values()];\n}\n</code></pre><p>O(n · k log k) con k la lunghezza media. Alternativa: chiave dal conteggio delle lettere, O(n · k).</p>',
+      },
+      {
+        id: 'p15',
+        question: '15. Unisci gli intervalli sovrapposti: [[1,3],[2,6],[8,10],[15,18]] → [[1,6],[8,10],[15,18]].',
+        answer:
+          "<pre><code>function mergeIntervals(intervals) {\n  const sorted = [...intervals].sort((a, b) => a[0] - b[0]);\n  const out = [];\n  for (const [start, end] of sorted) {\n    const last = out[out.length - 1];\n    if (last &amp;&amp; start &lt;= last[1]) last[1] = Math.max(last[1], end);\n    else out.push([start, end]);\n  }\n  return out;\n}\n</code></pre><p>Ordina per inizio: O(n log n). Poi un passaggio. Attenzione: copia l'input prima di ordinarlo e usa <code>Math.max</code> per intervalli contenuti.</p>",
+      },
+      {
+        id: 'p16',
+        question: '16. Lunghezza della più lunga sottostringa senza caratteri ripetuti.',
+        answer:
+          '<pre><code>function longestUnique(s) {\n  const lastSeen = new Map();\n  let start = 0, best = 0;\n  for (let i = 0; i &lt; s.length; i++) {\n    const ch = s[i];\n    if (lastSeen.has(ch) &amp;&amp; lastSeen.get(ch) >= start) {\n      start = lastSeen.get(ch) + 1;    // sposta la finestra\n    }\n    lastSeen.set(ch, i);\n    best = Math.max(best, i - start + 1);\n  }\n  return best;\n}\n</code></pre><p>Finestra scorrevole: O(n). "abcabcbb" → 3.</p>',
+      },
+      {
+        id: 'p17',
+        question: "17. Ricerca binaria in un array ordinato: restituisci l'indice o -1.",
+        answer:
+          '<pre><code>function binarySearch(arr, target) {\n  let lo = 0, hi = arr.length - 1;\n  while (lo &lt;= hi) {\n    const mid = lo + Math.floor((hi - lo) / 2);\n    if (arr[mid] === target) return mid;\n    if (arr[mid] &lt; target) lo = mid + 1;\n    else hi = mid - 1;\n  }\n  return -1;\n}\n</code></pre><p>O(log n). Errori tipici: <code>lo &lt; hi</code> al posto di <code>&lt;=</code>, e cicli infiniti se non sposti i limiti di ±1.</p>',
+      },
+      {
+        id: 'p18',
+        question: '18. BFS: cammino minimo (numero di archi) tra due nodi in un grafo non pesato.',
+        answer:
+          '<pre><code>function shortestPath(graph, start, goal) {\n  const queue = [[start, 0]];\n  const visited = new Set([start]);\n  while (queue.length) {\n    const [node, dist] = queue.shift();       // per grafi grandi usa un indice di testa\n    if (node === goal) return dist;\n    for (const next of graph[node] ?? []) {\n      if (!visited.has(next)) {\n        visited.add(next);\n        queue.push([next, dist + 1]);\n      }\n    }\n  }\n  return -1;\n}\n</code></pre><p>O(V + E). Marca i visitati quando metti in coda, non quando togli. BFS dà il minimo solo se gli archi non hanno peso.</p>',
+      },
+      {
+        id: 'p19',
+        question: '19. LRU cache: get(key) e put(key, value) in O(1), con capienza massima.',
+        answer:
+          "<pre><code>class LRUCache {\n  constructor(capacity) {\n    this.capacity = capacity;\n    this.map = new Map();             // l'ordine di inserimento è l'ordine di uso\n  }\n  get(key) {\n    if (!this.map.has(key)) return undefined;\n    const value = this.map.get(key);\n    this.map.delete(key);\n    this.map.set(key, value);         // lo sposta in fondo (più recente)\n    return value;\n  }\n  put(key, value) {\n    if (this.map.has(key)) this.map.delete(key);\n    else if (this.map.size >= this.capacity) {\n      this.map.delete(this.map.keys().next().value); // il più vecchio\n    }\n    this.map.set(key, value);\n  }\n}\n</code></pre><p>La Map di JS mantiene l'ordine di inserimento, quindi basta. Nelle altre lingue: hashmap + lista doppiamente concatenata. Dì entrambe.</p>",
+      },
+      {
+        id: 'p20',
+        question: '20. deepEqual(a, b) per primitivi, array e oggetti.',
+        answer:
+          '<pre><code>function deepEqual(a, b) {\n  if (Object.is(a, b)) return true;\n  if (typeof a !== "object" || typeof b !== "object" || !a || !b) return false;\n  if (Array.isArray(a) !== Array.isArray(b)) return false;\n  const ka = Object.keys(a), kb = Object.keys(b);\n  if (ka.length !== kb.length) return false;\n  return ka.every(k => Object.hasOwn(b, k) &amp;&amp; deepEqual(a[k], b[k]));\n}\n</code></pre><p><code>Object.is</code> gestisce NaN e ±0. Cicli, Date, Map e Set sono estensioni: dichiaralo e dì cosa faresti.</p>',
+      },
+    ],
+  },
+  {
+    id: 'story',
+    title: 'Full stack in una storia',
+    subtitle:
+      'Come presentarti, come raccontare una funzionalità dal click al database, risposte alle domande difficili',
+    group: 'lg',
+    vault:
+      'Nel vault: <b>career/behavioral-interviews</b>, <b>technical-interview-prep</b>, <b>backend-interview-checklist</b> e i progetti in <b>Work/What</b>.',
+    lesson:
+      '<p class="lead">Ti sei presentato come full stack. Ora devi rendere credibile quella frase: un profilo con un punto forte chiaro (il frontend) e un backend vero, con esempi.</p>\n<h3>La frase di apertura</h3><div class="say"><b>Prima versione</b>"Sono uno sviluppatore full stack con il baricentro sul frontend: React e TypeScript sono il mio punto forte. Negli ultimi anni ho lavorato anche sul backend e sulle API, e mi piace seguire una funzionalità dall\'interfaccia ai dati."</div>\n<p>Dire dove sei forte non ti indebolisce: rende credibile il resto. Evita di dichiararti "ugualmente forte" su tutto.</p>\n<h3>Una funzionalità end to end (schema)</h3><ol><li><b>UI</b>: form, validazione (Zod), stati di caricamento/errore, accessibilità.</li><li><b>Client</b>: chiamata tipizzata, cache, retry, idempotency key.</li><li><b>API</b>: validazione dello schema, autenticazione, autorizzazione, codici di stato coerenti.</li><li><b>Dati</b>: transazione, indici, vincoli, migrazione.</li><li><b>Asincrono</b>: evento in coda, consumer idempotente, retry/DLQ.</li><li><b>Operazioni</b>: log, metriche, deploy, rollback.</li></ol>\n<h3>Tre storie da preparare (dal tuo lavoro)</h3><ul><li><b>Una funzionalità dal click al DB</b> in cui hai toccato entrambi i lati (un progetto reale del tuo lavoro).</li><li><b>Un problema di prestazioni o di dati</b> (query lenta, cache, Elasticsearch, bundle troppo grande): cosa hai misurato, cosa hai cambiato, risultato.</li><li><b>Un disaccordo o un bug difficile</b>: fatti, alternative, come avete deciso, cosa hai imparato.</li></ul>\n<h3>Domande difficili</h3><ul><li><b>"Dove ti senti più debole?"</b> Uno vero e non fatale: backend in produzione a grande scala, con ciò che stai facendo (mini-progetto, lettura, side project).</li><li><b>"Preferisci frontend o backend?"</b> Onesto e collegato al ruolo: "il frontend è il mio punto forte; mi interessa capire i dati e le API per costruire interfacce migliori".</li><li><b>"Cosa sai di cosa facciamo?"</b> Prepara tre frasi sul prodotto (mobilità e biglietti), su chi lo usa e su un problema tecnico che immagini.</li><li><b>"Perché noi?"</b> Prodotto concreto, team piccolo, stack che conosci o vuoi crescere, persone incontrate.</li></ul>\n<h3>Domande da fare a loro (aggiornate)</h3><ul><li>Com\'è diviso il lavoro tra frontend, backend e app mobile? Chi lavora trasversalmente?</li><li>Qual è lo stack del frontend e dell\'app (React Native, nativo, altro)?</li><li>Come arrivate in produzione: review, test, rilasci, rollback?</li><li>Com\'è un tipico primo progetto per chi entra?</li><li>Che cosa serve per crescere da mid a senior qui?</li></ul>\n<h3>Dopo il colloquio</h3><p>Scrivi subito cosa ti hanno chiesto e dove hai esitato. Aggiungilo come flashcard nel modulo giusto: è il miglior materiale di studio.</p>',
+    quiz: [],
+    cards: [
+      {
+        id: 'c1',
+        front: 'Frase di apertura',
+        back: "Full stack con baricentro frontend (React/TS), backend e API nell'esperienza recente, voglia di seguire una funzionalità dall'interfaccia ai dati.",
+      },
+      {
+        id: 'c2',
+        front: 'Il tuo punto debole',
+        back: 'Un limite vero e non fatale (backend a grande scala) e ciò che fai: mini-progetto, studio mirato, richieste di review.',
+      },
+      {
+        id: 'c3',
+        front: 'Funzionalità end to end',
+        back: 'UI, client, API, dati, asincrono, operazioni. Sapere per ogni livello una decisione e un compromesso.',
+      },
+      {
+        id: 'c4',
+        front: 'Se non conosci una cosa',
+        back: '"Non l\'ho usata in produzione. Immagino che funzioni così... e lo verificherei in questo modo." Un ragionamento onesto vale più di un\'invenzione.',
+      },
+      {
+        id: 'c5',
+        front: 'Dopo ogni colloquio',
+        back: 'Scrivi le domande e dove hai esitato, trasforma in flashcard, studia quelle per prime.',
+      },
+    ],
+    practice: [
+      {
+        id: 'p1',
+        question: 'Parlami di te e del tuo profilo tecnico.',
+        answer:
+          'Novanta secondi: dove lavori e cosa fai, il punto forte (frontend React/TS), il backend che hai toccato, un progetto di cui vai fiero, cosa cerchi. Chiudi collegando il ruolo a ciò che hai detto.',
+      },
+      {
+        id: 'p2',
+        question: "Descrivi una funzionalità che hai costruito dall'interfaccia al database.",
+        answer:
+          'Scegli un esempio reale, usa i sei livelli (UI, client, API, dati, asincrono, operazioni) e per ognuno una decisione e il suo perché. Chiudi con cosa cambieresti.',
+      },
+      {
+        id: 'p3',
+        question: 'Dove ti vedi tra due anni?',
+        answer:
+          'Un obiettivo concreto legato al ruolo: crescere su tutto lo stack di prodotto, con responsabilità su una parte (la UI e la sua qualità), e contribuire alle scelte tecniche del team. Evita titoli e promesse vaghe.',
+      },
+    ],
+  },
+  {
     id: 'col',
     title: 'Il colloquio',
-    subtitle: 'Storie dai tuoi progetti, passaggio frontend → backend, domande da fare, piano di 10 giorni',
+    subtitle: 'Storie dai tuoi progetti, perché full stack, domande da fare, piano di 14 giorni',
     vault:
       'Nel vault: <b>career/technical-interview-prep</b> e <b>behavioral-interviews</b>. Il tuo materiale reale: Atoka API (Django, Elasticsearch), Celery, Redis, SpiceDB, OpenTelemetry, test con pytest.',
     lesson:
-      '<p class="lead">La parte tecnica vale solo se la racconti bene. Qui prepari le storie e la risposta più delicata: "perché il backend?".</p><h3>Struttura tipica</h3><p>Presentazione (5 min) → domande tecniche o live coding (30-40 min) → system design leggero → le tue domande (5-10 min).</p><h3>Raccontare un progetto (5 beat)</h3><ol><li><b>Contesto</b> in una frase.</li><li><b>Problema</b> e vincolo.</li><li><b>Scelta</b> e alternative scartate.</li><li><b>Risultato</b> con un numero se possibile.</li><li><b>Cosa cambieresti</b>. È il punto che dimostra maturità.</li></ol><h3>Tre storie da preparare, dal tuo lavoro</h3><ul><li>Una in cui hai <b>progettato o consumato un\'API</b> (contratto OpenAPI, problemi di versioning, errori).</li><li>Una sulle <b>prestazioni</b> (query lente, cache, Elasticsearch, N+1).</li><li>Una su un <b>bug difficile</b> o un incidente: cosa hai misurato, cosa hai imparato.</li></ul><div class="say"><b>Perché il backend?</b>"Lavoro full-stack da anni e la parte che mi attrae di più è quella dei dati, dell\'affidabilità e delle API. Conosco i bisogni di chi le consuma e voglio dedicarmi a ciò che c\'è dietro." Poi mostra un esempio concreto del tuo vault (Django, Celery, Postgres).</div><h3>Se non conosci una cosa</h3><p>Dillo, poi ragiona: "Non l\'ho usato, ma immagino che… e lo verificherei così." Un ragionamento onesto vale più di un\'invenzione.</p><h3>Domande da fare a loro</h3><ul><li>Qual è lo stack e come si divide il lavoro tra frontend e backend?</li><li>Come fate code review, test e rilascio?</li><li>Com\'è il processo di on-call e gli incidenti?</li><li>Cosa farei nei primi tre mesi?</li><li>Come cresce una persona nel team?</li></ul><h3>Piano di 10 giorni</h3><div class="tblw"><table><tr><th>Giorni</th><th>Cosa</th></tr><tr><td>1-2</td><td>Moduli HTTP, API, Auth (quiz + simulazione)</td></tr><tr><td>3-5</td><td>SQL e indici, transazioni, modellazione: 15-20 query a mano</td></tr><tr><td>6-7</td><td>Cache, code asincrone, system design (un disegno su carta a giorno)</td></tr><tr><td>8</td><td>Test, Docker, osservabilità; algoritmi leggeri</td></tr><tr><td>9</td><td>Moduli dello stack scelto; le tre storie scritte e provate a voce</td></tr><tr><td>10</td><td>Simulazione completa a voce alta, 45 minuti; riposo</td></tr></table></div>',
+      '<p class="lead">La parte tecnica vale solo se la racconti bene. Qui prepari le storie e la risposta più delicata: "perché il backend?".</p><h3>Struttura tipica</h3><p>Presentazione (5 min) → domande tecniche o live coding (30-40 min) → system design leggero → le tue domande (5-10 min).</p><h3>Raccontare un progetto (5 beat)</h3><ol><li><b>Contesto</b> in una frase.</li><li><b>Problema</b> e vincolo.</li><li><b>Scelta</b> e alternative scartate.</li><li><b>Risultato</b> con un numero se possibile.</li><li><b>Cosa cambieresti</b>. È il punto che dimostra maturità.</li></ol><h3>Tre storie da preparare, dal tuo lavoro</h3><ul><li>Una in cui hai <b>progettato o consumato un\'API</b> (contratto OpenAPI, problemi di versioning, errori).</li><li>Una sulle <b>prestazioni</b> (query lente, cache, Elasticsearch, N+1).</li><li>Una su un <b>bug difficile</b> o un incidente: cosa hai misurato, cosa hai imparato.</li></ul><div class="say"><b>Perché full stack?</b>"Il frontend è il mio punto forte, ma mi piace seguire una funzionalità dall\'interfaccia ai dati: conosco i bisogni di chi consuma le API e negli ultimi anni ho lavorato anche dietro (Django, Celery, Postgres, Node)." Poi mostra un esempio concreto del tuo vault. Vedi anche il modulo "Full stack in una storia".</div><h3>Se non conosci una cosa</h3><p>Dillo, poi ragiona: "Non l\'ho usato, ma immagino che… e lo verificherei così." Un ragionamento onesto vale più di un\'invenzione.</p><h3>Domande da fare a loro</h3><ul><li>Qual è lo stack e come si divide il lavoro tra frontend e backend?</li><li>Come fate code review, test e rilascio?</li><li>Com\'è il processo di on-call e gli incidenti?</li><li>Cosa farei nei primi tre mesi?</li><li>Come cresce una persona nel team?</li></ul><h3>Piano di 14 giorni (backend, frontend, mobile, logica)</h3><div class="tblw"><table><tr><th>Giorni</th><th>Cosa</th></tr><tr><td>1</td><td>HTTP, API, Auth (quiz + simulazione). Browser e sicurezza lato client</td></tr><tr><td>2</td><td>JavaScript/TypeScript a fondo + esercizi di codice 1-6</td></tr><tr><td>3</td><td>React a livello senior + stato e dati dal server</td></tr><tr><td>4</td><td>SQL e indici, transazioni (15 query a mano)</td></tr><tr><td>5</td><td>Rendering (CSR/SSR/RSC), performance web, CSS e accessibilità</td></tr><tr><td>6</td><td>Modellazione dati, cache, code asincrone; esercizi async 7-11</td></tr><tr><td>7</td><td>System design backend + system design frontend (un disegno su carta ciascuno)</td></tr><tr><td>8</td><td>Node/Fastify, Mongo, RabbitMQ (moduli dello stack)</td></tr><tr><td>9</td><td>Mobile: React Native, concetti mobile, confronto con Flutter</td></tr><tr><td>10</td><td>Test e tooling frontend, test/Docker/CI backend, Kubernetes e GCP</td></tr><tr><td>11</td><td>Live coding: metodo + esercizi 12-20, a voce alta con un timer</td></tr><tr><td>12</td><td>Mini-progetti: scegli la storia e il diagramma end to end</td></tr><tr><td>13</td><td>Le tre storie scritte e provate a voce; domande da fare a loro</td></tr><tr><td>14</td><td>Simulazione completa a voce alta, 45 minuti; riposo</td></tr></table></div>',
     quiz: [],
     cards: [
       {
@@ -1611,7 +3338,7 @@ export const modules: CourseModule[] = [
       {
         id: 'c2',
         front: 'Se ti chiedono un punto debole',
-        back: 'Uno vero e non fatale, con ciò che stai facendo per migliorarlo. Per te: il backend in produzione a grande scala, e come lo stai colmando.',
+        back: 'Uno vero e non fatale, con ciò che stai facendo per migliorarlo. Per te: il backend in produzione a grande scala, e come lo stai colmando (mini-progetto, letture, review).',
       },
       {
         id: 'c3',
@@ -1627,9 +3354,9 @@ export const modules: CourseModule[] = [
     practice: [
       {
         id: 'p1',
-        question: 'Perché vuoi passare dal frontend al backend?',
+        question: 'Ti sei presentato come full stack: dove sei più forte e dove meno?',
         answer:
-          'Risposta in tre parti: cosa ti attrae (dati, affidabilità, API), cosa porti dal frontend (conosci i bisogni del consumatore), cosa hai già fatto nel backend (esempio concreto). Niente lamentele sul frontend.',
+          'Sii onesto e concreto: il frontend (React, TypeScript, UI) è il punto forte, con esempi. Sul backend dici cosa hai fatto davvero (API, Django, Celery, Postgres, Node) e cosa stai colmando (mini-progetto, scala in produzione). Mai "forte su tutto".',
       },
       {
         id: 'p2',

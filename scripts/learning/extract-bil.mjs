@@ -1,6 +1,7 @@
 // One-off extraction of the Backend Interview Lab prototype's content array `M`
 // into src/projects/learning/courses/backend-interview-lab.modules.ts.
-// The prototype HTML is read-only source; re-run only if it changes:
+// The prototype HTML is read-only source; re-run only if it changes (it now
+// includes the frontend, mobile and logic modules):
 //   node scripts/learning/extract-bil.mjs <path-to-backend-interview-lab.html>
 import fs from 'node:fs'
 import vm from 'node:vm'
@@ -14,7 +15,8 @@ const html = fs.readFileSync(src, 'utf8')
 const script = html.match(/<script>([\s\S]*?)<\/script>/)[1]
 const start = script.indexOf('var M = [')
 const end = script.indexOf('/* ---------- STATE ---------- */')
-const ctx = {}
+// The prototype's later blocks call its helper `esc` (defined below the content in the page).
+const ctx = { esc: (x) => String(x).replace(/&/g, '&amp;').replace(/</g, '&lt;') }
 vm.createContext(ctx)
 vm.runInContext(script.slice(start, end), ctx)
 const M = vm.runInContext('M', ctx)

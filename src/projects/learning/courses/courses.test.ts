@@ -26,6 +26,26 @@ const IDS = [
   'col',
 ]
 
+// Added with the frontend / mobile / logic extension (2026-10-23).
+const EXTENDED_IDS = [
+  'jsts',
+  'react',
+  'state',
+  'next',
+  'perf',
+  'websec',
+  'css',
+  'fetest',
+  'fesd',
+  'projui',
+  'rn',
+  'mobcore',
+  'flutter',
+  'live',
+  'code',
+  'story',
+]
+
 describe('course data', () => {
   it('has unique course ids and unique module ids per course', () => {
     expect(new Set(courses.map((c) => c.id)).size).toBe(courses.length)
@@ -51,10 +71,15 @@ describe('course data', () => {
       for (const m of c.modules) for (const q of m.quiz) expect(q.options[q.answer], `${m.id}`).toBeDefined()
   })
 
-  it('Backend Interview Lab keeps the 19 original module ids plus the hand-written ones and the prototype counts', () => {
+  it('Full Stack Interview Lab keeps the original module ids, the hand-written ones and the extension', () => {
     const c = courses.find((x) => x.id === 'backend-interview-lab')!
-    expect(c.modules.map((m) => m.id).sort()).toEqual([...IDS].sort())
+    expect(c.modules.map((m) => m.id).sort()).toEqual([...IDS, ...EXTENDED_IDS].sort())
     for (const m of c.modules) {
+      if (EXTENDED_IDS.includes(m.id)) {
+        expect(m.cards.length, m.id).toBeGreaterThanOrEqual(4)
+        expect(m.practice.length, m.id).toBeGreaterThanOrEqual(1)
+        continue
+      }
       expect(m.cards, m.id).toHaveLength(4)
       expect(m.practice.length, m.id).toBeGreaterThanOrEqual(2)
       expect(m.practice.length, m.id).toBeLessThanOrEqual(3)

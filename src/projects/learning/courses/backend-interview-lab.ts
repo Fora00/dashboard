@@ -13,14 +13,17 @@ const VERIFY: Record<string, string> = {
 
 export const backendInterviewLab: Course = {
   id: 'backend-interview-lab',
-  title: 'Backend Interview Lab',
+  title: 'Full Stack Interview Lab',
   emoji: '🧪',
-  summary: 'Preparazione al colloquio backend da Open Move: dall’API al deploy.',
+  summary: 'Preparazione al colloquio full stack da Open Move: backend, frontend, mobile e live coding.',
   intro:
-    'Corso a moduli per preparare il colloquio da Open Move. Lezione breve, quiz, flashcard e simulazione a voce alta per ogni argomento. I primi moduli valgono per ogni backend; gli ultimi seguono lo stack che usano (JS/TS, Fastify, Postgres, Mongo, RabbitMQ, Helm, GCP). Chiudi con il mini-progetto.',
+    'Corso a moduli per preparare il colloquio da Open Move come full stack. Lezione breve, quiz, flashcard e simulazione a voce alta per ogni argomento. Backend generale e stack (JS/TS, Fastify, Postgres, Mongo, RabbitMQ, Helm, GCP), poi frontend, mobile, logica e live coding. Chiudi con i mini-progetti.',
   groups: [
     { id: 'general', label: 'Moduli generali' },
     { id: 'stack', label: 'Stack Open Move' },
+    { id: 'fe', label: 'Frontend' },
+    { id: 'mob', label: 'Mobile' },
+    { id: 'lg', label: 'Logica e live coding' },
     { id: 'finale', label: 'Il colloquio' },
   ],
   modules: [...modules, langs, gaps].map((m) => ({
@@ -30,9 +33,14 @@ export const backendInterviewLab: Course = {
   })),
   references: [
     {
-      label: 'Checklist nel vault',
-      path: '~/Dev/personal-work-learning/career/backend-interview-checklist.md',
+      label: 'Checklist backend nel vault',
+      path: '~/Dev/personal/personal-work-learning/knowledge/career/backend-interview-checklist.md',
       note: 'Rimanda agli stessi argomenti. Solo un riferimento, nessuna integrazione.',
+    },
+    {
+      label: 'Checklist frontend e full stack nel vault',
+      path: '~/Dev/personal/personal-work-learning/knowledge/career/frontend-interview-checklist.md',
+      note: 'Frontend, mobile e logica, con i collegamenti alle note.',
     },
   ],
   notes: [
