@@ -19,13 +19,15 @@ function Row({ item }: { item: LifeDayFocus }) {
         onClick={() => void runSafe(toggleDayFocus, 'Could not save')(item.id)}
         className={`flex min-h-12 min-w-0 flex-1 items-center gap-3 rounded-xl border px-4 py-2 text-left text-base font-medium transition-colors active:bg-amber-100 dark:active:bg-amber-400/20 ${
           done
-            ? 'border-emerald-400/60 bg-emerald-400/10'
+            ? 'border-amber-400 bg-amber-300/25 dark:bg-amber-400/15'
             : 'border-amber-300/70 bg-white hover:border-amber-400 dark:border-amber-400/30 dark:bg-slate-800/50 dark:hover:border-amber-400/60'
         }`}
       >
         <span
           className={`flex size-7 shrink-0 items-center justify-center rounded-full border text-sm ${
-            done ? 'border-emerald-400 bg-emerald-400 text-slate-900' : 'border-amber-400 dark:border-amber-400/70'
+            done
+              ? 'border-amber-500 bg-gradient-to-br from-amber-300 to-amber-500 text-slate-900'
+              : 'border-amber-400 dark:border-amber-400/70'
           }`}
         >
           {done && '✓'}
