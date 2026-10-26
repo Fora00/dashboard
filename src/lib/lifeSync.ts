@@ -10,6 +10,8 @@ import {
   type LifePlan,
   type LifePlaybookEntry,
   type LifeSentEntry,
+  type LifeStreakEntry,
+  type LifeStreakValue,
   type LifeSundayEntry,
   type LifeUpgradeEntry,
   type LifeUpgradeSize,
@@ -27,6 +29,7 @@ import {
   entryId,
   freeSlots,
   isEnergy,
+  planStreakImport,
   validatePlan,
   withCheckinIds,
 } from '../projects/life/model'
@@ -175,11 +178,13 @@ const engine = createCloudSync({
 
 /**
  * Save an imported week: replaces the week's plan entirely and never touches
- * life_entries (entries whose ref left the plan are kept). Re-validates, so
+ * the week's life_entries (entries whose ref left the plan are kept). When
+ * `streaks` is given (the JSON's optional Streaks snapshot) the streak rows
+ * are synced to it too (importStreaks). Re-validates, so
  * nothing invalid is ever written; throws with the errors otherwise.
  */
-export async function importWeek(plan: LifePlan): Promise<LifeWeek> {
-  const result = validatePlan(plan)
+export async function importWeek(plan: LifePlan, streaks?: readonly LifeStreakValue[]): Promise<LifeWeek> {
+  const result = validatePlan(streaks === undefined ? plan : { ...plan, streaks })
   if (!result.ok) throw new Error(result.errors.join('\n'))
   const now = Date.now()
   const week: LifeWeek = {
@@ -190,7 +195,20 @@ export async function importWeek(plan: LifePlan): Promise<LifeWeek> {
     updatedAt: now,
   }
   await engine.upsert('life_weeks', week)
+  if (result.streaks) await importStreaks(result.plan.week, result.streaks)
   return week
+}
+
+/**
+ * Apply a Streaks-app snapshot (already validated by parseWeekJson/validatePlan):
+ * upsert each habit by ref, delete the habits no longer in it. Unchanged
+ * habits write nothing. See planStreakImport for the rules.
+ */
+export async function importStreaks(week: string, streaks: readonly LifeStreakValue[]): Promise<void> {
+  const existing = (await db.lifeEntries.filter((e) => e.kind === 'streak').toArray()) as LifeStreakEntry[]
+  const { upserts, deletes } = planStreakImport(existing, streaks, week, dayKey(new Date()), Date.now())
+  for (const e of upserts) await engine.upsert('life_entries', e)
+  for (const id of deletes) await engine.remove('life_entries', id)
 }
 
 /**

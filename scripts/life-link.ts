@@ -14,4 +14,4 @@ if (!result.ok) {
   console.error(result.errors.join('\n'))
   process.exit(1)
 }
-console.log(encodeImportLink(result.plan))
+console.log(encodeImportLink(result.streaks ? { ...result.plan, streaks: result.streaks } : result.plan))

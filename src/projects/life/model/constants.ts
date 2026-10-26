@@ -54,6 +54,12 @@ export const LIFE_CAPS = {
   ideaText: 300,
   /** Upgrade list item text (SQL: life_entries_upgrade_value). */
   upgradeText: 200,
+  /** Streaks snapshot (SQL: life_entries_streak_value): habits per import, name
+   *  length, the `days` strip length (exactly), max current/best streak. */
+  streaks: 40,
+  streakName: 60,
+  streakDays: 28,
+  streakMax: 100_000,
   /** Check-in note (SQL: life_entries_checkin_value, char_length ≤ 1000). */
   checkinNote: 1000,
   /** Sunday text answers (SQL: pg_column_size(value) ≤ 16 KiB). */

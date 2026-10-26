@@ -379,6 +379,7 @@ export type LifeEntryKind =
   | 'why'
   | 'idea'
   | 'upgrade'
+  | 'streak'
 
 export type LifeAnswer = number | boolean | string | null
 
@@ -461,6 +462,28 @@ export interface LifeUpgradeEntry extends LifeEntryBase {
   value: { text: string; size: LifeUpgradeSize; status: LifeUpgradeStatus; doneAt?: string }
 }
 
+/** A Streaks (iOS app) habit as last read from the Mac's backup. Read-only here. */
+export interface LifeStreakValue {
+  name: string
+  emoji?: string
+  /** Last 28 days, oldest → newest, one char each: 'd' done, 'm' missed, '-' not scheduled/no entry. */
+  days: string
+  /** Current consecutive done days (unscheduled days don't break it). */
+  streak: number
+  best?: number
+  /** Day key of the backup the snapshot was read from. */
+  asOf: string
+}
+
+// A Streaks habit, received with the week's JSON (never edited here). Id
+// `streak:${ref}`, ref = a stable slug of the habit name. Like 'upgrade' it is
+// not tied to a week: `week` = the week it was first imported in. Replaced in
+// place on each import that carries `streaks`; deleted when the habit leaves it.
+export interface LifeStreakEntry extends LifeEntryBase {
+  kind: 'streak'
+  value: LifeStreakValue
+}
+
 // One row per logged thing. Keyed toggles (focus/sunday/sent/checkin) are
 // never deleted, only flipped, so last-writer-wins by updatedAt resolves them.
 export type LifeEntry =
@@ -473,6 +496,7 @@ export type LifeEntry =
   | LifeWhyEntry
   | LifeIdeaEntry
   | LifeUpgradeEntry
+  | LifeStreakEntry
 
 // Remote (Supabase) table name → the LOCAL row shape that travels through the
 // outbox for it. The single source of truth for what the generic sync engine

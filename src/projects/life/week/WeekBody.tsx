@@ -25,6 +25,7 @@ import { TrackersSection } from './TrackersSection'
 import { RecapSection } from './RecapSection'
 import { ProgressAside } from './ProgressAside'
 import { useSections } from './useSections'
+import { useStreakList } from './useStreakList'
 
 // Week body (shared by the current week and read-only History). Sections are
 // collapsible (per-device preference, see useSections.ts).
@@ -92,11 +93,14 @@ export function WeekBody({ week, plan, entries, readOnly, lateEdit = false, dayF
   // Saved events + favourite categories (Events project, local Dexie) ride along in the export.
   const eventMarks = useLiveQuery(() => db.eventMarks.where('state').equals('saved').toArray(), [])
   const eventPrefs = useLiveQuery(() => db.eventPrefs.get('prefs'), [])
-  // Habit ideas and the Upgrade list live across weeks; they ride along in the export for /settimana.
+  // Habit ideas, the Upgrade list and Streaks habits live across weeks; they ride along in the export for /settimana.
   const ideas = useLiveQuery(
-    () => db.lifeEntries.filter((e) => e.kind === 'idea' || e.kind === 'upgrade').toArray(),
+    () => db.lifeEntries.filter((e) => e.kind === 'idea' || e.kind === 'upgrade' || e.kind === 'streak').toArray(),
     [],
   )
+  // Streaks-app habits: a current snapshot, shown (read-only) on the live week only.
+  const allStreaks = useStreakList()
+  const streaks = readOnly ? [] : (allStreaks ?? [])
   const exportEntries = useMemo(() => [...entries, ...(ideas ?? [])], [entries, ideas])
   // Learning's rows (local Dexie, owner-only sync) fold into the week's activity.
   const learningStates = useLiveQuery(async () => {
@@ -158,11 +162,12 @@ export function WeekBody({ week, plan, entries, readOnly, lateEdit = false, dayF
         readOnly={readOnly}
       />
     )
-  if (plan.trackers.length > 0)
+  if (plan.trackers.length > 0 || streaks.length > 0)
     blocks.trackers = (
       <TrackersSection
         week={week}
         trackers={summary.trackers}
+        streaks={streaks}
         open={sections.trackers}
         onToggle={() => toggleSection('trackers')}
         readOnly={readOnly}

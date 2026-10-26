@@ -6,16 +6,23 @@ import type {
   LifeQuestionType,
   LifePlaybook,
   LifeRecapItem,
+  LifeStreakValue,
   LifeTask,
   LifeTracker,
 } from '../../../lib/db'
 import { assignCheckinIds } from './checkinIds.ts'
 import { AUTO_QUESTION_TYPES, LIFE_CAPS, QUESTION_TYPES, THINGS_WHEN_KEYWORDS } from './constants.ts'
 import { isDateKey, isMondayKey } from './dates.ts'
+import { streakRef } from './streaks.ts'
 
 // --- Validation --------------------------------------------------------------
 
-export type ParseResult = { ok: true; plan: LifePlan } | { ok: false; errors: string[] }
+/**
+ * `streaks` is the optional Streaks-app snapshot riding along with the week
+ * (not part of the plan: it's stored as life_entries, see importWeek).
+ * Undefined when the JSON has no `streaks` field (existing rows untouched).
+ */
+export type ParseResult = { ok: true; plan: LifePlan; streaks?: LifeStreakValue[] } | { ok: false; errors: string[] }
 
 /** Raw pasted text beyond this is rejected before JSON.parse. */
 const MAX_INPUT_CHARS = 200_000
@@ -70,6 +77,7 @@ export function validatePlan(value: unknown): ParseResult {
     'checkins',
     'recap',
     'playbook',
+    'streaks',
   ]
   unknownKeys(value, allowed, '', err)
 
@@ -222,6 +230,8 @@ export function validatePlan(value: unknown): ParseResult {
     playbook = { section, practice, ...(how ? { plan: how } : {}) }
   }
 
+  const streaks = value.streaks === undefined || value.streaks === null ? undefined : streaksField(value, err)
+
   if (errors.length > 0) return { ok: false, errors }
 
   const plan: LifePlan = {
@@ -244,7 +254,48 @@ export function validatePlan(value: unknown): ParseResult {
       errors: [`The week is too large (${bytes} bytes, max ${LIFE_CAPS.planBytes})`],
     }
   }
-  return { ok: true, plan }
+  return { ok: true, plan, ...(streaks ? { streaks } : {}) }
+}
+
+const STREAK_DAYS_RE = new RegExp(`^[dm-]{${LIFE_CAPS.streakDays}}$`)
+
+/** The optional `streaks` snapshot: habits from the Streaks app, read-only here. */
+function streaksField(value: Obj, err: (m: string) => void): LifeStreakValue[] {
+  if (!Array.isArray(value.streaks)) {
+    err('streaks must be an array')
+    return []
+  }
+  const items = arrayField(value, 'streaks', LIFE_CAPS.streaks, err).map((raw, i): LifeStreakValue => {
+    const p = `streaks[${i}]`
+    const o = itemObj(raw, p, ['name', 'emoji', 'days', 'streak', 'best', 'asOf'], err)
+    const name = textField(o, 'name', p, LIFE_CAPS.streakName, true, err)
+    const emoji = textField(o, 'emoji', p, LIFE_CAPS.emoji, false, err)
+    const days = o.days
+    if (typeof days !== 'string' || !STREAK_DAYS_RE.test(days))
+      err(`${p}.days must be ${LIFE_CAPS.streakDays} characters, each "d" (done), "m" (missed) or "-"`)
+    if (!intIn(o.streak, 0, LIFE_CAPS.streakMax)) err(`${p}.streak must be an integer 0–${LIFE_CAPS.streakMax}`)
+    if (o.best !== undefined && o.best !== null && !intIn(o.best, 0, LIFE_CAPS.streakMax))
+      err(`${p}.best must be an integer 0–${LIFE_CAPS.streakMax}`)
+    if (!isDateKey(o.asOf)) err(`${p}.asOf must be a date written YYYY-MM-DD`)
+    return {
+      name,
+      ...(emoji ? { emoji } : {}),
+      days: typeof days === 'string' ? days : '',
+      streak: typeof o.streak === 'number' ? o.streak : 0,
+      ...(typeof o.best === 'number' ? { best: o.best } : {}),
+      asOf: typeof o.asOf === 'string' ? o.asOf : '',
+    }
+  })
+  // The ref is a slug of the name: two names that slug alike would overwrite each other.
+  const seen = new Map<string, string>()
+  for (const s of items) {
+    if (!s.name) continue
+    const ref = streakRef(s.name)
+    const other = seen.get(ref)
+    if (other !== undefined) err(`streaks: "${other}" and "${s.name}" are the same habit (rename one in Streaks)`)
+    else seen.set(ref, s.name)
+  }
+  return items
 }
 
 function intIn(v: unknown, min: number, max: number): v is number {

@@ -8,6 +8,7 @@ import { describeLearningActivity, type LearningWeek } from './learning.ts'
 import { summarizeMealsWeek } from './meals.ts'
 import { SCREEN_QUESTIONS } from './screenTime.ts'
 import { summarizeWeek } from './summary.ts'
+import { doneLast7, sortStreaks, streaksForExport } from './streaks.ts'
 import { summarizeUpgrades, upgradesForExport } from './upgrades.ts'
 
 // --- Export ---------------------------------------------------------------------
@@ -155,6 +156,19 @@ export function buildExportMarkdown(
     out.push('')
   }
 
+  // The Streaks app's habits (read-only snapshot from the Mac), not this week's trackers.
+  const streaks = sortStreaks(entries)
+  if (streaks.length) {
+    out.push('## Streaks', '')
+    for (const { value: v } of streaks) {
+      const best = v.best !== undefined ? ` (best ${v.best})` : ''
+      out.push(
+        `- ${v.emoji ? `${v.emoji} ` : ''}${oneLine(v.name)}: streak ${v.streak}${best} · ${doneLast7(v.days)}/7 done in the last 7 days · as of ${v.asOf}`,
+      )
+    }
+    out.push('')
+  }
+
   if (s.screen.size) {
     out.push('## Screen time', '')
     for (const q of SCREEN_QUESTIONS) {
@@ -246,7 +260,7 @@ export function buildExportMarkdown(
   const json = {
     plan,
     entries: mine
-      .filter((e) => e.kind !== 'upgrade')
+      .filter((e) => e.kind !== 'upgrade' && e.kind !== 'streak')
       .slice()
       .sort((a, b) => a.createdAt - b.createdAt)
       // `at` is the moment it was first logged (ISO, UTC), `day` the local day.
@@ -281,6 +295,8 @@ export function buildExportMarkdown(
     ...(upgrades.openCount || upgrades.doneThisWeek.length || upgrades.droppedThisWeek.length
       ? { upgrades: upgradesForExport(upgrades) }
       : {}),
+    // Present only when there are Streaks habits; same shape the import's `streaks` takes.
+    ...(streaks.length ? { streaks: streaksForExport(streaks) } : {}),
     // Present only when there are saved events next week.
     ...(saved.events.length
       ? {
@@ -341,6 +357,8 @@ function describeRemoved(e: LifeEntry): string {
       return `why not ${e.ref}: ${oneLine(e.value.reason)}`
     case 'upgrade':
       return `upgrade: ${oneLine(e.value.text)}`
+    case 'streak':
+      return `streak ${e.ref}: ${oneLine(e.value.name)}`
     case 'idea':
       return `idea ${e.ref}: ${oneLine(e.value.text)}`
     case 'checkin': {

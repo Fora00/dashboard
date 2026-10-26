@@ -1,17 +1,19 @@
 import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { db, type LifeTrackerEntry } from '../../../lib/db'
+import { db, type LifeStreakEntry, type LifeTrackerEntry } from '../../../lib/db'
 import { removeTrackerEntry, restoreEntry } from '../../../lib/lifeSync'
 import { trackersSummary } from '../format'
 import { addDays, type TrackerSummary } from '../model'
 import { useToday } from '../useToday'
 import { CollapsibleSection } from './CollapsibleSection'
+import { StreakRow } from './StreakRow'
 import { TrackerRow, type LastSunday } from './TrackerRow'
 import { runSafe } from '../../../lib/runSafe'
 
 export function TrackersSection({
   week,
   trackers,
+  streaks = [],
   open,
   onToggle,
   readOnly,
@@ -19,6 +21,8 @@ export function TrackersSection({
 }: {
   week: string
   trackers: TrackerSummary[]
+  /** Streaks-app habits (read-only snapshot), shown under the trackers. */
+  streaks?: readonly LifeStreakEntry[]
   open: boolean
   onToggle: () => void
   readOnly: boolean
@@ -60,7 +64,7 @@ export function TrackersSection({
   return (
     <CollapsibleSection
       title="Habits"
-      summary={`Habits · ${trackersSummary(trackers)}`}
+      summary={`Habits · ${trackersSummary(trackers)}${streaks.length ? ` · 🔥 ${streaks.length} in Streaks` : ''}`}
       open={open}
       onToggle={onToggle}
       readOnly={readOnly}
@@ -84,6 +88,16 @@ export function TrackersSection({
           />
         ))}
       </ul>
+      {streaks.length > 0 && (
+        <ul
+          className={`space-y-2 ${trackers.length ? 'mt-3' : ''}`}
+          aria-label="Streaks habits (logged in the Streaks app)"
+        >
+          {streaks.map((e) => (
+            <StreakRow key={e.id} entry={e} today={today} />
+          ))}
+        </ul>
+      )}
     </CollapsibleSection>
   )
 }

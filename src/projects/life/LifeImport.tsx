@@ -62,7 +62,7 @@ export function LifeImport() {
     setSaving(true)
     setSaveError(null)
     try {
-      await importWeek(result.plan)
+      await importWeek(result.plan, result.streaks)
       await navigate('/life', { replace: true })
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : String(err))
@@ -134,6 +134,15 @@ export function LifeImport() {
             </Card>
           )}
 
+          {result?.ok && result.streaks && (
+            <p className="mb-3 text-sm text-slate-500 dark:text-slate-400">
+              🔥 Also updates the Streaks habits:{' '}
+              {result.streaks.length
+                ? `${result.streaks.length} habit${result.streaks.length === 1 ? '' : 's'}, as of ${result.streaks.reduce((m, s) => (s.asOf > m ? s.asOf : m), '')}`
+                : 'none left (the shown ones are removed)'}
+              .
+            </p>
+          )}
           {result?.ok && (
             <PlanPreview
               plan={result.plan}

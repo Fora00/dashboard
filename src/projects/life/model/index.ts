@@ -35,6 +35,21 @@ export {
 export { buildExportMarkdown } from './export.ts'
 export { dayFocusId, parseFocusLines, freeSlots } from './dayFocus.ts'
 export { summarizeUpgrades, upgradesForExport, isUpgrade, type UpgradeSummary } from './upgrades.ts'
+export {
+  STREAK_STALE_DAYS,
+  doneLast7,
+  isStaleStreak,
+  isStreak,
+  last7,
+  planStreakImport,
+  sortStreaks,
+  streakAge,
+  streakEntryId,
+  streakRef,
+  streaksForExport,
+  type StreakDay,
+  type StreakImportPlan,
+} from './streaks.ts'
 export { fenceFor, extractJsonFence } from './fence.ts'
 export { summarizeSavedEvents, type SavedEventsNextWeek } from './events.ts'
 export { summarizeMealsWeek, type MealsWeek, type MealsDay } from './meals.ts'

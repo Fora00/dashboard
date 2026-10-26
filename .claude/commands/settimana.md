@@ -47,6 +47,11 @@ Paths: dashboard = `~/Dev/personal/dashboard`, notes = `~/life`.
   instructions say (e.g. record the fixes in the playbook section's "Tried"
   line), and in step 2.1 suggest the next 1-2 quick items for the weekly slot.
   It is a list that lives across weeks, not tasks: never send it to Things.
+  It may carry a `## Streaks` section (and a `streaks` array in the JSON): the
+  habits the owner logs in the iPhone Streaks app (read-only on the
+  dashboard), with the current streak, done days of the last 7 and the date
+  of the backup they were read from. Use them in the Sunday analysis like the
+  trackers, but remember the "as of" date can be a couple of days behind.
   Under each habit in `## Trackers` it may carry `why not:` (the reason the
   owner gave for missing the weekly target: the Spock test) and `ideas:` (the
   fixes they are collecting, each with its status: open, trying, done). Use
@@ -86,6 +91,14 @@ Paths: dashboard = `~/Dev/personal/dashboard`, notes = `~/life`.
    plan as `"playbook": { "section", "practice", "plan" }` (`plan` optional;
    see `docs/HANDOFF-life.md` section 2.1). Omit the field if they want no
    practice this week.
+   **Streaks:** if the Mac's Streaks snapshot is available, add it as the
+   optional top-level `"streaks": [{ "name", "emoji"?, "days", "streak",
+   "best"?, "asOf" }]` (`days` = the last 28 days oldest → newest, one char
+   each: `d` done, `m` missed, `-` not scheduled; `asOf` = backup date; see
+   `docs/HANDOFF-life.md`, "Streaks"). It replaces the dashboard's Streaks
+   rows and removes habits not in it; leave the field out to keep them as
+   they are. Never put a habit in both Streaks and the dashboard trackers:
+   if a plan tracker duplicates a Streaks habit, drop it from the plan.
 2. Tags on tasks must already exist in Things, or Things drops them
    silently. If unsure, list them (read-only):
    `osascript -e 'tell application "Things3" to get name of tags'`.
