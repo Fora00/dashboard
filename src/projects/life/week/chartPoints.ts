@@ -1,5 +1,5 @@
-import type { LifeEntry, LifeWeek } from '../../../lib/db'
-import { daysBetween, summarizeWeek } from '../model'
+import type { LifeDayFocus, LifeEntry, LifeWeek } from '../../../lib/db'
+import { daysBetween, summarizeWeek, weekDays } from '../model'
 
 export interface ChartPoint {
   week: string
@@ -8,6 +8,8 @@ export interface ChartPoint {
   at: number
   focus: number | null
   habits: number | null
+  /** Share of the week's Oggi lines (up to 3 a day) marked done; null when none were set. */
+  oggi: number | null
 }
 
 const pct = (done: number, total: number) => (total > 0 ? Math.round((done / total) * 100) : null)
@@ -31,6 +33,7 @@ export function buildChartPoints(
   entries: readonly LifeEntry[],
   currentWeek: string,
   max: number,
+  dayFocus: readonly LifeDayFocus[] = [],
 ): ChartPoint[] {
   const shown = weeks
     .filter((w) => w.week <= currentWeek)
@@ -42,6 +45,8 @@ export function buildChartPoints(
   const span = daysBetween(first, shown[shown.length - 1]!.week)
   return shown.map((w) => {
     const s = summarizeWeek(w.plan, entries)
+    const days = new Set(weekDays(w.week))
+    const lines = dayFocus.filter((f) => days.has(f.day))
     return {
       week: w.week,
       current: w.week === currentWeek,
@@ -49,6 +54,7 @@ export function buildChartPoints(
       focus: pct(s.focusDone.size, w.plan.focus.length),
       // habits = average progress towards each target, capped at 100% per habit
       habits: habitsPct(s.trackers),
+      oggi: pct(lines.filter((f) => f.done).length, lines.length),
     }
   })
 }

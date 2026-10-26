@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import type { LifeEntry, LifeWeek } from '../../../lib/db'
+import { useLiveQuery } from 'dexie-react-hooks'
+import { db, type LifeEntry, type LifeWeek } from '../../../lib/db'
 import { Card } from '../../../components/Card'
 import { buildChartPoints } from './chartPoints'
 
@@ -11,6 +12,7 @@ const MAX_WEEKS = 12
 const SERIES = [
   { key: 'focus', label: 'Focus', stroke: 'stroke-sky-400', fill: 'fill-sky-400', text: 'text-sky-500' },
   { key: 'habits', label: 'Habits', stroke: 'stroke-violet-400', fill: 'fill-violet-400', text: 'text-violet-500' },
+  { key: 'oggi', label: 'Oggi', stroke: 'stroke-amber-400', fill: 'fill-amber-400', text: 'text-amber-500' },
 ] as const
 
 /** Percent of focus and habits done per week, one line each, oldest to newest. The current week is the hollow dotted end point. Plain SVG. */
@@ -24,7 +26,8 @@ export function ProgressChart({
   currentWeek: string
 }) {
   const [active, setActive] = useState<number | null>(null)
-  const points = buildChartPoints(weeks, entries, currentWeek, MAX_WEEKS)
+  const dayFocus = useLiveQuery(() => db.lifeDayFocus.toArray(), [])
+  const points = buildChartPoints(weeks, entries, currentWeek, MAX_WEEKS, dayFocus ?? [])
   if (points.length < 2) return null
 
   const plotW = W - PAD_L - 6
@@ -47,7 +50,7 @@ export function ProgressChart({
         viewBox={`0 0 ${W} ${H + 14}`}
         className="w-full"
         role="img"
-        aria-label={`Percent of focus, check-ins, habits and Things done over the last ${points.length} weeks`}
+        aria-label={`Percent of focus, habits and Oggi lines done over the last ${points.length} weeks`}
       >
         {[0, 50, 100].map((v) => (
           <g key={v}>

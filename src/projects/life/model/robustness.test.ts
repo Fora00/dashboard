@@ -184,3 +184,25 @@ describe('validation hardening (LF6)', () => {
     expect(r.ok).toBe(false)
   })
 })
+
+describe('buildChartPoints Oggi line', () => {
+  const wk = (week: string): LifeWeek => ({ id: week, week, plan: plan({ week }), importedAt: 0, updatedAt: 0 })
+  it("is the share of the week's Oggi lines marked done", () => {
+    const f = (day: string, slot: number, done: boolean) => ({
+      id: `${day}:${slot}`,
+      day,
+      slot,
+      title: 't',
+      done,
+      createdAt: 0,
+      updatedAt: 0,
+    })
+    const pts = buildChartPoints([wk(WEEK)], [], WEEK, 12, [
+      f(WEEK, 0, true),
+      f(WEEK, 1, false),
+      f('2000-01-01', 0, true),
+    ])
+    expect(pts[0]!.oggi).toBe(50)
+    expect(buildChartPoints([wk(WEEK)], [], WEEK, 12)[0]!.oggi).toBeNull()
+  })
+})
