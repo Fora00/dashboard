@@ -1,5 +1,6 @@
 import type { MealsWeek } from '../model'
 import { addDays } from '../model/dates.ts'
+import { ProjectLink } from '../../../components/ProjectLink'
 import { CollapsibleSection } from './CollapsibleSection'
 
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
@@ -51,6 +52,11 @@ export function FoodSection({
         })}
       </ul>
       <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">From the Meal Diary; edit entries there.</p>
+      {!readOnly && (
+        <div className="mt-1 -ml-2">
+          <ProjectLink id="meal-diary">Open Meal Diary</ProjectLink>
+        </div>
+      )}
     </CollapsibleSection>
   )
 }

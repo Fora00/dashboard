@@ -35,12 +35,14 @@ export function CollapsibleSection({
           aria-expanded={open}
           className="flex min-h-12 w-full items-center justify-between gap-3 px-4 text-left text-sm font-medium text-slate-700 dark:text-slate-200"
         >
-          <span className="truncate">{title}</span>
-          <span className="flex shrink-0 items-center gap-2">
+          <span className="shrink-0">{title}</span>
+          <span className="flex min-w-0 items-center gap-2">
             {!open && summary && (
               <span className="truncate text-xs font-normal text-slate-500 dark:text-slate-400">{summary}</span>
             )}
-            <span aria-hidden>{open ? '▾' : '▸'}</span>
+            <span aria-hidden className="shrink-0">
+              {open ? '▾' : '▸'}
+            </span>
           </span>
         </button>
         {open && <div className="border-t border-slate-200 px-4 py-3 dark:border-slate-800">{children}</div>}
