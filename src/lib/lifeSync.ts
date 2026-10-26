@@ -5,12 +5,15 @@ import {
   type LifeDayFocus,
   type LifeEntry,
   type LifeFocusEntry,
+  type LifeIdeaEntry,
+  type LifeIdeaStatus,
   type LifePlan,
   type LifePlaybookEntry,
   type LifeSentEntry,
   type LifeSundayEntry,
   type LifeTrackerEntry,
   type LifeWeek,
+  type LifeWhyEntry,
 } from './db'
 import { createCloudSync, type TableSync } from './cloudSync'
 import { useSyncStatus } from './useSyncStatus'
@@ -354,6 +357,69 @@ export async function setSundayAnswer(week: string, questionId: string, answer: 
     updatedAt: now,
   }
   await engine.upsert('life_entries', entry)
+}
+
+/**
+ * Spock test: why a habit missed its weekly target. A keyed entry
+ * (`${week}:why:${trackerId}`), updated in place; an empty reason clears it
+ * (the row is kept with an empty reason, so two devices converge by LWW).
+ */
+export async function setWhy(week: string, trackerId: string, reasonIn: string): Promise<void> {
+  const reason = reasonIn.trim()
+  if (reason.length > LIFE_CAPS.whyReason) throw new Error(`Keep the reason under ${LIFE_CAPS.whyReason} characters`)
+  const id = entryId(week, 'why', trackerId)
+  const prev = await existing<LifeWhyEntry>(id)
+  if (!prev && !reason) return
+  const now = Date.now()
+  const entry: LifeWhyEntry = {
+    id,
+    week,
+    kind: 'why',
+    ref: trackerId,
+    day: dayKey(new Date()),
+    value: { reason },
+    createdAt: prev?.createdAt ?? now,
+    updatedAt: now,
+  }
+  await engine.upsert('life_entries', entry)
+}
+
+/** Add an idea for a habit (status 'open'). Blank text is ignored (returns null). */
+export async function addIdea(week: string, trackerId: string, textIn: string): Promise<LifeIdeaEntry | null> {
+  const text = textIn.trim()
+  if (!text) return null
+  if (text.length > LIFE_CAPS.ideaText) throw new Error(`Keep the idea under ${LIFE_CAPS.ideaText} characters`)
+  const now = Date.now()
+  const entry: LifeIdeaEntry = {
+    id: crypto.randomUUID(),
+    week,
+    kind: 'idea',
+    ref: trackerId,
+    day: dayKey(new Date()),
+    value: { text, status: 'open' },
+    createdAt: now,
+    updatedAt: now,
+  }
+  await engine.upsert('life_entries', entry)
+  return entry
+}
+
+/** Change an idea's text and/or status. An empty text is ignored (use removeIdea). */
+export async function updateIdea(
+  entry: LifeIdeaEntry,
+  change: { text?: string; status?: LifeIdeaStatus },
+): Promise<void> {
+  const text = change.text === undefined ? entry.value.text : change.text.trim()
+  if (!text) return
+  if (text.length > LIFE_CAPS.ideaText) throw new Error(`Keep the idea under ${LIFE_CAPS.ideaText} characters`)
+  const status = change.status ?? entry.value.status
+  if (text === entry.value.text && status === entry.value.status) return
+  await engine.upsert('life_entries', { ...entry, value: { text, status }, updatedAt: Date.now() })
+}
+
+/** Delete an idea for real. */
+export async function removeIdea(id: string): Promise<void> {
+  await engine.remove('life_entries', id)
 }
 
 export interface CheckinInput {

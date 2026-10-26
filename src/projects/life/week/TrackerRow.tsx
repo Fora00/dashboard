@@ -5,6 +5,7 @@ import { describeEnergy, weekdayShort } from '../format'
 import { weekDays, type TrackerSummary } from '../model'
 import { useToday } from '../useToday'
 import { EnergyPicker } from './EnergyScale'
+import { HabitHistoryButton } from './HabitHistory'
 
 const DAY_LABELS = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
 
@@ -118,6 +119,7 @@ export function TrackerRow({
             </span>
           )}
         </button>
+        <HabitHistoryButton trackerId={tracker.id} label={tracker.label} week={week} />
         <button
           type="button"
           onClick={() => setShowDetails((v) => !v)}

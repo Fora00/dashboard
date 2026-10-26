@@ -5,7 +5,11 @@ import { LIFE_CAPS } from './constants.ts'
 // --- Entry values -------------------------------------------------------------
 
 /** Deterministic id of a keyed toggle entry (focus done, Sunday answer, task sent). */
-export function entryId(week: string, kind: Exclude<LifeEntryKind, 'tracker' | 'playbook'>, ref: string): string {
+export function entryId(
+  week: string,
+  kind: Exclude<LifeEntryKind, 'tracker' | 'playbook' | 'idea'>,
+  ref: string,
+): string {
   return `${week}:${kind}:${ref}`
 }
 

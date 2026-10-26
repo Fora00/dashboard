@@ -369,7 +369,7 @@ export interface LearningPractice {
   updatedAt: number
 }
 
-export type LifeEntryKind = 'focus' | 'tracker' | 'sunday' | 'sent' | 'checkin' | 'playbook'
+export type LifeEntryKind = 'focus' | 'tracker' | 'sunday' | 'sent' | 'checkin' | 'playbook' | 'why' | 'idea'
 
 export type LifeAnswer = number | boolean | string | null
 
@@ -421,6 +421,25 @@ export interface LifePlaybookEntry extends LifeEntryBase {
   value: { note?: string }
 }
 
+// "Spock test": why a habit (tracker) missed its weekly target. Keyed like a
+// Sunday answer (`${week}:why:${trackerId}`), edited in place, cleared by
+// saving an empty reason. ref = the tracker id (stable across weeks).
+export interface LifeWhyEntry extends LifeEntryBase {
+  kind: 'why'
+  value: { reason: string }
+}
+
+export type LifeIdeaStatus = 'open' | 'trying' | 'done' | 'dropped'
+
+// An idea to make a habit work (the system fix to try), shown with the
+// habit's history. Append-only id (random uuid), edited in place, deleted for
+// real. ref = the tracker id; `week` = the week it was written in. It belongs
+// to the habit, not to a week: read across weeks, never part of a week summary.
+export interface LifeIdeaEntry extends LifeEntryBase {
+  kind: 'idea'
+  value: { text: string; status: LifeIdeaStatus }
+}
+
 // One row per logged thing. Keyed toggles (focus/sunday/sent/checkin) are
 // never deleted, only flipped, so last-writer-wins by updatedAt resolves them.
 export type LifeEntry =
@@ -430,6 +449,8 @@ export type LifeEntry =
   | LifeSentEntry
   | LifeCheckinEntry
   | LifePlaybookEntry
+  | LifeWhyEntry
+  | LifeIdeaEntry
 
 // Remote (Supabase) table name → the LOCAL row shape that travels through the
 // outbox for it. The single source of truth for what the generic sync engine

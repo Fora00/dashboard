@@ -37,6 +37,13 @@ Paths: dashboard = `~/Dev/personal/dashboard`, notes = `~/life`.
    Bring it into `~/life` the way `~/life`'s own instructions say (e.g. record
    the result under that practice's section) and use it when choosing the next
    practice in step 2.1: keep, change or retire it.
+  Under each habit in `## Trackers` it may carry `why not:` (the reason the
+  owner gave for missing the weekly target: the Spock test) and `ideas:` (the
+  fixes they are collecting, each with its status: open, trying, done). Use
+  them in the Sunday analysis and when proposing the next week: keep a habit
+  whose fix is working, suggest the next idea to try, say so when the same
+  reason repeats, and keep the same tracker `id` for a habit that continues so
+  its history and ideas stay attached.
 2. Check what happened in Things to the week's tasks (read-only, Mac only):
    `pbpaste | npx -y tsx ~/Dev/personal/dashboard/scripts/life-things-status.ts`.
    It matches by each send's timestamp, so renamed to-dos are still found.

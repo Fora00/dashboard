@@ -89,6 +89,9 @@ export function WeekBody({ week, plan, entries, readOnly, lateEdit = false, dayF
   // Saved events + favourite categories (Events project, local Dexie) ride along in the export.
   const eventMarks = useLiveQuery(() => db.eventMarks.where('state').equals('saved').toArray(), [])
   const eventPrefs = useLiveQuery(() => db.eventPrefs.get('prefs'), [])
+  // Habit ideas live across weeks; they ride along in the export for /settimana.
+  const ideas = useLiveQuery(() => db.lifeEntries.filter((e) => e.kind === 'idea').toArray(), [])
+  const exportEntries = useMemo(() => [...entries, ...(ideas ?? [])], [entries, ideas])
   const food = useMemo(() => summarizeMealsWeek(meals ?? [], week), [meals, week])
   const { pending, trigger, confirmUndo } = useUndoSnackbar()
   const { sections, sundayOpen, toggleSection, toggleSunday } = useSections(week, readOnly)
@@ -226,7 +229,7 @@ export function WeekBody({ week, plan, entries, readOnly, lateEdit = false, dayF
   blocks.export = (
     <ExportSection
       plan={plan}
-      entries={entries}
+      entries={exportEntries}
       meals={meals ?? []}
       eventMarks={eventMarks ?? []}
       favouriteCategories={eventPrefs?.favouriteCategories ?? []}

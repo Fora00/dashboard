@@ -6,21 +6,25 @@ import type { LifePlan } from './db'
 import { LIFE_CAPS } from '../projects/life/model'
 import {
   addDayFocus,
+  addIdea,
   editDayFocus,
   importWeek,
   logPlaybook,
   logTracker,
   markTasksSent,
   removeDayFocus,
+  removeIdea,
   removeTrackerEntry,
   restoreEntry,
   setCheckin,
   setFocusDone,
   setPlaybookNote,
   setSundayAnswer,
+  setWhy,
   setTrackerEnergy,
   toggleDayFocus,
   toggleFocus,
+  updateIdea,
 } from './lifeSync'
 
 beforeEach(resetDb)
@@ -81,6 +85,36 @@ describe('playbook', () => {
   it('Undo deletes the row', async () => {
     const a = await logPlaybook(WEEK)
     await removeTrackerEntry(a.id)
+    expect(await db.lifeEntries.count()).toBe(0)
+  })
+})
+
+describe('spock test: why not + habit ideas', () => {
+  it('a reason is one keyed row per week and habit, edited in place; blank with no row writes nothing', async () => {
+    await setWhy(WEEK, 'water', '  not accessible  ')
+    await setWhy(WEEK, 'water', 'bottle in the other room')
+    expect(await db.lifeEntries.count()).toBe(1)
+    expect(await db.lifeEntries.get(`${WEEK}:why:water`)).toMatchObject({
+      kind: 'why',
+      ref: 'water',
+      value: { reason: 'bottle in the other room' },
+    })
+    await setWhy(WEEK, 'water', ' ')
+    expect((await db.lifeEntries.get(`${WEEK}:why:water`))?.value).toEqual({ reason: '' })
+    await setWhy(WEEK, 'run', ' ')
+    expect(await db.lifeEntries.count()).toBe(1)
+    await expect(setWhy(WEEK, 'water', 'x'.repeat(LIFE_CAPS.whyReason + 1))).rejects.toThrow()
+  })
+
+  it('ideas start open, can change text and status, and are deleted for real', async () => {
+    expect(await addIdea(WEEK, 'water', '  ')).toBeNull()
+    const idea = await addIdea(WEEK, 'water', ' 1 L bottle at 08:00 ')
+    expect(idea).toMatchObject({ kind: 'idea', ref: 'water', value: { text: '1 L bottle at 08:00', status: 'open' } })
+    await updateIdea(idea!, { status: 'trying' })
+    expect((await db.lifeEntries.get(idea!.id))?.value).toEqual({ text: '1 L bottle at 08:00', status: 'trying' })
+    await updateIdea(idea!, { text: ' ' })
+    expect((await db.lifeEntries.get(idea!.id))?.value).toMatchObject({ text: '1 L bottle at 08:00' })
+    await removeIdea(idea!.id)
     expect(await db.lifeEntries.count()).toBe(0)
   })
 })

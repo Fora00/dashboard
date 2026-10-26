@@ -56,6 +56,12 @@ export function buildExportMarkdown(
   const s = summarizeWeek(plan, entries, today)
   const mine = entries.filter((e) => e.week === plan.week)
   const out: string[] = [`# Week of ${plan.week}`, '']
+  // Ideas travel across weeks (the caller passes them along with the week's entries).
+  const ideasByHabit = new Map<string, Extract<LifeEntry, { kind: 'idea' }>[]>()
+  for (const e of entries) {
+    if (e.kind !== 'idea' || e.value.status === 'dropped') continue
+    ideasByHabit.set(e.ref, [...(ideasByHabit.get(e.ref) ?? []), e])
+  }
   // When it was done: the local day the keyed entry was last written on.
   const doneOn = (kind: LifeEntry['kind'], ref: string): string => {
     const e = mine.find((x) => x.kind === kind && x.ref === ref)
@@ -80,8 +86,12 @@ export function buildExportMarkdown(
     out.push(
       `- Uses: ${uses}${uses ? ` (${s.playbook.days.map((d) => `${DAY_NAMES[weekDays(plan.week).indexOf(d)] ?? ''} ${d}`.trim()).join(', ')})` : ''}`,
     )
-    for (const e of s.playbook.entries) {
-      if (e.value.note?.trim()) out.push(`  - ${e.day}: ${oneLine(e.value.note)}`)
+    // One line per day: that day's notes collapsed together.
+    for (const d of s.playbook.days) {
+      const notes = s.playbook.entries
+        .filter((e) => e.day === d && e.value.note?.trim())
+        .map((e) => oneLine(e.value.note!))
+      if (notes.length) out.push(`  - ${d}: ${notes.join(' · ')}`)
     }
     out.push('')
   }
@@ -98,6 +108,11 @@ export function buildExportMarkdown(
         .filter(Boolean)
         .join(' · ')
       if (days) out.push(`  - ${days}`)
+      const why = s.whys.get(tracker.id)
+      if (why) out.push(`  - why not: ${oneLine(why)}`)
+      const ideas = ideasByHabit.get(tracker.id)
+      if (ideas?.length)
+        out.push(`  - ideas: ${ideas.map((i) => `${oneLine(i.value.text)} [${i.value.status}]`).join('; ')}`)
       const pairs = t.entries.map(energyPair).filter(Boolean)
       if (pairs.length) out.push(`  - energy: ${pairs.join(', ')}`)
     }
@@ -285,6 +300,10 @@ function describeRemoved(e: LifeEntry): string {
       return `task ${e.ref}: sent to Things`
     case 'playbook':
       return `playbook: used on ${e.day}${e.value.note?.trim() ? ` — ${oneLine(e.value.note)}` : ''}`
+    case 'why':
+      return `why not ${e.ref}: ${oneLine(e.value.reason)}`
+    case 'idea':
+      return `idea ${e.ref}: ${oneLine(e.value.text)}`
     case 'checkin': {
       const parts = [e.value.done ? 'done' : null, e.value.note?.trim() ? oneLine(e.value.note) : null]
       return `check-in ${e.ref}: ${parts.filter(Boolean).join(' — ')}`

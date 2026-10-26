@@ -143,6 +143,30 @@ Validation: ids unique within each array; `week` must be a Monday; dates
 `YYYY-MM-DD`; `target`/`max` positive integers; text lengths capped (mirror
 the caps in SQL, per the `links` pattern).
 
+### Spock test: why not + habit ideas
+
+Added 2026-10-26. In the **Sunday check** (`week/SpockWhy.tsx`) every habit
+with a target that is under it this week asks "why not?" (one line, max 500).
+Next to every habit (Habits block and the Sunday list) a 📈 button opens its
+history sheet (`week/HabitHistory.tsx`): the last 12 weeks (done/target and the
+reason given) and the **ideas to make it work**, which the owner adds, edits,
+moves through To try / Trying / Works / Dropped, or deletes. Both are
+`life_entries` rows, no new table:
+- `why`: keyed `${week}:why:${trackerId}`, `value: { reason }`, edited in place
+  (an emptied reason keeps the row with `reason: ""`). Shown in
+  `summarizeWeek().whys` and the export under the habit as `why not:`.
+- `idea`: random uuid id, `ref` = tracker id, `week` = the week it was written
+  in, `value: { text, status }` (text max 300, status `open|trying|done|dropped`).
+  It belongs to the habit, not to a week: never part of a week summary, read
+  across weeks by `useHabitHistory` / `buildHabitHistory` (`habitStory.ts`).
+  The export lists the live ones (not `dropped`) under the habit as `ideas:`,
+  whatever week they were written in.
+History follows the **tracker id**, which `/settimana` keeps stable for a habit
+that continues (renaming the label loses nothing; a new id starts a new story).
+Migration `20261026140000_life_habit_why_ideas.sql` widens the kind check and
+caps both values. Code: `setWhy` / `addIdea` / `updateIdea` / `removeIdea` in
+`lifeSync.ts`.
+
 ### Playbook of the week (optional)
 
 Added 2026-10-26. `playbook` in the week JSON (absent on older plans, which

@@ -6,6 +6,7 @@ import { Button } from '../../../components/Button'
 import { Card } from '../../../components/Card'
 import { CollapsibleSection } from './CollapsibleSection'
 import { AutoAnswer, SundayQuestion } from './SundayQuestion'
+import { SpockWhy } from './SpockWhy'
 import { WeekRecap } from './WeekRecap'
 
 export function SundaySection({
@@ -35,10 +36,13 @@ export function SundaySection({
   const manualQuestions = plan.sundayCheck.filter((q) => !summary.autoAnswered.has(q.id)).length
   const manualAnswered = [...summary.answers.keys()].filter((id) => !summary.autoAnswered.has(id)).length
 
+  const missed = summary.trackers.filter((t) => t.reachedTarget === false)
+  const explained = missed.filter((t) => summary.whys.has(t.tracker.id)).length
+
   return (
     <CollapsibleSection
       title="🗓️ Sunday check"
-      summary={`${summary.answers.size}/${plan.sundayCheck.length} answered`}
+      summary={`${summary.answers.size}/${plan.sundayCheck.length} answered${missed.length ? ` · why ${explained}/${missed.length}` : ''}`}
       open={open}
       onToggle={onToggle}
       readOnly={readOnly}
@@ -49,6 +53,7 @@ export function SundaySection({
         checkins={[summary.checkins.filter((c) => c.done).length, summary.checkins.length]}
         tasks={[tasksSent, plan.tasks.length]}
       />
+      <SpockWhy week={week} trackers={summary.trackers} whys={summary.whys} editable={editable} />
       {!editable ? (
         <Card className="space-y-2 text-sm">
           {plan.sundayCheck.map((q) => (

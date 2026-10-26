@@ -50,6 +50,8 @@ export interface WeekSummary {
   /** Question ids whose answer was computed from a linked tracker. */
   autoAnswered: Set<string>
   sentTaskIds: Set<string>
+  /** Spock test: tracker id -> why it missed its target this week (non-empty only). */
+  whys: Map<string, string>
   /** Meaningful entries whose ref is no longer in the plan (kept, hidden). */
   removed: LifeEntry[]
 }
@@ -76,6 +78,7 @@ export function summarizeWeek(
     sent: new Set(plan.tasks.map((t) => t.id)),
     checkin: new Set(plan.checkins.map((c) => c.id)),
     playbook: new Set(plan.playbook ? ['playbook'] : []),
+    why: new Set(plan.trackers.map((t) => t.id)),
   }
 
   const focusDone = new Set<string>()
@@ -83,9 +86,12 @@ export function summarizeWeek(
   const screen = new Map<string, LifeAnswer>()
   const sentTaskIds = new Set<string>()
   const checkinValues = new Map<string, { done: boolean; note?: string }>()
+  const whys = new Map<string, string>()
   const removed: LifeEntry[] = []
 
   for (const e of mine) {
+    // Ideas belong to the habit across weeks, not to a week (see habitHistory.ts).
+    if (e.kind === 'idea') continue
     if (e.kind === 'sunday' && SCREEN_IDS.has(e.ref)) {
       if (e.value.answer !== null) screen.set(e.ref, e.value.answer)
       continue
@@ -99,6 +105,7 @@ export function summarizeWeek(
     else if (e.kind === 'sunday' && e.value.answer !== null) answers.set(e.ref, e.value.answer)
     else if (e.kind === 'sent' && e.value.sent) sentTaskIds.add(e.ref)
     else if (e.kind === 'checkin') checkinValues.set(e.ref, e.value)
+    else if (e.kind === 'why' && e.value.reason.trim()) whys.set(e.ref, e.value.reason.trim())
   }
 
   const playbookEntries = mine.filter((e): e is LifePlaybookEntry => e.kind === 'playbook' && e.ref === 'playbook')
@@ -160,6 +167,7 @@ export function summarizeWeek(
     screen,
     autoAnswered,
     sentTaskIds,
+    whys,
     removed,
   }
 }
@@ -177,6 +185,10 @@ function isMeaningful(e: LifeEntry): boolean {
       return e.value.sent
     case 'checkin':
       return e.value.done || !!e.value.note?.trim()
+    case 'why':
+      return !!e.value.reason.trim()
+    case 'idea':
+      return false
   }
 }
 
