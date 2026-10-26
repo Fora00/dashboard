@@ -160,11 +160,16 @@ export function buildExportMarkdown(
   const streaks = sortStreaks(entries)
   if (streaks.length) {
     out.push('## Streaks', '')
-    for (const { value: v } of streaks) {
+    for (const { value: v, ref } of streaks) {
       const best = v.best !== undefined ? ` (best ${v.best})` : ''
       out.push(
         `- ${v.emoji ? `${v.emoji} ` : ''}${oneLine(v.name)}: streak ${v.streak}${best} · ${doneLast7(v.days)}/7 done in the last 7 days · as of ${v.asOf}`,
       )
+      const why = s.whys.get(ref)
+      if (why) out.push(`  - why not: ${oneLine(why)}`)
+      const ideas = ideasByHabit.get(ref)
+      if (ideas?.length)
+        out.push(`  - ideas: ${ideas.map((i) => `${oneLine(i.value.text)} [${i.value.status}]`).join('; ')}`)
     }
     out.push('')
   }

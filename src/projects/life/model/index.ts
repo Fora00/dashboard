@@ -39,6 +39,7 @@ export {
   STREAK_STALE_DAYS,
   doneLast7,
   isStaleStreak,
+  isMissedStreak,
   isStreak,
   last7,
   planStreakImport,

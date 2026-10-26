@@ -162,3 +162,10 @@ export function isStaleStreak(asOf: string, today: string): boolean {
 export function streaksForExport(entries: readonly LifeEntry[]): LifeStreakValue[] {
   return sortStreaks(entries).map((e) => normalize(e.value))
 }
+
+/** A Streaks habit counts as "not completed" (asks the Spock why) below this many done days of the last 7. */
+export const STREAK_MISSED_BELOW = 4
+
+export function isMissedStreak(e: LifeStreakEntry): boolean {
+  return doneLast7(e.value.days) < STREAK_MISSED_BELOW
+}
