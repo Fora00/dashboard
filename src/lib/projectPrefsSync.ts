@@ -3,7 +3,7 @@ import { createCloudSync, type TableSync } from './cloudSync'
 import { useSyncStatus } from './useSyncStatus'
 
 // Local-first sync for the home grid's per-project `starred` and `hidden`
-// choices (db.projectPrefs), on the generic engine in cloudSync.ts. Open
+// choices (and Life's block `layout`, row 'life') (db.projectPrefs), on the generic engine in cloudSync.ts. Open
 // counts and last-opened times stay in db.projectStats, local-only and per
 // device (projectStats.ts).
 //
@@ -31,6 +31,7 @@ export interface ProjectPrefRow {
   id: string
   starred: boolean
   hidden: boolean | null
+  layout: string[][] | null
   updated_at: number
 }
 
@@ -38,7 +39,7 @@ export const projectPrefsTable: TableSync<ProjectPref, ProjectPrefRow> = {
   remote: 'project_prefs',
   table: () => db.projectPrefs,
   // Never user_id: it is implied by RLS, and the local row has no such field.
-  columns: 'id, starred, hidden, updated_at',
+  columns: 'id, starred, hidden, layout, updated_at',
   realtime: true,
   realtimeDeletes: false,
   updatedAt: (p) => p.updatedAt,
@@ -46,15 +47,19 @@ export const projectPrefsTable: TableSync<ProjectPref, ProjectPrefRow> = {
     id: p.id,
     starred: p.starred === 1,
     hidden: p.hidden === null || p.hidden === undefined ? null : p.hidden === 1,
+    layout: p.layout ?? null,
     updated_at: p.updatedAt,
   }),
   fromRow: (r) => {
     if (typeof r.starred !== 'boolean') throw new Error('project_prefs: bad starred')
     if (r.hidden !== null && typeof r.hidden !== 'boolean') throw new Error('project_prefs: bad hidden')
+    if (r.layout !== null && r.layout !== undefined && !Array.isArray(r.layout))
+      throw new Error('project_prefs: bad layout')
     return {
       id: r.id,
       starred: r.starred ? 1 : 0,
       hidden: r.hidden === null ? null : r.hidden ? 1 : 0,
+      layout: r.layout ?? null,
       updatedAt: Number(r.updated_at),
     }
   },
@@ -79,6 +84,7 @@ async function updatePref(projectId: string, change: (prev: ProjectPref | undefi
     id: projectId,
     starred: prev?.starred ?? 0,
     hidden: prev?.hidden ?? null,
+    layout: prev?.layout ?? null,
     ...change(prev),
     updatedAt: stamp(prev?.updatedAt),
   })
@@ -92,6 +98,11 @@ export function toggleStarPref(projectId: string): Promise<void> {
 /** Write an explicit show/hide choice (beats the defaults from then on). */
 export function setHiddenPref(projectId: string, hidden: boolean): Promise<void> {
   return updatePref(projectId, () => ({ hidden: hidden ? 1 : 0 }))
+}
+
+/** Life's block layout (row 'life'); null goes back to the default. */
+export function setLayoutPref(projectId: string, layout: string[][] | null): Promise<void> {
+  return updatePref(projectId, () => ({ layout }))
 }
 
 // --- Sync engine ------------------------------------------------------------

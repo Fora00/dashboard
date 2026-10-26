@@ -661,6 +661,7 @@ export type Database = {
         Row: {
           hidden: boolean | null
           id: string
+          layout: Json | null
           starred: boolean
           updated_at: number
           user_id: string
@@ -668,6 +669,7 @@ export type Database = {
         Insert: {
           hidden?: boolean | null
           id: string
+          layout?: Json | null
           starred?: boolean
           updated_at: number
           user_id?: string
@@ -675,6 +677,7 @@ export type Database = {
         Update: {
           hidden?: boolean | null
           id?: string
+          layout?: Json | null
           starred?: boolean
           updated_at?: number
           user_id?: string

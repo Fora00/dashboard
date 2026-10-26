@@ -21,7 +21,7 @@ vi.mock('./sync', () => ({
   syncEnabled: true,
 }))
 
-const { projectPrefsTable, setHiddenPref, sync, toggleStarPref } = await import('./projectPrefsSync')
+const { projectPrefsTable, setHiddenPref, setLayoutPref, sync, toggleStarPref } = await import('./projectPrefsSync')
 
 const settle = () =>
   drain(async () => `${fake.calls.length}|${JSON.stringify(await db.outbox.toArray())}|${sync.getStatus().syncing}`)
@@ -50,7 +50,7 @@ describe('project prefs sync', () => {
       {
         table: 'project_prefs',
         op: 'upsert',
-        arg: { id: 'links', starred: true, hidden: null, updated_at: expect.any(Number) },
+        arg: { id: 'links', starred: true, hidden: null, layout: null, updated_at: expect.any(Number) },
       },
     ])
     expect(pushed()[0]!.arg).not.toHaveProperty('user_id')
@@ -66,7 +66,7 @@ describe('project prefs sync', () => {
     expect(await db.projectPrefs.get('todo')).toMatchObject({ starred: 0, hidden: 1 })
     expect(pushed().every((c) => c.op === 'upsert')).toBe(true)
     expect(fake.remote.project_prefs).toEqual([
-      { id: 'todo', starred: false, hidden: true, updated_at: expect.any(Number) },
+      { id: 'todo', starred: false, hidden: true, layout: null, updated_at: expect.any(Number) },
     ])
   })
 
@@ -84,8 +84,8 @@ describe('project prefs sync', () => {
     await sync.syncNow()
     await settle()
     expect(await db.projectPrefs.orderBy('id').toArray()).toEqual([
-      { id: 'links', starred: 1, hidden: null, updatedAt: 5 },
-      { id: 'todo', starred: 0, hidden: 0, updatedAt: 6 },
+      { id: 'links', starred: 1, hidden: null, layout: null, updatedAt: 5 },
+      { id: 'todo', starred: 0, hidden: 0, layout: null, updatedAt: 6 },
     ])
     fake.remote.project_prefs = []
     await sync.syncNow()
@@ -144,9 +144,17 @@ describe('project prefs sync', () => {
 
   it('toRow/fromRow round-trip all three hidden states', () => {
     for (const hidden of [null, 0, 1] as const) {
-      const local = { id: 'links', starred: 1 as const, hidden, updatedAt: 9 }
+      const local = { id: 'links', starred: 1 as const, hidden, layout: null, updatedAt: 9 }
       expect(projectPrefsTable.fromRow(projectPrefsTable.toRow(local))).toEqual(local)
     }
+  })
+
+  it('round-trips a layout and keeps it through a star toggle', async () => {
+    const local = { id: 'life', starred: 0 as const, hidden: null, layout: [['oggi'], ['food'], []], updatedAt: 9 }
+    expect(projectPrefsTable.fromRow(projectPrefsTable.toRow(local))).toEqual(local)
+    await setLayoutPref('life', [['food'], [], ['oggi']])
+    await toggleStarPref('life')
+    expect(await db.projectPrefs.get('life')).toMatchObject({ starred: 1, layout: [['food'], [], ['oggi']] })
   })
 
   it('choices migrated by the v17 upgrade are pushed (updated_at 0), not wiped by the first pull', async () => {
@@ -160,7 +168,7 @@ describe('project prefs sync', () => {
     fake.remote.project_prefs = [{ id: 'links', starred: true, hidden: null, updated_at: 7 }] as never
     await sync.syncNow()
     await settle()
-    expect(pushed()[0]?.arg).toEqual({ id: 'todo', starred: true, hidden: false, updated_at: 0 })
+    expect(pushed()[0]?.arg).toEqual({ id: 'todo', starred: true, hidden: false, layout: null, updated_at: 0 })
     expect((await db.projectPrefs.toCollection().primaryKeys()).sort()).toEqual(['links', 'todo'])
   })
 })

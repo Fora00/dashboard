@@ -31,6 +31,9 @@ export function useOwner(): boolean | undefined {
     }
   }, [session, userId])
 
+  // `npm run dev` only (never in the built app): localhost always shows the
+  // owner-only projects (Life…), signed in or not. Data stays local anyway.
+  if (import.meta.env.DEV) return true
   if (!supabase || session === null) return false
   if (session === undefined || !userId) return undefined
   if (answer?.userId === userId) return answer.owner

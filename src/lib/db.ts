@@ -201,6 +201,10 @@ export interface ProjectPref {
   // (projectStats.ts), so an explicit choice is never overwritten by the
   // defaults. Tri-state on purpose; mirrored by a nullable column remotely.
   hidden: 0 | 1 | null
+  // Life only (row id 'life'): where each block of the week screen sits, as
+  // columns of block ids. Validated on read by sanitizeLayout
+  // (projects/life/week/blockLayout.ts). null/absent = the default layout.
+  layout?: string[][] | null
   // ms, last-writer-wins. 0 = a choice that predates sync (queued by the v17
   // upgrade): the server MERGES it into its row instead of letting it win or
   // lose (project_prefs_merge in the project_prefs migration).
