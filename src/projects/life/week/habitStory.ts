@@ -57,3 +57,19 @@ export function buildHabitHistory(
     .sort((a, b) => IDEA_ORDER[a.value.status] - IDEA_ORDER[b.value.status] || b.createdAt - a.createdAt)
   return { tracker, weeks, ideas }
 }
+
+/** Consecutive weeks a habit held, newest first in `weeks`: a target reached,
+ * or a cap (max) not exceeded. Habits with neither have no streak (0). The
+ * current week never breaks it while still open (a target not yet reached); an
+ * exceeded cap does break it at once. */
+export function weekStreak(weeks: readonly HabitWeek[], currentWeek: string): number {
+  let run = 0
+  for (const w of weeks) {
+    const held = w.target !== null ? w.total >= w.target : w.max !== null ? w.total <= w.max : null
+    if (held === null) return 0
+    if (held) run++
+    else if (w.week === currentWeek && w.target !== null) continue
+    else break
+  }
+  return run
+}

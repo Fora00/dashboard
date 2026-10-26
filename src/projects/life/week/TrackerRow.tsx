@@ -6,6 +6,7 @@ import { weekDays, type TrackerSummary } from '../model'
 import { useToday } from '../useToday'
 import { EnergyPicker } from './EnergyScale'
 import { HabitHistoryButton } from './HabitHistory'
+import { useWeekStreak } from './useHabitHistory'
 
 const DAY_LABELS = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
 
@@ -52,6 +53,7 @@ export function TrackerRow({
           : ''
   const activeEntry = energyPromptId ? entries.find((e) => e.id === energyPromptId) : undefined
   const today = useToday()
+  const streakWeeks = useWeekStreak(tracker.id, week)
   const doneToday = entries.some((e) => e.day === today)
   const days = weekDays(week)
 
@@ -110,7 +112,7 @@ export function TrackerRow({
               {tracker.emoji}
             </span>
           )}
-          <span className="min-w-0 flex-1 truncate">{tracker.label}</span>
+          <span className="min-w-0 flex-1 break-words">{tracker.label}</span>
           {goal && (
             <span
               className={`shrink-0 text-xs font-normal ${atMax ? 'text-amber-600 dark:text-amber-400' : ts.reachedTarget ? 'text-emerald-700 dark:text-emerald-300' : 'text-slate-500 dark:text-slate-400'}`}
@@ -132,6 +134,14 @@ export function TrackerRow({
       </div>
       {showDetails && (
         <div className="mt-2 space-y-2 pl-1">
+          {streakWeeks > 0 && (
+            <p className="text-sm font-medium">
+              🔥 {streakWeeks} {streakWeeks === 1 ? 'week' : 'weeks'} in a row
+              <span className="font-normal text-slate-500 dark:text-slate-400">
+                {tracker.target !== null ? ' reaching the target' : ' under the max'}
+              </span>
+            </p>
+          )}
           <div className="flex gap-1.5">
             {lastSunday && (
               <button

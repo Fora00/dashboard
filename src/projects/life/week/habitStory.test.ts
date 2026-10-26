@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { LifeEntry, LifePlan, LifeWeek } from '../../../lib/db'
-import { buildHabitHistory } from './habitStory'
+import { buildHabitHistory, weekStreak, type HabitWeek } from './habitStory'
 
 const plan = (week: string, trackers: LifePlan['trackers']): LifeWeek => ({
   id: week,
@@ -52,5 +52,32 @@ describe('buildHabitHistory', () => {
   it('honours the week limit and returns nothing for an unknown habit', () => {
     expect(buildHabitHistory('water', weeks, [], 1).weeks).toHaveLength(1)
     expect(buildHabitHistory('nope', weeks, [])).toEqual({ tracker: null, weeks: [], ideas: [] })
+  })
+})
+
+describe('weekStreak', () => {
+  const w = (week: string, total: number, target: number | null, max: number | null = null): HabitWeek => ({
+    week,
+    total,
+    target,
+    max,
+    reached: target === null ? null : total >= target,
+    reason: null,
+  })
+  it('counts weeks in a row that reached the target, newest first', () => {
+    expect(weekStreak([w('c', 2, 2), w('b', 3, 2), w('a', 0, 2)], 'c')).toBe(2)
+  })
+  it('an open current week does not break it', () => {
+    expect(weekStreak([w('c', 0, 2), w('b', 2, 2), w('a', 2, 2)], 'c')).toBe(2)
+  })
+  it('a past miss breaks it', () => {
+    expect(weekStreak([w('c', 2, 2), w('b', 1, 2), w('a', 2, 2)], 'c')).toBe(1)
+  })
+  it('caps hold while at or under max, and break when exceeded', () => {
+    expect(weekStreak([w('c', 2, null, 2), w('b', 0, null, 2)], 'c')).toBe(2)
+    expect(weekStreak([w('c', 3, null, 2), w('b', 0, null, 2)], 'c')).toBe(0)
+  })
+  it('no goal, no streak', () => {
+    expect(weekStreak([w('c', 5, null)], 'c')).toBe(0)
   })
 })
