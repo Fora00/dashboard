@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { EventMark, LifeEntry, LifePlan, MealEntry } from '../../../lib/db'
-import { buildExportMarkdown } from '../model'
+import { buildExportMarkdown, type LearningWeek } from '../model'
 import { categoryLabel } from '../../events/model'
 import { markExported } from '../lateEdit'
 import { shareOrCopy } from '../../../lib/share'
@@ -15,6 +15,7 @@ export function ExportSection({
   meals,
   eventMarks,
   favouriteCategories,
+  learning,
   open,
   onToggle,
   readOnly,
@@ -24,6 +25,7 @@ export function ExportSection({
   meals: MealEntry[]
   eventMarks: EventMark[]
   favouriteCategories: string[]
+  learning: LearningWeek | null
   open: boolean
   onToggle: () => void
   readOnly: boolean
@@ -34,10 +36,17 @@ export function ExportSection({
   const [fallbackText, setFallbackText] = useState<string | null>(null)
 
   async function doExport() {
-    const md = buildExportMarkdown(plan, entries, undefined, meals, {
-      marks: eventMarks,
-      favouriteCategories: favouriteCategories.map(categoryLabel),
-    })
+    const md = buildExportMarkdown(
+      plan,
+      entries,
+      undefined,
+      meals,
+      {
+        marks: eventMarks,
+        favouriteCategories: favouriteCategories.map(categoryLabel),
+      },
+      learning,
+    )
     if (navigator.clipboard) {
       try {
         await navigator.clipboard.writeText(md)
@@ -54,10 +63,17 @@ export function ExportSection({
   }
 
   async function doShare() {
-    const md = buildExportMarkdown(plan, entries, undefined, meals, {
-      marks: eventMarks,
-      favouriteCategories: favouriteCategories.map(categoryLabel),
-    })
+    const md = buildExportMarkdown(
+      plan,
+      entries,
+      undefined,
+      meals,
+      {
+        marks: eventMarks,
+        favouriteCategories: favouriteCategories.map(categoryLabel),
+      },
+      learning,
+    )
     try {
       const outcome = await shareOrCopy(md, { title: `Week of ${plan.week}` })
       if (outcome !== 'cancelled') markExported(plan.week)

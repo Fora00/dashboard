@@ -1,7 +1,8 @@
 import { useMemo, useState, type ReactNode } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, type LifeEntry, type LifePlan } from '../../../lib/db'
-import { summarizeMealsWeek, summarizeWeek } from '../model'
+import { summarizeLearningWeek, summarizeMealsWeek, summarizeWeek } from '../model'
+import { courses } from '../../learning/courses'
 import { addDays } from '../model/dates.ts'
 import { useUndoSnackbar } from '../../../lib/useUndoSnackbar'
 import { Snackbar } from '../../../components/Snackbar'
@@ -15,6 +16,7 @@ import { DayFocusSection } from './DayFocusSection'
 import { PlaybookSection } from './PlaybookSection'
 import { FocusSection } from './FocusSection'
 import { FoodSection } from './FoodSection'
+import { LearningSection } from './LearningSection'
 import { ScreenTimeSection } from './ScreenTimeSection'
 import { SundaySection } from './SundaySection'
 import { ThingsSection } from './ThingsSection'
@@ -92,6 +94,28 @@ export function WeekBody({ week, plan, entries, readOnly, lateEdit = false, dayF
   // Habit ideas live across weeks; they ride along in the export for /settimana.
   const ideas = useLiveQuery(() => db.lifeEntries.filter((e) => e.kind === 'idea').toArray(), [])
   const exportEntries = useMemo(() => [...entries, ...(ideas ?? [])], [entries, ideas])
+  // Learning's rows (local Dexie, owner-only sync) fold into the week's activity.
+  const learningStates = useLiveQuery(async () => {
+    const [quiz, cards, practice] = await Promise.all([
+      db.learningQuiz.toArray(),
+      db.learningCards.toArray(),
+      db.learningPractice.toArray(),
+    ])
+    return new Map(
+      courses.map((c) => [
+        c.id,
+        {
+          quiz: quiz.filter((r) => r.courseId === c.id),
+          cards: cards.filter((r) => r.courseId === c.id),
+          practice: practice.filter((r) => r.courseId === c.id),
+        },
+      ]),
+    )
+  }, [])
+  const learning = useMemo(
+    () => (learningStates ? summarizeLearningWeek(courses, learningStates, week) : null),
+    [learningStates, week],
+  )
   const food = useMemo(() => summarizeMealsWeek(meals ?? [], week), [meals, week])
   const { pending, trigger, confirmUndo } = useUndoSnackbar()
   const { sections, sundayOpen, toggleSection, toggleSunday } = useSections(week, readOnly)
@@ -207,15 +231,25 @@ export function WeekBody({ week, plan, entries, readOnly, lateEdit = false, dayF
         editable={!answersReadOnly}
       />
     )
-  blocks.food = (
-    <FoodSection
-      week={week}
-      food={food}
-      open={sections.food}
-      onToggle={() => toggleSection('food')}
-      readOnly={readOnly}
-    />
-  )
+  if (food.days.length > 0)
+    blocks.food = (
+      <FoodSection
+        week={week}
+        food={food}
+        open={sections.food}
+        onToggle={() => toggleSection('food')}
+        readOnly={readOnly}
+      />
+    )
+  if (learning && learning.courses.length > 0)
+    blocks.learning = (
+      <LearningSection
+        learning={learning}
+        open={sections.learning}
+        onToggle={() => toggleSection('learning')}
+        readOnly={readOnly}
+      />
+    )
   blocks.screen = (
     <ScreenTimeSection
       week={week}
@@ -233,6 +267,7 @@ export function WeekBody({ week, plan, entries, readOnly, lateEdit = false, dayF
       meals={meals ?? []}
       eventMarks={eventMarks ?? []}
       favouriteCategories={eventPrefs?.favouriteCategories ?? []}
+      learning={learning}
       open={sections.export}
       onToggle={() => toggleSection('export')}
       readOnly={readOnly}

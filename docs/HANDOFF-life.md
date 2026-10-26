@@ -143,6 +143,19 @@ Validation: ids unique within each array; `week` must be a Monday; dates
 `YYYY-MM-DD`; `target`/`max` positive integers; text lengths capped (mirror
 the caps in SQL, per the `links` pattern).
 
+### Learning block (read-only, like Food)
+
+Added 2026-10-26. The week screen shows a "🎓 Learning" block
+(`week/LearningSection.tsx`) fed by the Learning project's local rows, no new
+table or sync: per course the overall progress now, and the week's activity
+(rows whose `updatedAt` falls in the Mon-Sun week: quiz answers and how many
+were right, cards marked known, practice ticked), the number of active days,
+and a "Continue" link to the first unfinished module via `ProjectLink`. It is
+movable like every block and collapses per device. The export gets a
+`## Learning` section (`model/learning.ts`, `summarizeLearningWeek`). Caveat:
+a card's row is written when it is marked known, so a card re-marked later
+counts in the later week.
+
 ### Spock test: why not + habit ideas
 
 Added 2026-10-26. In the **Sunday check** (`week/SpockWhy.tsx`) every habit

@@ -23,6 +23,7 @@ export type SectionId =
   | 'checkins'
   | 'things'
   | 'food'
+  | 'learning'
   | 'screen'
   | 'export'
 
@@ -35,6 +36,7 @@ interface SectionsState {
   checkins: boolean
   things: boolean
   food: boolean
+  learning: boolean
   screen: boolean
   export: boolean
   sundayWeek: string | null
@@ -50,6 +52,7 @@ const DEFAULT_SECTIONS: SectionsState = {
   checkins: true,
   things: true,
   food: true,
+  learning: true,
   screen: true,
   export: true,
   sundayWeek: null,
@@ -72,6 +75,7 @@ function sanitizeSections(raw: unknown): SectionsState {
     checkins: isBool(r.checkins) ? r.checkins : DEFAULT_SECTIONS.checkins,
     things: isBool(r.things) ? r.things : DEFAULT_SECTIONS.things,
     food: isBool(r.food) ? r.food : DEFAULT_SECTIONS.food,
+    learning: isBool(r.learning) ? r.learning : DEFAULT_SECTIONS.learning,
     screen: isBool(r.screen) ? r.screen : DEFAULT_SECTIONS.screen,
     export: isBool(r.export) ? r.export : DEFAULT_SECTIONS.export,
     sundayWeek: typeof r.sundayWeek === 'string' ? r.sundayWeek : null,

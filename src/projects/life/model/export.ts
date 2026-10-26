@@ -4,6 +4,7 @@ import { dayKey, weekDays } from './dates.ts'
 import { summarizeSavedEvents } from './events.ts'
 import { parseApps } from './apps.ts'
 import { fenceFor } from './fence.ts'
+import { describeLearningActivity, type LearningWeek } from './learning.ts'
 import { summarizeMealsWeek } from './meals.ts'
 import { SCREEN_QUESTIONS } from './screenTime.ts'
 import { summarizeWeek } from './summary.ts'
@@ -51,6 +52,7 @@ export function buildExportMarkdown(
     marks: [],
     favouriteCategories: [],
   },
+  learning: LearningWeek | null = null,
 ): string {
   const plan = withCheckinIds(planIn)
   const s = summarizeWeek(plan, entries, today)
@@ -187,6 +189,17 @@ export function buildExportMarkdown(
         const kcal = m.kcal === null ? '' : ` — ${m.estimated ? '≈ ' : ''}${m.kcal} kcal`
         out.push(`  - ${m.meal}: ${oneLine(m.text)}${m.weighed ? ' (weighed)' : ''}${kcal}`)
       }
+    }
+    out.push('')
+  }
+
+  if (learning?.courses.length) {
+    out.push('## Learning', '')
+    for (const c of learning.courses) {
+      out.push(
+        `- ${c.emoji ? `${c.emoji} ` : ''}${c.title}: ${c.percent}% overall (${c.done}/${c.total}) · this week: ${describeLearningActivity(c)}${c.days.length ? ` on ${c.days.length} day${c.days.length === 1 ? '' : 's'}` : ''}`,
+      )
+      if (c.next) out.push(`  - next: ${c.next.title} (${c.next.percent}%)`)
     }
     out.push('')
   }

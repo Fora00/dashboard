@@ -37,6 +37,9 @@ Paths: dashboard = `~/Dev/personal/dashboard`, notes = `~/life`.
    Bring it into `~/life` the way `~/life`'s own instructions say (e.g. record
    the result under that practice's section) and use it when choosing the next
    practice in step 2.1: keep, change or retire it.
+  It may carry a `## Learning` section: per course the overall progress and
+  what was studied this week (quiz, cards, practice, active days) and the next
+  module. Use it in the Sunday analysis like the other areas.
   Under each habit in `## Trackers` it may carry `why not:` (the reason the
   owner gave for missing the weekly target: the Spock test) and `ideas:` (the
   fixes they are collecting, each with its status: open, trying, done). Use

@@ -14,6 +14,7 @@ export const BLOCK_IDS = [
   'checkins',
   'sunday',
   'food',
+  'learning',
   'screen',
   'export',
   'progress',
@@ -25,7 +26,7 @@ export type BlockLayout = BlockId[][]
 export const DEFAULT_LAYOUT: BlockLayout = [
   ['oggi', 'playbook', 'focus', 'trackers', 'recap', 'rules'],
   ['things', 'checkins', 'sunday'],
-  ['food', 'screen', 'export', 'progress'],
+  ['food', 'learning', 'screen', 'export', 'progress'],
 ]
 
 const known = new Set<string>(BLOCK_IDS)
