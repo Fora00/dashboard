@@ -49,7 +49,7 @@ export function PlaybookSection({
   return (
     <CollapsibleSection
       title="📖 Playbook of the week"
-      summary={`${used}× · ${playbook.practice}`}
+      summary={`${last ? '✓ today' : 'due today'} · ${used}× · ${playbook.practice}`}
       open={open}
       onToggle={onToggle}
       readOnly={readOnly}
