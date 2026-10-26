@@ -94,7 +94,7 @@ export function TrackersSection({
           aria-label="Streaks habits (logged in the Streaks app)"
         >
           {streaks.map((e) => (
-            <StreakRow key={e.id} entry={e} today={today} />
+            <StreakRow key={e.id} entry={e} today={today} week={week} />
           ))}
         </ul>
       )}
