@@ -386,6 +386,7 @@ them (the dashboard's category chips match only category ids).
 | `teatrogrande` | teatrogrande.it (ring 2): Teatro Grande Brescia | static HTML calendar `/it/calendario`, `data-date` per row | 1 request; café opening-hours rows dropped except "Aperitivo in Jazz"; "under 11"/"Educational" rows → `kids` |
 | `spot` | `scripts/events/spot.json` (hand-curated) | no network | see "Spot events" |
 | `recurring` | `scripts/events/recurring.json` (hand-curated) | no network | see "Recurring activities" |
+| `curated` | `scripts/events/curated.json` (hand-curated) | no network | see "Curated events" |
 
 Not included (checked 2026-09-29):
 
@@ -549,6 +550,23 @@ verified), `summary`, `weekdays` (mon..sun), `time` (HH:MM), `from`/`until`
 event per meeting inside the 90-day window; `series.ts` then flags them as
 one recurring series. Validated with zod like spot.json. Courses held on
 request without fixed dates are not events: do not add them.
+
+## Curated events
+
+One-off **timed** events of a local place that only publishes a poster (an
+Instagram post, a flyer) and has no calendar page are kept by hand in
+`scripts/events/curated.json`, read by the `curated` adapter (no network,
+ring `home`, `area` from the town map). Entry: `id` (kebab-case with the
+year, never change it), `title`, `date` + `time` (local Rome, HH:MM),
+optional `endTime` (omitted = `end: null`), `city`, `venue`, `url`, `summary`,
+optional `category`, `tags`, `image`, `verified: false`. `url` is required
+(the pipeline drops records without a valid https url): use the event page, or
+the venue's page when only a poster exists, and never invent one. Validated
+with zod (`CuratedFileSchema`). The id is `sha1("curated" + entry id)`, so it
+is stable; dedup against other sources works as usual (same title/time).
+Public venue data only: no personal notes. First entries: aMarti Ceramics Lab
+(Rovereto), November 2026 (venue url = a press article about the venue; the
+poster has no link).
 
 ## Spot events
 

@@ -27,6 +27,8 @@ export interface PlanDiff {
   trackers: ListDiff<LifeTracker>
   sundayCheck: ListDiff<LifeQuestion>
   recap: ListDiff<LifeRecapItem>
+  /** The week's playbook practice: added, removed, or changed. */
+  playbook: 'added' | 'removed' | 'changed' | null
   rules: { added: string[]; removed: string[] }
   checkins: { added: LifeCheckin[]; removed: LifeCheckin[] }
   /** Human lines for the preview, e.g. "1 tracker removed", "2 tasks added". */
@@ -100,12 +102,17 @@ export function diffPlans(prev: LifePlan | null, next: LifePlan): PlanDiff {
     if (s.removed.length) summary.push(`${plural(s.removed.length, one, many)} removed`)
     if ('changed' in s && s.changed.length) summary.push(`${plural(s.changed.length, one, many)} changed`)
   }
+  const oldPb = JSON.stringify(old.playbook ?? null)
+  const newPb = JSON.stringify(next.playbook ?? null)
+  const playbook = oldPb === newPb ? null : !old.playbook ? 'added' : !next.playbook ? 'removed' : 'changed'
+  if (playbook) summary.push(`playbook practice ${playbook}`)
   const unchanged = prev !== null && JSON.stringify(old) === JSON.stringify(next)
   // Same items, different order: still worth saying before the owner saves.
   if (!unchanged && summary.length === 0) summary.push('order changed')
   return {
     firstImport: prev === null,
     ...d,
+    playbook,
     summary: unchanged ? [] : summary,
     unchanged,
   }

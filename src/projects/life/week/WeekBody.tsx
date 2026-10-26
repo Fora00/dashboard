@@ -9,6 +9,7 @@ import { CheckinRow } from './CheckinRow'
 import { CollapsibleSection } from './CollapsibleSection'
 import { ExportSection } from './ExportSection'
 import { DayFocusSection } from './DayFocusSection'
+import { PlaybookSection } from './PlaybookSection'
 import { FocusSection } from './FocusSection'
 import { FoodSection } from './FoodSection'
 import { ScreenTimeSection } from './ScreenTimeSection'
@@ -67,6 +68,20 @@ export function WeekBody({ week, plan, entries, readOnly, lateEdit = false, dayF
         {!readOnly && dayFocusDay && (
           <Slot n={1}>
             <DayFocusSection day={dayFocusDay} />
+          </Slot>
+        )}
+
+        {plan.playbook && summary.playbook && (
+          <Slot n={1}>
+            <PlaybookSection
+              week={week}
+              playbook={plan.playbook}
+              summary={summary.playbook}
+              open={sections.playbook}
+              onToggle={() => toggleSection('playbook')}
+              readOnly={readOnly}
+              trigger={trigger}
+            />
           </Slot>
         )}
 

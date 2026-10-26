@@ -11,6 +11,7 @@ import { ical } from './ical.ts'
 import { trentinospettacoli } from './trentinospettacoli.ts'
 import { tebe } from './tebe.ts'
 import { spot } from './spot.ts'
+import { curated } from './curated.ts'
 import { gardaveneto } from './gardaveneto.ts'
 import { padova } from './padova.ts'
 import { infinityboulder } from './infinityboulder.ts'
@@ -227,6 +228,8 @@ export const ADAPTERS: Adapter[] = [
   teatrogrande,
   // Hand-curated: weekly activities with a fixed timetable, and big far events
   recurring,
+  // Curated one-off timed events (posters), then spot
+  curated,
   // Spot (hand-curated)
   spot,
 ]

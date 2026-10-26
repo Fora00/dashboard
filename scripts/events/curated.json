@@ -1,0 +1,148 @@
+{
+  "_readme": "Hand-curated ONE-OFF timed events of a place that only posts a poster (e.g. on Instagram) and has no calendar page. To add one, append an object to `events`. Required: id (kebab-case, stable, include the year: never change it once published, it keys saved/hidden state), title, date (YYYY-MM-DD, local Rome), time (HH:MM, local), city, url (an https page about the event or, if there is none, about the venue), summary (one honest line). Optional: venue, endTime (HH:MM; omit when unknown, no end is published), tags, category (primary category id), image, verified:false. Public venue data only: no personal notes. Past events are dropped by the crawler window; delete old ones when convenient.",
+  "events": [
+    {
+      "id": "amarti-art-lab-candela-autunnale-2026",
+      "title": "Art Lab: decora la tua candela autunnale",
+      "date": "2026-11-05",
+      "time": "18:00",
+      "city": "Rovereto",
+      "venue": "aMarti Ceramics Lab (Minicami), Piazza Malfatti 10",
+      "url": "https://www.ildolomiti.it/societa/2026/un-negozio-di-artigianato-dove-creare-una-comunita-martina-bonfiglio-e-il-suo-amarticeramics-lab-in-una-societa-frenetica-qui-si-rallenta-e-ci-si-conosce",
+      "summary": "Evento in programma da aMarti Ceramics Lab a Rovereto (locandina Instagram del locale, novembre 2026). Orario di fine non indicato; il link è un articolo sul locale, non la pagina dell'evento.",
+      "category": "creative"
+    },
+    {
+      "id": "amarti-corso-ceramica-modellazione-day-1-2026",
+      "title": "Corso base di ceramica: modellazione argilla, Day 1",
+      "date": "2026-11-10",
+      "time": "18:30",
+      "city": "Rovereto",
+      "venue": "aMarti Ceramics Lab (Minicami), Piazza Malfatti 10",
+      "url": "https://www.ildolomiti.it/societa/2026/un-negozio-di-artigianato-dove-creare-una-comunita-martina-bonfiglio-e-il-suo-amarticeramics-lab-in-una-societa-frenetica-qui-si-rallenta-e-ci-si-conosce",
+      "summary": "Evento in programma da aMarti Ceramics Lab a Rovereto (locandina Instagram del locale, novembre 2026). Orario di fine non indicato; il link è un articolo sul locale, non la pagina dell'evento.",
+      "category": "creative"
+    },
+    {
+      "id": "amarti-ghirlanda-autunnale-bicelli-2026",
+      "title": "Crea la tua ghirlanda autunnale con Lorenzo Bicelli",
+      "date": "2026-11-11",
+      "time": "17:30",
+      "city": "Rovereto",
+      "venue": "aMarti Ceramics Lab (Minicami), Piazza Malfatti 10",
+      "url": "https://www.ildolomiti.it/societa/2026/un-negozio-di-artigianato-dove-creare-una-comunita-martina-bonfiglio-e-il-suo-amarticeramics-lab-in-una-societa-frenetica-qui-si-rallenta-e-ci-si-conosce",
+      "summary": "Evento in programma da aMarti Ceramics Lab a Rovereto (locandina Instagram del locale, novembre 2026). Orario di fine non indicato; il link è un articolo sul locale, non la pagina dell'evento.",
+      "category": "creative"
+    },
+    {
+      "id": "amarti-minicami-paracord-2026",
+      "title": "Minicami: workshop di paracord",
+      "date": "2026-11-12",
+      "time": "18:00",
+      "city": "Rovereto",
+      "venue": "aMarti Ceramics Lab (Minicami), Piazza Malfatti 10",
+      "url": "https://www.ildolomiti.it/societa/2026/un-negozio-di-artigianato-dove-creare-una-comunita-martina-bonfiglio-e-il-suo-amarticeramics-lab-in-una-societa-frenetica-qui-si-rallenta-e-ci-si-conosce",
+      "summary": "Evento in programma da aMarti Ceramics Lab a Rovereto (locandina Instagram del locale, novembre 2026). Orario di fine non indicato; il link è un articolo sul locale, non la pagina dell'evento.",
+      "category": "creative"
+    },
+    {
+      "id": "amarti-astrologia-aperitivo-tarocchi-2026",
+      "title": "Astrologia e aperitivo con Dialogo con i Tarocchi",
+      "date": "2026-11-16",
+      "time": "19:00",
+      "city": "Rovereto",
+      "venue": "aMarti Ceramics Lab (Minicami), Piazza Malfatti 10",
+      "url": "https://www.ildolomiti.it/societa/2026/un-negozio-di-artigianato-dove-creare-una-comunita-martina-bonfiglio-e-il-suo-amarticeramics-lab-in-una-societa-frenetica-qui-si-rallenta-e-ci-si-conosce",
+      "summary": "Evento in programma da aMarti Ceramics Lab a Rovereto (locandina Instagram del locale, novembre 2026). Orario di fine non indicato; il link è un articolo sul locale, non la pagina dell'evento.",
+      "category": "other"
+    },
+    {
+      "id": "amarti-corso-ceramica-decoro-day-2-2026",
+      "title": "Corso base di ceramica: decoro, Argilla Day 2",
+      "date": "2026-11-17",
+      "time": "18:30",
+      "city": "Rovereto",
+      "venue": "aMarti Ceramics Lab (Minicami), Piazza Malfatti 10",
+      "url": "https://www.ildolomiti.it/societa/2026/un-negozio-di-artigianato-dove-creare-una-comunita-martina-bonfiglio-e-il-suo-amarticeramics-lab-in-una-societa-frenetica-qui-si-rallenta-e-ci-si-conosce",
+      "summary": "Evento in programma da aMarti Ceramics Lab a Rovereto (locandina Instagram del locale, novembre 2026). Orario di fine non indicato; il link è un articolo sul locale, non la pagina dell'evento.",
+      "category": "creative"
+    },
+    {
+      "id": "amarti-corona-avvento-bicelli-2026",
+      "title": "Crea la tua corona d'Avvento con Lorenzo Bicelli",
+      "date": "2026-11-18",
+      "time": "17:30",
+      "city": "Rovereto",
+      "venue": "aMarti Ceramics Lab (Minicami), Piazza Malfatti 10",
+      "url": "https://www.ildolomiti.it/societa/2026/un-negozio-di-artigianato-dove-creare-una-comunita-martina-bonfiglio-e-il-suo-amarticeramics-lab-in-una-societa-frenetica-qui-si-rallenta-e-ci-si-conosce",
+      "summary": "Evento in programma da aMarti Ceramics Lab a Rovereto (locandina Instagram del locale, novembre 2026). Orario di fine non indicato; il link è un articolo sul locale, non la pagina dell'evento.",
+      "category": "creative"
+    },
+    {
+      "id": "amarti-dharana-gioiello-pietre-2026",
+      "title": "Dharana: crea il tuo gioiello con le pietre incastonate",
+      "date": "2026-11-19",
+      "time": "18:00",
+      "city": "Rovereto",
+      "venue": "aMarti Ceramics Lab (Minicami), Piazza Malfatti 10",
+      "url": "https://www.ildolomiti.it/societa/2026/un-negozio-di-artigianato-dove-creare-una-comunita-martina-bonfiglio-e-il-suo-amarticeramics-lab-in-una-societa-frenetica-qui-si-rallenta-e-ci-si-conosce",
+      "summary": "Evento in programma da aMarti Ceramics Lab a Rovereto (locandina Instagram del locale, novembre 2026). Orario di fine non indicato; il link è un articolo sul locale, non la pagina dell'evento.",
+      "category": "creative"
+    },
+    {
+      "id": "amarti-nebulosa-lab-bouquet-paper-art-2026",
+      "title": "Nebulosa Lab: crea il tuo bouquet in paper art",
+      "date": "2026-11-21",
+      "time": "18:00",
+      "city": "Rovereto",
+      "venue": "aMarti Ceramics Lab (Minicami), Piazza Malfatti 10",
+      "url": "https://www.ildolomiti.it/societa/2026/un-negozio-di-artigianato-dove-creare-una-comunita-martina-bonfiglio-e-il-suo-amarticeramics-lab-in-una-societa-frenetica-qui-si-rallenta-e-ci-si-conosce",
+      "summary": "Evento in programma da aMarti Ceramics Lab a Rovereto (locandina Instagram del locale, novembre 2026). Orario di fine non indicato; il link è un articolo sul locale, non la pagina dell'evento.",
+      "category": "creative"
+    },
+    {
+      "id": "amarti-decoro-ceramica-castagne-vin-brule-2026",
+      "title": "Decoro su ceramica, castagne e vin brulé",
+      "date": "2026-11-24",
+      "time": "18:30",
+      "city": "Rovereto",
+      "venue": "aMarti Ceramics Lab (Minicami), Piazza Malfatti 10",
+      "url": "https://www.ildolomiti.it/societa/2026/un-negozio-di-artigianato-dove-creare-una-comunita-martina-bonfiglio-e-il-suo-amarticeramics-lab-in-una-societa-frenetica-qui-si-rallenta-e-ci-si-conosce",
+      "summary": "Evento in programma da aMarti Ceramics Lab a Rovereto (locandina Instagram del locale, novembre 2026). Orario di fine non indicato; il link è un articolo sul locale, non la pagina dell'evento.",
+      "category": "creative"
+    },
+    {
+      "id": "amarti-materia-nomade-gioielli-2026",
+      "title": "Laboratorio creazione di gioielli con Materia Nomade",
+      "date": "2026-11-26",
+      "time": "18:00",
+      "city": "Rovereto",
+      "venue": "aMarti Ceramics Lab (Minicami), Piazza Malfatti 10",
+      "url": "https://www.ildolomiti.it/societa/2026/un-negozio-di-artigianato-dove-creare-una-comunita-martina-bonfiglio-e-il-suo-amarticeramics-lab-in-una-societa-frenetica-qui-si-rallenta-e-ci-si-conosce",
+      "summary": "Evento in programma da aMarti Ceramics Lab a Rovereto (locandina Instagram del locale, novembre 2026). Orario di fine non indicato; il link è un articolo sul locale, non la pagina dell'evento.",
+      "category": "creative"
+    },
+    {
+      "id": "amarti-artemisya-macrame-2026",
+      "title": "Artemisya Creations: workshop di macramè",
+      "date": "2026-11-28",
+      "time": "10:00",
+      "city": "Rovereto",
+      "venue": "aMarti Ceramics Lab (Minicami), Piazza Malfatti 10",
+      "url": "https://www.ildolomiti.it/societa/2026/un-negozio-di-artigianato-dove-creare-una-comunita-martina-bonfiglio-e-il-suo-amarticeramics-lab-in-una-societa-frenetica-qui-si-rallenta-e-ci-si-conosce",
+      "summary": "Evento in programma da aMarti Ceramics Lab a Rovereto (locandina Instagram del locale, novembre 2026). Orario di fine non indicato; il link è un articolo sul locale, non la pagina dell'evento.",
+      "category": "creative"
+    },
+    {
+      "id": "amarti-degustazione-vini-decoro-calice-2026",
+      "title": "Degustazione di vini, buffet e decoro di un calice in vetro",
+      "date": "2026-11-30",
+      "time": "18:30",
+      "city": "Rovereto",
+      "venue": "aMarti Ceramics Lab (Minicami), Piazza Malfatti 10",
+      "url": "https://www.ildolomiti.it/societa/2026/un-negozio-di-artigianato-dove-creare-una-comunita-martina-bonfiglio-e-il-suo-amarticeramics-lab-in-una-societa-frenetica-qui-si-rallenta-e-ci-si-conosce",
+      "summary": "Evento in programma da aMarti Ceramics Lab a Rovereto (locandina Instagram del locale, novembre 2026). Orario di fine non indicato; il link è un articolo sul locale, non la pagina dell'evento.",
+      "category": "creative"
+    }
+  ]
+}

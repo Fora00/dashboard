@@ -14,7 +14,14 @@ export { SCREEN_IDS, SCREEN_QUESTIONS } from './screenTime.ts'
 export { MAX_APPS, parseApps, serializeApps, type AppUsage } from './apps.ts'
 export { derivedCheckinId, withCheckinIds } from './checkinIds.ts'
 export { entryId, isEnergy, validateAnswer } from './entries.ts'
-export { summarizeWeek, nextCheckin, type TrackerSummary, type CheckinStatus, type WeekSummary } from './summary.ts'
+export {
+  summarizeWeek,
+  nextCheckin,
+  type TrackerSummary,
+  type PlaybookSummary,
+  type CheckinStatus,
+  type WeekSummary,
+} from './summary.ts'
 export { diffPlans, hiddenTrackerEntries, type ListDiff, type PlanDiff } from './diff.ts'
 export {
   thingsItems,

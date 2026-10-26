@@ -71,6 +71,21 @@ export function buildExportMarkdown(
     out.push('')
   }
 
+  if (s.playbook) {
+    const pb = plan.playbook!
+    out.push('## Playbook', '')
+    out.push(`- Section: ${oneLine(pb.section)}`, `- Practice: ${oneLine(pb.practice)}`)
+    if (pb.plan) out.push(`- Plan: ${oneLine(pb.plan)}`)
+    const uses = s.playbook.total
+    out.push(
+      `- Uses: ${uses}${uses ? ` (${s.playbook.days.map((d) => `${DAY_NAMES[weekDays(plan.week).indexOf(d)] ?? ''} ${d}`.trim()).join(', ')})` : ''}`,
+    )
+    for (const e of s.playbook.entries) {
+      if (e.value.note?.trim()) out.push(`  - ${e.day}: ${oneLine(e.value.note)}`)
+    }
+    out.push('')
+  }
+
   if (s.trackers.length) {
     out.push('## Trackers', '')
     for (const t of s.trackers) {
@@ -268,6 +283,8 @@ function describeRemoved(e: LifeEntry): string {
       return `Sunday ${e.ref}: ${formatAnswer(undefined, e.value.answer)}`
     case 'sent':
       return `task ${e.ref}: sent to Things`
+    case 'playbook':
+      return `playbook: used on ${e.day}${e.value.note?.trim() ? ` — ${oneLine(e.value.note)}` : ''}`
     case 'checkin': {
       const parts = [e.value.done ? 'done' : null, e.value.note?.trim() ? oneLine(e.value.note) : null]
       return `check-in ${e.ref}: ${parts.filter(Boolean).join(' — ')}`

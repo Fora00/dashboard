@@ -119,7 +119,12 @@ the installed PWA. The phone gets the week through sync.
     { "id": "q3", "label": "Question C", "type": "text" },
     { "id": "q4", "label": "Question D", "type": "scale5" }
   ],
-  "checkins": [{ "date": "2026-01-31", "label": "Monthly review" }]
+  "checkins": [{ "date": "2026-01-31", "label": "Monthly review" }],
+  "playbook": {                        // optional: the week's one practice
+    "section": "Section A",            // playbook section (max 100)
+    "practice": "Example practice",    // the line chosen (max 300)
+    "plan": "Once in the morning"      // optional: when/how (max 300)
+  }
 }
 ```
 
@@ -137,6 +142,24 @@ already answers.
 Validation: ids unique within each array; `week` must be a Monday; dates
 `YYYY-MM-DD`; `target`/`max` positive integers; text lengths capped (mirror
 the caps in SQL, per the `links` pattern).
+
+### Playbook of the week (optional)
+
+Added 2026-10-26. `playbook` in the week JSON (absent on older plans, which
+still validate and render; `version` stays 1 because the field is additive,
+like `recap`) names the one practice from the owner's playbook chosen for the
+week. `section` and `practice` are required one-line texts, `plan` optional;
+unknown keys are an import error. It lives in the `plan` jsonb: no column.
+Edits by hand keep it. The Week screen shows a "📖 Playbook of the week" card
+(`week/PlaybookSection.tsx`) with an optional note field and a **"Used it
+today"** button. It follows the tracker pattern: one use per day, tapping again
+today undoes it. Entries are `life_entries` rows of kind `playbook`
+(`ref: "playbook"`, `value: { note? }`, note max 300), append-only with a random
+id like a tracker +1, so two devices never collide; Undo deletes the row. The
+migration `20261026120000_life_playbook.sql` only widens the kind check and
+caps the note. Entries whose week no longer has a playbook stay stored and show
+up in the export as "(removed from plan)". Code: `logPlaybook` /
+`setPlaybookNote` in `lifeSync.ts`, `summarizeWeek().playbook`.
 
 ### Recap (optional, read-only)
 
@@ -159,6 +182,8 @@ decision lives in Notion and Things.
 ## 2.2 The Week screen (default view of `/life`)
 
 1. **Focus:** the items, big. Tap marks done for the week.
+1b. **Playbook of the week** (only when the plan has one): section, practice,
+   plan, uses so far and "Used it today" with an optional note.
 2. **Trackers:** one row each, today's "+1", a Mon–Sun dot row.
    `target` shows `n / target`; `max` is a ceiling — soft warning when
    reached, never blocks; `energy: true` asks energy before/after (1–5) on
@@ -201,7 +226,11 @@ removed from the plan. When the Events page has saved events overlapping the
 `## Saved events next week` section lists them (`- Sat 2026-10-17 21:00 ·
 Title — Venue, City`, no time if all-day) plus a `Favourite categories:` line,
 and the JSON block gets a `savedEvents` array (only when non-empty).
-`/settimana` proposes placing them in the new plan. Local only (Dexie
+`/settimana` proposes placing them in the new plan. When the plan has a
+`playbook`, a `## Playbook` section lists `Section`, `Practice`, `Plan`, `Uses`
+(count and days) and one indented line per use that has a note
+(`  - 2026-01-06: note`); the uses are also in the JSON `entries` as
+`kind: "playbook"` (`ref: "playbook"`, `value.note?`). Local only (Dexie
 `eventMarks`/`eventPrefs`); code in `model/events.ts`. Copy to clipboard; `navigator.share` when available.
 
 ## 2.5 History

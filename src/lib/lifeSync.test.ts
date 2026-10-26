@@ -8,6 +8,7 @@ import {
   addDayFocus,
   editDayFocus,
   importWeek,
+  logPlaybook,
   logTracker,
   markTasksSent,
   removeDayFocus,
@@ -15,6 +16,7 @@ import {
   restoreEntry,
   setCheckin,
   setFocusDone,
+  setPlaybookNote,
   setSundayAnswer,
   setTrackerEnergy,
   toggleDayFocus,
@@ -58,6 +60,28 @@ describe('importWeek', () => {
     await setFocusDone(WEEK, 'f1', true)
     await importWeek(plan())
     expect(await db.lifeEntries.count()).toBe(1)
+  })
+})
+
+describe('playbook', () => {
+  it('each use is a new random-id row with an optional trimmed note; the note can be edited', async () => {
+    const a = await logPlaybook(WEEK, { day: '2026-09-29', note: '  worked well  ' })
+    const b = await logPlaybook(WEEK)
+    expect(a.id).not.toBe(b.id)
+    expect(a).toMatchObject({ kind: 'playbook', ref: 'playbook', day: '2026-09-29', value: { note: 'worked well' } })
+    expect(b.value).toEqual({})
+    await setPlaybookNote(b, 'later note')
+    expect((await db.lifeEntries.get(b.id))?.value).toEqual({ note: 'later note' })
+    await setPlaybookNote(b, ' ')
+    expect((await db.lifeEntries.get(b.id))?.value).toEqual({})
+    await expect(logPlaybook(WEEK, { note: 'x'.repeat(LIFE_CAPS.playbookNote + 1) })).rejects.toThrow()
+    expect(await db.lifeEntries.count()).toBe(2)
+  })
+
+  it('Undo deletes the row', async () => {
+    const a = await logPlaybook(WEEK)
+    await removeTrackerEntry(a.id)
+    expect(await db.lifeEntries.count()).toBe(0)
   })
 })
 

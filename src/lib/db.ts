@@ -296,6 +296,14 @@ export interface LifePlan {
   checkins: LifeCheckin[]
   /** Optional read-only Recap, absent on most plans. */
   recap?: LifeRecapItem[]
+  /** Optional "Playbook of the week": the one practice chosen, absent on older plans. */
+  playbook?: LifePlaybook
+}
+
+export interface LifePlaybook {
+  section: string // the playbook section it comes from
+  practice: string // the line chosen
+  plan?: string // when / how it will be used, one sentence
 }
 
 // One row per week. `id` IS the week (the engine addresses rows by id); the
@@ -357,7 +365,7 @@ export interface LearningPractice {
   updatedAt: number
 }
 
-export type LifeEntryKind = 'focus' | 'tracker' | 'sunday' | 'sent' | 'checkin'
+export type LifeEntryKind = 'focus' | 'tracker' | 'sunday' | 'sent' | 'checkin' | 'playbook'
 
 export type LifeAnswer = number | boolean | string | null
 
@@ -400,9 +408,24 @@ export interface LifeCheckinEntry extends LifeEntryBase {
   value: { done: boolean; note?: string }
 }
 
+// "Used it today" for the week's playbook practice. Append-only like a tracker
+// +1 (random uuid, deleted on Undo); ref is always 'playbook'.
+export interface LifePlaybookEntry extends LifeEntryBase {
+  kind: 'playbook'
+  // `note`: optional short text, trimmed, ≤ LIFE_CAPS.playbookNote chars
+  // (mirrored in SQL); absent when empty.
+  value: { note?: string }
+}
+
 // One row per logged thing. Keyed toggles (focus/sunday/sent/checkin) are
 // never deleted, only flipped, so last-writer-wins by updatedAt resolves them.
-export type LifeEntry = LifeTrackerEntry | LifeFocusEntry | LifeSundayEntry | LifeSentEntry | LifeCheckinEntry
+export type LifeEntry =
+  | LifeTrackerEntry
+  | LifeFocusEntry
+  | LifeSundayEntry
+  | LifeSentEntry
+  | LifeCheckinEntry
+  | LifePlaybookEntry
 
 // Remote (Supabase) table name → the LOCAL row shape that travels through the
 // outbox for it. The single source of truth for what the generic sync engine

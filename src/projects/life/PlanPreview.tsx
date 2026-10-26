@@ -57,6 +57,11 @@ export function PlanPreview({
         <li>
           {plan.checkins.length} check-in{plan.checkins.length === 1 ? '' : 's'}
         </li>
+        {plan.playbook && (
+          <li>
+            Playbook: {plan.playbook.section} — {plan.playbook.practice}
+          </li>
+        )}
         {plan.recap && plan.recap.length > 0 && (
           <li>
             {plan.recap.length} recap line{plan.recap.length === 1 ? '' : 's'}

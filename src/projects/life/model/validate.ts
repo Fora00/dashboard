@@ -4,6 +4,7 @@ import type {
   LifePlan,
   LifeQuestion,
   LifeQuestionType,
+  LifePlaybook,
   LifeRecapItem,
   LifeTask,
   LifeTracker,
@@ -58,7 +59,18 @@ export function validatePlan(value: unknown): ParseResult {
 
   if (!isObj(value)) return { ok: false, errors: ['The week must be a JSON object'] }
 
-  const allowed = ['version', 'week', 'focus', 'rules', 'tasks', 'trackers', 'sundayCheck', 'checkins', 'recap']
+  const allowed = [
+    'version',
+    'week',
+    'focus',
+    'rules',
+    'tasks',
+    'trackers',
+    'sundayCheck',
+    'checkins',
+    'recap',
+    'playbook',
+  ]
   unknownKeys(value, allowed, '', err)
 
   if (value.version !== 1) err(`version must be 1 (got ${JSON.stringify(value.version) ?? 'nothing'})`)
@@ -200,6 +212,16 @@ export function validatePlan(value: unknown): ParseResult {
   const recap = arrayField(value, 'recap', LIFE_CAPS.recap, err).map((raw, i) => recapItem(raw, `recap[${i}]`, err))
   uniqueIds(recap, 'recap', err)
 
+  // Optional: plans written before the playbook existed have none.
+  let playbook: LifePlaybook | undefined
+  if (value.playbook !== undefined && value.playbook !== null) {
+    const o = itemObj(value.playbook, 'playbook', ['section', 'practice', 'plan'], err)
+    const section = textField(o, 'section', 'playbook', LIFE_CAPS.playbookSection, true, err)
+    const practice = textField(o, 'practice', 'playbook', LIFE_CAPS.playbookPractice, true, err)
+    const how = nullableText(o, 'plan', 'playbook', LIFE_CAPS.playbookPlan, err)
+    playbook = { section, practice, ...(how ? { plan: how } : {}) }
+  }
+
   if (errors.length > 0) return { ok: false, errors }
 
   const plan: LifePlan = {
@@ -213,6 +235,7 @@ export function validatePlan(value: unknown): ParseResult {
     checkins,
     // Only present when given: most plans have no recap.
     ...(recap.length > 0 ? { recap } : {}),
+    ...(playbook ? { playbook } : {}),
   }
   const bytes = utf8Bytes(JSON.stringify(plan))
   if (bytes > LIFE_CAPS.planBytes) {

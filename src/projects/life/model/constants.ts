@@ -44,6 +44,11 @@ export const LIFE_CAPS = {
   recapPoints: 24,
   recapUnit: 20,
   recapCriterion: 100,
+  /** Playbook of the week: section name, the practice, the plan sentence, a use's note. */
+  playbookSection: 100,
+  playbookPractice: 300,
+  playbookPlan: 300,
+  playbookNote: 300,
   /** Check-in note (SQL: life_entries_checkin_value, char_length ≤ 1000). */
   checkinNote: 1000,
   /** Sunday text answers (SQL: pg_column_size(value) ≤ 16 KiB). */

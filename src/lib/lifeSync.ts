@@ -6,6 +6,7 @@ import {
   type LifeEntry,
   type LifeFocusEntry,
   type LifePlan,
+  type LifePlaybookEntry,
   type LifeSentEntry,
   type LifeSundayEntry,
   type LifeTrackerEntry,
@@ -33,7 +34,7 @@ import {
 //   life_day_focus  "Focus di oggi": up to 3 free-text lines per day, id
 //                 `${day}:${slot}` (slot 0-2, so a day never exceeds 3), edited
 //                 in place, deleted for real. Not part of the week plan/export.
-//   life_entries  one row per logged thing. Tracker +1s are append-only rows
+//   life_entries  one row per logged thing. Tracker and playbook +1s are append-only rows
 //                 with random ids; focus-done / Sunday answer / task-sent /
 //                 check-in done+note use
 //                 a deterministic id `${week}:${kind}:${ref}` and are flipped
@@ -195,7 +196,10 @@ export async function removeFocus(week: string, focusId: string): Promise<void> 
   if (!row) return
   await engine.upsert('life_weeks', {
     ...row,
-    plan: { ...row.plan, focus: row.plan.focus.filter((f) => f.id !== focusId) },
+    plan: {
+      ...row.plan,
+      focus: row.plan.focus.filter((f) => f.id !== focusId),
+    },
     updatedAt: Date.now(),
   })
 }
@@ -242,6 +246,43 @@ export async function logTracker(
   return entry
 }
 
+/**
+ * "Used it today" for the week's playbook practice: a new append-only row
+ * (like a tracker +1; random id, deleted on Undo). The optional note is
+ * trimmed and capped at LIFE_CAPS.playbookNote (throws if longer).
+ */
+export async function logPlaybook(
+  week: string,
+  opts: { day?: string; note?: string } = {},
+): Promise<LifePlaybookEntry> {
+  const note = (opts.note ?? '').trim()
+  if (note.length > LIFE_CAPS.playbookNote) throw new Error(`Keep the note under ${LIFE_CAPS.playbookNote} characters`)
+  const now = Date.now()
+  const entry: LifePlaybookEntry = {
+    id: crypto.randomUUID(),
+    week,
+    kind: 'playbook',
+    ref: 'playbook',
+    day: opts.day ?? dayKey(new Date()),
+    value: note ? { note } : {},
+    createdAt: now,
+    updatedAt: now,
+  }
+  await engine.upsert('life_entries', entry)
+  return entry
+}
+
+/** Set, replace or clear (empty) the note of an existing playbook use. */
+export async function setPlaybookNote(entry: LifePlaybookEntry, noteIn: string): Promise<void> {
+  const note = noteIn.trim()
+  if (note.length > LIFE_CAPS.playbookNote) throw new Error(`Keep the note under ${LIFE_CAPS.playbookNote} characters`)
+  await engine.upsert('life_entries', {
+    ...entry,
+    value: note ? { note } : {},
+    updatedAt: Date.now(),
+  })
+}
+
 /** Set (or replace) the energy pair on an existing tracker +1. */
 export async function setTrackerEnergy(
   entry: LifeTrackerEntry,
@@ -254,7 +295,7 @@ export async function setTrackerEnergy(
   })
 }
 
-/** Remove a tracker +1 (Undo). Only tracker rows are ever deleted. */
+/** Remove a tracker or playbook +1 (Undo). Only those append-only rows are ever deleted. */
 export async function removeTrackerEntry(id: string): Promise<void> {
   await engine.remove('life_entries', id)
 }
@@ -421,7 +462,15 @@ export async function setDayFocus(day: string, titles: string[]): Promise<void> 
     const old = bySlot.get(slot)
     if (old && old.title === title) return []
     return [
-      { id: dayFocusId(day, slot), day, slot, title, done: false, createdAt: old?.createdAt ?? now, updatedAt: now },
+      {
+        id: dayFocusId(day, slot),
+        day,
+        slot,
+        title,
+        done: false,
+        createdAt: old?.createdAt ?? now,
+        updatedAt: now,
+      },
     ]
   })
   if (rows.length > 0) await engine.upsertMany('life_day_focus', rows)
@@ -433,7 +482,11 @@ export async function setDayFocus(day: string, titles: string[]): Promise<void> 
 export async function toggleDayFocus(id: string): Promise<boolean | null> {
   const row = await db.lifeDayFocus.get(id)
   if (!row) return null
-  await engine.upsert('life_day_focus', { ...row, done: !row.done, updatedAt: Date.now() })
+  await engine.upsert('life_day_focus', {
+    ...row,
+    done: !row.done,
+    updatedAt: Date.now(),
+  })
   return !row.done
 }
 
@@ -442,7 +495,11 @@ export async function editDayFocus(id: string, title: string): Promise<void> {
   const row = await db.lifeDayFocus.get(id)
   const next = title.trim().slice(0, LIFE_CAPS.dayFocusTitle)
   if (!row || !next || next === row.title) return
-  await engine.upsert('life_day_focus', { ...row, title: next, updatedAt: Date.now() })
+  await engine.upsert('life_day_focus', {
+    ...row,
+    title: next,
+    updatedAt: Date.now(),
+  })
 }
 
 /** Delete a day-focus line (its slot becomes free). */

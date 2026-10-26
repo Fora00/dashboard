@@ -51,6 +51,42 @@ export const SpotFileSchema = z.object({ events: z.array(SpotEntrySchema) }).sup
   })
 })
 
+/** One hand-curated one-off timed event of curated.json. */
+export const CuratedEntrySchema = z.object({
+  id: z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, 'id must be kebab-case'),
+  title: z.string().min(1),
+  /** Local Rome day, YYYY-MM-DD. */
+  date: z.string().regex(DAY, 'date must be YYYY-MM-DD'),
+  /** Local start time, HH:MM. */
+  time: z.string().regex(/^\d{2}:\d{2}$/, 'time must be HH:MM'),
+  /** Local end time, HH:MM; omit when unknown (no end is published). */
+  endTime: z
+    .string()
+    .regex(/^\d{2}:\d{2}$/, 'endTime must be HH:MM')
+    .optional(),
+  city: z.string().min(1),
+  venue: z.string().optional(),
+  url: z.url({ protocol: /^https?$/ }),
+  image: z.url({ protocol: /^https$/ }).optional(),
+  summary: z.string().min(1),
+  tags: z.array(z.string()).optional(),
+  category: z.string().optional(),
+  verified: z.boolean().default(true),
+})
+
+export type CuratedEntry = z.infer<typeof CuratedEntrySchema>
+
+/** curated.json: entries as above, ids unique, `category` a CATEGORIES id. */
+export const CuratedFileSchema = z.object({ events: z.array(CuratedEntrySchema) }).superRefine((file, ctx) => {
+  const seen = new Set<string>()
+  file.events.forEach((e, i) => {
+    if (seen.has(e.id)) ctx.addIssue({ code: 'custom', message: `duplicate id "${e.id}"`, path: ['events', i, 'id'] })
+    seen.add(e.id)
+    if (e.category !== undefined && !CATEGORY_IDS.has(e.category))
+      ctx.addIssue({ code: 'custom', message: `unknown category "${e.category}"`, path: ['events', i, 'category'] })
+  })
+})
+
 const WEEKDAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as const
 
 /** One hand-curated weekly activity of recurring.json (expanded to dated events by the `recurring` adapter). */

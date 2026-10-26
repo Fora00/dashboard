@@ -1,4 +1,4 @@
-import type { LifeAnswer, LifeCheckin, LifeEntry, LifePlan, LifeTracker } from '../../../lib/db'
+import type { LifeAnswer, LifeCheckin, LifeEntry, LifePlan, LifePlaybookEntry, LifeTracker } from '../../../lib/db'
 import { withCheckinIds } from './checkinIds.ts'
 import { SCREEN_IDS } from './screenTime.ts'
 import { dayKey, daysBetween, weekDays } from './dates.ts'
@@ -29,7 +29,17 @@ export interface CheckinStatus {
   overdue: boolean
 }
 
+export interface PlaybookSummary {
+  /** This week's uses, oldest first (several per day are allowed by the model). */
+  entries: LifePlaybookEntry[]
+  total: number
+  /** Distinct days used, ascending. */
+  days: string[]
+}
+
 export interface WeekSummary {
+  /** The week's playbook practice use; null when the plan has no playbook. */
+  playbook: PlaybookSummary | null
   focusDone: Set<string>
   /** Every check-in of the plan with its status, by date (then plan order). */
   checkins: CheckinStatus[]
@@ -65,6 +75,7 @@ export function summarizeWeek(
     sunday: new Set(plan.sundayCheck.map((q) => q.id)),
     sent: new Set(plan.tasks.map((t) => t.id)),
     checkin: new Set(plan.checkins.map((c) => c.id)),
+    playbook: new Set(plan.playbook ? ['playbook'] : []),
   }
 
   const focusDone = new Set<string>()
@@ -89,6 +100,15 @@ export function summarizeWeek(
     else if (e.kind === 'sent' && e.value.sent) sentTaskIds.add(e.ref)
     else if (e.kind === 'checkin') checkinValues.set(e.ref, e.value)
   }
+
+  const playbookEntries = mine.filter((e): e is LifePlaybookEntry => e.kind === 'playbook' && e.ref === 'playbook')
+  const playbook: PlaybookSummary | null = plan.playbook
+    ? {
+        entries: playbookEntries,
+        total: playbookEntries.length,
+        days: [...new Set(playbookEntries.map((e) => e.day))].sort(),
+      }
+    : null
 
   const checkins = plan.checkins
     .map((checkin, i) => ({ checkin, i }))
@@ -131,12 +151,23 @@ export function summarizeWeek(
     autoAnswered.add(q.id)
   }
 
-  return { focusDone, checkins, trackers, answers, screen, autoAnswered, sentTaskIds, removed }
+  return {
+    playbook,
+    focusDone,
+    checkins,
+    trackers,
+    answers,
+    screen,
+    autoAnswered,
+    sentTaskIds,
+    removed,
+  }
 }
 
 function isMeaningful(e: LifeEntry): boolean {
   switch (e.kind) {
     case 'tracker':
+    case 'playbook':
       return true
     case 'focus':
       return e.value.done

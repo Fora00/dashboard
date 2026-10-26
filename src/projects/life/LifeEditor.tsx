@@ -164,6 +164,8 @@ export function LifeEditor() {
       })),
       // Not editable by hand: an edit keeps the imported recap.
       ...(existing?.plan.recap ? { recap: existing.plan.recap } : {}),
+      // Same for the playbook practice.
+      ...(existing?.plan.playbook ? { playbook: existing.plan.playbook } : {}),
     }
   }
 

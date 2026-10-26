@@ -31,6 +31,12 @@ Paths: dashboard = `~/Dev/personal/dashboard`, notes = `~/life`.
    `savedEvents` array in the JSON): the events the owner saved in the
    dashboard's Events page for the coming week, plus their favourite
    categories. Use it in step 2.1 below.
+   It may also carry a `## Playbook` section (and `kind: "playbook"` entries in
+   the JSON): the practice chosen for the week (section, practice, plan), how
+   many times it was used, on which days, and the short notes the owner left.
+   Bring it into `~/life` the way `~/life`'s own instructions say (e.g. record
+   the result under that practice's section) and use it when choosing the next
+   practice in step 2.1: keep, change or retire it.
 2. Check what happened in Things to the week's tasks (read-only, Mac only):
    `pbpaste | npx -y tsx ~/Dev/personal/dashboard/scripts/life-things-status.ts`.
    It matches by each send's timestamp, so renamed to-dos are still found.
@@ -56,6 +62,13 @@ Paths: dashboard = `~/Dev/personal/dashboard`, notes = `~/life`.
    where those events fit in the coming plan (day, time, what they displace),
    and which favourite categories are worth a slot. They are the owner's
    choices, so propose and let them confirm; never add them silently.
+   **Playbook of the week:** also propose ONE practice from the owner's
+   playbook for the coming week (from `~/life`, following its own
+   instructions): which section, which line, and a one-sentence plan of when
+   or how it will be used. The owner confirms or swaps it. Put it in the
+   plan as `"playbook": { "section", "practice", "plan" }` (`plan` optional;
+   see `docs/HANDOFF-life.md` section 2.1). Omit the field if they want no
+   practice this week.
 2. Tags on tasks must already exist in Things, or Things drops them
    silently. If unsure, list them (read-only):
    `osascript -e 'tell application "Things3" to get name of tags'`.
