@@ -20,6 +20,7 @@ import { LearningSection } from './LearningSection'
 import { ScreenTimeSection } from './ScreenTimeSection'
 import { SundaySection } from './SundaySection'
 import { ThingsSection } from './ThingsSection'
+import { UpgradeList } from './UpgradeList'
 import { TrackersSection } from './TrackersSection'
 import { RecapSection } from './RecapSection'
 import { ProgressAside } from './ProgressAside'
@@ -91,8 +92,11 @@ export function WeekBody({ week, plan, entries, readOnly, lateEdit = false, dayF
   // Saved events + favourite categories (Events project, local Dexie) ride along in the export.
   const eventMarks = useLiveQuery(() => db.eventMarks.where('state').equals('saved').toArray(), [])
   const eventPrefs = useLiveQuery(() => db.eventPrefs.get('prefs'), [])
-  // Habit ideas live across weeks; they ride along in the export for /settimana.
-  const ideas = useLiveQuery(() => db.lifeEntries.filter((e) => e.kind === 'idea').toArray(), [])
+  // Habit ideas and the Upgrade list live across weeks; they ride along in the export for /settimana.
+  const ideas = useLiveQuery(
+    () => db.lifeEntries.filter((e) => e.kind === 'idea' || e.kind === 'upgrade').toArray(),
+    [],
+  )
   const exportEntries = useMemo(() => [...entries, ...(ideas ?? [])], [entries, ideas])
   // Learning's rows (local Dexie, owner-only sync) fold into the week's activity.
   const learningStates = useLiveQuery(async () => {
@@ -230,6 +234,11 @@ export function WeekBody({ week, plan, entries, readOnly, lateEdit = false, dayF
         readOnly={readOnly}
         editable={!answersReadOnly}
       />
+    )
+  // The list lives across weeks and is edited on the live week only.
+  if (!readOnly)
+    blocks.upgrades = (
+      <UpgradeList week={week} open={sections.upgrades} onToggle={() => toggleSection('upgrades')} trigger={trigger} />
     )
   if (food.days.length > 0)
     blocks.food = (

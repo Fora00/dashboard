@@ -36,7 +36,7 @@ describe('moves', () => {
   })
   it('moves between columns', () => {
     const l = moveHorizontal(DEFAULT_LAYOUT, 'focus', 1)
-    expect(l[1]).toEqual(['things', 'checkins', 'focus', 'sunday'])
+    expect(l[1]).toEqual(['things', 'checkins', 'focus', 'sunday', 'upgrades'])
     expect(moveHorizontal(DEFAULT_LAYOUT, 'oggi', -1)).toBe(DEFAULT_LAYOUT)
   })
 })

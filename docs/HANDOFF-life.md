@@ -180,6 +180,42 @@ Migration `20261026140000_life_habit_why_ideas.sql` widens the kind check and
 caps both values. Code: `setWhy` / `addIdea` / `updateIdea` / `removeIdea` in
 `lifeSync.ts`.
 
+### Upgrade list
+
+Added 2026-10-26. A persistent list of small annoyances to fix (a friction
+list), a card "🛠️ Upgrade list" on the live Week screen
+(`week/UpgradeList.tsx`; not shown on past weeks). The rule it supports: if
+something annoys me a second time it goes on the list; under 2 minutes I fix it
+now; one weekly slot clears 1-2 items. It is **not** a todo list: nothing goes
+to Things, and the week plan JSON is unchanged. Example item: "loose door
+handle". Items are `life_entries` rows of kind `upgrade`, no new table:
+- Random uuid id, `ref: "upgrade"`, `week` = the week it was added in,
+  `value: { text, size, status, doneAt? }`: `text` max 200, `size` `quick`
+  (under 15 min or 10 EUR) | `big`, `status` `open` | `done` | `dropped`,
+  `doneAt` = day key, stamped when it becomes done and removed when it leaves
+  done (undo). Like a habit `idea` it belongs to the list, not to a week: never
+  part of a week summary or "(removed from plan)", read across weeks
+  (`useUpgradeList`, `summarizeUpgrades` in `model/upgrades.ts`).
+- UI: add field with a Quick/Bigger toggle (Enter adds, default quick); groups
+  **Veloci** and **Più grandi**, oldest first; tap an item = done (it moves to
+  the collapsed "Done (n)" group, tap it there to reopen; a snackbar also
+  undoes); ⋯ opens edit, move quick/bigger, drop, delete (drop and delete have
+  an Undo snackbar). Header "N open · M done this week" (done = `doneAt` in the
+  Mon-Sun week). A quiet "1-2 this week?" shows when a quick item is open and
+  none was done this week (no red, no streak). Collapsible and movable like the
+  other blocks (`upgrades` in `blockLayout.ts`, `useSections.ts`).
+- Export: a `## Upgrade list` section (only when there is something): open
+  items grouped by size with the week each was added, "Done this week", and
+  "Dropped this week" (a dropped item counts in the week of its last change).
+  The JSON gets an `upgrades` array `{ id, text, size, status, week, doneAt? }`
+  (open items plus those done or dropped this week); upgrades are not repeated
+  in `entries`.
+- Migration `20261026160000_life_upgrade_list.sql` only widens the kind check
+  and caps the value. Code: `addUpgrade` / `updateUpgrade` / `removeUpgrade` in
+  `lifeSync.ts`.
+- Not in v1: a weekly reminder slot (optional later: `"upgrade": { "slot": … }`
+  in the plan).
+
 ### Playbook of the week (optional)
 
 Added 2026-10-26. `playbook` in the week JSON (absent on older plans, which
@@ -263,7 +299,9 @@ removed from the plan. When the Events page has saved events overlapping the
 `## Saved events next week` section lists them (`- Sat 2026-10-17 21:00 ·
 Title — Venue, City`, no time if all-day) plus a `Favourite categories:` line,
 and the JSON block gets a `savedEvents` array (only when non-empty).
-`/settimana` proposes placing them in the new plan. When the plan has a
+`/settimana` proposes placing them in the new plan. When the Upgrade list has
+open items, or items done or dropped this week, a `## Upgrade list` section and
+an `upgrades` array in the JSON carry them (see "Upgrade list"). When the plan has a
 `playbook`, a `## Playbook` section lists `Section`, `Practice`, `Plan`, `Uses`
 (count and days) and one indented line per use that has a note
 (`  - 2026-01-06: note`); the uses are also in the JSON `entries` as

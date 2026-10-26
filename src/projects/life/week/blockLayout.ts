@@ -13,6 +13,7 @@ export const BLOCK_IDS = [
   'things',
   'checkins',
   'sunday',
+  'upgrades',
   'food',
   'learning',
   'screen',
@@ -25,7 +26,7 @@ export type BlockLayout = BlockId[][]
 
 export const DEFAULT_LAYOUT: BlockLayout = [
   ['oggi', 'playbook', 'focus', 'trackers', 'recap', 'rules'],
-  ['things', 'checkins', 'sunday'],
+  ['things', 'checkins', 'sunday', 'upgrades'],
   ['food', 'learning', 'screen', 'export', 'progress'],
 ]
 

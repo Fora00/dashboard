@@ -11,6 +11,9 @@ import {
   type LifePlaybookEntry,
   type LifeSentEntry,
   type LifeSundayEntry,
+  type LifeUpgradeEntry,
+  type LifeUpgradeSize,
+  type LifeUpgradeStatus,
   type LifeTrackerEntry,
   type LifeWeek,
   type LifeWhyEntry,
@@ -419,6 +422,68 @@ export async function updateIdea(
 
 /** Delete an idea for real. */
 export async function removeIdea(id: string): Promise<void> {
+  await engine.remove('life_entries', id)
+}
+
+/**
+ * Upgrade list: add an item (status 'open'; size defaults to 'quick'). Blank
+ * text is ignored (returns null). `week` is the week it is added in.
+ */
+export async function addUpgrade(
+  week: string,
+  textIn: string,
+  size: LifeUpgradeSize = 'quick',
+): Promise<LifeUpgradeEntry | null> {
+  const text = textIn.trim()
+  if (!text) return null
+  if (text.length > LIFE_CAPS.upgradeText) throw new Error(`Keep it under ${LIFE_CAPS.upgradeText} characters`)
+  const now = Date.now()
+  const day = dayKey(new Date())
+  const entry: LifeUpgradeEntry = {
+    id: crypto.randomUUID(),
+    week,
+    kind: 'upgrade',
+    ref: 'upgrade',
+    day,
+    value: { text, size, status: 'open' },
+    createdAt: now,
+    updatedAt: now,
+  }
+  await engine.upsert('life_entries', entry)
+  return entry
+}
+
+/**
+ * Change an upgrade's text, size and/or status. Setting 'done' stamps `doneAt`
+ * (today, or `doneAt`); leaving 'done' (undo, drop) clears it. An empty text is
+ * ignored (use removeUpgrade). A no-op writes nothing.
+ */
+export async function updateUpgrade(
+  entry: LifeUpgradeEntry,
+  change: { text?: string; size?: LifeUpgradeSize; status?: LifeUpgradeStatus; doneAt?: string },
+): Promise<void> {
+  const text = change.text === undefined ? entry.value.text : change.text.trim()
+  if (!text) return
+  if (text.length > LIFE_CAPS.upgradeText) throw new Error(`Keep it under ${LIFE_CAPS.upgradeText} characters`)
+  const size = change.size ?? entry.value.size
+  const status = change.status ?? entry.value.status
+  const value: LifeUpgradeEntry['value'] = { text, size, status }
+  if (status === 'done') {
+    const doneAt = entry.value.status === 'done' ? entry.value.doneAt : (change.doneAt ?? dayKey(new Date()))
+    if (doneAt) value.doneAt = doneAt
+  }
+  if (
+    value.text === entry.value.text &&
+    value.size === entry.value.size &&
+    value.status === entry.value.status &&
+    value.doneAt === entry.value.doneAt
+  )
+    return
+  await engine.upsert('life_entries', { ...entry, value, updatedAt: Date.now() })
+}
+
+/** Delete an upgrade for real. */
+export async function removeUpgrade(id: string): Promise<void> {
   await engine.remove('life_entries', id)
 }
 

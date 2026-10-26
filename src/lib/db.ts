@@ -369,7 +369,16 @@ export interface LearningPractice {
   updatedAt: number
 }
 
-export type LifeEntryKind = 'focus' | 'tracker' | 'sunday' | 'sent' | 'checkin' | 'playbook' | 'why' | 'idea'
+export type LifeEntryKind =
+  | 'focus'
+  | 'tracker'
+  | 'sunday'
+  | 'sent'
+  | 'checkin'
+  | 'playbook'
+  | 'why'
+  | 'idea'
+  | 'upgrade'
 
 export type LifeAnswer = number | boolean | string | null
 
@@ -440,6 +449,18 @@ export interface LifeIdeaEntry extends LifeEntryBase {
   value: { text: string; status: LifeIdeaStatus }
 }
 
+export type LifeUpgradeSize = 'quick' | 'big'
+export type LifeUpgradeStatus = 'open' | 'done' | 'dropped'
+
+// An item of the Upgrade list: a small annoyance to fix. Random uuid id, edited
+// in place, deleted for real; ref is always 'upgrade'. `week` = the week it was
+// added in. It belongs to the list, not to a week: read across weeks, never part
+// of a week summary. `doneAt` (day key) is set while status is 'done'.
+export interface LifeUpgradeEntry extends LifeEntryBase {
+  kind: 'upgrade'
+  value: { text: string; size: LifeUpgradeSize; status: LifeUpgradeStatus; doneAt?: string }
+}
+
 // One row per logged thing. Keyed toggles (focus/sunday/sent/checkin) are
 // never deleted, only flipped, so last-writer-wins by updatedAt resolves them.
 export type LifeEntry =
@@ -451,6 +472,7 @@ export type LifeEntry =
   | LifePlaybookEntry
   | LifeWhyEntry
   | LifeIdeaEntry
+  | LifeUpgradeEntry
 
 // Remote (Supabase) table name → the LOCAL row shape that travels through the
 // outbox for it. The single source of truth for what the generic sync engine

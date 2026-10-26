@@ -7,6 +7,7 @@ import { LIFE_CAPS } from '../projects/life/model'
 import {
   addDayFocus,
   addIdea,
+  addUpgrade,
   editDayFocus,
   importWeek,
   logPlaybook,
@@ -15,6 +16,7 @@ import {
   removeDayFocus,
   removeIdea,
   removeTrackerEntry,
+  removeUpgrade,
   restoreEntry,
   setCheckin,
   setFocusDone,
@@ -25,6 +27,7 @@ import {
   toggleDayFocus,
   toggleFocus,
   updateIdea,
+  updateUpgrade,
 } from './lifeSync'
 
 beforeEach(resetDb)
@@ -115,6 +118,49 @@ describe('spock test: why not + habit ideas', () => {
     await updateIdea(idea!, { text: ' ' })
     expect((await db.lifeEntries.get(idea!.id))?.value).toMatchObject({ text: '1 L bottle at 08:00' })
     await removeIdea(idea!.id)
+    expect(await db.lifeEntries.count()).toBe(0)
+  })
+})
+
+describe('upgrade list', () => {
+  it('starts open and quick, ignores blank text, enforces the cap', async () => {
+    expect(await addUpgrade(WEEK, '  ')).toBeNull()
+    const u = await addUpgrade(WEEK, ' fix the loose door handle ')
+    expect(u).toMatchObject({
+      kind: 'upgrade',
+      ref: 'upgrade',
+      week: WEEK,
+      value: { text: 'fix the loose door handle', size: 'quick', status: 'open' },
+    })
+    await expect(addUpgrade(WEEK, 'x'.repeat(LIFE_CAPS.upgradeText + 1))).rejects.toThrow()
+    expect(await db.lifeEntries.count()).toBe(1)
+  })
+
+  it('done stamps doneAt, undo clears it, drop and size change keep one row', async () => {
+    const u = (await addUpgrade(WEEK, 'loose door handle'))!
+    await updateUpgrade(u, { status: 'done', doneAt: '2026-09-30' })
+    const done = (await db.lifeEntries.get(u.id))!
+    expect(done.value).toEqual({ text: 'loose door handle', size: 'quick', status: 'done', doneAt: '2026-09-30' })
+    // Undo: back to open, no doneAt left behind.
+    await updateUpgrade(done as typeof u, { status: 'open' })
+    expect((await db.lifeEntries.get(u.id))?.value).toEqual({
+      text: 'loose door handle',
+      size: 'quick',
+      status: 'open',
+    })
+    await updateUpgrade(u, { size: 'big' })
+    await updateUpgrade((await db.lifeEntries.get(u.id)) as typeof u, { status: 'dropped' })
+    expect((await db.lifeEntries.get(u.id))?.value).toMatchObject({ size: 'big', status: 'dropped' })
+    expect(await db.lifeEntries.count()).toBe(1)
+  })
+
+  it('a no-op or empty text writes nothing; delete is for real', async () => {
+    const u = (await addUpgrade(WEEK, 'a'))!
+    const before = (await db.outbox.count()) as number
+    await updateUpgrade(u, { text: ' ' })
+    await updateUpgrade(u, { status: 'open' })
+    expect(await db.outbox.count()).toBe(before)
+    await removeUpgrade(u.id)
     expect(await db.lifeEntries.count()).toBe(0)
   })
 })

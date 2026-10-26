@@ -52,6 +52,8 @@ export const LIFE_CAPS = {
   /** Spock test: why a habit missed (SQL: life_entries_why_idea_value) and an idea's text. */
   whyReason: 500,
   ideaText: 300,
+  /** Upgrade list item text (SQL: life_entries_upgrade_value). */
+  upgradeText: 200,
   /** Check-in note (SQL: life_entries_checkin_value, char_length ≤ 1000). */
   checkinNote: 1000,
   /** Sunday text answers (SQL: pg_column_size(value) ≤ 16 KiB). */

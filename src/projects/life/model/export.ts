@@ -8,6 +8,7 @@ import { describeLearningActivity, type LearningWeek } from './learning.ts'
 import { summarizeMealsWeek } from './meals.ts'
 import { SCREEN_QUESTIONS } from './screenTime.ts'
 import { summarizeWeek } from './summary.ts'
+import { summarizeUpgrades, upgradesForExport } from './upgrades.ts'
 
 // --- Export ---------------------------------------------------------------------
 
@@ -136,6 +137,24 @@ export function buildExportMarkdown(
     out.push('')
   }
 
+  const upgrades = summarizeUpgrades(entries, plan.week)
+  if (upgrades.openCount || upgrades.doneThisWeek.length || upgrades.droppedThisWeek.length) {
+    const line = (e: (typeof upgrades.quick)[number]) => `  - ${oneLine(e.value.text)} (added ${e.week})`
+    out.push('## Upgrade list', '')
+    if (upgrades.quick.length) out.push('- Open, quick:', ...upgrades.quick.map(line))
+    if (upgrades.big.length) out.push('- Open, bigger:', ...upgrades.big.map(line))
+    if (upgrades.doneThisWeek.length)
+      out.push(
+        '- Done this week:',
+        ...upgrades.doneThisWeek.map(
+          (e) => `  - ${oneLine(e.value.text)} (${e.value.size}, ${e.value.doneAt ?? e.day})`,
+        ),
+      )
+    if (upgrades.droppedThisWeek.length)
+      out.push('- Dropped this week:', ...upgrades.droppedThisWeek.map((e) => `  - ${oneLine(e.value.text)}`))
+    out.push('')
+  }
+
   if (s.screen.size) {
     out.push('## Screen time', '')
     for (const q of SCREEN_QUESTIONS) {
@@ -227,6 +246,7 @@ export function buildExportMarkdown(
   const json = {
     plan,
     entries: mine
+      .filter((e) => e.kind !== 'upgrade')
       .slice()
       .sort((a, b) => a.createdAt - b.createdAt)
       // `at` is the moment it was first logged (ISO, UTC), `day` the local day.
@@ -256,6 +276,10 @@ export function buildExportMarkdown(
             })),
           ),
         }
+      : {}),
+    // Present only when the Upgrade list has something to say (open items, done/dropped this week).
+    ...(upgrades.openCount || upgrades.doneThisWeek.length || upgrades.droppedThisWeek.length
+      ? { upgrades: upgradesForExport(upgrades) }
       : {}),
     // Present only when there are saved events next week.
     ...(saved.events.length
@@ -315,6 +339,8 @@ function describeRemoved(e: LifeEntry): string {
       return `playbook: used on ${e.day}${e.value.note?.trim() ? ` — ${oneLine(e.value.note)}` : ''}`
     case 'why':
       return `why not ${e.ref}: ${oneLine(e.value.reason)}`
+    case 'upgrade':
+      return `upgrade: ${oneLine(e.value.text)}`
     case 'idea':
       return `idea ${e.ref}: ${oneLine(e.value.text)}`
     case 'checkin': {
