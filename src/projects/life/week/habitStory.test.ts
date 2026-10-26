@@ -64,20 +64,25 @@ describe('weekStreak', () => {
     reached: target === null ? null : total >= target,
     reason: null,
   })
-  it('counts weeks in a row that reached the target, newest first', () => {
-    expect(weekStreak([w('c', 2, 2), w('b', 3, 2), w('a', 0, 2)], 'c')).toBe(2)
+  it('counts weeks in a row that reached the target, newest first, and the best run', () => {
+    expect(weekStreak([w('c', 2, 2), w('b', 3, 2), w('a', 0, 2)], 'c')).toEqual({ current: 2, best: 2 })
+    expect(weekStreak([w('e', 2, 2), w('d', 0, 2), w('c', 2, 2), w('b', 2, 2), w('a', 2, 2)], 'e')).toEqual({
+      current: 1,
+      best: 3,
+    })
   })
   it('an open current week does not break it', () => {
-    expect(weekStreak([w('c', 0, 2), w('b', 2, 2), w('a', 2, 2)], 'c')).toBe(2)
+    expect(weekStreak([w('c', 0, 2), w('b', 2, 2), w('a', 2, 2)], 'c')).toEqual({ current: 2, best: 2 })
   })
-  it('a past miss breaks it', () => {
-    expect(weekStreak([w('c', 2, 2), w('b', 1, 2), w('a', 2, 2)], 'c')).toBe(1)
+  it('a past miss breaks the current run but keeps the best', () => {
+    expect(weekStreak([w('c', 2, 2), w('b', 1, 2), w('a', 2, 2)], 'c')).toEqual({ current: 1, best: 1 })
+    expect(weekStreak([w('c', 0, 2), w('b', 1, 2), w('a', 2, 2)], 'c')).toEqual({ current: 0, best: 1 })
   })
   it('caps hold while at or under max, and break when exceeded', () => {
-    expect(weekStreak([w('c', 2, null, 2), w('b', 0, null, 2)], 'c')).toBe(2)
-    expect(weekStreak([w('c', 3, null, 2), w('b', 0, null, 2)], 'c')).toBe(0)
+    expect(weekStreak([w('c', 2, null, 2), w('b', 0, null, 2)], 'c')).toEqual({ current: 2, best: 2 })
+    expect(weekStreak([w('c', 3, null, 2), w('b', 0, null, 2)], 'c')).toEqual({ current: 0, best: 1 })
   })
   it('no goal, no streak', () => {
-    expect(weekStreak([w('c', 5, null)], 'c')).toBe(0)
+    expect(weekStreak([w('c', 5, null)], 'c')).toEqual({ current: 0, best: 0 })
   })
 })

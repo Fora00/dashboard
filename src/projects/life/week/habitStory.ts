@@ -58,18 +58,41 @@ export function buildHabitHistory(
   return { tracker, weeks, ideas }
 }
 
-/** Consecutive weeks a habit held, newest first in `weeks`: a target reached,
- * or a cap (max) not exceeded. Habits with neither have no streak (0). The
- * current week never breaks it while still open (a target not yet reached); an
- * exceeded cap does break it at once. */
-export function weekStreak(weeks: readonly HabitWeek[], currentWeek: string): number {
+/** How a week counts for a streak: held, broken, or still open (the current
+ * week with a target not yet reached: neither counts nor breaks). */
+function weekOutcome(w: HabitWeek, currentWeek: string): 'held' | 'broken' | 'open' | 'none' {
+  const held = w.target !== null ? w.total >= w.target : w.max !== null ? w.total <= w.max : null
+  if (held === null) return 'none'
+  if (held) return 'held'
+  return w.week === currentWeek && w.target !== null ? 'open' : 'broken'
+}
+
+export interface WeekStreak {
+  /** Weeks in a row that held, up to now. */
+  current: number
+  /** Longest such run in the history. */
+  best: number
+}
+
+/** Streak of a habit in weeks (a target reached, or a cap not exceeded), from
+ * its weeks newest first. Habits with neither goal have none (0/0). An open
+ * current week never breaks it; an exceeded cap breaks it at once. */
+export function weekStreak(weeks: readonly HabitWeek[], currentWeek: string): WeekStreak {
+  if (weeks.some((w) => weekOutcome(w, currentWeek) === 'none')) return { current: 0, best: 0 }
+  let current = 0
+  let stillCurrent = true
   let run = 0
+  let best = 0
   for (const w of weeks) {
-    const held = w.target !== null ? w.total >= w.target : w.max !== null ? w.total <= w.max : null
-    if (held === null) return 0
-    if (held) run++
-    else if (w.week === currentWeek && w.target !== null) continue
-    else break
+    const o = weekOutcome(w, currentWeek)
+    if (o === 'held') {
+      run++
+      if (stillCurrent) current++
+      best = Math.max(best, run)
+    } else if (o === 'broken') {
+      stillCurrent = false
+      run = 0
+    }
   }
-  return run
+  return { current, best }
 }
