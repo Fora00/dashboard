@@ -39,8 +39,8 @@ export function TrackerRow({
   onRemove: (entry: LifeTrackerEntry) => void
 }) {
   const { tracker, total, perDay, atMax, entries } = ts
-  // The details (day strip, energy, per-entry edit) stay one tap away but are
-  // hidden by default: the row itself is a single "done today" toggle.
+  // Energy, per-entry edit and last Sunday stay one tap away, hidden by
+  // default: the row is a "done today" toggle with the week strip below it.
   const [showDetails, setShowDetails] = useState(false)
   // "2/4" = a target to reach; "4 · max 2" = a cap not to exceed; bare count = no goal.
   const goal =
@@ -58,7 +58,7 @@ export function TrackerRow({
   const days = weekDays(week)
 
   // One tap per day: logs the day, or removes its latest entry (with undo).
-  // The row toggles today; the hidden day strip toggles any past day this week.
+  // The row toggles today; the week strip toggles any day up to today.
   async function toggleDay(day: string) {
     const dayEntries = entries.filter((e) => e.day === day)
     const last = dayEntries[dayEntries.length - 1]
@@ -81,19 +81,21 @@ export function TrackerRow({
   }
 
   return (
-    <li>
-      <div className="flex items-center gap-2">
+    <li
+      className={`rounded-2xl border p-2 transition-colors ${
+        doneToday
+          ? 'border-emerald-400/60 bg-emerald-400/10'
+          : 'border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-800/50'
+      }`}
+    >
+      <div className="flex items-center gap-1">
         <button
           type="button"
           disabled={readOnly}
           aria-pressed={doneToday}
           onClick={() => void toggleDay(today)}
-          className={`flex min-h-14 min-w-0 flex-1 items-center gap-3 rounded-xl border px-4 py-2 text-left text-base font-medium transition-colors ${
-            readOnly ? '' : 'active:bg-slate-100 dark:active:bg-slate-800'
-          } ${
-            doneToday
-              ? 'border-emerald-400/60 bg-emerald-400/10'
-              : 'border-slate-200 bg-white hover:border-slate-400 dark:border-slate-800 dark:bg-slate-800/50 dark:hover:border-slate-600'
+          className={`flex min-h-12 min-w-0 flex-1 items-center gap-3 rounded-xl px-2 text-left text-base font-medium ${
+            readOnly ? '' : 'active:bg-slate-900/5 dark:active:bg-white/5'
           }`}
         >
           {!readOnly && (
@@ -125,7 +127,7 @@ export function TrackerRow({
           </span>
           {goal && (
             <span
-              className={`shrink-0 text-xs font-normal ${atMax ? 'text-amber-600 dark:text-amber-400' : ts.reachedTarget ? 'text-emerald-700 dark:text-emerald-300' : 'text-slate-500 dark:text-slate-400'}`}
+              className={`shrink-0 rounded-full bg-slate-900/5 px-2 py-0.5 text-xs font-medium dark:bg-white/10 ${atMax ? 'text-amber-600 dark:text-amber-400' : ts.reachedTarget ? 'text-emerald-700 dark:text-emerald-300' : 'text-slate-500 dark:text-slate-400'}`}
             >
               {goal}
             </span>
@@ -142,51 +144,56 @@ export function TrackerRow({
           {showDetails ? '▾' : '▸'}
         </button>
       </div>
-      {showDetails && (
-        <div className="mt-2 space-y-2 pl-1">
-          <div className="flex gap-1.5">
-            {lastSunday && (
-              <button
-                type="button"
-                onClick={() => void toggleLastSunday(lastSunday)}
-                aria-pressed={lastSunday.entries.length > 0}
-                aria-label={`${tracker.label} last Sunday (${lastSunday.day})`}
-                className={`mr-1.5 flex h-10 flex-1 items-center justify-center rounded border border-dashed text-xs font-medium ${
-                  lastSunday.entries.length > 0
-                    ? 'border-emerald-400/60 bg-emerald-400/20 text-emerald-700 dark:text-emerald-300'
-                    : 'border-slate-300 text-slate-500 dark:border-slate-700 dark:text-slate-400'
+      {/* The week is always visible: tap a day to mark or unmark it. */}
+      <div className="mt-1 flex gap-1 px-1">
+        {DAY_LABELS.map((label, i) => {
+          const count = perDay[i] ?? 0
+          const day = days[i] ?? ''
+          const future = day > today
+          return (
+            <button
+              key={i}
+              type="button"
+              disabled={readOnly || future}
+              onClick={() => void toggleDay(day)}
+              aria-pressed={count > 0}
+              aria-label={`${tracker.label} on ${day}`}
+              className={`flex min-h-11 flex-1 flex-col items-center justify-center gap-0.5 rounded-lg ${
+                day === today ? 'bg-slate-900/5 dark:bg-white/10' : ''
+              } ${future ? 'opacity-40' : ''}`}
+            >
+              <span
+                className={`text-[10px] leading-none ${day === today ? 'font-semibold text-slate-700 dark:text-slate-200' : 'text-slate-500 dark:text-slate-400'}`}
+              >
+                {label}
+              </span>
+              <span
+                className={`flex size-5 items-center justify-center rounded-full text-[11px] font-medium ${
+                  count > 0 ? 'bg-emerald-400 text-slate-900' : 'border border-slate-300 dark:border-slate-600'
                 }`}
               >
-                {lastSunday.entries.length > 0 ? lastSunday.entries.length : 'S'}
-              </button>
-            )}
-            {DAY_LABELS.map((label, i) => {
-              const count = perDay[i] ?? 0
-              const day = days[i] ?? ''
-              const future = day > today
-              return (
-                <button
-                  key={i}
-                  type="button"
-                  disabled={readOnly || future}
-                  onClick={() => void toggleDay(day)}
-                  aria-pressed={count > 0}
-                  aria-label={`${tracker.label} on ${day}`}
-                  className={`flex h-10 flex-1 items-center justify-center rounded text-xs font-medium ${
-                    count > 0
-                      ? 'bg-emerald-400/20 text-emerald-700 dark:text-emerald-300'
-                      : 'bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-600'
-                  } ${future ? 'opacity-40' : ''} ${day === today ? 'ring-1 ring-slate-300 dark:ring-slate-600' : ''}`}
-                >
-                  {count > 0 ? count : label}
-                </button>
-              )
-            })}
-          </div>
-          {!readOnly && (
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              Tap a day to mark or unmark it.{lastSunday && ' The dashed one is last Sunday.'}
-            </p>
+                {count > 0 ? (count > 1 ? count : '✓') : ''}
+              </span>
+            </button>
+          )
+        })}
+      </div>
+      {showDetails && (
+        <div className="mt-2 space-y-2 border-t border-slate-200 px-1 pt-2 dark:border-slate-800">
+          {lastSunday && (
+            <button
+              type="button"
+              onClick={() => void toggleLastSunday(lastSunday)}
+              aria-pressed={lastSunday.entries.length > 0}
+              aria-label={`${tracker.label} last Sunday (${lastSunday.day})`}
+              className={`flex min-h-10 w-full items-center justify-center rounded-lg border border-dashed text-xs font-medium ${
+                lastSunday.entries.length > 0
+                  ? 'border-emerald-400/60 bg-emerald-400/20 text-emerald-700 dark:text-emerald-300'
+                  : 'border-slate-300 text-slate-500 dark:border-slate-700 dark:text-slate-400'
+              }`}
+            >
+              {lastSunday.entries.length > 0 ? `Last Sunday ✓ ${lastSunday.entries.length}` : 'Mark last Sunday'}
+            </button>
           )}
           {atMax && <p className="text-xs text-amber-700 dark:text-amber-400">⚠️ Reached the max for this week</p>}
           {!readOnly && activeEntry && <EnergyPicker entry={activeEntry} onDone={() => setEnergyPromptId(null)} />}

@@ -66,6 +66,8 @@ export function TrackersSection({
     }
   }
 
+  const doneTodayCount = trackers.filter((ts) => ts.entries.some((e) => e.day === today)).length
+
   return (
     <CollapsibleSection
       title="Habits"
@@ -74,7 +76,23 @@ export function TrackersSection({
       onToggle={onToggle}
       readOnly={readOnly}
     >
-      <ul className="space-y-2">
+      {!readOnly && trackers.length > 0 && (
+        <div
+          className="mb-3 flex items-center gap-3"
+          aria-label={`Done today: ${doneTodayCount} of ${trackers.length}`}
+        >
+          <span className="text-sm font-medium tabular-nums">
+            Today {doneTodayCount}/{trackers.length}
+          </span>
+          <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-200 dark:bg-slate-700" aria-hidden>
+            <span
+              className="block h-full rounded-full bg-emerald-400 transition-all"
+              style={{ width: `${(doneTodayCount / trackers.length) * 100}%` }}
+            />
+          </span>
+        </div>
+      )}
+      <ul className="space-y-2.5">
         {trackers.map((ts) => (
           <TrackerRow
             key={ts.tracker.id}
@@ -94,14 +112,19 @@ export function TrackersSection({
         ))}
       </ul>
       {streaks.length > 0 && (
-        <div className={trackers.length ? 'mt-3' : ''}>
+        <div className={trackers.length ? 'mt-5 border-t border-slate-200 pt-4 dark:border-slate-800' : ''}>
           <button
             type="button"
             onClick={onToggleStreaks}
             aria-expanded={streaksOpen}
-            className="flex min-h-11 w-full items-center justify-between gap-3 rounded-xl border border-amber-300/70 px-4 text-left text-sm font-medium dark:border-amber-400/30"
+            className="flex min-h-11 w-full items-center justify-between gap-3 rounded-xl border border-dashed border-amber-300/70 bg-amber-50/50 px-4 text-left dark:border-amber-400/30 dark:bg-amber-400/5"
           >
-            <span>🔥 Streaks ({streaks.length})</span>
+            <span className="min-w-0">
+              <span className="block text-sm font-medium">🔥 Streaks ({streaks.length})</span>
+              <span className="block text-xs text-slate-500 dark:text-slate-400">
+                Logged in the Streaks app, read-only
+              </span>
+            </span>
             <span aria-hidden>{streaksOpen ? '▾' : '▸'}</span>
           </button>
           {streaksOpen && (
