@@ -66,8 +66,6 @@ describe('layoutForPath', () => {
     for (const path of [
       '/',
       '/events',
-      '/life',
-      '/life/import',
       '/meal-diary',
       '/sharing',
       '/links',
@@ -76,6 +74,10 @@ describe('layoutForPath', () => {
       '/boardgame-ideas',
     ])
       expect(layoutForPath(path), path).toBe('wide')
+  })
+
+  it('is full for the Life dashboard', () => {
+    for (const path of ['/life', '/life/import']) expect(layoutForPath(path), path).toBe('full')
   })
 
   it('is narrow for capture pages, join pages and unknown routes', () => {
@@ -100,5 +102,6 @@ describe('contentWidthClass', () => {
     expect(contentWidthClass('narrow')).not.toContain('lg:max-w-6xl')
     expect(contentWidthClass('wide')).toContain('max-w-3xl')
     expect(contentWidthClass('wide')).toContain('lg:max-w-6xl')
+    expect(contentWidthClass('full')).toContain('lg:max-w-[96rem]')
   })
 })

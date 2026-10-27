@@ -6,8 +6,9 @@ import type { AreaId } from './areas'
 
 // Content column width from lg (1024px) up; below lg every page is the same
 // single max-w-3xl column. narrow = max-w-3xl centred (capture pages used
-// one-handed), wide = up to max-w-6xl (dense / reading pages). See navModel.ts.
-export type ProjectLayout = 'narrow' | 'wide'
+// one-handed), wide = up to max-w-6xl (dense / reading pages), full = up to
+// 96rem (multi-column dashboards on a desktop monitor). See navModel.ts.
+export type ProjectLayout = 'narrow' | 'wide' | 'full'
 
 export interface ProjectMeta {
   id: string
@@ -190,7 +191,7 @@ export const projects: ProjectMeta[] = [
     description: 'This week: focus, trackers, Sunday check. Owner only.',
     path: '/life',
     status: 'live',
-    layout: 'wide',
+    layout: 'full',
     ownerOnly: true,
   },
   {

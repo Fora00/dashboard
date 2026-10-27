@@ -63,9 +63,10 @@ export function layoutForPath(pathname: string): ProjectLayout {
 
 /**
  * Width classes for <main>. Below lg every page keeps today's max-w-3xl
- * column; from lg a wide page grows to max-w-6xl, a narrow one stays 3xl and
- * sits centred in the content area (mx-auto).
+ * column; from lg a wide page grows to max-w-6xl, a full one to 96rem, a
+ * narrow one stays 3xl and sits centred in the content area (mx-auto).
  */
 export function contentWidthClass(layout: ProjectLayout): string {
+  if (layout === 'full') return 'max-w-3xl lg:max-w-[96rem] lg:px-8'
   return layout === 'wide' ? 'max-w-3xl lg:max-w-6xl lg:px-8' : 'max-w-3xl lg:px-6'
 }

@@ -159,7 +159,8 @@ export function Layout() {
             data-layout={layout}
             style={
               {
-                '--content-max': layout === 'wide' ? 'var(--container-6xl)' : 'var(--container-3xl)',
+                '--content-max':
+                  layout === 'full' ? '96rem' : layout === 'wide' ? 'var(--container-6xl)' : 'var(--container-3xl)',
               } as CSSProperties
             }
             className={`layout-${layout} mx-auto w-full px-4 py-6 pb-16 focus:outline-none ${contentWidthClass(layout)}`}
