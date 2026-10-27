@@ -170,6 +170,8 @@ export function WeekBody({ week, plan, entries, readOnly, lateEdit = false, dayF
         streaks={streaks}
         open={sections.trackers}
         onToggle={() => toggleSection('trackers')}
+        streaksOpen={sections.streaks}
+        onToggleStreaks={() => toggleSection('streaks')}
         readOnly={readOnly}
         trigger={trigger}
       />

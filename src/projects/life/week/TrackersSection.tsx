@@ -16,6 +16,8 @@ export function TrackersSection({
   streaks = [],
   open,
   onToggle,
+  streaksOpen = false,
+  onToggleStreaks,
   readOnly,
   trigger,
 }: {
@@ -25,6 +27,9 @@ export function TrackersSection({
   streaks?: readonly LifeStreakEntry[]
   open: boolean
   onToggle: () => void
+  /** The Streaks list is read-only, so it starts collapsed. */
+  streaksOpen?: boolean
+  onToggleStreaks?: () => void
   readOnly: boolean
   /** Undo snackbar trigger (useUndoSnackbar). */
   trigger: (label: string, undo: () => void | Promise<void>) => void
@@ -89,14 +94,24 @@ export function TrackersSection({
         ))}
       </ul>
       {streaks.length > 0 && (
-        <ul
-          className={`space-y-2 ${trackers.length ? 'mt-3' : ''}`}
-          aria-label="Streaks habits (logged in the Streaks app)"
-        >
-          {streaks.map((e) => (
-            <StreakRow key={e.id} entry={e} today={today} week={week} />
-          ))}
-        </ul>
+        <div className={trackers.length ? 'mt-3' : ''}>
+          <button
+            type="button"
+            onClick={onToggleStreaks}
+            aria-expanded={streaksOpen}
+            className="flex min-h-11 w-full items-center justify-between gap-3 rounded-xl border border-amber-300/70 px-4 text-left text-sm font-medium dark:border-amber-400/30"
+          >
+            <span>🔥 Streaks ({streaks.length})</span>
+            <span aria-hidden>{streaksOpen ? '▾' : '▸'}</span>
+          </button>
+          {streaksOpen && (
+            <ul className="mt-2 space-y-2" aria-label="Streaks habits (logged in the Streaks app)">
+              {streaks.map((e) => (
+                <StreakRow key={e.id} entry={e} today={today} week={week} />
+              ))}
+            </ul>
+          )}
+        </div>
       )}
     </CollapsibleSection>
   )

@@ -4,8 +4,8 @@ import { parseDayKey } from '../model'
 import { useToday } from '../useToday'
 
 // --- Collapsible sections (per-device UI preference, guarded localStorage) --
-// Every section except Rules starts open; Rules keeps its pre-existing
-// default of closed. Sunday check is special: its default depends on the day
+// Every section except Rules and Streaks starts open; Rules keeps its
+// pre-existing default of closed, and the read-only Streaks list is closed too. Sunday check is special: its default depends on the day
 // of week (open on Sat/Sun), so only an explicit choice made THIS week
 // (sundayWeek matches the current week key) overrides that default — next
 // week it falls back to the day-of-week default again. Read-only history
@@ -18,6 +18,7 @@ export type SectionId =
   | 'playbook'
   | 'focus'
   | 'trackers'
+  | 'streaks'
   | 'recap'
   | 'rules'
   | 'checkins'
@@ -32,6 +33,7 @@ interface SectionsState {
   playbook: boolean
   focus: boolean
   trackers: boolean
+  streaks: boolean
   recap: boolean
   rules: boolean
   checkins: boolean
@@ -49,6 +51,7 @@ const DEFAULT_SECTIONS: SectionsState = {
   playbook: true,
   focus: true,
   trackers: true,
+  streaks: false,
   recap: true,
   rules: false,
   checkins: true,
@@ -73,6 +76,7 @@ function sanitizeSections(raw: unknown): SectionsState {
     playbook: isBool(r.playbook) ? r.playbook : DEFAULT_SECTIONS.playbook,
     focus: isBool(r.focus) ? r.focus : DEFAULT_SECTIONS.focus,
     trackers: isBool(r.trackers) ? r.trackers : DEFAULT_SECTIONS.trackers,
+    streaks: isBool(r.streaks) ? r.streaks : DEFAULT_SECTIONS.streaks,
     recap: isBool(r.recap) ? r.recap : DEFAULT_SECTIONS.recap,
     rules: isBool(r.rules) ? r.rules : DEFAULT_SECTIONS.rules,
     checkins: isBool(r.checkins) ? r.checkins : DEFAULT_SECTIONS.checkins,
