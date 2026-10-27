@@ -1,14 +1,15 @@
 import { useState } from 'react'
 import type { LifePlaybook } from '../../../lib/db'
-import { logPlaybook, removeTrackerEntry, setPlaybookNote } from '../../../lib/lifeSync'
+import { logPlaybook, removeTrackerEntry } from '../../../lib/lifeSync'
 import { runSafe } from '../../../lib/runSafe'
 import { LIFE_CAPS, type PlaybookSummary } from '../model'
 import { useToday } from '../useToday'
 import { CollapsibleSection } from './CollapsibleSection'
 
 // "Playbook of the week": the one practice chosen for the week and a one-tap
-// "Used it today" log, same pattern as a tracker (one use per day; tapping
-// again today undoes it). The optional note is what happened / what changed.
+// "Used it today" log, repeatable: each tap logs another use (the
+// day count stays distinct), "Undo last" removes the latest. The optional note
+// is what happened / what changed.
 
 export function PlaybookSection({
   week,
@@ -31,16 +32,9 @@ export function PlaybookSection({
   const todays = summary.entries.filter((e) => e.day === today)
   const last = todays[todays.length - 1]
   const [draft, setDraft] = useState('')
-  const [editing, setEditing] = useState<string | null>(null)
-  const noteValue = editing ?? last?.value.note ?? ''
   const used = summary.total
 
-  async function toggleToday() {
-    if (last) {
-      await removeTrackerEntry(last.id)
-      setEditing(null)
-      return
-    }
+  async function logUse() {
     const entry = await logPlaybook(week, { note: draft })
     setDraft('')
     trigger('✓ Playbook', () => removeTrackerEntry(entry.id))
@@ -77,38 +71,32 @@ export function PlaybookSection({
         <div className="mt-3 space-y-2">
           <input
             type="text"
-            value={last ? noteValue : draft}
+            value={draft}
             maxLength={LIFE_CAPS.playbookNote}
             placeholder="Note (optional): what happened, what changed"
             aria-label="Playbook note"
-            onChange={(ev) => (last ? setEditing(ev.target.value) : setDraft(ev.target.value))}
+            onChange={(ev) => setDraft(ev.target.value)}
             className="min-h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm dark:border-slate-700 dark:bg-slate-900"
           />
           <div className="flex gap-2">
             <button
               type="button"
-              aria-pressed={!!last}
-              onClick={() => void runSafe(toggleToday, 'Could not save')()}
+              onClick={() => void runSafe(logUse, 'Could not save')()}
               className={`min-h-14 min-w-0 flex-1 rounded-xl border px-4 py-2 text-base font-medium ${
                 last
                   ? 'border-emerald-400/60 bg-emerald-400/10'
                   : 'border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-800/50'
               }`}
             >
-              {last ? '✓ Used today (tap to undo)' : 'Used it today'}
+              {last ? `✓ Used ${todays.length}× today · tap to add another` : 'Used it today'}
             </button>
-            {last && editing !== null && editing.trim() !== (last.value.note ?? '') && (
+            {last && (
               <button
                 type="button"
-                onClick={() =>
-                  void runSafe(async () => {
-                    await setPlaybookNote(last, editing)
-                    setEditing(null)
-                  }, 'Could not save')()
-                }
+                onClick={() => void runSafe(() => removeTrackerEntry(last.id), 'Could not save')()}
                 className="min-h-14 rounded-xl border border-slate-200 px-4 text-sm font-medium dark:border-slate-700"
               >
-                Save note
+                Undo last
               </button>
             )}
           </div>
