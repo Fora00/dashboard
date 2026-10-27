@@ -1,6 +1,6 @@
 import type { LifeStreakEntry } from '../../../lib/db'
 import { HabitHistoryButton } from './HabitHistory'
-import { isStaleStreak, last7, type StreakDay } from '../model'
+import { addDays, isStaleStreak, last7, parseDayKey, type StreakDay } from '../model'
 
 const DAY_TONE: Record<StreakDay, string> = {
   d: 'bg-emerald-400/70 dark:bg-emerald-500/70',
@@ -13,6 +13,8 @@ const DAY_WORD: Record<StreakDay, string> = {
   '-': 'no entry',
 }
 
+const WEEKDAY = ['S', 'M', 'T', 'W', 'T', 'F', 'S']
+
 /**
  * A Streaks-app habit, read-only: the iPhone app is the place to log it. Shows
  * the last 7 days of the snapshot, the current streak and how old the snapshot
@@ -21,6 +23,7 @@ const DAY_WORD: Record<StreakDay, string> = {
 export function StreakRow({ entry, today, week }: { entry: LifeStreakEntry; today: string; week: string }) {
   const v = entry.value
   const strip = last7(v.days)
+  // The strip ends on the snapshot day (asOf); label each cell with its weekday.
   const stale = isStaleStreak(v.asOf, today)
   return (
     <li className="flex items-center gap-2">
@@ -51,7 +54,12 @@ export function StreakRow({ entry, today, week }: { entry: LifeStreakEntry; toda
             aria-label={`Last 7 days: ${strip.map((c) => DAY_WORD[c]).join(', ')}`}
           >
             {strip.map((c, i) => (
-              <span key={i} className={`size-2.5 rounded-sm ${DAY_TONE[c]}`} />
+              <span key={i} className="flex flex-col items-center gap-0.5">
+                <span className={`size-2.5 rounded-sm ${DAY_TONE[c]}`} />
+                <span className="text-[9px] leading-none text-slate-500 dark:text-slate-400">
+                  {WEEKDAY[parseDayKey(addDays(v.asOf, i - 6)).getDay()]}
+                </span>
+              </span>
             ))}
           </span>
           <span className="text-sm font-medium tabular-nums" aria-label={`Streak ${v.streak} days`}>
