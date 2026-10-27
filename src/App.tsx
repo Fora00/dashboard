@@ -38,6 +38,7 @@ const JoinProject = page(() => import('./projects/join/JoinProject'), 'JoinProje
 const Life = page(() => import('./projects/life/Life'), 'Life')
 const LifeEditor = page(() => import('./projects/life/LifeEditor'), 'LifeEditor')
 const LifeToday = page(() => import('./projects/life/LifeToday'), 'LifeToday')
+const LifeStreaks = page(() => import('./projects/life/LifeStreaks'), 'LifeStreaks')
 const LifeImport = page(() => import('./projects/life/LifeImport'), 'LifeImport')
 const Learning = page(() => import('./projects/learning/Learning'), 'Learning')
 const Links = page(() => import('./projects/links/Links'), 'Links')
@@ -104,6 +105,7 @@ export default function App() {
           <Route path="/learning/*" element={<Learning />} />
           <Route path="/life" element={<Life />} />
           <Route path="/life/oggi" element={<LifeToday />} />
+          <Route path="/life/streaks" element={<LifeStreaks />} />
           <Route path="/life/import" element={<LifeImport />} />
           <Route path="/life/edit" element={<LifeEditor />} />
           <Route path="/settings" element={<Settings />} />

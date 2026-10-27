@@ -253,6 +253,10 @@ than 3 days). No checkbox, no history button: log it in the Streaks app.
 - Export: a `## Streaks` section (name, streak, best, done in the last 7 days,
   as of) and a `streaks` array in the JSON in the import's shape (both only
   when there are any); not repeated in `entries`.
+- Refresh without a week: `/streaks` (also run by `/oggi`) reads the backup with
+  `streaks-sync.py` and opens `#/life/streaks?d=…` (`LifeStreaks.tsx`,
+  `scripts/life-streaks-link.ts`): same import rules, owner taps Save. The
+  script prints nothing when the backup is no newer than the last link made.
 - Never put a habit in both Streaks and the plan's `trackers`.
 - Migration `20261026170000_life_streaks.sql` only widens the kind check and
   caps the value.

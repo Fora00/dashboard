@@ -257,6 +257,25 @@ export function validatePlan(value: unknown): ParseResult {
   return { ok: true, plan, ...(streaks ? { streaks } : {}) }
 }
 
+/**
+ * A bare Streaks snapshot (the `/streaks` link): a JSON array of the same
+ * items as the week JSON's `streaks`, validated by the same rules.
+ */
+export function parseStreaksJson(
+  text: string,
+): { ok: true; streaks: LifeStreakValue[] } | { ok: false; errors: string[] } {
+  let raw: unknown
+  try {
+    raw = JSON.parse(text)
+  } catch {
+    return { ok: false, errors: ['Not valid JSON'] }
+  }
+  const errors: string[] = []
+  const streaks = streaksField({ streaks: raw }, (m) => errors.push(m))
+  if (errors.length > 0) return { ok: false, errors }
+  return { ok: true, streaks }
+}
+
 const STREAK_DAYS_RE = new RegExp(`^[dm-]{${LIFE_CAPS.streakDays}}$`)
 
 /** The optional `streaks` snapshot: habits from the Streaks app, read-only here. */
