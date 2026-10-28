@@ -10,6 +10,8 @@ import {
   type LifePlan,
   type LifePlaybookEntry,
   type LifeSentEntry,
+  type LifeChoreEntry,
+  type LifeChoreValue,
   type LifeStreakEntry,
   type LifeStreakValue,
   type LifeSundayEntry,
@@ -29,7 +31,9 @@ import {
   entryId,
   freeSlots,
   isEnergy,
+  planChoreImport,
   planStreakImport,
+  toggleChoreValue,
   validatePlan,
   withCheckinIds,
 } from '../projects/life/model'
@@ -209,6 +213,26 @@ export async function importStreaks(week: string, streaks: readonly LifeStreakVa
   const { upserts, deletes } = planStreakImport(existing, streaks, week, dayKey(new Date()), Date.now())
   for (const e of upserts) await engine.upsert('life_entries', e)
   for (const id of deletes) await engine.remove('life_entries', id)
+}
+
+/**
+ * Apply a chores snapshot (the /oggi link, already validated): upsert each
+ * chore by ref, delete the ones no longer in it. See planChoreImport.
+ */
+export async function importChores(week: string, chores: readonly LifeChoreValue[]): Promise<void> {
+  const existing = (await db.lifeEntries.filter((e) => e.kind === 'chore').toArray()) as LifeChoreEntry[]
+  const { upserts, deletes } = planChoreImport(existing, chores, week, dayKey(new Date()), Date.now())
+  for (const e of upserts) await engine.upsert('life_entries', e)
+  for (const id of deletes) await engine.remove('life_entries', id)
+}
+
+/** Tick / untick a chore (a recurring one also moves its counter). Returns the new `done` (null if gone). */
+export async function toggleChore(id: string): Promise<boolean | null> {
+  const row = await db.lifeEntries.get(id)
+  if (!row || row.kind !== 'chore') return null
+  const value = toggleChoreValue(row.value, dayKey(new Date()))
+  await engine.upsert('life_entries', { ...row, value, updatedAt: Date.now() })
+  return value.done
 }
 
 /**
@@ -435,7 +459,11 @@ export async function updateIdea(
   if (text.length > LIFE_CAPS.ideaText) throw new Error(`Keep the idea under ${LIFE_CAPS.ideaText} characters`)
   const status = change.status ?? entry.value.status
   if (text === entry.value.text && status === entry.value.status) return
-  await engine.upsert('life_entries', { ...entry, value: { text, status }, updatedAt: Date.now() })
+  await engine.upsert('life_entries', {
+    ...entry,
+    value: { text, status },
+    updatedAt: Date.now(),
+  })
 }
 
 /** Delete an idea for real. */
@@ -478,7 +506,12 @@ export async function addUpgrade(
  */
 export async function updateUpgrade(
   entry: LifeUpgradeEntry,
-  change: { text?: string; size?: LifeUpgradeSize; status?: LifeUpgradeStatus; doneAt?: string },
+  change: {
+    text?: string
+    size?: LifeUpgradeSize
+    status?: LifeUpgradeStatus
+    doneAt?: string
+  },
 ): Promise<void> {
   const text = change.text === undefined ? entry.value.text : change.text.trim()
   if (!text) return
@@ -497,7 +530,11 @@ export async function updateUpgrade(
     value.doneAt === entry.value.doneAt
   )
     return
-  await engine.upsert('life_entries', { ...entry, value, updatedAt: Date.now() })
+  await engine.upsert('life_entries', {
+    ...entry,
+    value,
+    updatedAt: Date.now(),
+  })
 }
 
 /** Delete an upgrade for real. */

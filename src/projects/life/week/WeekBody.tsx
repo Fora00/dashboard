@@ -12,6 +12,7 @@ import { clearLayout, saveLayout, useBlockLayout } from './useBlockLayout'
 import { CheckinRow } from './CheckinRow'
 import { CollapsibleSection } from './CollapsibleSection'
 import { ExportSection } from './ExportSection'
+import { ChoresSection } from './ChoresSection'
 import { DayFocusSection } from './DayFocusSection'
 import { PlaybookSection } from './PlaybookSection'
 import { FocusSection } from './FocusSection'
@@ -138,7 +139,13 @@ export function WeekBody({ week, plan, entries, readOnly, lateEdit = false, dayF
 
   // Blocks that exist for this week; absent ones are skipped when moving.
   const blocks: Partial<Record<BlockId, ReactNode>> = {}
-  if (!readOnly && dayFocusDay) blocks.oggi = <DayFocusSection day={dayFocusDay} />
+  if (!readOnly && dayFocusDay)
+    blocks.oggi = (
+      <>
+        <DayFocusSection day={dayFocusDay} />
+        <ChoresSection />
+      </>
+    )
   if (plan.playbook && summary.playbook)
     blocks.playbook = (
       <PlaybookSection

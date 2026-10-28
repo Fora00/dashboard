@@ -9,7 +9,7 @@
 
 export { LIFE_CAPS, THINGS_WHEN_KEYWORDS, AUTO_QUESTION_TYPES } from './constants.ts'
 export { dayKey, isDateKey, parseDayKey, isMondayKey, addDays, weekKey, weekDays, daysBetween } from './dates.ts'
-export { parseWeekJson, parseStreaksJson, validatePlan, type ParseResult } from './validate.ts'
+export { parseWeekJson, parseStreaksJson, parseChoresJson, validatePlan, type ParseResult } from './validate.ts'
 export { SCREEN_IDS, SCREEN_QUESTIONS } from './screenTime.ts'
 export { MAX_APPS, parseApps, serializeApps, type AppUsage } from './apps.ts'
 export { derivedCheckinId, withCheckinIds } from './checkinIds.ts'
@@ -51,6 +51,17 @@ export {
   type StreakDay,
   type StreakImportPlan,
 } from './streaks.ts'
+export {
+  choreEntryId,
+  choreRef,
+  isChore,
+  planChoreImport,
+  sortChores,
+  summarizeChores,
+  toggleChoreValue,
+  type ChoreImportPlan,
+  type ChoresSummary,
+} from './chores.ts'
 export { fenceFor, extractJsonFence } from './fence.ts'
 export { summarizeSavedEvents, type SavedEventsNextWeek } from './events.ts'
 export { summarizeMealsWeek, type MealsWeek, type MealsDay } from './meals.ts'

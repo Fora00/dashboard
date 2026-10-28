@@ -265,7 +265,7 @@ export function buildExportMarkdown(
   const json = {
     plan,
     entries: mine
-      .filter((e) => e.kind !== 'upgrade' && e.kind !== 'streak')
+      .filter((e) => e.kind !== 'upgrade' && e.kind !== 'streak' && e.kind !== 'chore')
       .slice()
       .sort((a, b) => a.createdAt - b.createdAt)
       // `at` is the moment it was first logged (ISO, UTC), `day` the local day.
@@ -364,6 +364,8 @@ function describeRemoved(e: LifeEntry): string {
       return `upgrade: ${oneLine(e.value.text)}`
     case 'streak':
       return `streak ${e.ref}: ${oneLine(e.value.name)}`
+    case 'chore':
+      return `chore ${e.ref}: ${oneLine(e.value.name)}`
     case 'idea':
       return `idea ${e.ref}: ${oneLine(e.value.text)}`
     case 'checkin': {

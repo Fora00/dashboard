@@ -91,7 +91,7 @@ export function summarizeWeek(
 
   for (const e of mine) {
     // Ideas belong to the habit across weeks, not to a week (see habitHistory.ts).
-    if (e.kind === 'idea' || e.kind === 'upgrade' || e.kind === 'streak') continue
+    if (e.kind === 'idea' || e.kind === 'upgrade' || e.kind === 'streak' || e.kind === 'chore') continue
     if (e.kind === 'sunday' && SCREEN_IDS.has(e.ref)) {
       if (e.value.answer !== null) screen.set(e.ref, e.value.answer)
       continue
@@ -190,6 +190,7 @@ function isMeaningful(e: LifeEntry): boolean {
     case 'idea':
     case 'upgrade':
     case 'streak':
+    case 'chore':
       return false
   }
 }

@@ -60,6 +60,10 @@ export const LIFE_CAPS = {
   streakName: 60,
   streakDays: 28,
   streakMax: 100_000,
+  /** Chores snapshot (SQL: life_entries_chore_value): chores per import, name length, max counter. */
+  chores: 40,
+  choreName: 100,
+  choreMax: 100_000,
   /** Check-in note (SQL: life_entries_checkin_value, char_length ≤ 1000). */
   checkinNote: 1000,
   /** Sunday text answers (SQL: pg_column_size(value) ≤ 16 KiB). */

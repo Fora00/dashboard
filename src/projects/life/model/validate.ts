@@ -1,5 +1,6 @@
 import type {
   LifeCheckin,
+  LifeChoreValue,
   LifeFocus,
   LifePlan,
   LifeQuestion,
@@ -276,10 +277,62 @@ export function parseStreaksJson(
   return { ok: true, streaks }
 }
 
+/** A bare chores snapshot (inside the /oggi link): a JSON array of chores. */
+export function parseChoresJson(
+  text: string,
+): { ok: true; chores: LifeChoreValue[] } | { ok: false; errors: string[] } {
+  let raw: unknown
+  try {
+    raw = JSON.parse(text)
+  } catch {
+    return { ok: false, errors: ['Not valid JSON'] }
+  }
+  const errors: string[] = []
+  const chores = choresField({ chores: raw }, (m) => errors.push(m))
+  if (errors.length > 0) return { ok: false, errors }
+  return { ok: true, chores }
+}
+
+/** The `chores` snapshot: Things project "Casa catia" as the Mac read it. */
+export function choresField(value: Obj, err: (m: string) => void): LifeChoreValue[] {
+  if (!Array.isArray(value.chores)) {
+    err('chores must be an array')
+    return []
+  }
+  const items = arrayField(value, 'chores', LIFE_CAPS.chores, err).map((raw, i): LifeChoreValue => {
+    const p = `chores[${i}]`
+    const o = itemObj(raw, p, ['name', 'repeat', 'done', 'count', 'last', 'asOf'], err)
+    const name = textField(o, 'name', p, LIFE_CAPS.choreName, true, err)
+    if (typeof o.repeat !== 'boolean') err(`${p}.repeat must be true or false`)
+    if (typeof o.done !== 'boolean') err(`${p}.done must be true or false`)
+    if (!intIn(o.count, 0, LIFE_CAPS.choreMax)) err(`${p}.count must be an integer 0–${LIFE_CAPS.choreMax}`)
+    const last = o.last === undefined || o.last === null ? undefined : o.last
+    if (last !== undefined && !(typeof last === 'string' && isDateKey(last))) err(`${p}.last must be YYYY-MM-DD`)
+    if (typeof o.asOf !== 'string' || !isDateKey(o.asOf)) err(`${p}.asOf must be YYYY-MM-DD`)
+    return {
+      name,
+      repeat: o.repeat === true,
+      done: o.done === true,
+      count: typeof o.count === 'number' ? o.count : 0,
+      ...(typeof last === 'string' ? { last } : {}),
+      asOf: typeof o.asOf === 'string' ? o.asOf : '',
+    }
+  })
+  const seen = new Map<string, string>()
+  for (const c of items) {
+    if (!c.name) continue
+    const ref = streakRef(c.name)
+    const other = seen.get(ref)
+    if (other !== undefined) err(`chores: "${other}" and "${c.name}" are the same chore (rename one in Things)`)
+    else seen.set(ref, c.name)
+  }
+  return items
+}
+
 const STREAK_DAYS_RE = new RegExp(`^[dm-]{${LIFE_CAPS.streakDays}}$`)
 
 /** The optional `streaks` snapshot: habits from the Streaks app, read-only here. */
-function streaksField(value: Obj, err: (m: string) => void): LifeStreakValue[] {
+export function streaksField(value: Obj, err: (m: string) => void): LifeStreakValue[] {
   if (!Array.isArray(value.streaks)) {
     err('streaks must be an array')
     return []

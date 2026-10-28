@@ -2,9 +2,9 @@ import { useEffect, useMemo, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { db } from '../../lib/db'
-import { setDayFocus } from '../../lib/lifeSync'
+import { importChores, importStreaks, setDayFocus } from '../../lib/lifeSync'
 import { useAuth } from '../../lib/useAuth'
-import { decodeDayFocusParam, parseDayFocusJson } from './model'
+import { decodeDayFocusParam, parseDayFocusJson, weekKey } from './model'
 import { Button } from '../../components/Button'
 import { Card } from '../../components/Card'
 import { PageHeader } from '../../components/PageHeader'
@@ -44,7 +44,10 @@ export function LifeToday() {
     setSaving(true)
     setSaveError(null)
     try {
-      await setDayFocus(result.plan.day, result.plan.lines)
+      const { day, lines, streaks, chores } = result.plan
+      if (lines.length > 0) await setDayFocus(day, lines)
+      if (streaks) await importStreaks(weekKey(), streaks)
+      if (chores) await importChores(weekKey(), chores)
       await navigate('/life', { replace: true })
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : String(err))
@@ -57,7 +60,7 @@ export function LifeToday() {
 
   return (
     <div>
-      <PageHeader emoji="☀️" title="Oggi" subtitle="Imposta il focus del giorno (da /oggi)." />
+      <PageHeader emoji="☀️" title="Oggi" subtitle="Focus del giorno, Streaks e faccende (da /oggi)." />
       {session === null && (
         <p className="mb-4 rounded-lg border border-amber-300 bg-amber-50 px-3.5 py-2 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-300">
           Non hai fatto l'accesso: resta solo su questo dispositivo, il telefono non lo vedrà.
@@ -76,17 +79,38 @@ export function LifeToday() {
       {result?.ok && (
         <Card className="space-y-3">
           <p className="text-sm font-medium">{result.plan.day}</p>
-          <ul className="space-y-2">
-            {result.plan.lines.map((l, i) => (
-              <li
-                key={i}
-                className="rounded-xl border border-amber-300/70 px-4 py-2 text-base dark:border-amber-400/30"
-              >
-                {l}
-              </li>
-            ))}
-          </ul>
-          {existing && existing.length > 0 && (
+          {result.plan.lines.length > 0 && (
+            <ul className="space-y-2">
+              {result.plan.lines.map((l, i) => (
+                <li
+                  key={i}
+                  className="rounded-xl border border-amber-300/70 px-4 py-2 text-base dark:border-amber-400/30"
+                >
+                  {l}
+                </li>
+              ))}
+            </ul>
+          )}
+          {result.plan.streaks && (
+            <p className="text-sm">
+              🔥 Streaks: {result.plan.streaks.length} abitudini, dati al{' '}
+              {result.plan.streaks.reduce((m, x) => (x.asOf > m ? x.asOf : m), '')}
+            </p>
+          )}
+          {result.plan.chores && (
+            <div className="space-y-1 text-sm">
+              <p>🏠 Casa: {result.plan.chores.length} faccende</p>
+              <ul className="space-y-1 text-slate-600 dark:text-slate-300">
+                {result.plan.chores.map((c) => (
+                  <li key={c.name}>
+                    {c.done ? '✓' : '○'} {c.name}
+                    {c.repeat ? ` · 🔁 ${c.count}×` : ''}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {existing && result.plan.lines.length > 0 && existing.length > 0 && (
             <p className="text-xs text-slate-500 dark:text-slate-400">
               Sostituisce le {existing.length} righe già presenti per questo giorno.
             </p>

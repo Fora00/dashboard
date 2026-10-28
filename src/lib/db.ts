@@ -380,6 +380,7 @@ export type LifeEntryKind =
   | 'idea'
   | 'upgrade'
   | 'streak'
+  | 'chore'
 
 export type LifeAnswer = number | boolean | string | null
 
@@ -459,7 +460,12 @@ export type LifeUpgradeStatus = 'open' | 'done' | 'dropped'
 // of a week summary. `doneAt` (day key) is set while status is 'done'.
 export interface LifeUpgradeEntry extends LifeEntryBase {
   kind: 'upgrade'
-  value: { text: string; size: LifeUpgradeSize; status: LifeUpgradeStatus; doneAt?: string }
+  value: {
+    text: string
+    size: LifeUpgradeSize
+    status: LifeUpgradeStatus
+    doneAt?: string
+  }
 }
 
 /** A Streaks (iOS app) habit as last read from the Mac's backup. Read-only here. */
@@ -484,6 +490,31 @@ export interface LifeStreakEntry extends LifeEntryBase {
   value: LifeStreakValue
 }
 
+/**
+ * A household chore (Things project "Casa catia", read by the Mac). `repeat` =
+ * a recurring Things to-do: `count` is how many times it was completed in all,
+ * `last` the day of the latest one. `done` = done today (recurring) or
+ * completed (one-off). Ticking here flips `done` and, for a recurring chore,
+ * `count` too; the next Mac import sets both from Things again.
+ */
+export interface LifeChoreValue {
+  name: string
+  repeat: boolean
+  done: boolean
+  count: number
+  last?: string
+  /** Day key of the Mac snapshot (or of the last tick here). */
+  asOf: string
+}
+
+// A chore. Id `chore:${ref}`, ref = a slug of the name (same as streaks). Not
+// tied to a week (`week` = the week first imported); replaced in place by each
+// import that carries `chores`, deleted when it leaves the snapshot.
+export interface LifeChoreEntry extends LifeEntryBase {
+  kind: 'chore'
+  value: LifeChoreValue
+}
+
 // One row per logged thing. Keyed toggles (focus/sunday/sent/checkin) are
 // never deleted, only flipped, so last-writer-wins by updatedAt resolves them.
 export type LifeEntry =
@@ -497,6 +528,7 @@ export type LifeEntry =
   | LifeIdeaEntry
   | LifeUpgradeEntry
   | LifeStreakEntry
+  | LifeChoreEntry
 
 // Remote (Supabase) table name → the LOCAL row shape that travels through the
 // outbox for it. The single source of truth for what the generic sync engine
