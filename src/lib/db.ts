@@ -503,6 +503,8 @@ export interface LifeChoreValue {
   done: boolean
   count: number
   last?: string
+  /** Weeks the chore was done in, 12 chars oldest → newest ending on the snapshot's week: '1' done at least once, '0' not. */
+  wk?: string
   /** Day key of the Mac snapshot (or of the last tick here). */
   asOf: string
 }

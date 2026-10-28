@@ -64,6 +64,8 @@ export const LIFE_CAPS = {
   chores: 40,
   choreName: 100,
   choreMax: 100_000,
+  /** Length of a chore's weekly history strip (SQL: life_entries_chore_value). */
+  choreWeeks: 12,
   /** Check-in note (SQL: life_entries_checkin_value, char_length ≤ 1000). */
   checkinNote: 1000,
   /** Sunday text answers (SQL: pg_column_size(value) ≤ 16 KiB). */

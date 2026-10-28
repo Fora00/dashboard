@@ -1,5 +1,5 @@
-import type { LifeDayFocus, LifeEntry, LifeWeek } from '../../../lib/db'
-import { daysBetween, summarizeWeek, weekDays } from '../model'
+import type { LifeChoreEntry, LifeDayFocus, LifeEntry, LifeWeek } from '../../../lib/db'
+import { addDays, choresByWeek, daysBetween, summarizeWeek, weekDays, weekKey, parseDayKey } from '../model'
 
 export interface ChartPoint {
   week: string
@@ -10,6 +10,8 @@ export interface ChartPoint {
   habits: number | null
   /** Share of the week's Oggi lines (up to 3 a day) marked done; null when none were set. */
   oggi: number | null
+  /** Share of the household chores (Things project Casa catia) done in the week; null without a history. */
+  casa: number | null
 }
 
 const pct = (done: number, total: number) => (total > 0 ? Math.round((done / total) * 100) : null)
@@ -41,6 +43,11 @@ export function buildChartPoints(
     .slice(0, max)
     .reverse()
   if (shown.length === 0) return []
+  const casa = choresByWeek(
+    entries.filter((e): e is LifeChoreEntry => e.kind === 'chore'),
+    (d) => weekKey(parseDayKey(d)),
+    addDays,
+  )
   const first = shown[0]!.week
   const span = daysBetween(first, shown[shown.length - 1]!.week)
   return shown.map((w) => {
@@ -55,6 +62,7 @@ export function buildChartPoints(
       // habits = average progress towards each target, capped at 100% per habit
       habits: habitsPct(s.trackers),
       oggi: pct(lines.filter((f) => f.done).length, lines.length),
+      casa: casa.get(w.week) ?? null,
     }
   })
 }

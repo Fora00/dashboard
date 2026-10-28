@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import type { LifeChoreEntry, LifeChoreValue } from '../../../lib/db'
 import {
+  addDays,
   choreEntryId,
+  choresByWeek,
+  weekKey,
+  parseDayKey,
   choreRef,
   decodeDayFocusParam,
   encodeDayFocusLink,
@@ -126,5 +130,28 @@ describe('Oggi link with snapshots', () => {
     expect(parseDayFocusJson(JSON.stringify({ day: '2026-10-28', lines: ['A'], chores: [{ name: 'x' }] })).ok).toBe(
       false,
     )
+  })
+})
+
+describe('choresByWeek', () => {
+  const wk = (strip: string, over: Partial<LifeChoreValue> = {}) => row(cv(`c${strip}`, { wk: strip, ...over }))
+  const by = (rows: LifeChoreEntry[]) => choresByWeek(rows, (d) => weekKey(parseDayKey(d)), addDays)
+
+  it('share of chores done per week, ending on the snapshot week', () => {
+    const m = by([wk('000000000011'), wk('000000000001')])
+    expect(m.get('2026-10-26')).toBe(100)
+    expect(m.get('2026-10-19')).toBe(50)
+  })
+
+  it('weeks before the first completion are unknown, not 0%', () => {
+    const m = by([wk('000000000100')])
+    expect([...m.keys()]).toEqual(['2026-10-12', '2026-10-19', '2026-10-26'])
+    expect(m.get('2026-10-26')).toBe(0)
+  })
+
+  it('a chore ticked today counts in the current week; no history gives nothing', () => {
+    expect(by([wk('000000000000', { done: true })]).size).toBe(1)
+    expect(by([wk('000000000000')]).size).toBe(0)
+    expect(by([]).size).toBe(0)
   })
 })

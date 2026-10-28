@@ -54,6 +54,7 @@ export {
 export {
   choreEntryId,
   choreRef,
+  choresByWeek,
   isChore,
   planChoreImport,
   sortChores,

@@ -27,6 +27,7 @@ function normalize(v: LifeChoreValue): LifeChoreValue {
     done: v.done,
     count: v.count,
     ...(v.last ? { last: v.last } : {}),
+    ...(v.wk ? { wk: v.wk } : {}),
     asOf: v.asOf,
   }
 }
@@ -38,6 +39,7 @@ function sameValue(a: LifeChoreValue, b: LifeChoreValue): boolean {
     a.done === b.done &&
     a.count === b.count &&
     a.last === b.last &&
+    a.wk === b.wk &&
     a.asOf === b.asOf
   )
 }
@@ -106,7 +108,15 @@ export function toggleChoreValue(v: LifeChoreValue, today: string): LifeChoreVal
   const done = !v.done
   const count = v.repeat ? Math.max(0, v.count + (done ? 1 : -1)) : v.count
   const last = done ? today : v.last === today ? undefined : v.last
-  return normalize({ name: v.name, repeat: v.repeat, done, count, ...(last ? { last } : {}), asOf: today })
+  return normalize({
+    name: v.name,
+    repeat: v.repeat,
+    done,
+    count,
+    ...(last ? { last } : {}),
+    ...(v.wk ? { wk: v.wk } : {}),
+    asOf: today,
+  })
 }
 
 /** Open chores first, then by name. */
@@ -128,4 +138,37 @@ export function summarizeChores(chores: readonly LifeChoreEntry[]): ChoresSummar
     done: chores.filter((c) => c.value.done).length,
     repeating: chores.filter((c) => c.value.repeat).length,
   }
+}
+
+/**
+ * Share of the chores done per week, keyed by week (Monday) for the weeks the
+ * snapshot's strips cover: a chore counts in a week when its strip has a '1'
+ * there (the current week also counts a chore ticked today). Empty when there
+ * is no history. `weekOf` is the Monday of a day key.
+ */
+export function choresByWeek(
+  chores: readonly LifeChoreEntry[],
+  weekOf: (day: string) => string,
+  addDays: (day: string, n: number) => string,
+): Map<string, number> {
+  const out = new Map<string, number>()
+  if (chores.length === 0) return out
+  const newest = chores.reduce((m, c) => (c.value.asOf > m ? c.value.asOf : m), '')
+  const thisWeek = weekOf(newest)
+  const n = chores[0]?.value.wk?.length ?? 0
+  // Weeks before the first completion on record are unknown, not 0%.
+  const firstOne = (c: LifeChoreEntry) => {
+    const at = c.value.wk?.indexOf('1') ?? -1
+    return at >= 0 ? at : c.value.done ? n - 1 : n
+  }
+  const first = Math.min(...chores.map(firstOne))
+  for (let i = first; i < n; i++) {
+    const done = chores.filter((c) => {
+      const wk = c.value.wk
+      if (!wk || wk.length !== n) return false
+      return wk[i] === '1' || (i === n - 1 && c.value.done)
+    }).length
+    out.set(addDays(thisWeek, -7 * (n - 1 - i)), Math.round((done / chores.length) * 100))
+  }
+  return out
 }

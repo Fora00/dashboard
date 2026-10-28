@@ -301,13 +301,16 @@ export function choresField(value: Obj, err: (m: string) => void): LifeChoreValu
   }
   const items = arrayField(value, 'chores', LIFE_CAPS.chores, err).map((raw, i): LifeChoreValue => {
     const p = `chores[${i}]`
-    const o = itemObj(raw, p, ['name', 'repeat', 'done', 'count', 'last', 'asOf'], err)
+    const o = itemObj(raw, p, ['name', 'repeat', 'done', 'count', 'last', 'wk', 'asOf'], err)
     const name = textField(o, 'name', p, LIFE_CAPS.choreName, true, err)
     if (typeof o.repeat !== 'boolean') err(`${p}.repeat must be true or false`)
     if (typeof o.done !== 'boolean') err(`${p}.done must be true or false`)
     if (!intIn(o.count, 0, LIFE_CAPS.choreMax)) err(`${p}.count must be an integer 0–${LIFE_CAPS.choreMax}`)
     const last = o.last === undefined || o.last === null ? undefined : o.last
     if (last !== undefined && !(typeof last === 'string' && isDateKey(last))) err(`${p}.last must be YYYY-MM-DD`)
+    const wk = o.wk === undefined || o.wk === null ? undefined : o.wk
+    if (wk !== undefined && !(typeof wk === 'string' && CHORE_WK_RE.test(wk)))
+      err(`${p}.wk must be ${LIFE_CAPS.choreWeeks} characters, each "0" or "1"`)
     if (typeof o.asOf !== 'string' || !isDateKey(o.asOf)) err(`${p}.asOf must be YYYY-MM-DD`)
     return {
       name,
@@ -315,6 +318,7 @@ export function choresField(value: Obj, err: (m: string) => void): LifeChoreValu
       done: o.done === true,
       count: typeof o.count === 'number' ? o.count : 0,
       ...(typeof last === 'string' ? { last } : {}),
+      ...(typeof wk === 'string' ? { wk } : {}),
       asOf: typeof o.asOf === 'string' ? o.asOf : '',
     }
   })
@@ -328,6 +332,8 @@ export function choresField(value: Obj, err: (m: string) => void): LifeChoreValu
   }
   return items
 }
+
+const CHORE_WK_RE = new RegExp(`^[01]{${LIFE_CAPS.choreWeeks}}$`)
 
 const STREAK_DAYS_RE = new RegExp(`^[dm-]{${LIFE_CAPS.streakDays}}$`)
 
