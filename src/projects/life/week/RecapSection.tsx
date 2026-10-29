@@ -125,7 +125,7 @@ export function RecapItems({ week, items }: { week: string; items: LifeRecapItem
               <MinimumBars item={item} week={week} />
               {item.returns !== undefined && (
                 <p className="text-xs text-slate-600 dark:text-slate-300">
-                  ↩ {item.returns} return{item.returns === 1 ? '' : 's'} this month
+                  ↩ {item.returns} return{item.returns === 1 ? '' : 's'} in the last week
                 </p>
               )}
             </div>

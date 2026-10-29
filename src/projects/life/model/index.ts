@@ -8,6 +8,18 @@
 // scripts/life-link.ts runs under native Node without a resolver hook.
 
 export { LIFE_CAPS, THINGS_WHEN_KEYWORDS, AUTO_QUESTION_TYPES } from './constants.ts'
+export {
+  buildMonthReport,
+  buildMonthMarkdown,
+  addMonths,
+  monthOf,
+  monthRange,
+  readShare,
+  type MonthReport,
+  type MonthStreak,
+  type MonthTracker,
+  type Reading,
+} from './month.ts'
 export { dayKey, isDateKey, parseDayKey, isMondayKey, addDays, weekKey, weekDays, daysBetween } from './dates.ts'
 export { parseWeekJson, parseStreaksJson, parseChoresJson, validatePlan, type ParseResult } from './validate.ts'
 export { SCREEN_IDS, SCREEN_QUESTIONS } from './screenTime.ts'

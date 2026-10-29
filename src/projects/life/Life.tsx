@@ -52,7 +52,7 @@ export function Life() {
   const pastWeeks = useLiveQuery(() => db.lifeWeeks.orderBy('id').reverse().toArray())
 
   if (view.tab === 'month') {
-    return <MonthView weeks={pastWeeks} onBack={() => setView({ tab: 'week' })} />
+    return <MonthView weeks={pastWeeks} today={today} onBack={() => setView({ tab: 'week' })} />
   }
 
   if (view.tab === 'history') {
