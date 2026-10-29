@@ -1290,6 +1290,18 @@ Low-confidence — flagged for completeness, not verified as real problems:
 
 ## Ideas / later
 
+- [ ] **🤝 Sharing review: what can be shared, and better ways to do it** [opus]
+      (noted 2026-10-27). Today sharing is two systems (`project_members` per
+      project on `/sharing`, `shop_area_members` per shop area) plus the
+      owner-only tables. Gaps seen: `/events` is public but your own marks, 👍/👎,
+      interest profile and custom events are owner-only (`is_owner()`), with no
+      way to hand someone a read-only list or give a guest their own marks.
+      Goal: an analysis first, no code: (1) a table of every project and table
+      → private / owner-only / per-project members / public; (2) which should
+      be shareable and how (read-only link, per-user rows like `project_prefs`,
+      per-project invite); (3) a proposal in the order of value per effort.
+      Decide with the owner before building anything.
+
 Candidate new subprojects (brainstormed 2026-07-04, not committed to):
 
 - [ ] **💰 Expenses / shared budget** [opus] — couple-shared ledger with
