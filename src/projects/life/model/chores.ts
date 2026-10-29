@@ -126,6 +126,15 @@ export function sortChores(entries: readonly LifeEntry[]): LifeChoreEntry[] {
     .sort((a, b) => Number(a.value.done) - Number(b.value.done) || a.value.name.localeCompare(b.value.name))
 }
 
+/**
+ * What "Casa" lists today: the open chores plus the ones done today. A chore
+ * done on an earlier day drops off the list each morning, like the Oggi focus
+ * (its history still feeds the progress chart).
+ */
+export function visibleChores(chores: readonly LifeChoreEntry[], today: string): LifeChoreEntry[] {
+  return chores.filter((c) => !c.value.done || c.value.last === today)
+}
+
 export interface ChoresSummary {
   total: number
   done: number

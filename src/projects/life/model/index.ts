@@ -59,6 +59,7 @@ export {
   planChoreImport,
   sortChores,
   summarizeChores,
+  visibleChores,
   toggleChoreValue,
   type ChoreImportPlan,
   type ChoresSummary,

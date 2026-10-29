@@ -2,7 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db, type LifeChoreEntry } from '../../../lib/db'
 import { toggleChore } from '../../../lib/lifeSync'
 import { runSafe } from '../../../lib/runSafe'
-import { sortChores, summarizeChores } from '../model'
+import { dayKey, sortChores, summarizeChores, visibleChores } from '../model'
 
 // "Casa": the household chores of the Things project "Casa catia", imported by
 // /oggi and tickable here. A recurring chore shows how many times it was done.
@@ -45,7 +45,8 @@ function Row({ entry }: { entry: LifeChoreEntry }) {
 
 export function ChoresSection() {
   const chores = useLiveQuery(
-    async () => sortChores(await db.lifeEntries.filter((e) => e.kind === 'chore').toArray()),
+    async () =>
+      visibleChores(sortChores(await db.lifeEntries.filter((e) => e.kind === 'chore').toArray()), dayKey(new Date())),
     [],
   )
   if (chores === undefined || chores.length === 0) return null

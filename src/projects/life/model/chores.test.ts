@@ -15,6 +15,7 @@ import {
   sortChores,
   summarizeChores,
   toggleChoreValue,
+  visibleChores,
 } from './index'
 
 const cv = (name: string, over: Partial<LifeChoreValue> = {}): LifeChoreValue => ({
@@ -80,14 +81,22 @@ describe('planChoreImport', () => {
 describe('toggleChoreValue', () => {
   it('a recurring chore moves its counter and last day', () => {
     const done = toggleChoreValue(cv('a', { repeat: true, count: 2, last: '2026-10-20' }), '2026-10-28')
-    expect(done).toMatchObject({ done: true, count: 3, last: '2026-10-28', asOf: '2026-10-28' })
+    expect(done).toMatchObject({
+      done: true,
+      count: 3,
+      last: '2026-10-28',
+      asOf: '2026-10-28',
+    })
     const back = toggleChoreValue(done, '2026-10-28')
     expect(back).toMatchObject({ done: false, count: 2 })
     expect(back.last).toBeUndefined()
   })
 
   it('a one-off chore keeps its count', () => {
-    expect(toggleChoreValue(cv('a'), '2026-10-28')).toMatchObject({ done: true, count: 0 })
+    expect(toggleChoreValue(cv('a'), '2026-10-28')).toMatchObject({
+      done: true,
+      count: 0,
+    })
   })
 })
 
@@ -101,9 +110,24 @@ describe('sort and summary', () => {
 
 describe('parseChoresJson', () => {
   it('accepts the Mac snapshot shape (last may be null)', () => {
-    const ok = JSON.stringify([{ name: 'x', repeat: true, done: false, count: 4, last: null, asOf: '2026-10-28' }])
+    const ok = JSON.stringify([
+      {
+        name: 'x',
+        repeat: true,
+        done: false,
+        count: 4,
+        last: null,
+        asOf: '2026-10-28',
+      },
+    ])
     const r = parseChoresJson(ok)
-    expect(r.ok && r.chores[0]).toEqual({ name: 'x', repeat: true, done: false, count: 4, asOf: '2026-10-28' })
+    expect(r.ok && r.chores[0]).toEqual({
+      name: 'x',
+      repeat: true,
+      done: false,
+      count: 4,
+      asOf: '2026-10-28',
+    })
   })
 
   it('rejects bad values and names that slug alike', () => {
@@ -114,7 +138,14 @@ describe('parseChoresJson', () => {
 
 describe('Oggi link with snapshots', () => {
   it('carries focus and chores in one link', () => {
-    const r = parseDayFocusJson(JSON.stringify({ day: '2026-10-28', lines: ['A'], chores: [cv('a')], streaks: [] }))
+    const r = parseDayFocusJson(
+      JSON.stringify({
+        day: '2026-10-28',
+        lines: ['A'],
+        chores: [cv('a')],
+        streaks: [],
+      }),
+    )
     expect(r.ok).toBe(true)
     if (!r.ok) return
     const back = decodeDayFocusParam(encodeDayFocusLink(r.plan).split('d=')[1] ?? '')
@@ -127,9 +158,15 @@ describe('Oggi link with snapshots', () => {
   })
 
   it('a bad chore invalidates the link', () => {
-    expect(parseDayFocusJson(JSON.stringify({ day: '2026-10-28', lines: ['A'], chores: [{ name: 'x' }] })).ok).toBe(
-      false,
-    )
+    expect(
+      parseDayFocusJson(
+        JSON.stringify({
+          day: '2026-10-28',
+          lines: ['A'],
+          chores: [{ name: 'x' }],
+        }),
+      ).ok,
+    ).toBe(false)
   })
 })
 
@@ -153,5 +190,17 @@ describe('choresByWeek', () => {
     expect(by([wk('000000000000', { done: true })]).size).toBe(1)
     expect(by([wk('000000000000')]).size).toBe(0)
     expect(by([]).size).toBe(0)
+  })
+})
+
+describe('visibleChores', () => {
+  it('keeps open chores and the ones done today, drops older completions', () => {
+    const open = row(cv('aspirare', { repeat: true, count: 48, last: '2026-10-26' }))
+    const today = row(cv('mettere bidoni', { done: true, last: '2026-10-29' }))
+    const old = row(cv('togliere ciotola', { done: true, last: '2026-10-28' }))
+    expect(visibleChores([open, today, old], '2026-10-29').map((c) => c.value.name)).toEqual([
+      'aspirare',
+      'mettere bidoni',
+    ])
   })
 })
