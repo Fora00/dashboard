@@ -1,5 +1,5 @@
 import type { LifeEntry, LifeStreakEntry, LifeStreakValue } from '../../../lib/db'
-import { daysBetween } from './dates.ts'
+import { addDays, daysBetween, parseDayKey, weekKey } from './dates.ts'
 
 // --- Streaks (iOS app) snapshot (spec: docs/HANDOFF-life.md) -------------------
 // The owner's Streaks habits can't be written from here: a Mac script reads the
@@ -168,4 +168,29 @@ export const STREAK_MISSED_BELOW = 4
 
 export function isMissedStreak(e: LifeStreakEntry): boolean {
   return doneLast7(e.value.days) < STREAK_MISSED_BELOW
+}
+
+/**
+ * Per week (Monday key), each Streaks habit's share of done days over the days
+ * it had a verdict ('d' done, 'm' missed; '-' = rest or not yet, ignored). The
+ * strip is 28 days ending on `asOf`, so only those weeks have a value, and a
+ * habit with no verdict in a week is left out of it. Feeds the Habits line of
+ * the progress chart.
+ */
+export function streakRatiosByWeek(entries: readonly LifeEntry[]): Map<string, number[]> {
+  const out = new Map<string, number[]>()
+  for (const { value } of entries.filter(isStreak)) {
+    const n = value.days.length
+    const perWeek = new Map<string, { d: number; m: number }>()
+    for (let i = 0; i < n; i++) {
+      const c = value.days[i]
+      if (c !== 'd' && c !== 'm') continue
+      const wk = weekKey(parseDayKey(addDays(value.asOf, i - (n - 1))))
+      const cur = perWeek.get(wk) ?? { d: 0, m: 0 }
+      cur[c]++
+      perWeek.set(wk, cur)
+    }
+    for (const [wk, { d, m }] of perWeek) out.set(wk, [...(out.get(wk) ?? []), d / (d + m)])
+  }
+  return out
 }

@@ -9,6 +9,7 @@ import {
   parseWeekJson,
   planStreakImport,
   sortStreaks,
+  streakRatiosByWeek,
   streakRef,
   summarizeWeek,
 } from './index'
@@ -211,5 +212,15 @@ describe('export: streaks', () => {
     const md = buildExportMarkdown(plan, [], WEEK)
     expect(md).not.toContain('## Streaks')
     expect(JSON.parse(extractJsonFence(md)!)).not.toHaveProperty('streaks')
+  })
+})
+
+describe('streakRatiosByWeek', () => {
+  it('splits the 28-day strip by week, ignoring rest days and weeks without a verdict', () => {
+    // asOf Sat 2026-10-24: the last 7 chars are Sun 10-18 .. Sat 10-24 (Sunday still belongs to the week of 10-12).
+    const days = `${'-'.repeat(20)}m` + 'm' + 'ddmd-d'
+    const out = streakRatiosByWeek([row(sv('A', { days })), row(sv('B', { days: '-'.repeat(28) }))])
+    expect(out.get('2026-10-19')).toEqual([4 / 5])
+    expect(out.get('2026-10-12')).toEqual([0])
   })
 })

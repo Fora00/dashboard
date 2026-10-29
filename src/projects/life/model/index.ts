@@ -44,6 +44,7 @@ export {
   last7,
   planStreakImport,
   sortStreaks,
+  streakRatiosByWeek,
   streakAge,
   streakEntryId,
   streakRef,

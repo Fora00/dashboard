@@ -1,5 +1,14 @@
 import type { LifeChoreEntry, LifeDayFocus, LifeEntry, LifeWeek } from '../../../lib/db'
-import { addDays, choresByWeek, daysBetween, summarizeWeek, weekDays, weekKey, parseDayKey } from '../model'
+import {
+  addDays,
+  choresByWeek,
+  daysBetween,
+  streakRatiosByWeek,
+  summarizeWeek,
+  weekDays,
+  weekKey,
+  parseDayKey,
+} from '../model'
 
 export interface ChartPoint {
   week: string
@@ -16,12 +25,21 @@ export interface ChartPoint {
 
 const pct = (done: number, total: number) => (total > 0 ? Math.round((done / total) * 100) : null)
 
-/** Mean of min(count / target, 1) over trackers with a target; null when none has one. */
-function habitsPct(trackers: readonly { tracker: { target: number | null }; total: number }[]): number | null {
+/**
+ * Mean progress over the week's habits, each weighing the same: the trackers with a target
+ * (min(count / target, 1)) and the Streaks habits (share of done days, 0-1); null when none.
+ */
+function habitsPct(
+  trackers: readonly { tracker: { target: number | null }; total: number }[],
+  streakRatios: readonly number[],
+): number | null {
   const targeted = trackers.filter((t) => t.tracker.target !== null && t.tracker.target > 0)
-  if (targeted.length === 0) return null
-  const sum = targeted.reduce((acc, t) => acc + Math.min(t.total / t.tracker.target!, 1), 0)
-  return Math.round((sum / targeted.length) * 100)
+  const count = targeted.length + streakRatios.length
+  if (count === 0) return null
+  const sum =
+    targeted.reduce((acc, t) => acc + Math.min(t.total / t.tracker.target!, 1), 0) +
+    streakRatios.reduce((acc, r) => acc + r, 0)
+  return Math.round((sum / count) * 100)
 }
 
 /**
@@ -48,6 +66,7 @@ export function buildChartPoints(
     (d) => weekKey(parseDayKey(d)),
     addDays,
   )
+  const streaks = streakRatiosByWeek(entries)
   const first = shown[0]!.week
   const span = daysBetween(first, shown[shown.length - 1]!.week)
   return shown.map((w) => {
@@ -59,8 +78,8 @@ export function buildChartPoints(
       current: w.week === currentWeek,
       at: span > 0 ? daysBetween(first, w.week) / span : 0,
       focus: pct(s.focusDone.size, w.plan.focus.length),
-      // habits = average progress towards each target, capped at 100% per habit
-      habits: habitsPct(s.trackers),
+      // habits = average progress of the dashboard trackers (towards target, capped at 100%) and the Streaks habits
+      habits: habitsPct(s.trackers, streaks.get(w.week) ?? []),
       oggi: pct(lines.filter((f) => f.done).length, lines.length),
       casa: casa.get(w.week) ?? null,
     }
