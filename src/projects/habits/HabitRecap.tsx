@@ -15,13 +15,29 @@ interface Props {
   onOpen: (habitId: string) => void
   /** When given, every row gets a button that taps the habit for today (used in Life). */
   onTapToday?: ((habit: Habit) => void) | undefined
+  /** When given, a day can be tapped to pick its state (done, floor, rest, missed, clear). */
+  onSetDay?: ((habit: Habit, day: string, state: HabitDayState | null) => void) | undefined
 }
 
-const fmt = (day: string) => new Date(`${day}T12:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+const WEEKDAY = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
+const PICK: readonly (readonly [HabitDayState | null, string])[] = [
+  ['done', '✓ Done'],
+  ['floor', '◐ Floor'],
+  ['skip', '⏸ Rest'],
+  ['fail', '✕ Missed'],
+  [null, 'Clear'],
+]
+
+const fmt = (day: string) =>
+  new Date(`${day}T12:00:00`).toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'short',
+  })
 
 /** Every habit side by side for a week or a month: counts, reasons, Spock prompt. */
-export function HabitRecap({ kind, habits, states, notes, today, onOpen, onTapToday }: Props) {
+export function HabitRecap({ kind, habits, states, notes, today, onOpen, onTapToday, onSetDay }: Props) {
   const [offset, setOffset] = useState(0)
+  const [picked, setPicked] = useState<{ id: string; day: string } | null>(null)
   let period = recapPeriod(kind, today)
   if (offset !== 0) for (let i = 0; i < Math.abs(offset); i++) period = shiftPeriod(period, Math.sign(offset))
   const rows = buildRecap(habits, states, notes, period, today)
@@ -36,7 +52,10 @@ export function HabitRecap({ kind, habits, states, notes, today, onOpen, onTapTo
   const label =
     kind === 'week'
       ? `${fmt(period.from)} – ${fmt(period.to)}`
-      : new Date(`${period.from}T12:00:00`).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })
+      : new Date(`${period.from}T12:00:00`).toLocaleDateString('en-GB', {
+          month: 'long',
+          year: 'numeric',
+        })
 
   return (
     <div className="space-y-5">
@@ -117,21 +136,63 @@ export function HabitRecap({ kind, habits, states, notes, today, onOpen, onTapTo
                   : `${r.done}/${r.expected}${r.graceUsed ? ` +${r.graceUsed} grace` : ''} ${r.hit ? '✓' : ''}`}
               </span>
             </div>
-            <div className="mt-2 flex flex-wrap gap-1" aria-label="Days">
-              {r.cells.map((c) => (
-                <span
-                  key={c.day}
-                  title={`${c.day}${c.note ? ` · ${reasonLabel(c.note)}` : ''}`}
-                  className={`flex size-6 items-center justify-center rounded-full text-[10px] ${
-                    c.state === 'future' || c.state === 'before'
-                      ? 'border border-slate-200 text-slate-300 dark:border-slate-800'
-                      : STATE_CELL[c.state]
-                  }`}
-                >
-                  {c.state === 'empty' || c.state === 'future' || c.state === 'before' ? '' : STATE_ICON[c.state]}
-                </span>
-              ))}
+            <div className={`mt-2 flex flex-wrap ${kind === 'week' ? 'justify-between' : 'gap-1'}`} aria-label="Days">
+              {r.cells.map((c, i) => {
+                const st = c.state === 'future' || c.state === 'before' ? null : c.state
+                const cls = `flex size-8 items-center justify-center rounded-full text-xs ${
+                  st ? STATE_CELL[st] : 'border border-slate-200 text-slate-300 dark:border-slate-800'
+                } ${picked?.id === r.habit.id && picked.day === c.day ? 'ring-2 ring-slate-500' : ''}`
+                const icon = !st || st === 'empty' ? '' : STATE_ICON[st]
+                const title = `${c.day}${c.note ? ` · ${reasonLabel(c.note)}` : ''}`
+                return (
+                  <span key={c.day} className="flex flex-col items-center gap-0.5">
+                    {onSetDay && c.state !== 'future' ? (
+                      <button
+                        type="button"
+                        title={title}
+                        aria-label={`${r.habit.name}, ${c.day}: choose a state`}
+                        onClick={() =>
+                          setPicked(
+                            picked?.id === r.habit.id && picked.day === c.day ? null : { id: r.habit.id, day: c.day },
+                          )
+                        }
+                        className={`${cls} touch-manipulation`}
+                      >
+                        {icon}
+                      </button>
+                    ) : (
+                      <span title={title} className={cls}>
+                        {icon}
+                      </span>
+                    )}
+                    {kind === 'week' && (
+                      <span
+                        className={`text-[10px] leading-none ${c.day === today ? 'font-semibold' : 'text-slate-500 dark:text-slate-400'}`}
+                      >
+                        {WEEKDAY[i]}
+                      </span>
+                    )}
+                  </span>
+                )
+              })}
             </div>
+            {onSetDay && picked?.id === r.habit.id && (
+              <div className="mt-2 flex flex-wrap gap-1" role="group" aria-label={`State for ${picked.day}`}>
+                {PICK.map(([state, label]) => (
+                  <button
+                    key={label}
+                    type="button"
+                    onClick={() => {
+                      onSetDay(r.habit, picked.day, state)
+                      setPicked(null)
+                    }}
+                    className="min-h-10 flex-1 rounded-lg bg-slate-100 px-2 text-xs hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700"
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            )}
             {Object.keys(r.reasons).length > 0 && (
               <div className="mt-2 flex flex-wrap gap-1.5">
                 {Object.entries(r.reasons).map(([k, n]) => (

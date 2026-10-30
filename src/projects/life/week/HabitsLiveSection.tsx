@@ -4,6 +4,7 @@ import { db, type Habit, type HabitDayState } from '../../../lib/db'
 import { runSafe } from '../../../lib/runSafe'
 import { activeDaysOf, habitDayStates, type HabitDays } from '../../habits/habitDayStates'
 import { HabitRecap } from '../../habits/HabitRecap'
+import { setDayState } from '../../../lib/habitSync'
 import { tapHabit } from '../../habits/habitTap'
 import { useToday } from '../useToday'
 import { CollapsibleSection } from './CollapsibleSection'
@@ -63,10 +64,11 @@ export function HabitsLiveSection({ open, onToggle, readOnly }: Props) {
         today={today}
         onOpen={() => void navigate('/habits')}
         onTapToday={tap}
+        onSetDay={(habit, day, state) => void runSafe(() => setDayState(habit.id, day, state), 'Could not save')()}
       />
       <p className="mt-3 text-xs text-slate-500">
-        ○ = tap for today (done; a slip on a habit to avoid asks why on the Habits page). Floor, rest, calendar and
-        settings: Open on any row.
+        ○ = tap for today (done; a slip on a habit to avoid asks why on the Habits page). Tap any day for floor, rest or
+        missed. Calendar and settings: Open on any row.
       </p>
     </CollapsibleSection>
   )
