@@ -6,6 +6,7 @@ import { useSyncStatus } from '../../lib/useSyncStatus'
 import { watchedEngines, type WatchedEngine } from '../../lib/syncHealth'
 import { Button } from '../../components/Button'
 import { Card } from '../../components/Card'
+import { SystemStatus } from './SystemStatus'
 import { deadEntries, groupOutbox, tableCounts } from './dataStats'
 
 // Settings → "Data on this device": what is in the local db, for the phone
@@ -65,6 +66,8 @@ function Body() {
 
   return (
     <Card className="space-y-4 text-sm">
+      <SystemStatus />
+
       <div>
         <h3 className="mb-1 font-medium text-slate-700 dark:text-slate-300">Rows per table</h3>
         {counts === undefined ? (

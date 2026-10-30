@@ -6,6 +6,7 @@ import { clearPrivateData, privateDataSummary, type PrivateDataSummary } from '.
 import { useAuth } from '../lib/useAuth'
 import { Button } from './Button'
 import { Card } from './Card'
+import { relativeTime } from '../lib/format'
 
 // Sign-in / sync status card. Email OTP flow: request a 6-digit code, then
 // verify it. Only whitelisted emails can sign in (enforced server-side).
@@ -24,18 +25,6 @@ import { Card } from './Card'
 
 interface SyncCardProps {
   sync?: CloudSync
-}
-
-/** "3m ago"-style relative time for the last successful sync. */
-function relativeTime(ts: number): string {
-  const s = Math.max(0, Math.round((Date.now() - ts) / 1000))
-  if (s < 5) return 'just now'
-  if (s < 60) return `${s}s ago`
-  const m = Math.floor(s / 60)
-  if (m < 60) return `${m}m ago`
-  const h = Math.floor(m / 60)
-  if (h < 24) return `${h}h ago`
-  return `${Math.floor(h / 24)}d ago`
 }
 
 export function SyncCard({ sync }: SyncCardProps) {
