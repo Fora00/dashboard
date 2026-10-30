@@ -4,7 +4,7 @@ import { db, type Habit, type HabitDayState } from '../../../lib/db'
 import { runSafe } from '../../../lib/runSafe'
 import { activeDaysOf, habitDayStates, type HabitDays } from '../../habits/habitDayStates'
 import { HabitRecap } from '../../habits/HabitRecap'
-import { setDayState } from '../../../lib/habitSync'
+import { setDayCount, setDayState, setSlipCount } from '../../../lib/habitSync'
 import { tapHabit } from '../../habits/habitTap'
 import { useToday } from '../useToday'
 import { CollapsibleSection } from './CollapsibleSection'
@@ -31,6 +31,8 @@ export function HabitsLiveSection({ open, onToggle, readOnly }: Props) {
   const days = new Map<string, HabitDays>(active.map((h) => [h.id, habitDayStates(h, checks, activeDays, today)]))
   const states = new Map<string, ReadonlyMap<string, HabitDayState>>([...days].map(([id, d]) => [id, d.states]))
   const notes = new Map<string, ReadonlyMap<string, string>>([...days].map(([id, d]) => [id, d.notes]))
+  const counts = new Map<string, ReadonlyMap<string, number>>([...days].map(([id, d]) => [id, d.counts]))
+  const slips = new Map<string, ReadonlyMap<string, number>>([...days].map(([id, d]) => [id, d.slips]))
   const doneToday = active.filter((h) => {
     const st = days.get(h.id)?.states.get(today)
     return st === 'done' || st === 'floor'
@@ -64,10 +66,14 @@ export function HabitsLiveSection({ open, onToggle, readOnly }: Props) {
         today={today}
         onOpen={() => void navigate('/habits')}
         onTapToday={tap}
+        counts={counts}
+        slips={slips}
+        onSetCount={(habit, day, n) => void runSafe(() => setDayCount(habit.id, day, n), 'Could not save')()}
+        onSetSlips={(habit, day, n) => void runSafe(() => setSlipCount(habit.id, day, n), 'Could not save')()}
         onSetDay={(habit, day, state) => void runSafe(() => setDayState(habit.id, day, state), 'Could not save')()}
       />
       <p className="mt-3 text-xs text-slate-500">
-        ○ = tap for today (done; a slip on a habit to avoid asks why on the Habits page). Tap any day for floor, rest or
+        ○ = tap for today (steps count up; on a habit to avoid it opens kept / slipped). Tap any day for floor, rest or
         missed. Calendar and settings: Open on any row.
       </p>
     </CollapsibleSection>

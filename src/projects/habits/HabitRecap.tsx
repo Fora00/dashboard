@@ -17,6 +17,11 @@ interface Props {
   onTapToday?: ((habit: Habit) => void) | undefined
   /** When given, a day can be tapped to pick its state (done, floor, rest, missed, clear). */
   onSetDay?: ((habit: Habit, day: string, state: HabitDayState | null) => void) | undefined
+  /** Taps per day (multi-tap habits) and slips per day (daily-grace "don't" habits), per habit. */
+  counts?: ReadonlyMap<string, ReadonlyMap<string, number>> | undefined
+  slips?: ReadonlyMap<string, ReadonlyMap<string, number>> | undefined
+  onSetCount?: ((habit: Habit, day: string, count: number) => void) | undefined
+  onSetSlips?: ((habit: Habit, day: string, slips: number) => void) | undefined
 }
 
 const WEEKDAY = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
@@ -35,7 +40,20 @@ const fmt = (day: string) =>
   })
 
 /** Every habit side by side for a week or a month: counts, reasons, Spock prompt. */
-export function HabitRecap({ kind, habits, states, notes, today, onOpen, onTapToday, onSetDay }: Props) {
+export function HabitRecap({
+  kind,
+  habits,
+  states,
+  notes,
+  today,
+  onOpen,
+  onTapToday,
+  onSetDay,
+  counts,
+  slips,
+  onSetCount,
+  onSetSlips,
+}: Props) {
   const [offset, setOffset] = useState(0)
   const [picked, setPicked] = useState<{ id: string; day: string } | null>(null)
   let period = recapPeriod(kind, today)
@@ -106,19 +124,45 @@ export function HabitRecap({ kind, habits, states, notes, today, onOpen, onTapTo
                 (() => {
                   const todayState = r.cells.find((c) => c.day === today)?.state
                   const done = todayState === 'done' || todayState === 'floor'
+                  const perDay = r.habit.perDay ?? 1
+                  const avoid = r.habit.direction === 'avoid'
+                  const n = counts?.get(r.habit.id)?.get(today) ?? 0
+                  const sl = slips?.get(r.habit.id)?.get(today) ?? 0
+                  const slipped = todayState === 'fail' || sl > 0
+                  const face = avoid
+                    ? sl > 0
+                      ? String(sl)
+                      : todayState === 'fail'
+                        ? '✕'
+                        : todayState === 'skip'
+                          ? '⏸'
+                          : '✓'
+                    : perDay > 1 && !done
+                      ? `${n}/${perDay}`
+                      : done
+                        ? '✓'
+                        : '○'
                   return (
                     <button
                       type="button"
-                      onClick={() => onTapToday(r.habit)}
-                      aria-label={`${r.habit.name}: tap for today`}
+                      onClick={() => (avoid ? setPicked({ id: r.habit.id, day: today }) : onTapToday(r.habit))}
+                      aria-label={
+                        avoid
+                          ? `${r.habit.name}: kept or slipped today`
+                          : perDay > 1
+                            ? `${r.habit.name}: ${n} of ${perDay} today, tap for one more`
+                            : `${r.habit.name}: tap for today`
+                      }
                       aria-pressed={done}
-                      className={`flex size-10 shrink-0 items-center justify-center rounded-full border text-sm ${
-                        done
-                          ? 'border-emerald-400 bg-emerald-400 text-slate-900'
-                          : 'border-slate-300 dark:border-slate-600'
+                      className={`flex h-10 min-w-10 shrink-0 items-center justify-center rounded-full border px-2 text-sm ${
+                        avoid && slipped
+                          ? 'border-amber-400 bg-amber-400/30'
+                          : done || (avoid && todayState !== 'skip')
+                            ? 'border-emerald-400 bg-emerald-400 text-slate-900'
+                            : 'border-slate-300 dark:border-slate-600'
                       }`}
                     >
-                      {done ? '✓' : '○'}
+                      {face}
                     </button>
                   )
                 })()}
@@ -142,7 +186,12 @@ export function HabitRecap({ kind, habits, states, notes, today, onOpen, onTapTo
                 const cls = `flex size-8 items-center justify-center rounded-full text-xs ${
                   st ? STATE_CELL[st] : 'border border-slate-200 text-slate-300 dark:border-slate-800'
                 } ${picked?.id === r.habit.id && picked.day === c.day ? 'ring-2 ring-slate-500' : ''}`
-                const icon = !st || st === 'empty' ? '' : STATE_ICON[st]
+                const partial = (counts?.get(r.habit.id)?.get(c.day) ?? 0) > 0 && st === 'empty'
+                const icon = partial
+                  ? String(counts?.get(r.habit.id)?.get(c.day))
+                  : !st || st === 'empty'
+                    ? ''
+                    : STATE_ICON[st]
                 const title = `${c.day}${c.note ? ` · ${reasonLabel(c.note)}` : ''}`
                 return (
                   <span key={c.day} className="flex flex-col items-center gap-0.5">
@@ -178,12 +227,18 @@ export function HabitRecap({ kind, habits, states, notes, today, onOpen, onTapTo
             </div>
             {onSetDay && picked?.id === r.habit.id && (
               <div className="mt-2 flex flex-wrap gap-1" role="group" aria-label={`State for ${picked.day}`}>
-                {PICK.map(([state, label]) => (
+                {pickOptions(
+                  r.habit,
+                  picked.day,
+                  counts?.get(r.habit.id)?.get(picked.day) ?? 0,
+                  slips?.get(r.habit.id)?.get(picked.day) ?? 0,
+                  { onSetDay, onSetCount, onSetSlips },
+                ).map(({ label, run }) => (
                   <button
                     key={label}
                     type="button"
                     onClick={() => {
-                      onSetDay(r.habit, picked.day, state)
+                      run()
                       setPicked(null)
                     }}
                     className="min-h-10 flex-1 rounded-lg bg-slate-100 px-2 text-xs hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700"
@@ -283,4 +338,42 @@ function Stat({ label, value, sub }: { label: string; value: string; sub?: strin
       {sub && <div className="text-[10px] text-slate-500">{sub}</div>}
     </div>
   )
+}
+
+interface PickOption {
+  label: string
+  run: () => void
+}
+
+/** The choices for one day, shaped by the kind of habit: steps count taps,
+ *  a "don't" habit is kept or slipped, a plain habit is done or not. */
+function pickOptions(
+  habit: Habit,
+  day: string,
+  count: number,
+  slipCount: number,
+  p: Pick<Props, 'onSetDay' | 'onSetCount' | 'onSetSlips'>,
+): PickOption[] {
+  const set = (state: HabitDayState | null) => () => p.onSetDay?.(habit, day, state)
+  const perDay = habit.perDay ?? 1
+  if (habit.direction === 'avoid') {
+    const daily = habit.graceScope === 'day' && (habit.grace ?? 0) > 0
+    return [
+      { label: '✓ Kept', run: () => (daily ? p.onSetSlips?.(habit, day, 0) : p.onSetDay?.(habit, day, null)) },
+      ...(daily ? [{ label: '+1 slip', run: () => p.onSetSlips?.(habit, day, slipCount + 1) }] : []),
+      { label: '✕ Slipped', run: set('fail') },
+      { label: '⏸ Rest', run: set('skip') },
+    ]
+  }
+  if (perDay > 1) {
+    return [
+      { label: '+1', run: () => p.onSetCount?.(habit, day, Math.min(perDay, count + 1)) },
+      { label: '−1', run: () => p.onSetCount?.(habit, day, Math.max(0, count - 1)) },
+      { label: '✓ All', run: set('done') },
+      { label: '⏸ Rest', run: set('skip') },
+      { label: '✕ Missed', run: set('fail') },
+      { label: 'Clear', run: set(null) },
+    ]
+  }
+  return PICK.map(([state, label]) => ({ label, run: set(state) }))
 }
