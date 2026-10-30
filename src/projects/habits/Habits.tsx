@@ -1,6 +1,6 @@
-import { useRef, useState, type FormEvent } from 'react'
+import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { db, type Habit } from '../../lib/db'
+import { db, type Habit, type HabitDayState } from '../../lib/db'
 import { useAuth } from '../../lib/useAuth'
 import { useOwner } from '../../lib/useOwner'
 import { Button } from '../../components/Button'
@@ -8,61 +8,85 @@ import { PageHeader } from '../../components/PageHeader'
 import { EmptyState } from '../../components/EmptyState'
 import { SyncCard } from '../../components/SyncCard'
 import { SkeletonList } from '../../components/Skeleton'
-import {
-  addHabit,
-  deleteHabit,
-  MAX_EMOJI_LENGTH,
-  MAX_NAME_LENGTH,
-  setArchived,
-  sync,
-  toggleCheck,
-} from '../../lib/habitSync'
-import { dayKey, lastDays, streak } from './habitStore'
+import { addHabit, deleteHabit, setArchived, sync, setDayState, setSlipCount } from '../../lib/habitSync'
+import { dayKey } from './habitStore'
+import { habitStats, restWarnings, shiftDayKey } from './habitStats'
+import { tapHabit } from './habitTap'
+import { activeDaysOf, habitDayStates } from './habitDayStates'
+import { HabitTile } from './HabitTile'
+import { HabitLegend } from './HabitLegend'
+import { resetDemoHabits } from './demoHabits'
+import { MISS_REASONS, REST_REASONS, STATE_ICON } from './habitStates'
+import { HabitRecap } from './HabitRecap'
+import { HabitRules } from './HabitRules'
+import { Lifeboard } from './Lifeboard'
+import { buildLifeboard, type DayData } from './lifeboardData'
+import { Sheet } from '../../components/Sheet'
+import { HabitDetail } from './HabitDetail'
+import { HabitForm } from './HabitForm'
+import { newForm } from './habitFormDefaults'
 import { Kbd } from '../../components/Kbd'
 import { useListHotkeys } from '../../lib/useListHotkeys'
 import { runSafe } from '../../lib/runSafe'
 
-const DOT_DAYS = 14
+const MAX_OPEN = 3 // more open cycles than this and none gets finished
 
 export function Habits() {
-  const nameRef = useRef<HTMLInputElement>(null)
-  // No search here: '/' and 'n' both jump to the new-habit name field.
-  const focusName = () => nameRef.current?.focus()
-  useListHotkeys({ onSearch: focusName, onNew: focusName })
+  const [adding, setAdding] = useState(false)
+  // No search here: '/' and 'n' both open the new-habit sheet.
+  useListHotkeys({ onSearch: () => setAdding(true), onNew: () => setAdding(true) })
   const session = useAuth()
   const owner = useOwner()
   const isGuestViewer = Boolean(session) && owner === false
-  const [name, setName] = useState('')
-  const [emoji, setEmoji] = useState('')
 
   // oxlint-disable-next-line react/purity -- the day must follow the wall clock across midnight
   const today = dayKey(new Date())
-  const dotDays = lastDays(DOT_DAYS)
+  // oxlint-disable-next-line react/purity -- follows the wall clock like `today`
+  const yesterday = shiftDayKey(today, -1)
+  const [openId, setOpenId] = useState<string | null>(null)
 
   const habits = useLiveQuery(() => db.habits.orderBy('createdAt').toArray())
   const checks = useLiveQuery(() => db.habitChecks.toArray())
 
-  // habitId -> set of done day-keys, for streaks and the dot rows.
-  const doneByHabit = new Map<string, Set<string>>()
-  for (const check of checks ?? []) {
-    let days = doneByHabit.get(check.habitId)
-    if (!days) doneByHabit.set(check.habitId, (days = new Set()))
-    days.add(check.day)
+  // Per habit: day -> state, day -> reason, day -> taps (see habitDayStates).
+  const allChecks = checks ?? []
+  const activeDays = activeDaysOf(allChecks)
+  const statesByHabit = new Map<string, Map<string, HabitDayState>>()
+  const notesByHabit = new Map<string, Map<string, string>>()
+  const countsByHabit = new Map<string, Map<string, number>>()
+  const slipsByHabit = new Map<string, Map<string, number>>()
+  for (const h of habits ?? []) {
+    const d = habitDayStates(h, allChecks, activeDays, today)
+    statesByHabit.set(h.id, d.states)
+    notesByHabit.set(h.id, d.notes)
+    countsByHabit.set(h.id, d.counts)
+    slipsByHabit.set(h.id, d.slips)
   }
-  const emptySet = new Set<string>()
+  const boardData = new Map<string, DayData>()
+  for (const h of habits ?? []) {
+    boardData.set(h.id, { states: statesByHabit.get(h.id)!, counts: countsByHabit.get(h.id)! })
+  }
+  const wins = new Map(buildLifeboard(habits ?? [], boardData).legend.map((l) => [l.habit.id, l.total]))
+  const noStates = new Map<string, HabitDayState>()
+  const noNotes = new Map<string, string>()
+  const [view, setView] = useState<'today' | 'week' | 'month' | 'board'>('today')
+  const [rulesOpen, setRulesOpen] = useState(false)
+  const [slipId, setSlipId] = useState<string | null>(null)
+  const [reasonFor, setReasonFor] = useState<'skip' | 'fail' | null>(null)
+  const [pickId, setPickId] = useState<string | null>(null)
+  const [resetId, setResetId] = useState<string | null>(null)
 
   const active = habits?.filter((h) => h.archivedAt === undefined) ?? []
   const archived = habits?.filter((h) => h.archivedAt !== undefined) ?? []
-  const doneToday = active.filter((h) => doneByHabit.get(h.id)?.has(today)).length
-
-  async function createHabit(e: FormEvent) {
-    e.preventDefault()
-    const trimmed = name.trim()
-    if (!trimmed) return
-    await addHabit(trimmed, emoji.trim())
-    setName('')
-    setEmoji('')
+  const isDone = (h: Habit) => {
+    const st = statesByHabit.get(h.id)?.get(today)
+    return st === 'done' || st === 'floor'
   }
+  const doneToday = active.filter(isDone).length
+  const openHabit = habits?.find((h) => h.id === openId) ?? null
+  const resetHabit = habits?.find((h) => h.id === resetId) ?? null
+  const slipHabit = habits?.find((h) => h.id === slipId) ?? null
+  const pickHabit = habits?.find((h) => h.id === pickId) ?? null
 
   function removeHabit(habit: Habit) {
     if (window.confirm(`Delete “${habit.name}” and its whole history?`)) {
@@ -70,102 +94,59 @@ export function Habits() {
     }
   }
 
-  const renderHabit = (habit: Habit) => {
-    const days = doneByHabit.get(habit.id) ?? emptySet
-    const done = days.has(today)
-    const run = streak(days)
-    return (
-      <li key={habit.id} className="flex items-stretch gap-2">
-        <button
-          type="button"
-          onClick={() => void runSafe(toggleCheck, 'Could not save')(habit.id, today)}
-          aria-pressed={done}
-          className={`min-h-16 w-full min-w-0 flex-1 rounded-xl border px-4 py-3 text-left transition-colors active:bg-slate-100 dark:active:bg-slate-800 ${
-            done
-              ? 'border-emerald-400/60 bg-emerald-400/10'
-              : 'border-slate-200 bg-white hover:border-slate-400 dark:border-slate-800 dark:bg-slate-800/50 dark:hover:border-slate-600'
-          }`}
-        >
-          <div className="flex items-center gap-3">
-            <span
-              className={`flex size-7 shrink-0 items-center justify-center rounded-full border text-sm ${
-                done ? 'border-emerald-400 bg-emerald-400 text-slate-900' : 'border-slate-400 dark:border-slate-500'
-              }`}
-            >
-              {done && '✓'}
-            </span>
-            <span className="min-w-0 flex-1 truncate font-medium">
-              <span className="mr-2">{habit.emoji}</span>
-              {habit.name}
-            </span>
-            <span className={`shrink-0 text-sm ${run > 0 ? 'text-amber-700 dark:text-amber-300' : 'text-slate-500'}`}>
-              🔥 {run}
-            </span>
-          </div>
-          <div className="mt-2.5 flex gap-1.5 pl-10">
-            {dotDays.map((day) => (
-              <span
-                key={day}
-                className={`size-2 rounded-full ${
-                  days.has(day)
-                    ? 'bg-emerald-400'
-                    : day === today
-                      ? 'bg-slate-300 ring-1 ring-slate-400 dark:bg-slate-600'
-                      : 'bg-slate-300 dark:bg-slate-700'
-                }`}
-              />
-            ))}
-          </div>
-        </button>
-        <Button
-          variant="ghost"
-          onClick={() => void runSafe(setArchived, 'Could not archive')(habit, true)}
-          title={`Archive ${habit.name}`}
-          aria-label={`Archive ${habit.name}`}
-          className="min-w-10"
-        >
-          🗄
-        </Button>
-      </li>
-    )
-  }
-
   return (
     <div>
-      <PageHeader emoji="✅" title="Habits" subtitle="Tap a habit to check it off for today. Saved on this device." />
+      <PageHeader emoji="✅" title="Habits" subtitle="Tap a tile to check it off for today. Saved on this device." />
+
+      {import.meta.env.DEV && !session && habits !== undefined && (
+        <Button variant="ghost" className="mb-4" onClick={() => void runSafe(resetDemoHabits, 'Could not fill')()}>
+          🧪 {habits.length === 0 ? 'Fill with' : 'Reset to'} demo data (dev only, this browser only)
+        </Button>
+      )}
 
       <SyncCard sync={sync} />
 
-      <form onSubmit={createHabit} className="mb-6 flex gap-2">
-        <input
-          value={emoji}
-          onChange={(e) => setEmoji(e.target.value)}
-          placeholder="✅"
-          maxLength={MAX_EMOJI_LENGTH}
-          autoComplete="off"
-          aria-label="Habit emoji"
-          className="min-h-10 w-14 shrink-0 rounded-lg border border-slate-300 bg-white text-center text-sm placeholder:text-slate-500 focus:border-(color:--accent-ring) focus:outline-none dark:border-slate-700 dark:bg-slate-800"
-        />
-        <div className="relative min-w-0 flex-1">
-          <input
-            ref={nameRef}
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="New habit, e.g. Stretch"
-            maxLength={MAX_NAME_LENGTH}
-            autoComplete="off"
-            enterKeyHint="done"
-            aria-label="Habit name"
-            className="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-(color:--accent-ring) focus:outline-none dark:border-slate-700 dark:bg-slate-800"
-          />
-          {!name && <Kbd>/</Kbd>}
-        </div>
-        <Button type="submit" disabled={!name.trim()}>
-          Add
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <Button onClick={() => setAdding(true)}>
+          + New habit <Kbd>n</Kbd>
         </Button>
-      </form>
+        <Button variant="ghost" onClick={() => setRulesOpen(true)}>
+          ℹ️ How it works
+        </Button>
+      </div>
 
-      {habits === undefined ? (
+      <div
+        role="tablist"
+        aria-label="View"
+        className="mb-6 grid grid-cols-4 gap-1 rounded-xl bg-slate-100 p-1 dark:bg-slate-800"
+      >
+        {(['today', 'week', 'month', 'board'] as const).map((v) => (
+          <button
+            key={v}
+            type="button"
+            role="tab"
+            aria-selected={view === v}
+            onClick={() => setView(v)}
+            className={`min-h-10 rounded-lg text-sm font-medium capitalize ${view === v ? 'bg-white shadow-sm dark:bg-slate-700' : 'text-slate-500'}`}
+          >
+            {v}
+          </button>
+        ))}
+      </div>
+
+      {view === 'board' && habits !== undefined ? (
+        <Lifeboard habits={habits} data={boardData} />
+      ) : view !== 'today' && habits !== undefined && active.length > 0 ? (
+        <HabitRecap
+          key={view}
+          kind={view === 'month' ? 'month' : 'week'}
+          habits={active}
+          states={statesByHabit}
+          notes={notesByHabit}
+          today={today}
+          onOpen={setOpenId}
+        />
+      ) : habits === undefined ? (
         <SkeletonList rows={3} rowClassName="h-16" />
       ) : active.length === 0 && archived.length === 0 ? (
         <EmptyState
@@ -184,41 +165,356 @@ export function Habits() {
               <h2 className="mb-2 text-sm font-medium text-slate-500 dark:text-slate-400">
                 Today · {doneToday}/{active.length} done
               </h2>
-              <ul className="space-y-2">{active.map(renderHabit)}</ul>
+              <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                {active.map((habit) => {
+                  const states = statesByHabit.get(habit.id) ?? noStates
+                  const st = states.get(today)
+                  return (
+                    <HabitTile
+                      key={habit.id}
+                      habit={habit}
+                      stats={habitStats(habit, states, today)}
+                      state={st ?? 'open'}
+                      today={today}
+                      count={countsByHabit.get(habit.id)?.get(today) ?? 0}
+                      slips={slipsByHabit.get(habit.id)?.get(today) ?? 0}
+                      onToggle={() =>
+                        void runSafe(async () => {
+                          const next = await tapHabit(habit, {
+                            state: st ?? 'open',
+                            count: countsByHabit.get(habit.id)?.get(today) ?? 0,
+                            slips: slipsByHabit.get(habit.id)?.get(today) ?? 0,
+                            stats: habitStats(habit, states, today),
+                            today,
+                          })
+                          if (next === 'sheet') setSlipId(habit.id)
+                        }, 'Could not save')()
+                      }
+                      onMore={() => setPickId(habit.id)}
+                      onFloor={() => void runSafe(setDayState, 'Could not save')(habit.id, today, 'floor')}
+                      onReset={() => setResetId(habit.id)}
+                      onOpen={() => setOpenId(habit.id)}
+                    />
+                  )
+                })}
+              </ul>
+              <p className="mt-2 text-xs text-slate-500">
+                Tap = done today. Hold = floor, rest or missed. ⋯ = stats and cycle.
+                {active.length > MAX_OPEN && ` ${active.length} open: past ${MAX_OPEN} none gets finished. Close one?`}
+              </p>
+              <HabitLegend />
             </section>
           )}
 
           {archived.length > 0 && (
-            <section>
-              <h2 className="mb-2 text-sm font-medium text-slate-500 dark:text-slate-400">
-                Archived · {archived.length}
-              </h2>
-              <ul className="space-y-2">
-                {archived.map((habit) => (
-                  <li
-                    key={habit.id}
-                    className="flex min-h-12 items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 px-4 py-2 dark:border-slate-800 dark:bg-slate-800/30"
-                  >
-                    <span className="min-w-0 flex-1 truncate text-slate-500 dark:text-slate-400">
-                      <span className="mr-2">{habit.emoji}</span>
-                      {habit.name}
-                    </span>
-                    <Button
-                      variant="ghost"
-                      onClick={() => void runSafe(setArchived, 'Could not restore')(habit, false)}
+            <details className="rounded-xl border border-dashed border-slate-300 p-3 dark:border-slate-700">
+              <summary className="cursor-pointer text-sm font-medium text-slate-500 dark:text-slate-400">
+                Old habits · {archived.length} (history stays on the Board)
+              </summary>
+              <div className="mt-3">
+                <ul className="space-y-2">
+                  {archived.map((habit) => (
+                    <li
+                      key={habit.id}
+                      className="flex min-h-12 items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 px-4 py-2 dark:border-slate-800 dark:bg-slate-800/30"
                     >
-                      Restore
-                    </Button>
-                    <Button variant="danger" onClick={() => removeHabit(habit)}>
-                      Delete
-                    </Button>
-                  </li>
-                ))}
-              </ul>
-            </section>
+                      <span className="min-w-0 flex-1 truncate text-slate-500 dark:text-slate-400">
+                        <span className="mr-2">{habit.emoji}</span>
+                        {habit.name}
+                      </span>
+                      <Button
+                        variant="ghost"
+                        onClick={() => void runSafe(setArchived, 'Could not restore')(habit, false)}
+                      >
+                        Restore
+                      </Button>
+                      <Button variant="danger" onClick={() => removeHabit(habit)}>
+                        Delete
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </details>
           )}
         </div>
       )}
+
+      <Sheet open={adding} onClose={() => setAdding(false)} title="New habit">
+        {adding && (
+          <HabitForm
+            initial={newForm(
+              today,
+              active.filter((h) => h.kind === 'forever').length < MAX_OPEN ? 'forever' : 'experiment',
+            )}
+            submitLabel="Create habit"
+            presets
+            onSubmit={async (v) => {
+              await addHabit(v.name, v.emoji, v)
+              setAdding(false)
+            }}
+          />
+        )}
+        {adding && active.length >= MAX_OPEN && (
+          <p className="mt-3 text-xs text-amber-700 dark:text-amber-300">
+            {active.length} habits are open already: past {MAX_OPEN} none gets finished. Make this one an experiment, or
+            close one.
+          </p>
+        )}
+      </Sheet>
+
+      <Sheet
+        open={slipHabit !== null}
+        onClose={() => setSlipId(null)}
+        title={slipHabit ? `${slipHabit.emoji} ${slipHabit.name}` : ''}
+      >
+        {slipHabit && (
+          <div className="space-y-3">
+            <p className="text-sm text-slate-500">
+              A slip is one data point, not a verdict. Never twice in a row is the goal.
+            </p>
+            {slipHabit.anchor && <p className="text-sm text-slate-500">Instead: {slipHabit.anchor}</p>}
+            {(slipHabit.grace ?? 0) > 0 &&
+              (() => {
+                const st = habitStats(slipHabit, statesByHabit.get(slipHabit.id) ?? noStates, today)
+                const left = Math.max(0, st.grace - st.graceUsedWeek)
+                return (
+                  <p className="rounded-lg bg-amber-300/15 p-2 text-sm text-amber-800 dark:text-amber-200">
+                    {left > 0
+                      ? `Grace left this week: ${left} of ${st.grace}. This slip uses one and does not break the streak.`
+                      : `No grace left this week (${st.grace} used). This slip counts and breaks the streak.`}
+                  </p>
+                )
+              })()}
+            {slipHabit.floor && (
+              <Button
+                className="w-full"
+                onClick={() => {
+                  void runSafe(setDayState, 'Could not save')(slipHabit.id, today, 'floor')
+                  setSlipId(null)
+                }}
+              >
+                ◐ Within my limit: {slipHabit.floor}
+              </Button>
+            )}
+            <p className="text-sm text-slate-500">Or, if I went past it, what was it?</p>
+            <div className="grid grid-cols-2 gap-2">
+              {MISS_REASONS.map(([reason, label]) => (
+                <Button
+                  key={reason}
+                  variant="ghost"
+                  onClick={() => {
+                    void runSafe(setDayState, 'Could not save')(slipHabit.id, today, 'fail', reason)
+                    setSlipId(null)
+                  }}
+                >
+                  {label}
+                </Button>
+              ))}
+            </div>
+            <Button
+              variant="ghost"
+              className="w-full"
+              onClick={() => {
+                void runSafe(setDayState, 'Could not save')(slipHabit.id, today, 'fail')
+                setSlipId(null)
+              }}
+            >
+              No reason
+            </Button>
+          </div>
+        )}
+      </Sheet>
+
+      <Sheet open={rulesOpen} onClose={() => setRulesOpen(false)} title="How it works">
+        {rulesOpen && <HabitRules />}
+      </Sheet>
+
+      <HabitDetail
+        habit={openHabit}
+        states={(openHabit && statesByHabit.get(openHabit.id)) || noStates}
+        notes={(openHabit && notesByHabit.get(openHabit.id)) || noNotes}
+        openCount={active.length}
+        wins={(openHabit && wins.get(openHabit.id)) || 0}
+        today={today}
+        onClose={() => setOpenId(null)}
+        onArchive={(habit) => {
+          setOpenId(null)
+          void runSafe(setArchived, 'Could not archive')(habit, true)
+        }}
+      />
+
+      <Sheet
+        open={resetHabit !== null}
+        onClose={() => setResetId(null)}
+        title={resetHabit ? `${resetHabit.emoji} ${resetHabit.name}` : ''}
+      >
+        {resetHabit && (
+          <div className="space-y-3">
+            <p className="text-sm text-slate-500">
+              A gap is data about the setup, not about you. What got in the way? One tap, it only feeds Sunday.
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+              {MISS_REASONS.map(([reason, label]) => (
+                <Button
+                  key={reason}
+                  variant="ghost"
+                  onClick={() => {
+                    void runSafe(setDayState, 'Could not save')(resetHabit.id, yesterday, 'fail', reason)
+                    setResetId(null)
+                  }}
+                >
+                  {label}
+                </Button>
+              ))}
+            </div>
+            <p className="text-sm text-slate-500">
+              This is the Spock test: facts, not blame. Now fix the setup within ten minutes:
+            </p>
+            <Button
+              className="w-full"
+              onClick={() => {
+                setOpenId(resetHabit.id)
+                setResetId(null)
+              }}
+            >
+              Move the anchor or shrink the floor
+            </Button>
+            <Button
+              variant="ghost"
+              className="w-full"
+              onClick={() => {
+                setResetId(null)
+                void runSafe(setArchived, 'Could not archive')(resetHabit, true)
+              }}
+            >
+              🗄 Pause this habit
+            </Button>
+          </div>
+        )}
+      </Sheet>
+
+      <Sheet
+        open={pickHabit !== null}
+        onClose={() => {
+          setPickId(null)
+          setReasonFor(null)
+        }}
+        title={pickHabit ? `${pickHabit.emoji} ${pickHabit.name}` : ''}
+      >
+        {pickHabit && (
+          <div className="space-y-2">
+            {pickHabit.normal && <p className="text-sm text-slate-500">Normal: {pickHabit.normal}</p>}
+            {pickHabit.direction === 'avoid' &&
+              pickHabit.graceScope === 'day' &&
+              (slipsByHabit.get(pickHabit.id)?.get(today) ?? 0) > 0 && (
+                <Button
+                  className="w-full"
+                  onClick={() => {
+                    const n = slipsByHabit.get(pickHabit.id)?.get(today) ?? 0
+                    void runSafe(setSlipCount, 'Could not save')(pickHabit.id, today, n - 1)
+                    setPickId(null)
+                  }}
+                >
+                  ↩ Undo one slip
+                </Button>
+              )}
+            {pickHabit.floor && <p className="text-sm text-slate-500">Floor: {pickHabit.floor}</p>}
+            {reasonFor === null ? (
+              (
+                [
+                  ['done', 'Normal: done as usual'],
+                  ['floor', 'Floor: only the minimum'],
+                  ['skip', 'Rest day'],
+                  ['fail', 'Missed'],
+                ] as const
+              ).map(([state, label]) => (
+                <Button
+                  key={state}
+                  variant="ghost"
+                  className="w-full justify-start"
+                  onClick={() => {
+                    if (state === 'skip' || state === 'fail') {
+                      setReasonFor(state)
+                      return
+                    }
+                    void runSafe(setDayState, 'Could not save')(pickHabit.id, today, state)
+                    setPickId(null)
+                  }}
+                >
+                  {STATE_ICON[state]} {label}
+                </Button>
+              ))
+            ) : (
+              <>
+                {reasonFor === 'skip' &&
+                  restWarnings(
+                    habitStats(pickHabit, statesByHabit.get(pickHabit.id) ?? noStates, today),
+                    statesByHabit.get(pickHabit.id)?.get(today) === 'skip',
+                  ).map((w) => (
+                    <p key={w} className="rounded-lg bg-amber-300/15 p-2 text-sm text-amber-800 dark:text-amber-200">
+                      {w}
+                    </p>
+                  ))}
+                {reasonFor === 'skip' && (
+                  <Button
+                    className="w-full"
+                    onClick={() => {
+                      void runSafe(setDayState, 'Could not save')(pickHabit.id, today, 'floor')
+                      setPickId(null)
+                      setReasonFor(null)
+                    }}
+                  >
+                    ◐ Do the floor instead
+                  </Button>
+                )}
+                <p className="text-sm text-slate-500">
+                  {reasonFor === 'skip'
+                    ? 'A rest day is fine. What was it?'
+                    : 'A systems problem, not a flaw. What got in the way?'}{' '}
+                  One tap.
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  {(reasonFor === 'skip' ? REST_REASONS : MISS_REASONS).map(([reason, label]) => (
+                    <Button
+                      key={reason}
+                      variant="ghost"
+                      onClick={() => {
+                        void runSafe(setDayState, 'Could not save')(pickHabit.id, today, reasonFor, reason)
+                        setPickId(null)
+                        setReasonFor(null)
+                      }}
+                    >
+                      {label}
+                    </Button>
+                  ))}
+                </div>
+                <Button
+                  variant="ghost"
+                  className="w-full"
+                  onClick={() => {
+                    void runSafe(setDayState, 'Could not save')(pickHabit.id, today, reasonFor)
+                    setPickId(null)
+                    setReasonFor(null)
+                  }}
+                >
+                  No reason
+                </Button>
+              </>
+            )}
+            <Button
+              variant="danger"
+              className="w-full"
+              onClick={() => {
+                void runSafe(setDayState, 'Could not save')(pickHabit.id, today, null)
+                setPickId(null)
+              }}
+            >
+              Clear today
+            </Button>
+          </div>
+        )}
+      </Sheet>
     </div>
   )
 }

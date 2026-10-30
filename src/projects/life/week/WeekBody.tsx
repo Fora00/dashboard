@@ -27,6 +27,7 @@ import { RecapSection } from './RecapSection'
 import { ProgressAside } from './ProgressAside'
 import { useSections } from './useSections'
 import { useStreakList } from './useStreakList'
+import { HabitsLiveSection } from './HabitsLiveSection'
 
 // Week body (shared by the current week and read-only History). Sections are
 // collapsible (per-device preference, see useSections.ts).
@@ -169,20 +170,50 @@ export function WeekBody({ week, plan, entries, readOnly, lateEdit = false, dayF
         readOnly={readOnly}
       />
     )
-  if (plan.trackers.length > 0 || streaks.length > 0)
+  if (readOnly) {
+    // History pages keep the week's own trackers as they were.
+    if (plan.trackers.length > 0)
+      blocks.trackers = (
+        <TrackersSection
+          week={week}
+          trackers={summary.trackers}
+          streaks={[]}
+          open={sections.trackers}
+          onToggle={() => toggleSection('trackers')}
+          readOnly
+          trigger={trigger}
+        />
+      )
+  } else {
+    // The live week: the Habits project, live. The old trackers and the Streaks
+    // snapshot are hidden behind a closed "Old habits" box.
+    const oldHabits = plan.trackers.length > 0 || streaks.length > 0
     blocks.trackers = (
-      <TrackersSection
-        week={week}
-        trackers={summary.trackers}
-        streaks={streaks}
-        open={sections.trackers}
-        onToggle={() => toggleSection('trackers')}
-        streaksOpen={sections.streaks}
-        onToggleStreaks={() => toggleSection('streaks')}
-        readOnly={readOnly}
-        trigger={trigger}
-      />
+      <>
+        <HabitsLiveSection open={sections.trackers} onToggle={() => toggleSection('trackers')} readOnly={false} />
+        {oldHabits && (
+          <details className="mb-6 rounded-xl border border-dashed border-slate-300 p-3 text-sm dark:border-slate-700">
+            <summary className="cursor-pointer text-slate-500 dark:text-slate-400">
+              Old habits (week trackers and Streaks, read-only)
+            </summary>
+            <div className="mt-3">
+              <TrackersSection
+                week={week}
+                trackers={summary.trackers}
+                streaks={streaks}
+                open
+                onToggle={() => {}}
+                streaksOpen={sections.streaks}
+                onToggleStreaks={() => toggleSection('streaks')}
+                readOnly={false}
+                trigger={trigger}
+              />
+            </div>
+          </details>
+        )}
+      </>
     )
+  }
   if (plan.recap && plan.recap.length > 0)
     blocks.recap = (
       <RecapSection
