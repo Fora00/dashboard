@@ -1301,6 +1301,8 @@ Low-confidence — flagged for completeness, not verified as real problems:
       be shareable and how (read-only link, per-user rows like `project_prefs`,
       per-project invite); (3) a proposal in the order of value per effort.
       Decide with the owner before building anything.
+      Analysis written 2026-10-29 in `docs/SHARING_REVIEW.md`; awaiting the
+      owner's decision on which proposal to build.
 
 Candidate new subprojects (brainstormed 2026-07-04, not committed to):
 
