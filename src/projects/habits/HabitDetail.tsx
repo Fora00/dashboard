@@ -13,20 +13,15 @@ import { STATE_CELL } from './habitStates'
 import { HabitLegend } from './HabitLegend'
 
 const WEEKDAYS = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
-/** One click on a calendar day. A day is always one of four states, never a
- *  partial one: done (full success), only the floor, rest, or missed, then back
- *  to empty. A habit to avoid starts as kept (done) and ends cleared (kept again). */
-async function cycleDay(habit: Habit, day: string, state: HabitDayState | undefined): Promise<void> {
-  if (habit.direction !== 'avoid') return setDayState(habit.id, day, nextState(state))
-  const order: HabitDayState[] = ['done', 'floor', 'skip', 'fail']
-  const i = order.indexOf(state ?? 'done')
-  return setDayState(habit.id, day, i + 1 < order.length ? order[i + 1]! : null)
-}
-
-const CYCLE: (HabitDayState | undefined)[] = [undefined, 'done', 'floor', 'skip', 'fail']
-function nextState(s: HabitDayState | undefined): HabitDayState | null {
-  return CYCLE[(CYCLE.indexOf(s) + 1) % CYCLE.length] ?? null
-}
+/** The states a day can be set to from the calendar, never a partial one. A
+ *  habit to avoid reads "done" as kept and "missed" as a slip. */
+const DAY_CHOICES: { state: HabitDayState | null; icon: string; label: string; avoidLabel?: string }[] = [
+  { state: 'done', icon: '✓', label: 'Done', avoidLabel: 'Kept' },
+  { state: 'floor', icon: '◐', label: 'Only the floor', avoidLabel: 'Within my limit' },
+  { state: 'skip', icon: '⏸', label: 'Rest day' },
+  { state: 'fail', icon: '✕', label: 'Missed', avoidLabel: 'Slip' },
+  { state: null, icon: '⌫', label: 'Clear' },
+]
 
 interface Props {
   habit: Habit | null
@@ -68,6 +63,8 @@ export function HabitDetail({ habit, states, notes, openCount, wins, today, onCl
 
 function Body({ habit, states, notes, openCount, wins, today, onClose, onArchive }: Props & { habit: Habit }) {
   const [month, setMonth] = useState(today.slice(0, 7))
+  // The brush: one click on a day applies it (the same state again clears the day).
+  const [brush, setBrush] = useState<HabitDayState | null>(habit.direction === 'avoid' ? 'fail' : 'done')
   const s = habitStats(habit, states, today)
   const unit = s.streakUnit === 'weeks' ? 'w' : 'd'
 
@@ -138,6 +135,24 @@ function Body({ habit, states, notes, openCount, wins, today, onClose, onArchive
             ›
           </Button>
         </div>
+        <div role="radiogroup" aria-label="State to apply" className="mb-2 flex flex-wrap gap-1.5">
+          {DAY_CHOICES.map((c) => (
+            <button
+              key={c.label}
+              type="button"
+              role="radio"
+              aria-checked={brush === c.state}
+              onClick={() => setBrush(c.state)}
+              className={`min-h-9 rounded-lg border px-2.5 text-xs ${
+                brush === c.state
+                  ? 'border-(color:--accent-ring) bg-(color:--accent)/15 font-medium'
+                  : 'border-slate-300 dark:border-slate-700'
+              }`}
+            >
+              {c.icon} {habit.direction === 'avoid' && c.avoidLabel ? c.avoidLabel : c.label}
+            </button>
+          ))}
+        </div>
         <div className="grid grid-cols-7 gap-1 text-center text-xs">
           {WEEKDAYS.map((d, i) => (
             <span key={i} className="text-slate-500">
@@ -154,7 +169,14 @@ function Body({ habit, states, notes, openCount, wins, today, onClose, onArchive
                   key={c.day}
                   type="button"
                   disabled={c.future}
-                  onClick={() => void runSafe(() => cycleDay(habit, c.day, states.get(c.day)), 'Could not save')()}
+                  onClick={() => {
+                    const current = states.get(c.day)
+                    void runSafe(setDayState, 'Could not save')(
+                      habit.id,
+                      c.day,
+                      brush === null || current === brush ? null : brush,
+                    )
+                  }}
                   aria-label={`${c.day}: ${states.get(c.day) ?? 'empty'}`}
                   className={`flex size-9 items-center justify-center justify-self-center rounded-full ${STATE_CELL[states.get(c.day) ?? 'empty']} ${
                     c.future ? 'text-slate-400' : ''
@@ -166,9 +188,7 @@ function Body({ habit, states, notes, openCount, wins, today, onClose, onArchive
             )}
         </div>
         <p className="mt-2 text-xs text-slate-500">
-          {habit.direction === 'avoid'
-            ? 'Tap a day to mark a slip, tap again to undo.'
-            : 'Tap a day to cycle: done, floor, rest, missed, empty.'}
+          One click on a day applies the chosen state; the same state again clears it.
         </p>
         <HabitLegend />
       </section>
