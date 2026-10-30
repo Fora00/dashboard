@@ -495,6 +495,7 @@ export type Database = {
       }
       life_day_focus: {
         Row: {
+          cancelled: boolean
           created_at: number
           day: string
           done: boolean
@@ -504,6 +505,7 @@ export type Database = {
           updated_at: number
         }
         Insert: {
+          cancelled?: boolean
           created_at: number
           day: string
           done?: boolean
@@ -513,6 +515,7 @@ export type Database = {
           updated_at: number
         }
         Update: {
+          cancelled?: boolean
           created_at?: number
           day?: string
           done?: boolean

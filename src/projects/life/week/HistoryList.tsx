@@ -68,7 +68,7 @@ function WeekRecapRow({ week, entries }: { week: LifeWeek; entries: LifeEntry[] 
   return (
     <WeekRecap
       title=""
-      focus={[summary.focusDone.size, plan.focus.length]}
+      focus={[summary.focusDone.size, summary.focusTotal]}
       trackers={summary.trackers}
       checkins={[summary.checkins.filter((c) => c.done).length, summary.checkins.length]}
       tasks={[plan.tasks.filter((t) => summary.sentTaskIds.has(t.id)).length, plan.tasks.length]}

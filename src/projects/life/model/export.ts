@@ -76,7 +76,9 @@ export function buildExportMarkdown(
     out.push('## Focus', '')
     for (const f of plan.focus)
       out.push(
-        `- [${s.focusDone.has(f.id) ? 'x' : ' '}] ${f.title}${s.focusDone.has(f.id) ? doneOn('focus', f.id) : ''}`,
+        s.focusCancelled.has(f.id)
+          ? `- [-] ${f.title} (cancelled)`
+          : `- [${s.focusDone.has(f.id) ? 'x' : ' '}] ${f.title}${s.focusDone.has(f.id) ? doneOn('focus', f.id) : ''}`,
       )
     out.push('')
   }

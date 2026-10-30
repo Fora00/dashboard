@@ -140,6 +140,7 @@ interface LifeDayFocusRow {
   slot: number
   title: string
   done: boolean
+  cancelled: boolean
   created_at: number
   updated_at: number
 }
@@ -147,7 +148,7 @@ interface LifeDayFocusRow {
 const dayFocusTable: TableSync<LifeDayFocus, LifeDayFocusRow> = {
   remote: 'life_day_focus',
   table: () => db.lifeDayFocus,
-  columns: 'id, day, slot, title, done, created_at, updated_at',
+  columns: 'id, day, slot, title, done, cancelled, created_at, updated_at',
   realtime: true,
   updatedAt: (f) => f.updatedAt,
   toRow: (f) => ({
@@ -156,6 +157,7 @@ const dayFocusTable: TableSync<LifeDayFocus, LifeDayFocusRow> = {
     slot: f.slot,
     title: f.title,
     done: f.done,
+    cancelled: f.cancelled ?? false,
     created_at: f.createdAt,
     updated_at: f.updatedAt,
   }),
@@ -167,6 +169,7 @@ const dayFocusTable: TableSync<LifeDayFocus, LifeDayFocusRow> = {
       slot: Number(r.slot),
       title: r.title,
       done: Boolean(r.done),
+      ...(r.cancelled ? { cancelled: true } : {}),
       createdAt: Number(r.created_at),
       updatedAt: Number(r.updated_at),
     }
@@ -369,6 +372,24 @@ export async function setFocusDone(week: string, focusId: string, done: boolean)
     ref: focusId,
     day: dayKey(new Date()),
     value: { done },
+    createdAt: prev?.createdAt ?? now,
+    updatedAt: now,
+  }
+  await engine.upsert('life_entries', entry)
+}
+
+/** Cancel / restore a focus item (Things-style: kept, struck through, out of the counts). */
+export async function toggleFocusCancelled(week: string, focusId: string): Promise<void> {
+  const id = entryId(week, 'focus', focusId)
+  const prev = await existing<LifeFocusEntry>(id)
+  const now = Date.now()
+  const entry: LifeFocusEntry = {
+    id,
+    week,
+    kind: 'focus',
+    ref: focusId,
+    day: dayKey(new Date()),
+    value: prev?.value.cancelled ? { done: false } : { done: false, cancelled: true },
     createdAt: prev?.createdAt ?? now,
     updatedAt: now,
   }
@@ -674,6 +695,18 @@ export async function toggleDayFocus(id: string): Promise<boolean | null> {
     updatedAt: Date.now(),
   })
   return !row.done
+}
+
+/** Cancel / restore a day-focus line (Things-style). Cancelling clears done. */
+export async function toggleDayFocusCancelled(id: string): Promise<void> {
+  const row = await db.lifeDayFocus.get(id)
+  if (!row) return
+  const { cancelled: _was, ...rest } = row
+  await engine.upsert('life_day_focus', {
+    ...rest,
+    ...(row.cancelled ? {} : { cancelled: true, done: false }),
+    updatedAt: Date.now(),
+  })
 }
 
 /** Rename a day-focus line. An empty title is ignored (use removeDayFocus). */

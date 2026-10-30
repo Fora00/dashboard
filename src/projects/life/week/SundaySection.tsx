@@ -55,7 +55,7 @@ export function SundaySection({
       readOnly={readOnly}
     >
       <WeekRecap
-        focus={[summary.focusDone.size, plan.focus.length]}
+        focus={[summary.focusDone.size, summary.focusTotal]}
         trackers={summary.trackers}
         checkins={[summary.checkins.filter((c) => c.done).length, summary.checkins.length]}
         tasks={[tasksSent, plan.tasks.length]}

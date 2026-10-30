@@ -63,10 +63,10 @@ export interface LifeToday {
 /** Life focus + tracker progress of the plan's week (entries are that week's). */
 export function lifeToday(plan: LifePlan, entries: readonly LifeEntry[], today: string): LifeToday {
   const s = summarizeWeek(plan, entries, today)
-  const open = plan.focus.filter((f) => !s.focusDone.has(f.id))
+  const open = plan.focus.filter((f) => !s.focusDone.has(f.id) && !s.focusCancelled.has(f.id))
   return {
-    focusTotal: plan.focus.length,
-    focusDone: plan.focus.length - open.length,
+    focusTotal: s.focusTotal,
+    focusDone: s.focusDone.size,
     focusOpen: open.slice(0, 2).map((f) => f.title),
     trackers: s.trackers
       .filter((t) => t.tracker.target !== null)

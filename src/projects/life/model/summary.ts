@@ -41,6 +41,10 @@ export interface WeekSummary {
   /** The week's playbook practice use; null when the plan has no playbook. */
   playbook: PlaybookSummary | null
   focusDone: Set<string>
+  /** Focus ids cancelled this week: shown struck through, left out of every count. */
+  focusCancelled: Set<string>
+  /** Focus items still counting: the plan's minus the cancelled ones. */
+  focusTotal: number
   /** Every check-in of the plan with its status, by date (then plan order). */
   checkins: CheckinStatus[]
   trackers: TrackerSummary[]
@@ -82,6 +86,7 @@ export function summarizeWeek(
   }
 
   const focusDone = new Set<string>()
+  const focusCancelled = new Set<string>()
   const answers = new Map<string, LifeAnswer>()
   const screen = new Map<string, LifeAnswer>()
   const sentTaskIds = new Set<string>()
@@ -101,7 +106,8 @@ export function summarizeWeek(
       if (isMeaningful(e)) removed.push(e)
       continue
     }
-    if (e.kind === 'focus' && e.value.done) focusDone.add(e.ref)
+    if (e.kind === 'focus' && e.value.cancelled) focusCancelled.add(e.ref)
+    else if (e.kind === 'focus' && e.value.done) focusDone.add(e.ref)
     else if (e.kind === 'sunday' && e.value.answer !== null) answers.set(e.ref, e.value.answer)
     else if (e.kind === 'sent' && e.value.sent) sentTaskIds.add(e.ref)
     else if (e.kind === 'checkin') checkinValues.set(e.ref, e.value)
@@ -161,6 +167,8 @@ export function summarizeWeek(
   return {
     playbook,
     focusDone,
+    focusCancelled,
+    focusTotal: plan.focus.filter((f) => !focusCancelled.has(f.id)).length,
     checkins,
     trackers,
     answers,

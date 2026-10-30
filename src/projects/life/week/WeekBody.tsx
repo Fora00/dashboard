@@ -165,6 +165,8 @@ export function WeekBody({ week, plan, entries, readOnly, lateEdit = false, dayF
         week={week}
         focus={plan.focus}
         focusDone={summary.focusDone}
+        focusCancelled={summary.focusCancelled}
+        focusTotal={summary.focusTotal}
         open={sections.focus}
         onToggle={() => toggleSection('focus')}
         readOnly={readOnly}

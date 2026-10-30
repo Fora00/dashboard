@@ -364,6 +364,8 @@ export interface LifeDayFocus {
   slot: number // 0-2
   title: string
   done: boolean
+  // Things-style cancel: kept and struck through, restorable; absent = false.
+  cancelled?: boolean
   createdAt: number
   updatedAt: number
 }
@@ -434,7 +436,8 @@ export interface LifeTrackerEntry extends LifeEntryBase {
 }
 export interface LifeFocusEntry extends LifeEntryBase {
   kind: 'focus'
-  value: { done: boolean }
+  // `cancelled`: Things-style, kept in the list but out of the counts.
+  value: { done: boolean; cancelled?: boolean }
 }
 export interface LifeSundayEntry extends LifeEntryBase {
   kind: 'sunday'

@@ -72,12 +72,12 @@ export function buildChartPoints(
   return shown.map((w) => {
     const s = summarizeWeek(w.plan, entries)
     const days = new Set(weekDays(w.week))
-    const lines = dayFocus.filter((f) => days.has(f.day))
+    const lines = dayFocus.filter((f) => days.has(f.day) && !f.cancelled)
     return {
       week: w.week,
       current: w.week === currentWeek,
       at: span > 0 ? daysBetween(first, w.week) / span : 0,
-      focus: pct(s.focusDone.size, w.plan.focus.length),
+      focus: pct(s.focusDone.size, s.focusTotal),
       // habits = average progress of the dashboard trackers (towards target, capped at 100%) and the Streaks habits
       habits: habitsPct(s.trackers, streaks.get(w.week) ?? []),
       oggi: pct(lines.filter((f) => f.done).length, lines.length),
