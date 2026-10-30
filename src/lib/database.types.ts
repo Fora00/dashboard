@@ -307,22 +307,31 @@ export type Database = {
       }
       habit_checks: {
         Row: {
+          count: number | null
           created_at: number
           day: string
           habit_id: string
           id: string
+          note: string | null
+          status: string | null
         }
         Insert: {
+          count?: number | null
           created_at: number
           day: string
           habit_id: string
           id: string
+          note?: string | null
+          status?: string | null
         }
         Update: {
+          count?: number | null
           created_at?: number
           day?: string
           habit_id?: string
           id?: string
+          note?: string | null
+          status?: string | null
         }
         Relationships: [
           {
@@ -336,25 +345,67 @@ export type Database = {
       }
       habits: {
         Row: {
+          anchor: string | null
           archived_at: number | null
           created_at: number
+          cycle_end: string | null
+          cycle_start: string | null
+          direction: string | null
           emoji: string
+          floor: string | null
+          grace: number | null
+          grace_scope: string | null
           id: string
+          kind: string | null
           name: string
+          normal: string | null
+          per_day: number | null
+          social: string | null
+          target: number | null
+          verdict: string | null
+          why: string | null
         }
         Insert: {
+          anchor?: string | null
           archived_at?: number | null
           created_at: number
+          cycle_end?: string | null
+          cycle_start?: string | null
+          direction?: string | null
           emoji: string
+          floor?: string | null
+          grace?: number | null
+          grace_scope?: string | null
           id: string
+          kind?: string | null
           name: string
+          normal?: string | null
+          per_day?: number | null
+          social?: string | null
+          target?: number | null
+          verdict?: string | null
+          why?: string | null
         }
         Update: {
+          anchor?: string | null
           archived_at?: number | null
           created_at?: number
+          cycle_end?: string | null
+          cycle_start?: string | null
+          direction?: string | null
           emoji?: string
+          floor?: string | null
+          grace?: number | null
+          grace_scope?: string | null
           id?: string
+          kind?: string | null
           name?: string
+          normal?: string | null
+          per_day?: number | null
+          social?: string | null
+          target?: number | null
+          verdict?: string | null
+          why?: string | null
         }
         Relationships: []
       }

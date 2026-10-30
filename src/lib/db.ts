@@ -72,7 +72,33 @@ export interface Habit {
   // Set when the habit is archived; archived habits keep their history but
   // are hidden from the daily check-off list.
   archivedAt?: number | undefined
+  // Cycle fields (all optional: a habit made before them is a daily, open-ended
+  // 'forever' habit). `target` = times per week (1-7, default 7 = daily).
+  anchor?: string | undefined // "after dinner, journal on the table"
+  why?: string | undefined // what it serves, what it costs
+  // 'avoid' = a "don't" habit: kept unless a slip ('fail') is marked.
+  direction?: HabitDirection | undefined
+  // Taps that make a day done (1 = one tap). Progress lives in HabitCheck.count.
+  perDay?: number | undefined
+  // For 'avoid' habits: slips per week that are tolerated (0 = none).
+  grace?: number | undefined
+  // Per 'day' (each tap on the tile is one slip) or per 'week' (default).
+  graceScope?: HabitGraceScope | undefined
+  social?: HabitSocial | undefined
+  normal?: string | undefined // the usual version
+  floor?: string | undefined // the smallest version that still counts
+  target?: number | undefined
+  kind?: HabitKind | undefined
+  cycleStart?: string | undefined // 'YYYY-MM-DD'
+  cycleEnd?: string | undefined
+  verdict?: HabitVerdict | undefined // set when the cycle is judged
 }
+export type HabitDayState = 'done' | 'floor' | 'skip' | 'fail'
+export type HabitGraceScope = 'day' | 'week'
+export type HabitDirection = 'do' | 'avoid'
+export type HabitSocial = 'person' | 'alone'
+export type HabitKind = 'forever' | 'experiment'
+export type HabitVerdict = 'up' | 'stay' | 'down' | 'closed'
 
 // One check-off of a habit on one local calendar day.
 export interface HabitCheck {
@@ -81,6 +107,14 @@ export interface HabitCheck {
   // Local-date string 'YYYY-MM-DD' so a check belongs to the day the user saw.
   day: string
   createdAt: number
+  // Absent = done (the normal version). 'floor' = only the minimum, counts as
+  // done. 'skip' = a conscious rest day (neither done nor a miss). 'fail' = a
+  // day marked missed on purpose.
+  status?: HabitDayState | undefined
+  // Gap reason on a 'fail' day: 'anchor' | 'energy' | 'plan' | 'other'.
+  note?: string | undefined
+  // Taps so far on a multi-tap day (habit.perDay > 1).
+  count?: number | undefined
 }
 
 // One line of the meal diary. Cloud-syncable via the generic engine, owner-only

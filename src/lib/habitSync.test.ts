@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { db, resetDb } from '../test/fakeDb'
 import { drain } from '../test/drain'
 import type { FakeSupabase } from '../test/fakeSupabase'
-import { checkId, dedupeChecks, sync, toggleCheck } from './habitSync'
+import { checkId, dedupeChecks, setDayState, setSlipCount, sync, toggleCheck } from './habitSync'
 import type { HabitCheck } from './db'
 
 const fake = await vi.hoisted(async () => {
@@ -110,5 +110,52 @@ describe('legacy duplicates', () => {
     await dedupeChecks()
     expect((await db.habitChecks.toArray()).map((c) => c.id).sort()).toEqual([det.id, 'other'].sort())
     expect((await db.outbox.toArray()).map((e) => e.rowId)).toEqual([det.id])
+  })
+})
+
+type CheckRemote = { id: string; day: string; status: string | null; note: string | null }
+const remoteChecks = () => (fake.remote.habit_checks ?? []) as unknown as CheckRemote[]
+
+describe('rest-day and missed-day reasons', () => {
+  it('a rest day saves its reason locally and on the server', async () => {
+    await setDayState('h1', DAY, 'skip', 'sick')
+    await settle()
+    expect(await db.habitChecks.get(checkId('h1', DAY))).toMatchObject({ status: 'skip', note: 'sick' })
+    expect(remoteChecks().map((r) => ({ status: r.status, note: r.note }))).toEqual([{ status: 'skip', note: 'sick' }])
+    expect(sync.getStatus().dead).toBe(0)
+  })
+
+  it('changing the reason replaces it; marking the day done drops it', async () => {
+    await setDayState('h1', DAY, 'skip', 'sick')
+    await settle()
+    await setDayState('h1', DAY, 'skip', 'tired')
+    await settle()
+    expect(remoteChecks()[0]).toMatchObject({ status: 'skip', note: 'tired' })
+    await setDayState('h1', DAY, 'done')
+    await settle()
+    expect(remoteChecks()).toHaveLength(1)
+    expect(remoteChecks()[0]).toMatchObject({ status: null, note: null })
+  })
+
+  it('a missed day keeps its reason too, and no reason stays empty', async () => {
+    await setDayState('h1', DAY, 'fail', 'anchor')
+    await setDayState('h1', '2026-10-09', 'skip')
+    await settle()
+    const rows = remoteChecks()
+    expect(rows.find((r) => r.day === DAY)).toMatchObject({ status: 'fail', note: 'anchor' })
+    expect(rows.find((r) => r.day === '2026-10-09')).toMatchObject({ status: 'skip', note: null })
+  })
+})
+
+describe('slip counts for habits to avoid', () => {
+  it('stores slips as a fail with a count, keeps the reason, and clears at zero', async () => {
+    await setSlipCount('h1', DAY, 1, 'forgot')
+    await setSlipCount('h1', DAY, 2)
+    await settle()
+    expect(await db.habitChecks.get(checkId('h1', DAY))).toMatchObject({ status: 'fail', count: 2, note: 'forgot' })
+    await setSlipCount('h1', DAY, 0)
+    await settle()
+    expect(await db.habitChecks.count()).toBe(0)
+    expect(sync.getStatus().dead).toBe(0)
   })
 })

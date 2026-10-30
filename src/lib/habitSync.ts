@@ -1,4 +1,4 @@
-import { db, type Habit, type HabitCheck } from './db'
+import { db, type Habit, type HabitCheck, type HabitDayState, type HabitKind, type HabitVerdict } from './db'
 import { createCloudSync, type TableSync } from './cloudSync'
 import { useSyncStatus } from './useSyncStatus'
 import { uuidV5 } from './uuidV5'
@@ -14,6 +14,10 @@ import { uuidV5 } from './uuidV5'
 // supabase/migrations/20260930160100_text_caps.sql and the inputs' maxLength.
 export const MAX_NAME_LENGTH = 300
 export const MAX_EMOJI_LENGTH = 8
+export const MAX_TEXT_LENGTH = 300 // anchor, normal, floor, why
+export const MAX_NOTE_LENGTH = 100
+export const MAX_PER_DAY = 20
+export const MAX_GRACE = 7
 
 /** Cap an emoji without leaving half a surrogate pair at the cut. */
 export function clipEmoji(raw: string): string {
@@ -28,6 +32,20 @@ interface HabitRow {
   emoji: string
   created_at: number
   archived_at: number | null
+  anchor: string | null
+  why: string | null
+  social: string | null
+  direction: string | null
+  per_day: number | null
+  grace: number | null
+  grace_scope: string | null
+  normal: string | null
+  floor: string | null
+  target: number | null
+  kind: string | null
+  cycle_start: string | null
+  cycle_end: string | null
+  verdict: string | null
 }
 
 interface HabitCheckRow {
@@ -35,12 +53,16 @@ interface HabitCheckRow {
   habit_id: string
   day: string
   created_at: number
+  status: string | null
+  note: string | null
+  count: number | null
 }
 
 const habitsTable: TableSync<Habit, HabitRow> = {
   remote: 'habits',
   table: () => db.habits,
-  columns: 'id, name, emoji, created_at, archived_at',
+  columns:
+    'id, name, emoji, created_at, archived_at, anchor, why, social, direction, per_day, grace, grace_scope, normal, floor, target, kind, cycle_start, cycle_end, verdict',
   realtime: true,
   toRow: (h) => ({
     id: h.id,
@@ -48,6 +70,20 @@ const habitsTable: TableSync<Habit, HabitRow> = {
     emoji: h.emoji,
     created_at: h.createdAt,
     archived_at: h.archivedAt ?? null,
+    anchor: h.anchor ?? null,
+    why: h.why ?? null,
+    social: h.social ?? null,
+    direction: h.direction ?? null,
+    per_day: h.perDay ?? null,
+    grace: h.grace ?? null,
+    grace_scope: h.graceScope ?? null,
+    normal: h.normal ?? null,
+    floor: h.floor ?? null,
+    target: h.target ?? null,
+    kind: h.kind ?? null,
+    cycle_start: h.cycleStart ?? null,
+    cycle_end: h.cycleEnd ?? null,
+    verdict: h.verdict ?? null,
   }),
   fromRow: (r) => ({
     id: r.id,
@@ -55,13 +91,27 @@ const habitsTable: TableSync<Habit, HabitRow> = {
     emoji: r.emoji,
     createdAt: Number(r.created_at),
     archivedAt: r.archived_at == null ? undefined : Number(r.archived_at),
+    anchor: r.anchor ?? undefined,
+    why: r.why ?? undefined,
+    social: r.social === 'person' || r.social === 'alone' ? r.social : undefined,
+    direction: r.direction === 'avoid' ? 'avoid' : r.direction === 'do' ? 'do' : undefined,
+    perDay: r.per_day == null ? undefined : Number(r.per_day),
+    grace: r.grace == null ? undefined : Number(r.grace),
+    graceScope: r.grace_scope === 'day' || r.grace_scope === 'week' ? r.grace_scope : undefined,
+    normal: r.normal ?? undefined,
+    floor: r.floor ?? undefined,
+    target: r.target == null ? undefined : Number(r.target),
+    kind: (r.kind as HabitKind | null) ?? undefined,
+    cycleStart: r.cycle_start ?? undefined,
+    cycleEnd: r.cycle_end ?? undefined,
+    verdict: (r.verdict as HabitVerdict | null) ?? undefined,
   }),
 }
 
 const habitChecksTable: TableSync<HabitCheck, HabitCheckRow> = {
   remote: 'habit_checks',
   table: () => db.habitChecks,
-  columns: 'id, habit_id, day, created_at',
+  columns: 'id, habit_id, day, created_at, status, note, count',
   realtime: true,
   // unique (habit_id, day) on the server: a 23505 means another device already
   // checked this habit that day — the check is done, not rejected. Only hit
@@ -72,12 +122,18 @@ const habitChecksTable: TableSync<HabitCheck, HabitCheckRow> = {
     habit_id: c.habitId,
     day: c.day,
     created_at: c.createdAt,
+    status: c.status ?? null,
+    note: c.note ?? null,
+    count: c.count ?? null,
   }),
   fromRow: (r) => ({
     id: r.id,
     habitId: r.habit_id,
     day: r.day,
     createdAt: Number(r.created_at),
+    note: r.note ?? undefined,
+    count: r.count == null ? undefined : Number(r.count),
+    status: r.status === 'floor' || r.status === 'skip' || r.status === 'fail' ? r.status : undefined,
   }),
 }
 
@@ -147,15 +203,69 @@ const engine = createCloudSync({
 
 // --- Local mutations (used by the UI; safe with or without sync) -----------
 
-export async function addHabit(name: string, emoji: string): Promise<Habit> {
+export type HabitDetails = Partial<
+  Pick<
+    Habit,
+    | 'anchor'
+    | 'why'
+    | 'social'
+    | 'direction'
+    | 'perDay'
+    | 'grace'
+    | 'graceScope'
+    | 'normal'
+    | 'floor'
+    | 'target'
+    | 'kind'
+    | 'cycleStart'
+    | 'cycleEnd'
+    | 'verdict'
+  >
+>
+
+function cleanDetails(d: HabitDetails): HabitDetails {
+  const text = (v: string | undefined) => v?.trim().slice(0, MAX_TEXT_LENGTH) || undefined
+  return {
+    anchor: text(d.anchor),
+    why: text(d.why),
+    social: d.social,
+    direction: d.direction,
+    grace: d.grace === undefined ? undefined : Math.min(MAX_GRACE, Math.max(0, Math.round(d.grace))),
+    graceScope: d.graceScope,
+    perDay: d.perDay === undefined ? undefined : Math.min(MAX_PER_DAY, Math.max(1, Math.round(d.perDay))),
+    normal: text(d.normal),
+    floor: text(d.floor),
+    target: d.target === undefined ? undefined : Math.min(7, Math.max(1, Math.round(d.target))),
+    kind: d.kind,
+    cycleStart: d.cycleStart || undefined,
+    cycleEnd: d.cycleEnd || undefined,
+    verdict: d.verdict,
+  }
+}
+
+export async function addHabit(name: string, emoji: string, details: HabitDetails = {}): Promise<Habit> {
   const habit: Habit = {
     id: crypto.randomUUID(),
     name: name.trim().slice(0, MAX_NAME_LENGTH),
     emoji: clipEmoji(emoji) || '✅',
     createdAt: Date.now(),
+    ...cleanDetails(details),
   }
   await engine.upsert('habits', habit)
   return habit
+}
+
+/** Edit a habit's name, emoji and cycle fields (pass every field: unset ones are cleared). */
+export async function updateHabit(habit: Habit, name: string, emoji: string, details: HabitDetails): Promise<void> {
+  const updated: Habit = {
+    id: habit.id,
+    createdAt: habit.createdAt,
+    archivedAt: habit.archivedAt,
+    name: name.trim().slice(0, MAX_NAME_LENGTH) || habit.name,
+    emoji: clipEmoji(emoji) || habit.emoji,
+    ...cleanDetails(details),
+  }
+  await engine.upsert('habits', updated)
 }
 
 export async function setArchived(habit: Habit, archived: boolean): Promise<void> {
@@ -186,6 +296,65 @@ export async function toggleCheck(habitId: string, day: string): Promise<void> {
     }
     await engine.upsert('habit_checks', check)
   }
+}
+
+/** Set a day's state (null clears it). A day has one state: setting one
+ *  replaces whatever was there. 'done' is stored as no status. */
+export async function setDayState(
+  habitId: string,
+  day: string,
+  state: HabitDayState | null,
+  note?: string,
+): Promise<void> {
+  const existing = await db.habitChecks.where('[habitId+day]').equals([habitId, day]).primaryKeys()
+  if (existing.length > 0) await engine.removeMany('habit_checks', existing)
+  if (state === null) return
+  const check: HabitCheck = {
+    id: checkId(habitId, day),
+    habitId,
+    day,
+    createdAt: Date.now(),
+    status: state === 'done' ? undefined : state,
+    note: note?.slice(0, MAX_NOTE_LENGTH),
+  }
+  await engine.upsert('habit_checks', check)
+}
+
+/** Set how many slips a "don't" habit has on a day (0 clears it). Stored as a
+ *  'fail' check with a count; whether it is within the daily grace is derived. */
+export async function setSlipCount(habitId: string, day: string, slips: number, note?: string): Promise<void> {
+  const existing = await db.habitChecks.where('[habitId+day]').equals([habitId, day]).toArray()
+  const kept = note ?? existing.find((c) => c.note)?.note
+  if (existing.length > 0)
+    await engine.removeMany(
+      'habit_checks',
+      existing.map((c) => c.id),
+    )
+  if (slips <= 0) return
+  await engine.upsert('habit_checks', {
+    id: checkId(habitId, day),
+    habitId,
+    day,
+    createdAt: Date.now(),
+    status: 'fail',
+    count: Math.min(99, Math.round(slips)),
+    note: kept?.slice(0, MAX_NOTE_LENGTH),
+  })
+}
+
+/** Set how many taps a multi-tap habit has today (0 clears the day). The day
+ *  is done when the count reaches the habit's perDay: see habitDayStates. */
+export async function setDayCount(habitId: string, day: string, count: number): Promise<void> {
+  const existing = await db.habitChecks.where('[habitId+day]').equals([habitId, day]).primaryKeys()
+  if (existing.length > 0) await engine.removeMany('habit_checks', existing)
+  if (count <= 0) return
+  await engine.upsert('habit_checks', {
+    id: checkId(habitId, day),
+    habitId,
+    day,
+    createdAt: Date.now(),
+    count: Math.min(99, Math.round(count)),
+  })
 }
 
 // --- Sync engine ------------------------------------------------------------
