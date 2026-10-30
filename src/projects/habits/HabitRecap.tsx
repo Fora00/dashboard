@@ -13,12 +13,14 @@ interface Props {
   notes: ReadonlyMap<string, ReadonlyMap<string, string>>
   today: string
   onOpen: (habitId: string) => void
+  /** When given, every row gets a button that taps the habit for today (used in Life). */
+  onTapToday?: ((habit: Habit) => void) | undefined
 }
 
 const fmt = (day: string) => new Date(`${day}T12:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
 
 /** Every habit side by side for a week or a month: counts, reasons, Spock prompt. */
-export function HabitRecap({ kind, habits, states, notes, today, onOpen }: Props) {
+export function HabitRecap({ kind, habits, states, notes, today, onOpen, onTapToday }: Props) {
   const [offset, setOffset] = useState(0)
   let period = recapPeriod(kind, today)
   if (offset !== 0) for (let i = 0; i < Math.abs(offset); i++) period = shiftPeriod(period, Math.sign(offset))
@@ -80,6 +82,27 @@ export function HabitRecap({ kind, habits, states, notes, today, onOpen }: Props
                 <div className="font-medium">{r.habit.name}</div>
                 {r.habit.why && <div className="text-xs text-slate-500 italic">{r.habit.why}</div>}
               </div>
+              {onTapToday &&
+                offset === 0 &&
+                (() => {
+                  const todayState = r.cells.find((c) => c.day === today)?.state
+                  const done = todayState === 'done' || todayState === 'floor'
+                  return (
+                    <button
+                      type="button"
+                      onClick={() => onTapToday(r.habit)}
+                      aria-label={`${r.habit.name}: tap for today`}
+                      aria-pressed={done}
+                      className={`flex size-10 shrink-0 items-center justify-center rounded-full border text-sm ${
+                        done
+                          ? 'border-emerald-400 bg-emerald-400 text-slate-900'
+                          : 'border-slate-300 dark:border-slate-600'
+                      }`}
+                    >
+                      {done ? '✓' : '○'}
+                    </button>
+                  )
+                })()}
               <span
                 className={`shrink-0 rounded-full px-2 py-0.5 text-xs ${
                   r.hit === null

@@ -13,6 +13,16 @@ import { STATE_CELL } from './habitStates'
 import { HabitLegend } from './HabitLegend'
 
 const WEEKDAYS = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
+/** One click on a calendar day. A day is always one of four states, never a
+ *  partial one: done (full success), only the floor, rest, or missed, then back
+ *  to empty. A habit to avoid starts as kept (done) and ends cleared (kept again). */
+async function cycleDay(habit: Habit, day: string, state: HabitDayState | undefined): Promise<void> {
+  if (habit.direction !== 'avoid') return setDayState(habit.id, day, nextState(state))
+  const order: HabitDayState[] = ['done', 'floor', 'skip', 'fail']
+  const i = order.indexOf(state ?? 'done')
+  return setDayState(habit.id, day, i + 1 < order.length ? order[i + 1]! : null)
+}
+
 const CYCLE: (HabitDayState | undefined)[] = [undefined, 'done', 'floor', 'skip', 'fail']
 function nextState(s: HabitDayState | undefined): HabitDayState | null {
   return CYCLE[(CYCLE.indexOf(s) + 1) % CYCLE.length] ?? null
@@ -144,17 +154,7 @@ function Body({ habit, states, notes, openCount, wins, today, onClose, onArchive
                   key={c.day}
                   type="button"
                   disabled={c.future}
-                  onClick={() =>
-                    void runSafe(setDayState, 'Could not save')(
-                      habit.id,
-                      c.day,
-                      habit.direction === 'avoid'
-                        ? states.get(c.day) === 'fail'
-                          ? null
-                          : 'fail'
-                        : nextState(states.get(c.day)),
-                    )
-                  }
+                  onClick={() => void runSafe(() => cycleDay(habit, c.day, states.get(c.day)), 'Could not save')()}
                   aria-label={`${c.day}: ${states.get(c.day) ?? 'empty'}`}
                   className={`flex size-9 items-center justify-center justify-self-center rounded-full ${STATE_CELL[states.get(c.day) ?? 'empty']} ${
                     c.future ? 'text-slate-400' : ''

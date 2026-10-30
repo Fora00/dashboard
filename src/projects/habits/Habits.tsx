@@ -10,7 +10,7 @@ import { SyncCard } from '../../components/SyncCard'
 import { SkeletonList } from '../../components/Skeleton'
 import { addHabit, deleteHabit, setArchived, sync, setDayState, setSlipCount } from '../../lib/habitSync'
 import { dayKey } from './habitStore'
-import { habitStats, restWarnings, shiftDayKey } from './habitStats'
+import { daysBetween, habitStats, restWarnings, shiftDayKey, weekStart } from './habitStats'
 import { tapHabit } from './habitTap'
 import { activeDaysOf, habitDayStates } from './habitDayStates'
 import { HabitTile } from './HabitTile'
@@ -176,6 +176,15 @@ export function Habits() {
                       stats={habitStats(habit, states, today)}
                       state={st ?? 'open'}
                       today={today}
+                      weekCells={
+                        habitStats(habit, states, today).target === 7
+                          ? Array.from({ length: 7 }, (_, i) => {
+                              const day = shiftDayKey(weekStart(today), i)
+                              return states.get(day) ?? (day > today ? 'future' : 'empty')
+                            })
+                          : undefined
+                      }
+                      todayIndex={daysBetween(weekStart(today), today)}
                       count={countsByHabit.get(habit.id)?.get(today) ?? 0}
                       slips={slipsByHabit.get(habit.id)?.get(today) ?? 0}
                       onToggle={() =>
@@ -184,7 +193,6 @@ export function Habits() {
                             state: st ?? 'open',
                             count: countsByHabit.get(habit.id)?.get(today) ?? 0,
                             slips: slipsByHabit.get(habit.id)?.get(today) ?? 0,
-                            stats: habitStats(habit, states, today),
                             today,
                           })
                           if (next === 'sheet') setSlipId(habit.id)
@@ -193,6 +201,10 @@ export function Habits() {
                       onMore={() => setPickId(habit.id)}
                       onFloor={() => void runSafe(setDayState, 'Could not save')(habit.id, today, 'floor')}
                       onReset={() => setResetId(habit.id)}
+                      onRest={() => {
+                        setPickId(habit.id)
+                        setReasonFor('skip')
+                      }}
                       onOpen={() => setOpenId(habit.id)}
                     />
                   )

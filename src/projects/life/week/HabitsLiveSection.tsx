@@ -1,11 +1,10 @@
 import { useLiveQuery } from 'dexie-react-hooks'
-import { Link, useNavigate } from 'react-router-dom'
-import { db, type HabitDayState } from '../../../lib/db'
-import { activeDaysOf, habitDayStates } from '../../habits/habitDayStates'
-import { habitStats } from '../../habits/habitStats'
-import { STATE_ICON } from '../../habits/habitStates'
-import { tapHabit } from '../../habits/habitTap'
+import { useNavigate } from 'react-router-dom'
+import { db, type Habit, type HabitDayState } from '../../../lib/db'
 import { runSafe } from '../../../lib/runSafe'
+import { activeDaysOf, habitDayStates, type HabitDays } from '../../habits/habitDayStates'
+import { HabitRecap } from '../../habits/HabitRecap'
+import { tapHabit } from '../../habits/habitTap'
 import { useToday } from '../useToday'
 import { CollapsibleSection } from './CollapsibleSection'
 
@@ -15,8 +14,9 @@ interface Props {
   readOnly: boolean
 }
 
-/** The Habits project, live, inside Life: today's state and the week's count
- *  per habit. A tap does what it does on the Habits tile; ⋯ opens the Habits page. */
+/** The Habits project inside Life, as the same week view as on the Habits page
+ *  (every habit side by side, the week's days, counts, reasons, tips) with a
+ *  button on each row that taps the habit for today. */
 export function HabitsLiveSection({ open, onToggle, readOnly }: Props) {
   const today = useToday()
   const navigate = useNavigate()
@@ -27,82 +27,47 @@ export function HabitsLiveSection({ open, onToggle, readOnly }: Props) {
   if (active.length === 0) return null
 
   const activeDays = activeDaysOf(checks)
-  const rows = active.map((habit) => {
-    const days = habitDayStates(habit, checks, activeDays, today)
-    const stats = habitStats(habit, days.states, today)
-    const state: HabitDayState | 'open' = days.states.get(today) ?? 'open'
-    return { habit, stats, state, taps: days.counts.get(today) ?? 0, slips: days.slips.get(today) ?? 0 }
-  })
-  const doneToday = rows.filter((r) => r.state === 'done' || r.state === 'floor').length
+  const days = new Map<string, HabitDays>(active.map((h) => [h.id, habitDayStates(h, checks, activeDays, today)]))
+  const states = new Map<string, ReadonlyMap<string, HabitDayState>>([...days].map(([id, d]) => [id, d.states]))
+  const notes = new Map<string, ReadonlyMap<string, string>>([...days].map(([id, d]) => [id, d.notes]))
+  const doneToday = active.filter((h) => {
+    const st = days.get(h.id)?.states.get(today)
+    return st === 'done' || st === 'floor'
+  }).length
+
+  const tap = (habit: Habit) =>
+    void runSafe(async () => {
+      const d = days.get(habit.id)!
+      const next = await tapHabit(habit, {
+        state: d.states.get(today) ?? 'open',
+        count: d.counts.get(today) ?? 0,
+        slips: d.slips.get(today) ?? 0,
+        today,
+      })
+      if (next === 'sheet') void navigate('/habits') // a slip needs its reason
+    }, 'Could not save')()
 
   return (
     <CollapsibleSection
       title="Habits"
-      summary={`Habits · today ${doneToday}/${rows.length}`}
+      summary={`Habits · today ${doneToday}/${active.length}`}
       open={open}
       onToggle={onToggle}
       readOnly={readOnly}
     >
-      <ul className="space-y-2" aria-label="Habits (from the Habits page)">
-        {rows.map(({ habit, stats, state, taps, slips }) => {
-          const avoid = habit.direction === 'avoid'
-          const perDay = habit.perDay ?? 1
-          return (
-            <li key={habit.id} className="flex items-stretch gap-1.5">
-              <button
-                type="button"
-                onClick={() =>
-                  void runSafe(async () => {
-                    const next = await tapHabit(habit, { state, count: taps, slips, stats, today })
-                    if (next === 'sheet') void navigate('/habits')
-                  }, 'Could not save')()
-                }
-                aria-pressed={state === 'done' || state === 'floor'}
-                aria-label={`${habit.name}: tap to ${avoid ? 'mark a slip' : 'check off'}`}
-                className="flex min-h-12 min-w-0 flex-1 items-center gap-3 rounded-xl border border-slate-200 px-3 py-2 text-left active:bg-slate-100 dark:border-slate-800 dark:active:bg-slate-800"
-              >
-                <span
-                  aria-hidden
-                  className={`flex size-8 shrink-0 items-center justify-center rounded-full text-sm ${
-                    state === 'done'
-                      ? 'bg-emerald-400 text-slate-900'
-                      : state === 'floor'
-                        ? 'bg-lime-300 text-slate-900'
-                        : state === 'skip'
-                          ? 'bg-sky-400/40'
-                          : state === 'fail'
-                            ? 'bg-rose-400/50'
-                            : 'bg-slate-100 dark:bg-slate-800'
-                  }`}
-                >
-                  {STATE_ICON[state] ?? habit.emoji}
-                </span>
-                <span className="min-w-0 flex-1 truncate font-medium">
-                  {habit.emoji} {habit.name}
-                </span>
-                <span className="shrink-0 text-xs text-slate-500 dark:text-slate-400">
-                  {avoid
-                    ? `${stats.streak} kept day${stats.streak === 1 ? '' : 's'}`
-                    : `${perDay > 1 && state !== 'done' ? `${Math.min(taps, perDay)}/${perDay} · ` : ''}${stats.week.done}/${stats.week.expected || stats.target} wk`}
-                </span>
-              </button>
-              <Link
-                to="/habits"
-                aria-label={`More for ${habit.name}`}
-                className="flex min-h-12 w-10 shrink-0 items-center justify-center rounded-xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800"
-              >
-                ⋯
-              </Link>
-            </li>
-          )
-        })}
-      </ul>
-      <p className="mt-2 text-xs text-slate-500">
-        Tap = done today (same as on the Habits page). Hold-menus, reasons and stats are on the page.
+      <HabitRecap
+        kind="week"
+        habits={active}
+        states={states}
+        notes={notes}
+        today={today}
+        onOpen={() => void navigate('/habits')}
+        onTapToday={tap}
+      />
+      <p className="mt-3 text-xs text-slate-500">
+        ○ = tap for today (done; a slip on a habit to avoid asks why on the Habits page). Floor, rest, calendar and
+        settings: Open on any row.
       </p>
-      <Link to="/habits" className="mt-1 inline-block text-xs underline decoration-dotted">
-        Open Habits →
-      </Link>
     </CollapsibleSection>
   )
 }

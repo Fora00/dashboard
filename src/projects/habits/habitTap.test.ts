@@ -25,7 +25,6 @@ const ctx = (extra: Partial<TapContext> = {}): TapContext => ({
   state: 'open',
   count: 0,
   slips: 0,
-  stats: { gap: 0 },
   today: DAY,
   ...extra,
 })
@@ -50,9 +49,10 @@ describe('tapHabit', () => {
     expect(await stored()).toBeUndefined()
   })
 
-  it('after an empty day the tap marks the floor (two-day rule)', async () => {
-    await tapHabit(habit(), ctx({ stats: { gap: 1 } }))
-    expect((await stored())?.status).toBe('floor')
+  it('a tap is always done, even after an empty day: the floor is offered next to it', async () => {
+    await tapHabit(habit(), ctx())
+    expect((await stored())?.status).toBeUndefined()
+    expect(await stored()).toMatchObject({ habitId: 'h1', day: DAY })
   })
 
   it('a multi-tap habit counts up and resets after the last tap', async () => {

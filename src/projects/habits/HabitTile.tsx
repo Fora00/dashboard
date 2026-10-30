@@ -3,6 +3,15 @@ import type { Habit, HabitDayState } from '../../lib/db'
 import { STATE_ICON } from './habitStates'
 import type { HabitStats } from './habitStats'
 
+export type WeekCell = HabitDayState | 'empty' | 'future'
+const CELL_STROKE: Record<WeekCell, string> = {
+  done: 'stroke-emerald-400',
+  floor: 'stroke-lime-300',
+  skip: 'stroke-sky-400',
+  fail: 'stroke-rose-400',
+  empty: 'stroke-slate-200 dark:stroke-slate-700',
+  future: 'stroke-slate-100 dark:stroke-slate-800',
+}
 const LONG_PRESS_MS = 500
 const STATE_LABEL: Record<HabitDayState | 'open', string> = {
   done: 'done today',
@@ -13,6 +22,8 @@ const STATE_LABEL: Record<HabitDayState | 'open', string> = {
 }
 const R = 26
 const CIRC = 2 * Math.PI * R
+const GAP = 3
+const SEG = CIRC / 7 - GAP
 
 interface Props {
   habit: Habit
@@ -23,12 +34,18 @@ interface Props {
   onMore: () => void
   /** Floor-only mode (two-day rule): tapping marks the floor, not the normal version. */
   onFloor: () => void
+  /** Open the rest-day choice (with its reason) straight away. */
+  onRest: () => void
   /** Two or more empty days: offer to reset the setup. */
   onReset: () => void
   /** Taps so far today on a multi-tap habit. */
   count?: number | undefined
   /** Slips today on a "don't" habit with a daily grace. */
   slips?: number | undefined
+  /** Daily habits: this week's seven days, Monday first, for the segmented ring. */
+  weekCells?: readonly WeekCell[] | undefined
+  /** Index (0 = Monday) of today in weekCells. */
+  todayIndex?: number | undefined
   onOpen: () => void
 }
 
@@ -42,10 +59,13 @@ export function HabitTile({
   onToggle,
   onMore,
   onFloor,
+  onRest,
   onReset,
   onOpen,
   count = 0,
   slips = 0,
+  weekCells,
+  todayIndex = -1,
 }: Props) {
   const timer = useRef<number | undefined>(undefined)
   const fired = useRef(false)
@@ -93,34 +113,51 @@ export function HabitTile({
         onContextMenu={(e) => e.preventDefault()}
         onClick={() => {
           if (fired.current) return
-          if (floorMode) onFloor()
-          else onToggle()
+          onToggle()
         }}
         aria-pressed={state === 'done' || state === 'floor'}
-        aria-label={`${habit.name}: ${STATE_LABEL[state]}. Hold for more states.`}
+        aria-label={`${habit.name}: ${STATE_LABEL[state]}. Hold for floor, rest or missed.`}
         className={`flex min-h-40 w-full touch-manipulation flex-col items-center justify-center gap-2 rounded-2xl border p-3 text-center transition-colors select-none active:scale-[0.98] ${tone}`}
       >
         <span className="relative flex size-16 items-center justify-center">
           <svg viewBox="0 0 64 64" className="absolute inset-0 -rotate-90" aria-hidden>
-            <circle
-              cx="32"
-              cy="32"
-              r={R}
-              fill="none"
-              strokeWidth="5"
-              className="stroke-slate-200 dark:stroke-slate-700"
-            />
-            <circle
-              cx="32"
-              cy="32"
-              r={R}
-              fill="none"
-              strokeWidth="5"
-              strokeLinecap="round"
-              strokeDasharray={CIRC}
-              strokeDashoffset={CIRC * (1 - progress)}
-              className={week.hit ? 'stroke-emerald-400' : 'stroke-amber-400'}
-            />
+            {weekCells ? (
+              weekCells.map((cell, i) => (
+                <circle
+                  key={i}
+                  cx="32"
+                  cy="32"
+                  r={R}
+                  fill="none"
+                  strokeWidth={i === todayIndex ? 7 : 5}
+                  strokeDasharray={`${SEG} ${CIRC - SEG}`}
+                  transform={`rotate(${(i * 360) / 7 + (GAP / CIRC) * 180} 32 32)`}
+                  className={CELL_STROKE[cell]}
+                />
+              ))
+            ) : (
+              <>
+                <circle
+                  cx="32"
+                  cy="32"
+                  r={R}
+                  fill="none"
+                  strokeWidth="5"
+                  className="stroke-slate-200 dark:stroke-slate-700"
+                />
+                <circle
+                  cx="32"
+                  cy="32"
+                  r={R}
+                  fill="none"
+                  strokeWidth="5"
+                  strokeLinecap="round"
+                  strokeDasharray={CIRC}
+                  strokeDashoffset={CIRC * (1 - progress)}
+                  className={week.hit ? 'stroke-emerald-400' : 'stroke-amber-400'}
+                />
+              </>
+            )}
           </svg>
           <span className="text-2xl">{avoid && state === 'done' ? '🚫' : (STATE_ICON[state] ?? habit.emoji)}</span>
         </span>
@@ -149,7 +186,7 @@ export function HabitTile({
           </span>
         ) : floorMode ? (
           <span className="text-xs text-amber-700 dark:text-amber-300">
-            Floor is enough: {habit.floor || 'the smallest version'}
+            Tap = done. Or the floor is enough: {habit.floor || 'the smallest version'}
           </span>
         ) : (
           <>
@@ -183,6 +220,24 @@ export function HabitTile({
       >
         ⋯
       </button>
+      {floorMode && (
+        <div className="mt-1 flex gap-1">
+          <button
+            type="button"
+            onClick={onFloor}
+            className="min-h-10 flex-1 rounded-lg bg-lime-300/30 text-xs hover:bg-lime-300/50"
+          >
+            ◐ Only the floor
+          </button>
+          <button
+            type="button"
+            onClick={onRest}
+            className="min-h-10 flex-1 rounded-lg bg-sky-400/15 text-xs hover:bg-sky-400/30"
+          >
+            ⏸ Skip today
+          </button>
+        </div>
+      )}
       {restNote && (
         <p className="mt-1 text-center text-[11px] text-amber-700 dark:text-amber-300">
           {stats.restRun} rest days in a row: a break, or avoiding something?

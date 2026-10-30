@@ -35,7 +35,8 @@ export function habitDayStates(
     if (c.note) notes.set(c.day, c.note)
     if (habit.direction === 'avoid' && habit.graceScope === 'day' && c.status === 'fail') {
       // Each tap is a slip: within the daily grace the day is kept (like a floor day), past it it is a slip.
-      const n = c.count ?? 1
+      // A tap on the tile writes a count; a miss marked by hand (calendar) has none and is a full slip.
+      const n = c.count ?? (habit.grace ?? 0) + 1
       slips.set(c.day, n)
       states.set(c.day, n <= (habit.grace ?? 0) ? 'floor' : 'fail')
     } else if (c.status === undefined && perDay > 1) {

@@ -81,6 +81,12 @@ describe('daily grace for habits to avoid', () => {
     expect(d.counts.size).toBe(0) // slips are not wins on the lifeboard
   })
 
+  it('a miss marked by hand (no count) is a full slip, never within the grace', () => {
+    const d = habitDayStates(phone, [check('2026-10-21', { status: 'fail' })], new Set(), '2026-10-23')
+    expect(d.states.get('2026-10-21')).toBe('fail')
+    expect(d.slips.get('2026-10-21')).toBe(3)
+  })
+
   it('without a day scope a fail stays a fail', () => {
     const d = habitDayStates(
       habit({ direction: 'avoid', grace: 2 }),

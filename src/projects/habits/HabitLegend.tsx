@@ -9,8 +9,9 @@ const DAYS = [
 ] as const
 
 const TILE = [
-  ['bg-emerald-400', 'Ring green: this week’s target is reached'],
-  ['bg-amber-400', 'Ring amber: this week is still in progress'],
+  ['bg-emerald-400', 'Daily habits: a ring of seven segments, one per day Monday to Sunday (the thick one is today)'],
+  ['bg-emerald-400', 'Weekly habits, ring green: this week’s target is reached'],
+  ['bg-amber-400', 'Weekly habits, ring amber: this week is still in progress'],
   ['bg-amber-300/40', 'Amber tile: after an empty day the floor is offered; one tap marks it'],
 ] as const
 
