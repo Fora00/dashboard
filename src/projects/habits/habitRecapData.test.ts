@@ -79,3 +79,21 @@ describe('buildRecap', () => {
     ])
   })
 })
+
+describe('buildRecap overshoot', () => {
+  it('sums the taps above the goal over the period', () => {
+    const week = recapPeriod('week', '2026-10-28')
+    const counts = new Map([
+      [
+        'd',
+        new Map([
+          ['2026-10-26', 2],
+          ['2026-10-27', 1],
+          ['2026-10-28', 4],
+        ]),
+      ],
+    ])
+    const [row] = buildRecap([habit('d', 7)], new Map(), new Map(), week, '2026-10-30', counts)
+    expect(row?.extra).toBe(4) // (2-1) + (4-1)
+  })
+})

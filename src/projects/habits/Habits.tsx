@@ -8,7 +8,7 @@ import { PageHeader } from '../../components/PageHeader'
 import { EmptyState } from '../../components/EmptyState'
 import { SyncCard } from '../../components/SyncCard'
 import { SkeletonList } from '../../components/Skeleton'
-import { addHabit, deleteHabit, setArchived, sync, setDayState, setSlipCount } from '../../lib/habitSync'
+import { addHabit, deleteHabit, setArchived, sync, setDayCount, setDayState, setSlipCount } from '../../lib/habitSync'
 import { dayKey } from './habitStore'
 import { daysBetween, habitStats, restWarnings, shiftDayKey, weekStart } from './habitStats'
 import { tapHabit } from './habitTap'
@@ -514,6 +514,29 @@ export function Habits() {
                 </Button>
               </>
             )}
+            {pickHabit.direction !== 'avoid' &&
+              reasonFor === null &&
+              (() => {
+                const n = countsByHabit.get(pickHabit.id)?.get(today) ?? 0
+                if (n < (pickHabit.perDay ?? 1)) return null
+                return (
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button
+                      variant="ghost"
+                      onClick={() => void runSafe(setDayCount, 'Could not save')(pickHabit.id, today, n + 1)}
+                    >
+                      + Extra{n > (pickHabit.perDay ?? 1) ? ` (${n - (pickHabit.perDay ?? 1)} so far)` : ''}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      disabled={n <= (pickHabit.perDay ?? 1)}
+                      onClick={() => void runSafe(setDayCount, 'Could not save')(pickHabit.id, today, n - 1)}
+                    >
+                      − Extra
+                    </Button>
+                  </div>
+                )
+              })()}
             <Button
               variant="danger"
               className="w-full"

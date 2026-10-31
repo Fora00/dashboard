@@ -37,6 +37,21 @@ describe('multi-tap habits', () => {
   })
 })
 
+describe('overshoot', () => {
+  it('a once-a-day habit logged twice is done with count 2', () => {
+    const d = habitDayStates(habit(), [check('2026-10-21', { count: 2 }), check('2026-10-22')], new Set(), '2026-10-23')
+    expect(d.states.get('2026-10-21')).toBe('done')
+    expect(d.counts.get('2026-10-21')).toBe(2)
+    expect(d.counts.get('2026-10-22')).toBe(1) // by hand = the goal exactly
+  })
+
+  it('a multi-tap habit keeps counting past perDay', () => {
+    const d = habitDayStates(habit({ perDay: 2 }), [check('2026-10-21', { count: 5 })], new Set(), '2026-10-23')
+    expect(d.states.get('2026-10-21')).toBe('done')
+    expect(d.counts.get('2026-10-21')).toBe(5)
+  })
+})
+
 describe("don't habits", () => {
   const avoid = habit({ direction: 'avoid' })
 

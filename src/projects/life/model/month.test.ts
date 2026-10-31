@@ -114,4 +114,33 @@ describe('buildMonthMarkdown', () => {
     expect(md).toContain('- Habit A: 28 of 28 days (kept)')
     expect(md).toContain('- 🧗 Climb: 0 in all, target hit 0 of 1 weeks (few)')
   })
+
+  it('writes the live Habits section', () => {
+    const report = buildMonthReport('2026-10', [plan('2026-10-05', 2)], [], '2026-10-29')
+    const md = buildMonthMarkdown(
+      report,
+      [],
+      [
+        {
+          emoji: '📖',
+          name: 'Read',
+          avoid: false,
+          done: 20,
+          floor: 3,
+          skip: 2,
+          fail: 1,
+          empty: 4,
+          expected: 24,
+          hit: false,
+          graceUsed: 0,
+          extra: 2,
+          reasons: { Tired: 2 },
+        },
+      ],
+    )
+    expect(md).toContain('## Habits (live, from the Habits page)')
+    expect(md).toContain(
+      '- 📖 Read: 20 done (3 floor) of 24 expected, 2 rest, 1 missed, 4 unmarked, 2 extra beyond the goal; target missed; reasons: Tired x2',
+    )
+  })
 })

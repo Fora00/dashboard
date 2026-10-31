@@ -16,6 +16,7 @@ export {
   monthRange,
   readShare,
   type MonthReport,
+  type MonthHabit,
   type MonthStreak,
   type MonthTracker,
   type Reading,

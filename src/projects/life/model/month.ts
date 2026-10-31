@@ -91,6 +91,28 @@ export interface MonthReport {
   counts: Record<Reading, number>
 }
 
+/** One live Habits-page habit over the month (from the habit recap), for the export. */
+export interface MonthHabit {
+  emoji: string
+  name: string
+  /** 'avoid' = a "don't" habit: it counts slips, not done days. */
+  avoid: boolean
+  done: number
+  floor: number
+  skip: number
+  fail: number
+  /** Past, unmarked days. */
+  empty: number
+  expected: number
+  /** null when nothing was expected yet. */
+  hit: boolean | null
+  graceUsed: number
+  /** Overshoot: taps above the goal over the month. */
+  extra: number
+  /** Reason label -> times, over rest days and misses. */
+  reasons: Record<string, number>
+}
+
 function streakOfMonth(e: LifeStreakEntry, first: string, upTo: string): MonthStreak {
   const { days, asOf } = e.value
   const n = days.length
@@ -205,6 +227,7 @@ const pct = (n: number | null) => (n === null ? 'n/a' : `${n}%`)
 export function buildMonthMarkdown(
   report: MonthReport,
   lines: readonly { label: string; now: number | null; before: number | null }[],
+  habits: readonly MonthHabit[] = [],
 ): string {
   const out = [
     `# Life month ${report.month}`,
@@ -214,8 +237,19 @@ export function buildMonthMarkdown(
     '## Progress lines (mean over the weeks, vs the previous month)',
     ...lines.map((l) => `- ${l.label}: ${pct(l.now)} (before: ${pct(l.before)})`),
     '',
-    '## Streaks habits',
+    '## Habits (live, from the Habits page)',
   ]
+  for (const h of habits) {
+    const reasons = Object.entries(h.reasons)
+      .map(([r, n]) => `${r} x${n}`)
+      .join(', ')
+    const verdict = h.hit === null ? 'not started' : h.hit ? 'target hit' : 'target missed'
+    out.push(
+      `- ${h.emoji} ${h.name}${h.avoid ? " (don't)" : ''}: ${h.done} done${h.floor ? ` (${h.floor} floor)` : ''} of ${h.expected} expected, ${h.skip} rest, ${h.fail} ${h.avoid ? 'slipped' : 'missed'}${h.graceUsed ? ` (${h.graceUsed} within grace)` : ''}, ${h.empty} unmarked${h.extra ? `, ${h.extra} extra beyond the goal` : ''}; ${verdict}${reasons ? `; reasons: ${reasons}` : ''}`,
+    )
+  }
+  if (habits.length === 0) out.push('- none')
+  out.push('', '## Streaks habits (old import)')
   for (const s of report.streaks) {
     const weeks = s.weeks.map((w) => `${w.week} ${w.done}/${w.of}`).join(', ')
     out.push(

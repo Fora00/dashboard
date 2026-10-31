@@ -191,7 +191,8 @@ export function HabitTile({
         ) : (
           <>
             <span className="text-xs text-slate-500 dark:text-slate-400">
-              {perDay > 1 && `${Math.min(count, perDay)}/${perDay} today · `}
+              {perDay > 1 && `${count}/${perDay} today · `}
+              {perDay === 1 && count > 1 && `×${count} today · `}
               {week.done}/{week.expected || stats.target} this week
             </span>
             {perDay > 1 && state !== 'skip' && state !== 'fail' && (

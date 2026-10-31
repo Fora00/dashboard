@@ -12,6 +12,8 @@ interface Props {
   states: ReadonlyMap<string, ReadonlyMap<string, HabitDayState>>
   notes: ReadonlyMap<string, ReadonlyMap<string, string>>
   today: string
+  /** A day in the period to show instead of today's; the ‹ › buttons are then hidden (Life's month view picks the month itself). */
+  anchor?: string | undefined
   onOpen: (habitId: string) => void
   /** When given, every row gets a button that taps the habit for today (used in Life). */
   onTapToday?: ((habit: Habit) => void) | undefined
@@ -48,6 +50,7 @@ export function HabitRecap({
   states,
   notes,
   today,
+  anchor,
   onOpen,
   onTapToday,
   onSetDay,
@@ -61,9 +64,9 @@ export function HabitRecap({
   // Long press on today's button opens today's choices (floor, rest, missed, clear).
   const pressTimer = useRef<number | undefined>(undefined)
   const longPressed = useRef(false)
-  let period = recapPeriod(kind, today)
+  let period = recapPeriod(kind, anchor ?? today)
   if (offset !== 0) for (let i = 0; i < Math.abs(offset); i++) period = shiftPeriod(period, Math.sign(offset))
-  const rows = buildRecap(habits, states, notes, period, today)
+  const rows = buildRecap(habits, states, notes, period, today, counts)
 
   const counted = rows.filter((r) => r.hit !== null)
   const hits = counted.filter((r) => r.hit).length
@@ -83,21 +86,29 @@ export function HabitRecap({
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
-        <Button variant="ghost" onClick={() => setOffset(offset - 1)} aria-label={`Previous ${kind}`}>
-          ‹
-        </Button>
+        {anchor ? (
+          <span />
+        ) : (
+          <Button variant="ghost" onClick={() => setOffset(offset - 1)} aria-label={`Previous ${kind}`}>
+            ‹
+          </Button>
+        )}
         <h2 className="text-sm font-medium">
           {label}
-          {offset === 0 && <span className="ml-2 text-xs text-slate-500">(now)</span>}
+          {offset === 0 && !anchor && <span className="ml-2 text-xs text-slate-500">(now)</span>}
         </h2>
-        <Button
-          variant="ghost"
-          onClick={() => setOffset(offset + 1)}
-          disabled={offset >= 0}
-          aria-label={`Next ${kind}`}
-        >
-          ›
-        </Button>
+        {anchor ? (
+          <span />
+        ) : (
+          <Button
+            variant="ghost"
+            onClick={() => setOffset(offset + 1)}
+            disabled={offset >= 0}
+            aria-label={`Next ${kind}`}
+          >
+            ›
+          </Button>
+        )}
       </div>
 
       <section aria-label="Overview" className="grid grid-cols-2 gap-2 text-center sm:grid-cols-4">
@@ -145,7 +156,9 @@ export function HabitRecap({
                     : perDay > 1 && !done
                       ? `${n}/${perDay}`
                       : done
-                        ? '✓'
+                        ? n > perDay
+                          ? `✓ ×${n}`
+                          : '✓'
                         : '○'
                   return (
                     <button
@@ -198,7 +211,7 @@ export function HabitRecap({
               >
                 {r.hit === null
                   ? 'not started'
-                  : `${r.done}/${r.expected}${r.graceUsed ? ` +${r.graceUsed} grace` : ''} ${r.hit ? '✓' : ''}`}
+                  : `${r.done}/${r.expected}${r.graceUsed ? ` +${r.graceUsed} grace` : ''}${r.extra ? ` +${r.extra} extra` : ''} ${r.hit ? '✓' : ''}`}
               </span>
             </div>
             <div className={`mt-2 flex flex-wrap ${kind === 'week' ? 'justify-between' : 'gap-1'}`} aria-label="Days">
@@ -388,7 +401,7 @@ function pickOptions(
   }
   if (perDay > 1) {
     return [
-      { label: '+1', run: () => p.onSetCount?.(habit, day, Math.min(perDay, count + 1)) },
+      { label: count >= perDay ? '+1 extra' : '+1', run: () => p.onSetCount?.(habit, day, count + 1) },
       { label: '−1', run: () => p.onSetCount?.(habit, day, Math.max(0, count - 1)) },
       { label: '✓ All', run: set('done') },
       { label: '⏸ Rest', run: set('skip') },
@@ -396,5 +409,12 @@ function pickOptions(
       { label: 'Clear', run: set(null) },
     ]
   }
-  return PICK.map(([state, label]) => ({ label, run: set(state) }))
+  const extras: PickOption[] =
+    count >= 1 && p.onSetCount
+      ? [
+          { label: '+1 extra', run: () => p.onSetCount?.(habit, day, count + 1) },
+          ...(count > 1 ? [{ label: '−1 extra', run: () => p.onSetCount?.(habit, day, count - 1) }] : []),
+        ]
+      : []
+  return [...PICK.map(([state, label]) => ({ label, run: set(state) })), ...extras]
 }

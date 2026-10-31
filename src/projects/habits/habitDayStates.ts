@@ -1,7 +1,8 @@
 // Turns a habit's stored check rows into the per-day states the stats and the
 // views read. Two derived behaviours live here, nowhere else:
 //  - multi-tap habits (perDay > 1): a day is done only when its taps reach
-//    perDay; fewer taps is progress, not a state;
+//    perDay; fewer taps is progress, not a state; taps past perDay are the
+//    overshoot (any habit: a day with count 2 on a once-a-day habit = done twice);
 //  - "don't" habits (direction 'avoid'): a day is kept unless a slip ('fail')
 //    is marked, but only on days the app was used at all (any habit logged
 //    that day). Otherwise a stopped log would look like a perfect streak.
@@ -13,7 +14,7 @@ import { shiftDayKey } from './habitStats'
 export interface HabitDays {
   states: Map<string, HabitDayState>
   notes: Map<string, string>
-  /** Taps so far per day, for multi-tap habits (also partial days). */
+  /** Taps so far per day: partial days of multi-tap habits, and done days (past perDay = overshoot). */
   counts: Map<string, number>
   /** Slips per day for a "don't" habit with a daily grace. */
   slips: Map<string, number>
@@ -39,8 +40,9 @@ export function habitDayStates(
       const n = c.count ?? (habit.grace ?? 0) + 1
       slips.set(c.day, n)
       states.set(c.day, n <= (habit.grace ?? 0) ? 'floor' : 'fail')
-    } else if (c.status === undefined && perDay > 1) {
-      const n = c.count ?? perDay // no count = marked done by hand
+    } else if (c.status === undefined && habit.direction !== 'avoid') {
+      // No count = marked done by hand (the goal exactly); a count past perDay is an overshoot.
+      const n = c.count ?? perDay
       counts.set(c.day, n)
       if (n >= perDay) states.set(c.day, 'done')
     } else {
