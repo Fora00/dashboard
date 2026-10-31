@@ -73,8 +73,8 @@ export function HabitsLiveSection({ open, onToggle, readOnly }: Props) {
         onSetDay={(habit, day, state) => void runSafe(() => setDayState(habit.id, day, state), 'Could not save')()}
       />
       <p className="mt-3 text-xs text-slate-500">
-        ○ = tap for today (steps count up; on a habit to avoid it opens kept / slipped). Tap any day for floor, rest or
-        missed. Calendar and settings: Open on any row.
+        ○ = tap for today, hold for floor, rest or missed (steps count up; on a habit to avoid it opens kept / slipped).
+        Tap any day for floor, rest or missed. Calendar and settings: Open on any row.
       </p>
     </CollapsibleSection>
   )

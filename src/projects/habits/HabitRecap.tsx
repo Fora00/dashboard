@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Button } from '../../components/Button'
 import type { Habit, HabitDayState } from '../../lib/db'
 import { buildRecap, recapPeriod, shiftPeriod, tallyReasons, type RecapKind } from './habitRecapData'
@@ -25,6 +25,8 @@ interface Props {
 }
 
 const WEEKDAY = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
+const LONG_PRESS_MS = 500
+
 const PICK: readonly (readonly [HabitDayState | null, string])[] = [
   ['done', '✓ Done'],
   ['floor', '◐ Floor'],
@@ -56,6 +58,9 @@ export function HabitRecap({
 }: Props) {
   const [offset, setOffset] = useState(0)
   const [picked, setPicked] = useState<{ id: string; day: string } | null>(null)
+  // Long press on today's button opens today's choices (floor, rest, missed, clear).
+  const pressTimer = useRef<number | undefined>(undefined)
+  const longPressed = useRef(false)
   let period = recapPeriod(kind, today)
   if (offset !== 0) for (let i = 0; i < Math.abs(offset); i++) period = shiftPeriod(period, Math.sign(offset))
   const rows = buildRecap(habits, states, notes, period, today)
@@ -145,7 +150,23 @@ export function HabitRecap({
                   return (
                     <button
                       type="button"
-                      onClick={() => (avoid ? setPicked({ id: r.habit.id, day: today }) : onTapToday(r.habit))}
+                      onPointerDown={() => {
+                        if (!onSetDay) return
+                        longPressed.current = false
+                        pressTimer.current = window.setTimeout(() => {
+                          longPressed.current = true
+                          setPicked({ id: r.habit.id, day: today })
+                        }, LONG_PRESS_MS)
+                      }}
+                      onPointerUp={() => window.clearTimeout(pressTimer.current)}
+                      onPointerLeave={() => window.clearTimeout(pressTimer.current)}
+                      onPointerCancel={() => window.clearTimeout(pressTimer.current)}
+                      onContextMenu={(e) => onSetDay && e.preventDefault()}
+                      onClick={() => {
+                        if (longPressed.current) return
+                        if (avoid) setPicked({ id: r.habit.id, day: today })
+                        else onTapToday(r.habit)
+                      }}
                       aria-label={
                         avoid
                           ? `${r.habit.name}: kept or slipped today`
@@ -154,7 +175,7 @@ export function HabitRecap({
                             : `${r.habit.name}: tap for today`
                       }
                       aria-pressed={done}
-                      className={`flex h-10 min-w-10 shrink-0 items-center justify-center rounded-full border px-2 text-sm ${
+                      className={`flex h-10 min-w-10 shrink-0 touch-manipulation items-center justify-center rounded-full border px-2 text-sm select-none ${
                         avoid && slipped
                           ? 'border-amber-400 bg-amber-400/30'
                           : done || (avoid && todayState !== 'skip')
