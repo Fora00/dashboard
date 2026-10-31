@@ -544,6 +544,8 @@ export interface LifeChoreValue {
   wk?: string
   /** Day key of the Mac snapshot (or of the last tick here). */
   asOf: string
+  /** Day the chore was cancelled here (Things-style, for that day only: it is back tomorrow if still open). */
+  cancelledOn?: string
 }
 
 // A chore. Id `chore:${ref}`, ref = a slug of the name (same as streaks). Not

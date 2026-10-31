@@ -29,6 +29,7 @@ function normalize(v: LifeChoreValue): LifeChoreValue {
     ...(v.last ? { last: v.last } : {}),
     ...(v.wk ? { wk: v.wk } : {}),
     asOf: v.asOf,
+    ...(v.cancelledOn ? { cancelledOn: v.cancelledOn } : {}),
   }
 }
 
@@ -40,7 +41,8 @@ function sameValue(a: LifeChoreValue, b: LifeChoreValue): boolean {
     a.count === b.count &&
     a.last === b.last &&
     a.wk === b.wk &&
-    a.asOf === b.asOf
+    a.asOf === b.asOf &&
+    a.cancelledOn === b.cancelledOn
   )
 }
 
@@ -78,9 +80,11 @@ export function planChoreImport(
   const seen = new Set<string>()
   for (const raw of incoming) {
     const value = normalize(raw)
+    // The snapshot (from Things) knows nothing of a cancel made here: keep it.
     const ref = choreRef(value.name)
     seen.add(ref)
     const prev = byRef.get(ref)
+    if (prev?.value.cancelledOn && !value.done) value.cancelledOn = prev.value.cancelledOn
     if (prev) {
       const keepTick = prev.value.asOf === value.asOf && prev.value.done && !value.done
       if (prev.value.asOf > value.asOf || keepTick || sameValue(normalize(prev.value), value)) continue
@@ -119,11 +123,29 @@ export function toggleChoreValue(v: LifeChoreValue, today: string): LifeChoreVal
   })
 }
 
+/** Cancelled today? (A cancel lasts the day: the chore is back tomorrow if still open.) */
+export function isCancelled(v: LifeChoreValue, today: string): boolean {
+  return v.cancelledOn === today
+}
+
+/** The chore after a cancel (or restore) today. A done chore is not cancelled. */
+export function cancelChoreValue(v: LifeChoreValue, today: string): LifeChoreValue {
+  if (v.done) return v
+  const { cancelledOn: _was, ...rest } = v
+  return normalize({ ...rest, asOf: today, ...(isCancelled(v, today) ? {} : { cancelledOn: today }) })
+}
+
 /** Open chores first, then by name. */
 export function sortChores(entries: readonly LifeEntry[]): LifeChoreEntry[] {
   return entries
     .filter(isChore)
     .sort((a, b) => Number(a.value.done) - Number(b.value.done) || a.value.name.localeCompare(b.value.name))
+}
+
+/** Active chores first, cancelled ones (today) last; stable otherwise. */
+export function cancelledLast(chores: readonly LifeChoreEntry[], today: string): LifeChoreEntry[] {
+  const key = (c: LifeChoreEntry) => Number(isCancelled(c.value, today))
+  return [...chores].sort((a, b) => key(a) - key(b))
 }
 
 /**
@@ -141,11 +163,12 @@ export interface ChoresSummary {
   repeating: number
 }
 
-export function summarizeChores(chores: readonly LifeChoreEntry[]): ChoresSummary {
+export function summarizeChores(chores: readonly LifeChoreEntry[], today?: string): ChoresSummary {
+  const active = today ? chores.filter((c) => !isCancelled(c.value, today)) : chores
   return {
-    total: chores.length,
-    done: chores.filter((c) => c.value.done).length,
-    repeating: chores.filter((c) => c.value.repeat).length,
+    total: active.length,
+    done: active.filter((c) => c.value.done).length,
+    repeating: active.filter((c) => c.value.repeat).length,
   }
 }
 

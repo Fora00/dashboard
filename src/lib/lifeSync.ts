@@ -34,6 +34,7 @@ import {
   planChoreImport,
   planStreakImport,
   toggleChoreValue,
+  cancelChoreValue,
   validatePlan,
   withCheckinIds,
 } from '../projects/life/model'
@@ -236,6 +237,16 @@ export async function toggleChore(id: string): Promise<boolean | null> {
   const value = toggleChoreValue(row.value, dayKey(new Date()))
   await engine.upsert('life_entries', { ...row, value, updatedAt: Date.now() })
   return value.done
+}
+
+/** Cancel / restore a chore for today (Things-style). Returns false if gone or already done. */
+export async function toggleChoreCancelled(id: string): Promise<boolean> {
+  const row = await db.lifeEntries.get(id)
+  if (!row || row.kind !== 'chore') return false
+  const value = cancelChoreValue(row.value, dayKey(new Date()))
+  if (value === row.value) return false
+  await engine.upsert('life_entries', { ...row, value, updatedAt: Date.now() })
+  return true
 }
 
 /**

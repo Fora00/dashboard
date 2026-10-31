@@ -13,6 +13,8 @@ import {
   parseDayFocusJson,
   planChoreImport,
   sortChores,
+  cancelChoreValue,
+  isCancelled,
   summarizeChores,
   toggleChoreValue,
   visibleChores,
@@ -202,5 +204,17 @@ describe('visibleChores', () => {
       'aspirare',
       'mettere bidoni',
     ])
+  })
+})
+
+describe('cancelChoreValue', () => {
+  it('cancels for today, restores on a second call, leaves a done chore alone', () => {
+    const open = cv('a')
+    const cancelled = cancelChoreValue(open, '2026-10-30')
+    expect(isCancelled(cancelled, '2026-10-30')).toBe(true)
+    expect(isCancelled(cancelled, '2026-10-31')).toBe(false)
+    expect(cancelChoreValue(cancelled, '2026-10-30').cancelledOn).toBeUndefined()
+    const done = cv('b', { done: true })
+    expect(cancelChoreValue(done, '2026-10-30')).toBe(done)
   })
 })
