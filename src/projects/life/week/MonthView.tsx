@@ -11,6 +11,7 @@ import { SkeletonList } from '../../../components/Skeleton'
 import { addMonths, buildMonthMarkdown, buildMonthReport, monthOf, monthRange, weekKey, parseDayKey } from '../model'
 import type { MonthHabit, MonthStreak, MonthTracker, Reading } from '../model'
 import { buildChartPoints } from './chartPoints'
+import { liveHabitRatiosByWeek } from './liveHabitRatios'
 import { recapMonths } from './monthRecap'
 import { RecapItems } from './RecapSection'
 import { HabitRecap } from '../../habits/HabitRecap'
@@ -169,6 +170,7 @@ function HabitsMonthCard({ month, today }: { month: string; today: string }) {
         states={states}
         notes={notes}
         counts={new Map([...days].map(([id, d]) => [id, d.counts]))}
+        slips={new Map([...days].map(([id, d]) => [id, d.slips]))}
         today={today}
         onOpen={() => void navigate('/habits')}
       />
@@ -215,7 +217,21 @@ export function MonthView({
         entries,
         today,
       )
-  const points = loading ? [] : buildChartPoints(weeks, entries, weekKey(parseDayKey(today)), 60, dayFocus ?? [])
+  const points = loading
+    ? []
+    : buildChartPoints(
+        weeks,
+        entries,
+        weekKey(parseDayKey(today)),
+        60,
+        dayFocus ?? [],
+        liveHabitRatiosByWeek(
+          habitRows ?? [],
+          habitChecks ?? [],
+          weeks.map((w) => w.week),
+          today,
+        ),
+      )
   const prev = addMonths(month, -1)
   const recap = loading ? undefined : recapMonths(weeks).find((m) => m.month === month)
   const criteria = (recap?.items ?? []).filter((i) => i.criterion && !i.closed)
@@ -239,6 +255,7 @@ export function MonthView({
       recapPeriod('month', `${month}-01`),
       today,
       new Map([...dayStates].map(([id, d]) => [id, d.counts])),
+      new Map([...dayStates].map(([id, d]) => [id, d.slips])),
     ).map((r) => ({
       emoji: r.habit.emoji,
       name: r.habit.name,
@@ -283,8 +300,8 @@ export function MonthView({
             </Button>
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            {report.partial ? `1–${shortDay(report.upTo)}, month not over yet.` : `All of ${monthName(month)}.`} Streaks
-            count the days with a verdict (rest days are skipped); weeks start in the month.
+            {report.partial ? `1–${shortDay(report.upTo)}, month not over yet.` : `All of ${monthName(month)}.`} Habits
+            are live from the Habits page; trackers count the weeks that start in the month.
           </p>
 
           {hasLines && (
@@ -320,8 +337,10 @@ export function MonthView({
           {hasHabits ? (
             <Card className="space-y-4">
               <p className="text-sm text-slate-600 dark:text-slate-300">
-                <span className="font-medium text-slate-800 dark:text-slate-100">Habits</span> · {report.counts.kept}{' '}
-                kept · {report.counts.half} half · {report.counts.few} few
+                <span className="font-medium text-slate-800 dark:text-slate-100">
+                  {report.streaks.length > 0 ? 'Streaks (old import) and trackers' : 'Trackers'}
+                </span>{' '}
+                · {report.counts.kept} kept · {report.counts.half} half · {report.counts.few} few
               </p>
               {report.streaks.map((s) => (
                 <StreakRow key={s.name} s={s} first={monthRange(month).first} />
@@ -334,7 +353,7 @@ export function MonthView({
             <EmptyState
               emoji="🔎"
               title="No habit data this month"
-              hint="Streaks (/streaks) and the week's trackers fill this in."
+              hint="Habits (the Habits page) and the week's trackers fill this in."
             />
           )}
 

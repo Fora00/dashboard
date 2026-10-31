@@ -4,6 +4,7 @@
 
 import type { Habit, HabitDayState } from '../../lib/db'
 import { dayKey } from './habitStore'
+import { overshootOf } from './habitStates'
 import { daysBetween, gracedSlips, habitTarget, shiftDayKey, weekStart } from './habitStats'
 
 export type RecapKind = 'week' | 'month'
@@ -50,7 +51,7 @@ export interface RecapRow {
   graceUsed: number
   /** reason -> times, over rest days and misses. */
   reasons: Record<string, number>
-  /** Overshoot: taps above the goal, summed over the period's days. */
+  /** Overshoot: taps above the goal (or slips above the limit), summed over the period's days. */
   extra: number
 }
 
@@ -61,6 +62,7 @@ export function buildRecap(
   period: RecapPeriod,
   today: string,
   counts?: ReadonlyMap<string, ReadonlyMap<string, number>>,
+  slips?: ReadonlyMap<string, ReadonlyMap<string, number>>,
 ): RecapRow[] {
   return habits.map((habit) => {
     const st = states.get(habit.id)
@@ -103,11 +105,10 @@ export function buildRecap(
         ? [...gracedSlips(st, habit.grace ?? 0)].filter((d) => period.days.includes(d)).length
         : 0
     const hit = avoid ? (expected > 0 ? fail - graced <= 0 : null) : expected > 0 ? done >= expected : null
-    const goal = habit.perDay ?? 1
-    const extra =
-      habit.direction === 'avoid'
-        ? 0
-        : period.days.reduce((n, day) => n + Math.max(0, (counts?.get(habit.id)?.get(day) ?? 0) - goal), 0)
+    const extra = period.days.reduce(
+      (n, day) => n + overshootOf(habit, counts?.get(habit.id)?.get(day) ?? 0, slips?.get(habit.id)?.get(day) ?? 0),
+      0,
+    )
     return { habit, cells, done, floor, skip, fail, empty, expected, hit, graceUsed: graced, reasons, extra }
   })
 }

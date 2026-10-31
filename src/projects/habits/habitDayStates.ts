@@ -16,7 +16,7 @@ export interface HabitDays {
   notes: Map<string, string>
   /** Taps so far per day: partial days of multi-tap habits, and done days (past perDay = overshoot). */
   counts: Map<string, number>
-  /** Slips per day for a "don't" habit with a daily grace. */
+  /** Slips per day for a "don't" habit (a plain miss counts 1; with a daily grace, each tap is one). */
   slips: Map<string, number>
 }
 
@@ -40,6 +40,10 @@ export function habitDayStates(
       const n = c.count ?? (habit.grace ?? 0) + 1
       slips.set(c.day, n)
       states.set(c.day, n <= (habit.grace ?? 0) ? 'floor' : 'fail')
+    } else if (habit.direction === 'avoid' && c.status === 'fail') {
+      // Weekly/no grace: a slip is a slip; extra slips the same day are logged as a count (overshoot).
+      slips.set(c.day, c.count ?? 1)
+      states.set(c.day, 'fail')
     } else if (c.status === undefined && habit.direction !== 'avoid') {
       // No count = marked done by hand (the goal exactly); a count past perDay is an overshoot.
       const n = c.count ?? perDay

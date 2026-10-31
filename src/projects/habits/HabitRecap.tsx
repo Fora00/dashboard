@@ -4,7 +4,19 @@ import type { Habit, HabitDayState } from '../../lib/db'
 import { buildRecap, recapPeriod, shiftPeriod, tallyReasons, type RecapKind } from './habitRecapData'
 import { habitStats } from './habitStats'
 import { suggest } from './habitSuggestions'
-import { reasonLabel, STATE_CELL, STATE_ICON } from './habitStates'
+import {
+  OVERSHOOT_CELL,
+  OVERSHOOT_ICON,
+  NEG_OVERSHOOT_CELL,
+  NEG_OVERSHOOT_ICON,
+  NEG_OVERSHOOT_TEXT,
+  OVERSHOOT_TEXT,
+  overshootOf,
+  reasonLabel,
+  slipLimit,
+  STATE_CELL,
+  STATE_ICON,
+} from './habitStates'
 
 interface Props {
   kind: RecapKind
@@ -66,7 +78,7 @@ export function HabitRecap({
   const longPressed = useRef(false)
   let period = recapPeriod(kind, anchor ?? today)
   if (offset !== 0) for (let i = 0; i < Math.abs(offset); i++) period = shiftPeriod(period, Math.sign(offset))
-  const rows = buildRecap(habits, states, notes, period, today, counts)
+  const rows = buildRecap(habits, states, notes, period, today, counts, slips)
 
   const counted = rows.filter((r) => r.hit !== null)
   const hits = counted.filter((r) => r.hit).length
@@ -119,6 +131,20 @@ export function HabitRecap({
           sub={sum((r) => r.floor) ? `${sum((r) => r.floor)} floor` : undefined}
         />
         <Stat label="rest days" value={String(sum((r) => r.skip))} />
+        {sum((r) => (r.habit.direction === 'avoid' ? 0 : r.extra)) > 0 && (
+          <Stat
+            label={`${OVERSHOOT_ICON} extra`}
+            value={`+${sum((r) => (r.habit.direction === 'avoid' ? 0 : r.extra))}`}
+            sub="beyond the goal"
+          />
+        )}
+        {sum((r) => (r.habit.direction === 'avoid' ? r.extra : 0)) > 0 && (
+          <Stat
+            label={`${NEG_OVERSHOOT_ICON} past the limit`}
+            value={String(sum((r) => (r.habit.direction === 'avoid' ? r.extra : 0)))}
+            sub="slips"
+          />
+        )}
         <Stat
           label="missed"
           value={String(sum((r) => r.fail))}
@@ -146,8 +172,10 @@ export function HabitRecap({
                   const sl = slips?.get(r.habit.id)?.get(today) ?? 0
                   const slipped = todayState === 'fail' || sl > 0
                   const face = avoid
-                    ? sl > 0
-                      ? String(sl)
+                    ? sl > 0 && (sl > slipLimit(r.habit) || r.habit.graceScope === 'day')
+                      ? sl > slipLimit(r.habit)
+                        ? `${sl} ${NEG_OVERSHOOT_ICON}`
+                        : String(sl)
                       : todayState === 'fail'
                         ? '✕'
                         : todayState === 'skip'
@@ -157,7 +185,7 @@ export function HabitRecap({
                       ? `${n}/${perDay}`
                       : done
                         ? n > perDay
-                          ? `✓ ×${n}`
+                          ? `${n}/${perDay} ${OVERSHOOT_ICON}`
                           : '✓'
                         : '○'
                   return (
@@ -189,11 +217,15 @@ export function HabitRecap({
                       }
                       aria-pressed={done}
                       className={`flex h-10 min-w-10 shrink-0 touch-manipulation items-center justify-center rounded-full border px-2 text-sm select-none ${
-                        avoid && slipped
-                          ? 'border-amber-400 bg-amber-400/30'
-                          : done || (avoid && todayState !== 'skip')
-                            ? 'border-emerald-400 bg-emerald-400 text-slate-900'
-                            : 'border-slate-300 dark:border-slate-600'
+                        avoid && overshootOf(r.habit, 0, sl) > 0
+                          ? 'border-rose-600 bg-rose-600 text-white'
+                          : avoid && slipped
+                            ? 'border-amber-400 bg-amber-400/30'
+                            : !avoid && done && n > perDay
+                              ? 'border-violet-400 bg-violet-400 text-slate-900'
+                              : done || (avoid && todayState !== 'skip')
+                                ? 'border-emerald-400 bg-emerald-400 text-slate-900'
+                                : 'border-slate-300 dark:border-slate-600'
                       }`}
                     >
                       {face}
@@ -211,22 +243,47 @@ export function HabitRecap({
               >
                 {r.hit === null
                   ? 'not started'
-                  : `${r.done}/${r.expected}${r.graceUsed ? ` +${r.graceUsed} grace` : ''}${r.extra ? ` +${r.extra} extra` : ''} ${r.hit ? '✓' : ''}`}
+                  : `${r.done}/${r.expected}${r.graceUsed ? ` +${r.graceUsed} grace` : ''}${r.hit ? ' ✓' : ''}`}
+                {r.hit !== null && r.extra > 0 && (
+                  <span
+                    className={`ml-1 font-medium ${r.habit.direction === 'avoid' ? NEG_OVERSHOOT_TEXT : OVERSHOOT_TEXT}`}
+                  >
+                    {r.habit.direction === 'avoid' ? NEG_OVERSHOOT_ICON : OVERSHOOT_ICON}
+                    {r.extra}
+                  </span>
+                )}
               </span>
             </div>
             <div className={`mt-2 flex flex-wrap ${kind === 'week' ? 'justify-between' : 'gap-1'}`} aria-label="Days">
               {r.cells.map((c, i) => {
                 const st = c.state === 'future' || c.state === 'before' ? null : c.state
+                const dayCount = counts?.get(r.habit.id)?.get(c.day) ?? 0
+                const goal = r.habit.perDay ?? 1
+                const daySlips = slips?.get(r.habit.id)?.get(c.day) ?? 0
+                const over =
+                  r.habit.direction === 'avoid'
+                    ? overshootOf(r.habit, 0, daySlips) > 0
+                    : st === 'done' && dayCount > goal
                 const cls = `flex size-8 items-center justify-center rounded-full text-xs ${
-                  st ? STATE_CELL[st] : 'border border-slate-200 text-slate-300 dark:border-slate-800'
+                  over
+                    ? r.habit.direction === 'avoid'
+                      ? NEG_OVERSHOOT_CELL
+                      : OVERSHOOT_CELL
+                    : st
+                      ? STATE_CELL[st]
+                      : 'border border-slate-200 text-slate-300 dark:border-slate-800'
                 } ${picked?.id === r.habit.id && picked.day === c.day ? 'ring-2 ring-slate-500' : ''}`
-                const partial = (counts?.get(r.habit.id)?.get(c.day) ?? 0) > 0 && st === 'empty'
+                const partial = dayCount > 0 && st === 'empty'
                 const icon = partial
-                  ? String(counts?.get(r.habit.id)?.get(c.day))
-                  : !st || st === 'empty'
-                    ? ''
-                    : STATE_ICON[st]
-                const title = `${c.day}${c.note ? ` · ${reasonLabel(c.note)}` : ''}`
+                  ? String(dayCount)
+                  : over
+                    ? r.habit.direction === 'avoid'
+                      ? NEG_OVERSHOOT_ICON
+                      : OVERSHOOT_ICON
+                    : !st || st === 'empty'
+                      ? ''
+                      : STATE_ICON[st]
+                const title = `${c.day}${over ? (r.habit.direction === 'avoid' ? ` · ${daySlips} slips` : ` · ${dayCount}/${goal}`) : ''}${c.note ? ` · ${reasonLabel(c.note)}` : ''}`
                 return (
                   <span key={c.day} className="flex flex-col items-center gap-0.5">
                     {onSetDay && c.state !== 'future' ? (
@@ -394,27 +451,31 @@ function pickOptions(
     const daily = habit.graceScope === 'day' && (habit.grace ?? 0) > 0
     return [
       { label: '✓ Kept', run: () => (daily ? p.onSetSlips?.(habit, day, 0) : p.onSetDay?.(habit, day, null)) },
-      ...(daily ? [{ label: '+1 slip', run: () => p.onSetSlips?.(habit, day, slipCount + 1) }] : []),
+      ...(daily
+        ? [
+            {
+              label: slipCount >= slipLimit(habit) ? NEG_OVERSHOOT_ICON : '+1 slip',
+              run: () => p.onSetSlips?.(habit, day, slipCount + 1),
+            },
+          ]
+        : slipCount >= 1
+          ? [{ label: NEG_OVERSHOOT_ICON, run: () => p.onSetSlips?.(habit, day, slipCount + 1) }]
+          : []),
       { label: '✕ Slipped', run: set('fail') },
       { label: '⏸ Rest', run: set('skip') },
     ]
   }
   if (perDay > 1) {
     return [
-      { label: count >= perDay ? '+1 extra' : '+1', run: () => p.onSetCount?.(habit, day, count + 1) },
-      { label: '−1', run: () => p.onSetCount?.(habit, day, Math.max(0, count - 1)) },
+      { label: count >= perDay ? OVERSHOOT_ICON : '+1', run: () => p.onSetCount?.(habit, day, count + 1) },
       { label: '✓ All', run: set('done') },
+      { label: '◐ Floor', run: set('floor') },
       { label: '⏸ Rest', run: set('skip') },
       { label: '✕ Missed', run: set('fail') },
       { label: 'Clear', run: set(null) },
     ]
   }
   const extras: PickOption[] =
-    count >= 1 && p.onSetCount
-      ? [
-          { label: '+1 extra', run: () => p.onSetCount?.(habit, day, count + 1) },
-          ...(count > 1 ? [{ label: '−1 extra', run: () => p.onSetCount?.(habit, day, count - 1) }] : []),
-        ]
-      : []
+    count >= 1 && p.onSetCount ? [{ label: OVERSHOOT_ICON, run: () => p.onSetCount?.(habit, day, count + 1) }] : []
   return [...PICK.map(([state, label]) => ({ label, run: set(state) })), ...extras]
 }

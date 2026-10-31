@@ -27,7 +27,8 @@ const pct = (done: number, total: number) => (total > 0 ? Math.round((done / tot
 
 /**
  * Mean progress over the week's habits, each weighing the same: the trackers with a target
- * (min(count / target, 1)) and the Streaks habits (share of done days, 0-1); null when none.
+ * (min(count / target, 1)) and the habits (share of expected days done, 0-1: the live
+ * Habits page when the week has them, else the old Streaks import); null when none.
  */
 function habitsPct(
   trackers: readonly { tracker: { target: number | null }; total: number }[],
@@ -54,6 +55,7 @@ export function buildChartPoints(
   currentWeek: string,
   max: number,
   dayFocus: readonly LifeDayFocus[] = [],
+  liveHabits: ReadonlyMap<string, number[]> = new Map(),
 ): ChartPoint[] {
   const shown = weeks
     .filter((w) => w.week <= currentWeek)
@@ -79,7 +81,7 @@ export function buildChartPoints(
       at: span > 0 ? daysBetween(first, w.week) / span : 0,
       focus: pct(s.focusDone.size, s.focusTotal),
       // habits = average progress of the dashboard trackers (towards target, capped at 100%) and the Streaks habits
-      habits: habitsPct(s.trackers, streaks.get(w.week) ?? []),
+      habits: habitsPct(s.trackers, liveHabits.get(w.week) ?? streaks.get(w.week) ?? []),
       oggi: pct(lines.filter((f) => f.done).length, lines.length),
       casa: casa.get(w.week) ?? null,
     }

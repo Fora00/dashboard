@@ -16,7 +16,12 @@ import type { Database } from './database.types'
 export const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined
 export const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined
 
-export const syncEnabled = Boolean(supabaseUrl && supabaseAnonKey)
+// `npm run dev` runs fully local and signed out (no sign-in cards, no sync
+// attempts, demo data from devDemo.ts). `npm run dev:auth` turns the real
+// Supabase layer on to test login and sync. Built apps are unaffected.
+const devOffline = import.meta.env.DEV && !import.meta.env.VITE_DEV_AUTH
+
+export const syncEnabled = Boolean(supabaseUrl && supabaseAnonKey) && !devOffline
 
 export const supabase: SupabaseClient<Database> | null = syncEnabled
   ? createClient<Database>(supabaseUrl!, supabaseAnonKey!)

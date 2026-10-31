@@ -245,7 +245,7 @@ export function buildMonthMarkdown(
       .join(', ')
     const verdict = h.hit === null ? 'not started' : h.hit ? 'target hit' : 'target missed'
     out.push(
-      `- ${h.emoji} ${h.name}${h.avoid ? " (don't)" : ''}: ${h.done} done${h.floor ? ` (${h.floor} floor)` : ''} of ${h.expected} expected, ${h.skip} rest, ${h.fail} ${h.avoid ? 'slipped' : 'missed'}${h.graceUsed ? ` (${h.graceUsed} within grace)` : ''}, ${h.empty} unmarked${h.extra ? `, ${h.extra} extra beyond the goal` : ''}; ${verdict}${reasons ? `; reasons: ${reasons}` : ''}`,
+      `- ${h.emoji} ${h.name}${h.avoid ? " (don't)" : ''}: ${h.done} done${h.floor ? ` (${h.floor} floor)` : ''} of ${h.expected} expected, ${h.skip} rest, ${h.fail} ${h.avoid ? 'slipped' : 'missed'}${h.graceUsed ? ` (${h.graceUsed} within grace)` : ''}, ${h.empty} unmarked${h.extra ? (h.avoid ? `, ${h.extra} slips past the limit (negative overshoot)` : `, ${h.extra} extra beyond the goal`) : ''}; ${verdict}${reasons ? `; reasons: ${reasons}` : ''}`,
     )
   }
   if (habits.length === 0) out.push('- none')

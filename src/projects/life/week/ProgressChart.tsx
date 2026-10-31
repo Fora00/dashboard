@@ -3,6 +3,8 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db, type LifeEntry, type LifeWeek } from '../../../lib/db'
 import { Card } from '../../../components/Card'
 import { buildChartPoints } from './chartPoints'
+import { liveHabitRatiosByWeek } from './liveHabitRatios'
+import { useToday } from '../useToday'
 
 const W = 320
 const H = 130
@@ -28,7 +30,22 @@ export function ProgressChart({
 }) {
   const [active, setActive] = useState<number | null>(null)
   const dayFocus = useLiveQuery(() => db.lifeDayFocus.toArray(), [])
-  const points = buildChartPoints(weeks, entries, currentWeek, MAX_WEEKS, dayFocus ?? [])
+  const today = useToday()
+  const habitRows = useLiveQuery(() => db.habits.toArray(), [])
+  const habitChecks = useLiveQuery(() => db.habitChecks.toArray(), [])
+  const points = buildChartPoints(
+    weeks,
+    entries,
+    currentWeek,
+    MAX_WEEKS,
+    dayFocus ?? [],
+    liveHabitRatiosByWeek(
+      habitRows ?? [],
+      habitChecks ?? [],
+      weeks.map((w) => w.week),
+      today,
+    ),
+  )
   if (points.length < 2) return null
 
   const plotW = W - PAD_L - 6

@@ -1,6 +1,13 @@
 import { useRef } from 'react'
 import type { Habit, HabitDayState } from '../../lib/db'
-import { STATE_ICON } from './habitStates'
+import {
+  NEG_OVERSHOOT_ICON,
+  NEG_OVERSHOOT_TEXT,
+  OVERSHOOT_ICON,
+  OVERSHOOT_TEXT,
+  slipLimit,
+  STATE_ICON,
+} from './habitStates'
 import type { HabitStats } from './habitStats'
 
 export type WeekCell = HabitDayState | 'empty' | 'future'
@@ -163,27 +170,34 @@ export function HabitTile({
         </span>
         <span className="line-clamp-2 w-full text-sm leading-tight font-medium">{habit.name}</span>
         {avoid ? (
-          <span className="text-xs text-slate-500 dark:text-slate-400">
-            {dailyGrace && slips > 0
-              ? state === 'fail'
-                ? `Past the grace today (${slips} of ${habit.grace}). Tap for one more.`
-                : `Within grace: ${slips} of ${habit.grace} today. Tap if you slip again.`
-              : dailyGrace && state !== 'fail'
-                ? `${stats.streak} kept day${stats.streak === 1 ? '' : 's'} · ${habit.grace} slips a day allowed`
-                : stats.gap >= 1 && state !== 'fail' && state !== 'floor'
-                  ? 'A slip is one data point. Today is the one that counts.'
-                  : state === 'fail'
-                    ? stats.gracedDays.has(today)
-                      ? `Within grace (${stats.graceUsedWeek} of ${stats.grace} used this week). Tap to undo.`
-                      : 'Past the grace: this one counts. Tap to undo.'
-                    : state === 'floor'
-                      ? `Within my limit${habit.floor ? `: ${habit.floor}` : ''}. Tap to undo.`
-                      : `${stats.streak} kept day${stats.streak === 1 ? '' : 's'}${
-                          stats.grace > 0
-                            ? ` · grace ${Math.max(0, stats.grace - stats.graceUsedWeek)}/${stats.grace} left`
-                            : ' · tap if you go past it'
-                        }`}
-          </span>
+          <>
+            {slips > slipLimit(habit) && (
+              <span className={`text-xs font-medium ${NEG_OVERSHOOT_TEXT}`}>
+                {NEG_OVERSHOOT_ICON} {slips} slips today
+              </span>
+            )}
+            <span className="text-xs text-slate-500 dark:text-slate-400">
+              {dailyGrace && slips > 0
+                ? state === 'fail'
+                  ? `Past the grace today (${slips} of ${habit.grace}). Tap for one more.`
+                  : `Within grace: ${slips} of ${habit.grace} today. Tap if you slip again.`
+                : dailyGrace && state !== 'fail'
+                  ? `${stats.streak} kept day${stats.streak === 1 ? '' : 's'} · ${habit.grace} slips a day allowed`
+                  : stats.gap >= 1 && state !== 'fail' && state !== 'floor'
+                    ? 'A slip is one data point. Today is the one that counts.'
+                    : state === 'fail'
+                      ? stats.gracedDays.has(today)
+                        ? `Within grace (${stats.graceUsedWeek} of ${stats.grace} used this week). Tap to undo.`
+                        : 'Past the grace: this one counts. Tap to undo.'
+                      : state === 'floor'
+                        ? `Within my limit${habit.floor ? `: ${habit.floor}` : ''}. Tap to undo.`
+                        : `${stats.streak} kept day${stats.streak === 1 ? '' : 's'}${
+                            stats.grace > 0
+                              ? ` · grace ${Math.max(0, stats.grace - stats.graceUsedWeek)}/${stats.grace} left`
+                              : ' · tap if you go past it'
+                          }`}
+            </span>
+          </>
         ) : floorMode ? (
           <span className="text-xs text-amber-700 dark:text-amber-300">
             Tap = done. Or the floor is enough: {habit.floor || 'the smallest version'}
@@ -191,8 +205,13 @@ export function HabitTile({
         ) : (
           <>
             <span className="text-xs text-slate-500 dark:text-slate-400">
-              {perDay > 1 && `${count}/${perDay} today · `}
-              {perDay === 1 && count > 1 && `×${count} today · `}
+              {count > perDay ? (
+                <span className={`font-medium ${OVERSHOOT_TEXT}`}>
+                  {count}/{perDay} {OVERSHOOT_ICON} today ·{' '}
+                </span>
+              ) : (
+                perDay > 1 && `${count}/${perDay} today · `
+              )}
               {week.done}/{week.expected || stats.target} this week
             </span>
             {perDay > 1 && state !== 'skip' && state !== 'fail' && (

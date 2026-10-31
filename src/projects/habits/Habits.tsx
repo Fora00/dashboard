@@ -16,7 +16,7 @@ import { activeDaysOf, habitDayStates } from './habitDayStates'
 import { HabitTile } from './HabitTile'
 import { HabitLegend } from './HabitLegend'
 import { resetDemoHabits } from './demoHabits'
-import { MISS_REASONS, REST_REASONS, STATE_ICON } from './habitStates'
+import { MISS_REASONS, NEG_OVERSHOOT_ICON, OVERSHOOT_ICON, REST_REASONS, slipLimit, STATE_ICON } from './habitStates'
 import { HabitRecap } from './HabitRecap'
 import { HabitRules } from './HabitRules'
 import { Lifeboard } from './Lifeboard'
@@ -418,6 +418,20 @@ export function Habits() {
           <div className="space-y-2">
             {pickHabit.normal && <p className="text-sm text-slate-500">Normal: {pickHabit.normal}</p>}
             {pickHabit.direction === 'avoid' &&
+              (slipsByHabit.get(pickHabit.id)?.get(today) ?? 0) >=
+                (pickHabit.graceScope === 'day' ? slipLimit(pickHabit) : 1) && (
+                <Button
+                  variant="ghost"
+                  className="w-full"
+                  onClick={() => {
+                    const n = slipsByHabit.get(pickHabit.id)?.get(today) ?? 0
+                    void runSafe(setSlipCount, 'Could not save')(pickHabit.id, today, n + 1)
+                  }}
+                >
+                  {NEG_OVERSHOOT_ICON} {slipsByHabit.get(pickHabit.id)?.get(today)}/{slipLimit(pickHabit)}
+                </Button>
+              )}
+            {pickHabit.direction === 'avoid' &&
               pickHabit.graceScope === 'day' &&
               (slipsByHabit.get(pickHabit.id)?.get(today) ?? 0) > 0 && (
                 <Button
@@ -520,21 +534,14 @@ export function Habits() {
                 const n = countsByHabit.get(pickHabit.id)?.get(today) ?? 0
                 if (n < (pickHabit.perDay ?? 1)) return null
                 return (
-                  <div className="grid grid-cols-2 gap-2">
-                    <Button
-                      variant="ghost"
-                      onClick={() => void runSafe(setDayCount, 'Could not save')(pickHabit.id, today, n + 1)}
-                    >
-                      + Extra{n > (pickHabit.perDay ?? 1) ? ` (${n - (pickHabit.perDay ?? 1)} so far)` : ''}
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      disabled={n <= (pickHabit.perDay ?? 1)}
-                      onClick={() => void runSafe(setDayCount, 'Could not save')(pickHabit.id, today, n - 1)}
-                    >
-                      − Extra
-                    </Button>
-                  </div>
+                  <Button
+                    variant="ghost"
+                    className="w-full"
+                    onClick={() => void runSafe(setDayCount, 'Could not save')(pickHabit.id, today, n + 1)}
+                  >
+                    {OVERSHOOT_ICON}
+                    {n > (pickHabit.perDay ?? 1) ? ` ${n}/${pickHabit.perDay ?? 1}` : ''}
+                  </Button>
                 )
               })()}
             <Button

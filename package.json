@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:auth": "VITE_DEV_AUTH=1 vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "test": "vitest run",

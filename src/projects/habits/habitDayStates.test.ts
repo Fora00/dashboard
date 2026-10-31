@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { Habit, HabitCheck } from '../../lib/db'
 import { activeDaysOf, habitDayStates } from './habitDayStates'
+import { overshootOf, slipLimit } from './habitStates'
 
 const habit = (extra: Partial<Habit> = {}): Habit => ({
   id: 'h',
@@ -49,6 +50,30 @@ describe('overshoot', () => {
     const d = habitDayStates(habit({ perDay: 2 }), [check('2026-10-21', { count: 5 })], new Set(), '2026-10-23')
     expect(d.states.get('2026-10-21')).toBe('done')
     expect(d.counts.get('2026-10-21')).toBe(5)
+  })
+})
+
+describe("overshoot of a don't habit", () => {
+  it('a plain slip counts 1, extra slips are logged as a count', () => {
+    const h = habit({ direction: 'avoid' })
+    const d = habitDayStates(
+      h,
+      [check('2026-10-21', { status: 'fail' }), check('2026-10-22', { status: 'fail', count: 4 })],
+      new Set(),
+      '2026-10-23',
+    )
+    expect(d.states.get('2026-10-22')).toBe('fail')
+    expect(d.slips.get('2026-10-21')).toBe(1)
+    expect(d.slips.get('2026-10-22')).toBe(4)
+    expect(overshootOf(h, 0, 4)).toBe(3)
+    expect(overshootOf(h, 0, 1)).toBe(0)
+  })
+
+  it('with a daily grace the limit is grace + 1', () => {
+    const h = habit({ direction: 'avoid', grace: 2, graceScope: 'day' })
+    expect(slipLimit(h)).toBe(3)
+    expect(overshootOf(h, 0, 3)).toBe(0)
+    expect(overshootOf(h, 0, 5)).toBe(2)
   })
 })
 
