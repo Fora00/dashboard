@@ -12,7 +12,6 @@ import { clearLayout, saveLayout, useBlockLayout } from './useBlockLayout'
 import { CheckinRow } from './CheckinRow'
 import { CollapsibleSection } from './CollapsibleSection'
 import { ExportSection } from './ExportSection'
-import { ChoresSection } from './ChoresSection'
 import { DayFocusSection } from './DayFocusSection'
 import { PlaybookSection } from './PlaybookSection'
 import { FocusSection } from './FocusSection'
@@ -144,7 +143,7 @@ export function WeekBody({ week, plan, entries, readOnly, lateEdit = false, dayF
     blocks.oggi = (
       <>
         <DayFocusSection day={dayFocusDay} />
-        <ChoresSection />
+        {/* Chores hidden for now: kept only as a reference in Things. */}
       </>
     )
   if (plan.playbook && summary.playbook)
