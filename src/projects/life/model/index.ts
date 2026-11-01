@@ -93,3 +93,30 @@ export {
 export { LIFE_IMPORT_BASE, encodeImportLink, decodeImportParam } from './importLink.ts'
 export { encodeStreaksLink, decodeStreaksParam } from './streaksLink.ts'
 export { encodeDayFocusLink, parseDayFocusJson, decodeDayFocusParam, type DayFocusPlan } from './dayFocusLink.ts'
+export {
+  ENGINES,
+  ICEBERG_LAYERS,
+  ENGINE_SCORE_MIN,
+  ENGINE_SCORE_MAX,
+  TREND_ARROW,
+  buildEnginesMarkdown,
+  emptyEngine,
+  engineId,
+  engineLabel,
+  engineTrend,
+  hasIceberg,
+  icebergCounts,
+  isEngineKey,
+  isEngineScore,
+  isMonthKey,
+  habitsByEngine,
+  normalizeIceberg,
+  planLead,
+  stepScore,
+  type EngineHabit,
+  type EngineKey,
+  type EngineRow,
+  type IcebergInput,
+  type IcebergLayer,
+  type Trend,
+} from './engines.ts'

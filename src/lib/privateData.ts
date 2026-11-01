@@ -3,7 +3,7 @@ import { db, type OutboxTable } from './db'
 // Owner-only data that stays readable in IndexedDB after the owner signs out
 // (local-first: signing out never deletes anything by itself). SyncCard offers
 // to remove it from the device right after a sign-out; it is NEVER run
-// automatically. Keep in sync with the owner-only synced tables (Life, Meal
+// automatically. Keep in sync with the owner-only synced tables (Life incl. Life Engines, Meal
 // Diary, Learning progress, the owner's custom events, event marks/prefs, event interests and the interest profile).
 
 /** Local Dexie tables holding owner-only data. */
@@ -11,6 +11,7 @@ const PRIVATE_TABLES = [
   db.lifeWeeks,
   db.lifeEntries,
   db.lifeDayFocus,
+  db.lifeEngines,
   db.learningQuiz,
   db.learningCards,
   db.learningPractice,
@@ -27,6 +28,7 @@ const PRIVATE_REMOTES = new Set<OutboxTable>([
   'life_weeks',
   'life_entries',
   'life_day_focus',
+  'life_engines',
   'learning_quiz',
   'learning_cards',
   'learning_practice',

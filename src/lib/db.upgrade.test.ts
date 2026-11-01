@@ -7,7 +7,8 @@
 // queues existing event marks/prefs once; v16 adds the meals table) and v16
 // (v17 moves starred/hidden from projectStats into the synced projectPrefs)
 // and v17 (v18 adds the empty eventInterest table, nothing queued) and v18
-// (v19 adds the empty eventInterestProfile table, nothing queued).
+// (v19 adds the empty eventInterestProfile table, nothing queued) and v21
+// (v22 adds the empty lifeEngines table, nothing queued).
 // fake-indexeddb must be installed before Dexie loads (Dexie captures
 // indexedDB when its module initialises), so this side-effect import is first.
 import 'fake-indexeddb/auto'
@@ -50,6 +51,15 @@ const V17_STORES = { ...V16_STORES, projectStats: 'id, opens', projectPrefs: 'id
 
 const V18_STORES = { ...V17_STORES, eventInterest: 'id, value' }
 
+const V21_STORES = {
+  ...V18_STORES,
+  eventInterestProfile: 'id',
+  lifeDayFocus: 'id, day',
+  learningQuiz: 'id, courseId, [courseId+moduleId]',
+  learningCards: 'id, courseId, [courseId+moduleId]',
+  learningPractice: 'id, courseId, [courseId+moduleId]',
+}
+
 /** Create the on-disk database at `version` with `stores`, seed it, close it. */
 async function writeOld(version: number, stores: Record<string, string>, seed: (old: Dexie) => Promise<void>) {
   const old = new Dexie(db.name)
@@ -78,7 +88,7 @@ describe('db upgrade paths', () => {
       },
     )
     await db.open()
-    expect(db.verno).toBe(21)
+    expect(db.verno).toBe(22)
     expect((await db.shopAreas.get(DEFAULT_AREA_ID))?.name).toBe('Groceries')
     const items = await db.shopItems.orderBy('createdAt').toArray()
     expect(items.map((i) => [i.id, i.text, i.areaId])).toEqual([
@@ -119,7 +129,7 @@ describe('db upgrade paths', () => {
       await old.table('outbox').add({ table: 'links', op: 'upsert', rowId: 'l1', ts: 1 })
     })
     await db.open()
-    expect(db.verno).toBe(21)
+    expect(db.verno).toBe(22)
     expect(await db.eventMarks.count()).toBe(2)
     // Prefs written before v15 get updatedAt 0 ("merge me" on the server).
     expect(await db.eventPrefs.get('prefs')).toEqual({ id: 'prefs', favouriteCategories: ['music'], updatedAt: 0 })
@@ -157,7 +167,7 @@ describe('db upgrade paths', () => {
       await old.table('outbox').add({ table: 'links', op: 'upsert', rowId: 'l1', ts: 1 })
     })
     await db.open()
-    expect(db.verno).toBe(21)
+    expect(db.verno).toBe(22)
     expect(await db.projectPrefs.orderBy('id').toArray()).toEqual([
       { id: 'events', starred: 0, hidden: 1, updatedAt: 0 },
       { id: 'links', starred: 1, hidden: null, updatedAt: 0 },
@@ -205,7 +215,7 @@ describe('db upgrade paths', () => {
       await old.table('outbox').add({ table: 'event_marks', op: 'upsert', rowId: 'e1', ts: 1 })
     })
     await db.open()
-    expect(db.verno).toBe(21)
+    expect(db.verno).toBe(22)
     expect(await db.eventInterest.count()).toBe(0)
     expect(await db.eventMarks.get('e1')).toMatchObject({ state: 'hidden', updatedAt: 5 })
     expect(await db.projectPrefs.get('links')).toEqual({ id: 'links', starred: 1, hidden: null, updatedAt: 3 })
@@ -223,7 +233,7 @@ describe('db upgrade paths', () => {
       await old.table('outbox').add({ table: 'event_interest', op: 'upsert', rowId: 'e1', ts: 1 })
     })
     await db.open()
-    expect(db.verno).toBe(21)
+    expect(db.verno).toBe(22)
     expect(await db.eventInterestProfile.count()).toBe(0)
     expect(await db.eventInterest.get('e1')).toMatchObject({ value: -1, updatedAt: 7 })
     expect(await db.eventMarks.get('e1')).toMatchObject({ state: 'hidden', updatedAt: 7 })
@@ -236,5 +246,44 @@ describe('db upgrade paths', () => {
       pin: null,
       updatedAt: 1,
     })
+  })
+
+  it('v21 → current: an empty lifeEngines table appears; Life rows and the outbox are kept', async () => {
+    await writeOld(21, V21_STORES, async (old) => {
+      await old.table('lifeDayFocus').add({
+        id: '2026-10-31:0',
+        day: '2026-10-31',
+        slot: 0,
+        title: 'Engine test',
+        done: false,
+        createdAt: 1,
+        updatedAt: 1,
+      })
+      await old.table('lifeWeeks').add({ id: '2026-10-26', week: '2026-10-26', plan: {}, importedAt: 1, updatedAt: 1 })
+      await old.table('outbox').add({ table: 'life_day_focus', op: 'upsert', rowId: '2026-10-31:0', ts: 1 })
+    })
+    await db.open()
+    expect(db.verno).toBe(22)
+    expect(await db.lifeEngines.count()).toBe(0)
+    expect(await db.lifeDayFocus.get('2026-10-31:0')).toMatchObject({ title: 'Engine test' })
+    expect(await db.lifeWeeks.count()).toBe(1)
+    expect((await db.outbox.toArray()).map((e) => `${e.table} ${e.rowId}`)).toEqual(['life_day_focus 2026-10-31:0'])
+    // The new table is usable, with its month index.
+    await db.lifeEngines.put({
+      id: '2026-11:mind',
+      month: '2026-11',
+      engine: 'mind',
+      score: 6,
+      lead: false,
+      event: '',
+      pattern: '',
+      system: '',
+      belief: '',
+      whys: [],
+      lever: '',
+      link: '',
+      updatedAt: 1,
+    })
+    expect(await db.lifeEngines.where('month').equals('2026-11').count()).toBe(1)
   })
 })

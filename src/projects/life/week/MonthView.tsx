@@ -8,12 +8,22 @@ import { Card } from '../../../components/Card'
 import { EmptyState } from '../../../components/EmptyState'
 import { PageHeader } from '../../../components/PageHeader'
 import { SkeletonList } from '../../../components/Skeleton'
-import { addMonths, buildMonthMarkdown, buildMonthReport, monthOf, monthRange, weekKey, parseDayKey } from '../model'
+import {
+  addMonths,
+  buildEnginesMarkdown,
+  buildMonthMarkdown,
+  buildMonthReport,
+  monthOf,
+  monthRange,
+  weekKey,
+  parseDayKey,
+} from '../model'
 import type { MonthHabit, MonthStreak, MonthTracker, Reading } from '../model'
 import { buildChartPoints } from './chartPoints'
 import { liveHabitRatiosByWeek } from './liveHabitRatios'
 import { recapMonths } from './monthRecap'
 import { RecapItems } from './RecapSection'
+import { EnginesSection } from './EnginesSection'
 import { HabitRecap } from '../../habits/HabitRecap'
 import { buildRecap, recapPeriod } from '../../habits/habitRecapData'
 import { reasonLabel } from '../../habits/habitStates'
@@ -178,10 +188,11 @@ function HabitsMonthCard({ month, today }: { month: string; today: string }) {
   )
 }
 
-/** Read-only month check: what the month said per habit (Streaks + trackers),
- * the progress lines against last month, and the monthly question. Built from
- * the app's own data; nothing is stored here (the decision lives in Notion and
- * Things, taken with `/month`). */
+/** Month check: what the month said per habit (Streaks + trackers), the
+ * progress lines against last month, the Life Engines audit and the monthly
+ * question. Read-only except the Engines (scores, lead, iceberg: lifeEngines);
+ * the go up / stay / go down decision is not stored here (it lives in ~/life
+ * and Things, taken with `/month`). */
 export function MonthView({
   weeks,
   today,
@@ -271,8 +282,13 @@ export function MonthView({
       extra: r.extra,
       reasons: Object.fromEntries(Object.entries(r.reasons).map(([k, n]) => [reasonLabel(k), n])),
     }))
+    const [engineRows, prevEngineRows] = await Promise.all([
+      db.lifeEngines.where('month').equals(month).toArray(),
+      db.lifeEngines.where('month').equals(prev).toArray(),
+    ])
+    const md = `${buildMonthMarkdown(report, lines, habits)}\n${buildEnginesMarkdown(month, engineRows, prevEngineRows, live)}`
     try {
-      await navigator.clipboard.writeText(buildMonthMarkdown(report, lines, habits))
+      await navigator.clipboard.writeText(md)
       flashCopied()
     } catch {
       // clipboard unavailable: nothing to fall back to here
@@ -357,14 +373,16 @@ export function MonthView({
             />
           )}
 
+          <EnginesSection month={month} prevMonth={prev} prevLabel={shortDay(`${prev}-01`).slice(-3)} />
+
           {criteria.length > 0 && <RecapItems week={recap!.week} items={criteria} />}
 
           <Card className="space-y-1 text-sm">
             <p className="font-medium text-slate-800 dark:text-slate-100">Go up, stay, or go down?</p>
             <p className="text-slate-600 dark:text-slate-300">
               {criteria.length > 0 ? 'Look at the criteria above, then decide.' : 'No written criteria this month.'} Run{' '}
-              <span className="font-medium">/month</span> in Claude Code to go through each habit with the numbers.
-              Nothing is saved here.
+              <span className="font-medium">/month</span> in Claude Code to go through each habit with the numbers. The
+              decision is not saved here.
             </p>
             <Button variant="ghost" onClick={exportMonth}>
               {copied ? 'Copied ✓' : 'Export month for /month'}

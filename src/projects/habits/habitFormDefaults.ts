@@ -1,4 +1,5 @@
 import type { Habit, HabitDirection, HabitGraceScope, HabitKind, HabitSocial, HabitVerdict } from '../../lib/db'
+import type { EngineKey } from '../life/model/engines'
 import { shiftDayKey } from './habitStats'
 
 /** Everything the habit form edits, as plain strings and numbers. */
@@ -19,6 +20,8 @@ export interface HabitFormValues {
   cycleStart: string
   cycleEnd: string
   verdict: HabitVerdict | undefined
+  /** The Life Engine this habit feeds; undefined = untagged. */
+  engine: EngineKey | undefined
 }
 
 export const CYCLE_DAYS = 28
@@ -41,6 +44,7 @@ export function toForm(habit: Habit): HabitFormValues {
     cycleStart: habit.cycleStart ?? '',
     cycleEnd: habit.cycleEnd ?? '',
     verdict: habit.verdict,
+    engine: habit.engine,
   }
 }
 
@@ -63,6 +67,7 @@ export function newForm(today: string, kind: HabitKind): HabitFormValues {
     cycleStart: today,
     cycleEnd: shiftDayKey(today, CYCLE_DAYS - 1),
     verdict: undefined,
+    engine: undefined,
   }
 }
 

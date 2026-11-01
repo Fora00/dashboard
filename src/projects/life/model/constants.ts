@@ -66,6 +66,14 @@ export const LIFE_CAPS = {
   choreMax: 100_000,
   /** Length of a chore's weekly history strip (SQL: life_entries_chore_value). */
   choreWeeks: 12,
+  /** Life Engines iceberg (SQL: life_engines, 20261101120000_life_engines.sql):
+   *  each free-text layer, one why, how many whys, the lever (one sentence) and
+   *  the free-text link to a habit or experiment by name. */
+  engineLayer: 1000,
+  engineWhy: 300,
+  engineWhys: 3,
+  engineLever: 200,
+  engineLink: 100,
   /** Check-in note (SQL: life_entries_checkin_value, char_length ≤ 1000). */
   checkinNote: 1000,
   /** Sunday text answers (SQL: pg_column_size(value) ≤ 16 KiB). */

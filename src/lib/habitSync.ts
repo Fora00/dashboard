@@ -2,6 +2,27 @@ import { db, type Habit, type HabitCheck, type HabitDayState, type HabitKind, ty
 import { createCloudSync, type TableSync } from './cloudSync'
 import { useSyncStatus } from './useSyncStatus'
 import { uuidV5 } from './uuidV5'
+import { isEngineKey } from '../projects/life/model/engines'
+// Caps and clipEmoji live in habitCaps.ts (pure, shared with the import link
+// script); re-exported so existing imports are untouched.
+import {
+  MAX_GRACE,
+  MAX_NAME_LENGTH,
+  MAX_PER_DAY,
+  MAX_TARGET,
+  MAX_TEXT_LENGTH,
+  MAX_NOTE_LENGTH,
+  clipEmoji,
+} from './habitCaps'
+export {
+  MAX_EMOJI_LENGTH,
+  MAX_GRACE,
+  MAX_NAME_LENGTH,
+  MAX_NOTE_LENGTH,
+  MAX_PER_DAY,
+  MAX_TEXT_LENGTH,
+  clipEmoji,
+} from './habitCaps'
 
 // Local-first sync for the habits project, built on the generic engine in
 // cloudSync.ts. Copies the todo reference integration (src/lib/todoSync.ts):
@@ -9,22 +30,6 @@ import { uuidV5 } from './uuidV5'
 //   2. createCloudSync({ projectId, tables }),
 //   3. export mutation helpers the UI calls instead of raw Dexie writes,
 //   4. export startHabitSync = engine.start and wire it in App.tsx.
-
-// Caps — MUST match the CHECK constraints in
-// supabase/migrations/20260930160100_text_caps.sql and the inputs' maxLength.
-export const MAX_NAME_LENGTH = 300
-export const MAX_EMOJI_LENGTH = 8
-export const MAX_TEXT_LENGTH = 300 // anchor, normal, floor, why
-export const MAX_NOTE_LENGTH = 100
-export const MAX_PER_DAY = 20
-export const MAX_GRACE = 7
-
-/** Cap an emoji without leaving half a surrogate pair at the cut. */
-export function clipEmoji(raw: string): string {
-  return Array.from(raw.trim().slice(0, MAX_EMOJI_LENGTH))
-    .filter((c) => c.length === 2 || !/[\ud800-\udfff]/.test(c))
-    .join('')
-}
 
 interface HabitRow {
   id: string
@@ -46,6 +51,7 @@ interface HabitRow {
   cycle_start: string | null
   cycle_end: string | null
   verdict: string | null
+  engine: string | null
 }
 
 interface HabitCheckRow {
@@ -62,7 +68,7 @@ const habitsTable: TableSync<Habit, HabitRow> = {
   remote: 'habits',
   table: () => db.habits,
   columns:
-    'id, name, emoji, created_at, archived_at, anchor, why, social, direction, per_day, grace, grace_scope, normal, floor, target, kind, cycle_start, cycle_end, verdict',
+    'id, name, emoji, created_at, archived_at, anchor, why, social, direction, per_day, grace, grace_scope, normal, floor, target, kind, cycle_start, cycle_end, verdict, engine',
   realtime: true,
   toRow: (h) => ({
     id: h.id,
@@ -84,6 +90,7 @@ const habitsTable: TableSync<Habit, HabitRow> = {
     cycle_start: h.cycleStart ?? null,
     cycle_end: h.cycleEnd ?? null,
     verdict: h.verdict ?? null,
+    engine: h.engine ?? null,
   }),
   fromRow: (r) => ({
     id: r.id,
@@ -105,6 +112,7 @@ const habitsTable: TableSync<Habit, HabitRow> = {
     cycleStart: r.cycle_start ?? undefined,
     cycleEnd: r.cycle_end ?? undefined,
     verdict: (r.verdict as HabitVerdict | null) ?? undefined,
+    engine: isEngineKey(r.engine) ? r.engine : undefined,
   }),
 }
 
@@ -220,6 +228,7 @@ export type HabitDetails = Partial<
     | 'cycleStart'
     | 'cycleEnd'
     | 'verdict'
+    | 'engine'
   >
 >
 
@@ -235,11 +244,14 @@ function cleanDetails(d: HabitDetails): HabitDetails {
     perDay: d.perDay === undefined ? undefined : Math.min(MAX_PER_DAY, Math.max(1, Math.round(d.perDay))),
     normal: text(d.normal),
     floor: text(d.floor),
-    target: d.target === undefined ? undefined : Math.min(7, Math.max(1, Math.round(d.target))),
+    target: d.target === undefined ? undefined : Math.min(MAX_TARGET, Math.max(1, Math.round(d.target))),
     kind: d.kind,
     cycleStart: d.cycleStart || undefined,
     cycleEnd: d.cycleEnd || undefined,
     verdict: d.verdict,
+    // One of the seven Life Engines or nothing: anything else is dropped (the
+    // habits_engine_check CHECK would reject it on the server).
+    engine: isEngineKey(d.engine) ? d.engine : undefined,
   }
 }
 

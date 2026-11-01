@@ -6,8 +6,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { db, resetDb } from '../test/fakeDb'
 import { drain } from '../test/drain'
 import type { FakeSupabase } from '../test/fakeSupabase'
-import { checkId, dedupeChecks, setDayState, setSlipCount, sync, toggleCheck } from './habitSync'
-import type { HabitCheck } from './db'
+import { addHabit, checkId, dedupeChecks, setDayState, setSlipCount, sync, toggleCheck, updateHabit } from './habitSync'
+import type { HabitCheck, LifeEngineKey } from './db'
 
 const fake = await vi.hoisted(async () => {
   const { createFakeSupabase } = await import('../test/fakeSupabase')
@@ -157,5 +157,54 @@ describe('slip counts for habits to avoid', () => {
     await settle()
     expect(await db.habitChecks.count()).toBe(0)
     expect(sync.getStatus().dead).toBe(0)
+  })
+})
+
+type HabitRemote = { id: string; name: string; engine: string | null }
+const remoteHabits = () => (fake.remote.habits ?? []) as unknown as HabitRemote[]
+
+describe('engine tag (EN2)', () => {
+  it('round-trips a tagged and an untagged habit through the server', async () => {
+    const tagged = await addHabit('Test habit A', '🅰️', { engine: 'mind' })
+    const plain = await addHabit('Test habit B', '🅱️')
+    await settle()
+    const byId = new Map(remoteHabits().map((r) => [r.id, r]))
+    expect(byId.get(tagged.id)?.engine).toBe('mind')
+    expect(byId.get(plain.id)?.engine).toBeNull()
+
+    // Pull back from the server as the source of truth.
+    await db.habits.clear()
+    await sync.syncNow()
+    await settle()
+    expect((await db.habits.get(tagged.id))?.engine).toBe('mind')
+    const back = await db.habits.get(plain.id)
+    expect(back).toBeDefined()
+    expect(back?.engine).toBeUndefined()
+  })
+
+  it('updating can set, change and clear the engine', async () => {
+    const h = await addHabit('Test habit C', '🅲')
+    await updateHabit(h, h.name, h.emoji, { engine: 'money' })
+    expect((await db.habits.get(h.id))?.engine).toBe('money')
+    await updateHabit(h, h.name, h.emoji, { engine: undefined })
+    await settle()
+    expect((await db.habits.get(h.id))?.engine).toBeUndefined()
+    expect(remoteHabits().find((r) => r.id === h.id)?.engine).toBeNull()
+  })
+
+  it('the writer drops an engine that is not one of the seven', async () => {
+    const h = await addHabit('Test habit D', '🅳', { engine: 'hobbies' as LifeEngineKey })
+    await settle()
+    expect((await db.habits.get(h.id))?.engine).toBeUndefined()
+    expect(remoteHabits().find((r) => r.id === h.id)?.engine).toBeNull()
+  })
+
+  it('a pulled row with an unknown engine is read as untagged', async () => {
+    const row = { id: 'hx', name: 'Test habit E', emoji: '🅴', created_at: 1, engine: 'hobbies' }
+    fake.remote.habits = [row]
+    await sync.syncNow()
+    await settle()
+    expect(await db.habits.get('hx')).toMatchObject({ name: 'Test habit E' })
+    expect((await db.habits.get('hx'))?.engine).toBeUndefined()
   })
 })

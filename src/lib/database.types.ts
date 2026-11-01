@@ -352,6 +352,7 @@ export type Database = {
           cycle_start: string | null
           direction: string | null
           emoji: string
+          engine: string | null
           floor: string | null
           grace: number | null
           grace_scope: string | null
@@ -373,6 +374,7 @@ export type Database = {
           cycle_start?: string | null
           direction?: string | null
           emoji: string
+          engine?: string | null
           floor?: string | null
           grace?: number | null
           grace_scope?: string | null
@@ -394,6 +396,7 @@ export type Database = {
           cycle_start?: string | null
           direction?: string | null
           emoji?: string
+          engine?: string | null
           floor?: string | null
           grace?: number | null
           grace_scope?: string | null
@@ -523,6 +526,54 @@ export type Database = {
           slot?: number
           title?: string
           updated_at?: number
+        }
+        Relationships: []
+      }
+      life_engines: {
+        Row: {
+          belief: string
+          engine: string
+          event: string
+          id: string
+          lead: boolean
+          lever: string
+          link: string
+          month: string
+          pattern: string
+          score: number | null
+          system: string
+          updated_at: number
+          whys: string[]
+        }
+        Insert: {
+          belief?: string
+          engine: string
+          event?: string
+          id: string
+          lead?: boolean
+          lever?: string
+          link?: string
+          month: string
+          pattern?: string
+          score?: number | null
+          system?: string
+          updated_at: number
+          whys?: string[]
+        }
+        Update: {
+          belief?: string
+          engine?: string
+          event?: string
+          id?: string
+          lead?: boolean
+          lever?: string
+          link?: string
+          month?: string
+          pattern?: string
+          score?: number | null
+          system?: string
+          updated_at?: number
+          whys?: string[]
         }
         Relationships: []
       }
@@ -948,6 +999,7 @@ export type Database = {
       join_area: { Args: { token: string }; Returns: undefined }
       join_project: { Args: { token: string }; Returns: string }
       jwt_email: { Args: never; Returns: string }
+      life_engines_whys_ok: { Args: { w: string[] }; Returns: boolean }
       links_tags_within_length: { Args: { tags: string[] }; Returns: boolean }
       project_invite_token: { Args: { pid: string }; Returns: string }
       redeem_invite: {

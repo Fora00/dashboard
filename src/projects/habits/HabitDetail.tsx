@@ -11,6 +11,7 @@ import { suggest } from './habitSuggestions'
 import { toForm } from './habitFormDefaults'
 import { STATE_CELL } from './habitStates'
 import { HabitLegend } from './HabitLegend'
+import { engineLabel } from '../life/model/engines'
 
 const WEEKDAYS = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
 /** The states a day can be set to from the calendar, never a partial one. A
@@ -70,6 +71,15 @@ function Body({ habit, states, notes, openCount, wins, today, onClose, onArchive
 
   return (
     <div className="space-y-6">
+      {habit.engine && (
+        <p
+          data-testid="habit-engine"
+          aria-label={`Engine: ${engineLabel(habit.engine)}`}
+          className="-mb-3 inline-flex rounded-full border border-slate-300 px-2.5 py-0.5 text-xs text-slate-600 dark:border-slate-700 dark:text-slate-300"
+        >
+          {engineLabel(habit.engine)}
+        </p>
+      )}
       <HabitSuggestionList
         suggestions={suggest({ habit, stats: s, states, notes, today, openCount })}
         onApply={(sg) => {

@@ -3,6 +3,8 @@ import {
   type LifeAnswer,
   type LifeCheckinEntry,
   type LifeDayFocus,
+  type LifeEngine,
+  type LifeEngineKey,
   type LifeEntry,
   type LifeFocusEntry,
   type LifeIdeaEntry,
@@ -28,7 +30,15 @@ import {
   LIFE_CAPS,
   dayFocusId,
   dayKey,
+  emptyEngine,
+  engineId,
   entryId,
+  isEngineKey,
+  isEngineScore,
+  isMonthKey,
+  normalizeIceberg,
+  planLead,
+  type IcebergInput,
   freeSlots,
   isEnergy,
   planChoreImport,
@@ -48,6 +58,8 @@ import {
 //   life_day_focus  "Focus di oggi": up to 3 free-text lines per day, id
 //                 `${day}:${slot}` (slot 0-2, so a day never exceeds 3), edited
 //                 in place, deleted for real. Not part of the week plan/export.
+//   life_engines  Life Engines (Life → Month): one row per month and engine, id
+//                 `${YYYY-MM}:${engine}`, edited in place, never deleted.
 //   life_entries  one row per logged thing. Tracker and playbook +1s are append-only rows
 //                 with random ids; focus-done / Sunday answer / task-sent /
 //                 check-in done+note use
@@ -177,9 +189,67 @@ const dayFocusTable: TableSync<LifeDayFocus, LifeDayFocusRow> = {
   },
 }
 
+interface LifeEngineRow {
+  id: string
+  month: string
+  engine: string
+  score: number | null
+  lead: boolean
+  event: string
+  pattern: string
+  system: string
+  belief: string
+  whys: string[]
+  lever: string
+  link: string
+  updated_at: number
+}
+
+const enginesTable: TableSync<LifeEngine, LifeEngineRow> = {
+  remote: 'life_engines',
+  table: () => db.lifeEngines,
+  columns: 'id, month, engine, score, lead, event, pattern, system, belief, whys, lever, link, updated_at',
+  realtime: true,
+  updatedAt: (e) => e.updatedAt,
+  toRow: (e) => ({
+    id: e.id,
+    month: e.month,
+    engine: e.engine,
+    score: e.score ?? null,
+    lead: e.lead === true,
+    event: e.event ?? '',
+    pattern: e.pattern ?? '',
+    system: e.system ?? '',
+    belief: e.belief ?? '',
+    whys: e.whys ?? [],
+    lever: e.lever ?? '',
+    link: e.link ?? '',
+    updated_at: e.updatedAt,
+  }),
+  fromRow: (r) => {
+    if (!isMonthKey(r.month) || !isEngineKey(r.engine)) throw new Error('life_engines: bad row')
+    const score = r.score === null || r.score === undefined ? null : Number(r.score)
+    return {
+      id: r.id,
+      month: r.month,
+      engine: r.engine,
+      score: isEngineScore(score) ? score : null,
+      lead: Boolean(r.lead),
+      event: r.event ?? '',
+      pattern: r.pattern ?? '',
+      system: r.system ?? '',
+      belief: r.belief ?? '',
+      whys: Array.isArray(r.whys) ? r.whys.filter((w): w is string => typeof w === 'string') : [],
+      lever: r.lever ?? '',
+      link: r.link ?? '',
+      updatedAt: Number(r.updated_at),
+    }
+  },
+}
+
 const engine = createCloudSync({
   projectId: 'life',
-  tables: [weeksTable, entriesTable, dayFocusTable],
+  tables: [weeksTable, entriesTable, dayFocusTable, enginesTable],
 })
 
 // --- Local mutations (used by the UI; safe with or without sync) -----------
@@ -735,6 +805,60 @@ export async function editDayFocus(id: string, title: string): Promise<void> {
 /** Delete a day-focus line (its slot becomes free). */
 export async function removeDayFocus(id: string): Promise<void> {
   await engine.remove('life_day_focus', id)
+}
+
+// --- Life Engines (Life → Month) --------------------------------------------
+
+function checkEngine(month: string, key: LifeEngineKey): void {
+  if (!isMonthKey(month)) throw new Error(`Not a month: ${month}`)
+  if (!isEngineKey(key)) throw new Error(`Not an engine: ${String(key)}`)
+}
+
+async function engineRow(month: string, key: LifeEngineKey, now: number): Promise<LifeEngine> {
+  return (await db.lifeEngines.get(engineId(month, key))) ?? emptyEngine(month, key, now)
+}
+
+/** Set (1-10) or clear (null) an engine's score for a month. A no-op writes nothing. */
+export async function setEngineScore(month: string, key: LifeEngineKey, score: number | null): Promise<void> {
+  checkEngine(month, key)
+  if (score !== null && !isEngineScore(score)) throw new Error('The score is a whole number from 1 to 10')
+  const now = Date.now()
+  const row = await engineRow(month, key, now)
+  if (row.score === score) return
+  await engine.upsert('life_engines', { ...row, score, updatedAt: now })
+}
+
+/**
+ * Make an engine the month's lead (clearing any other lead of that month, so
+ * there is at most one) or drop its lead flag.
+ */
+export async function setEngineLead(month: string, key: LifeEngineKey, lead: boolean): Promise<void> {
+  checkEngine(month, key)
+  const rows = await db.lifeEngines.where('month').equals(month).toArray()
+  const changes = planLead(rows, month, key, lead, Date.now())
+  if (changes.length > 0) await engine.upsertMany('life_engines', changes)
+}
+
+/**
+ * Save an engine's iceberg (layers, whys, lever, link): trimmed and capped by
+ * normalizeIceberg; score and lead are kept. A no-op writes nothing.
+ */
+export async function saveEngineIceberg(month: string, key: LifeEngineKey, input: IcebergInput): Promise<void> {
+  checkEngine(month, key)
+  const now = Date.now()
+  const row = await engineRow(month, key, now)
+  const next = normalizeIceberg(input)
+  const same =
+    next.event === row.event &&
+    next.pattern === row.pattern &&
+    next.system === row.system &&
+    next.belief === row.belief &&
+    next.lever === row.lever &&
+    next.link === row.link &&
+    next.whys.length === row.whys.length &&
+    next.whys.every((w, i) => w === row.whys[i])
+  if (same) return
+  await engine.upsert('life_engines', { ...row, ...next, updatedAt: now })
 }
 
 // --- Sync engine ------------------------------------------------------------

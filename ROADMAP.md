@@ -1288,6 +1288,47 @@ Low-confidence — flagged for completeness, not verified as real problems:
       per screen before treating it as a bug list. Effort to scope: S just
       to figure out if there's anything real here.
 
+## Life Engines (owner, 2026-11-01, handoff from ~/life)
+
+Monthly audit of seven life areas (physical-health, emotions, mind,
+relationships, career, money, environment), scored 1-10, one lead engine per
+month, iceberg sheet per engine. Lives in Life → Month only; Habits, Today,
+Week, Board and the habit model are NOT touched. Defaults for the open
+questions (owner may override): (a) Month view only; (b) scores stay editable
+after the month ends; (c) whys show in the sheet only, never in the export.
+
+- [x] **EN1 Engines audit in Life → Month** [opus, M] DONE 2026-11-01 (migration
+  pushed, types regenerated; not committed) — Dexie table
+  `lifeEngines` keyed `${month}:${engineKey}` (version bump + upgrade test),
+  synced via `lifeSync.ts` + owner-only `life_engines` migration, seven cards
+  (score stepper, previous score + trend, lead toggle), iceberg sheet, `##
+  Engines` in the month export (counts + lever only), documented in
+  `.claude/commands/month.md`. Unit tests + one e2e smoke. No personal text.
+- [x] **EN2 Engine tag on habits** DONE 2026-11-01 (single tag = one of the 7
+  engines; migration pushed, types regenerated; not committed) —
+  (owner, 2026-11-01) every habit, existing and new, can carry one engine key
+  (optional field `engine` on `habits`, nullable column + migration, picker in
+  HabitForm, existing habits untagged until he tags them). Engines audit shows
+  the habits of each engine; export gets per-engine habit counts. Questions for
+  the owner first: one tag or several? tag = the 7 engines or free labels?
+
+- [x] **EN3 Board: two lifeboards** DONE 2026-11-01 (forever + experiments by
+  `kind`, lifetime, legend grouped by engine; not committed) — (owner,
+  2026-11-01) in Board, two categories of view: a "lifetime board" with squares
+  (one square per period, per habit/engine) and the same for experiments.
+  Open questions for the owner when we reach it: what is one square (day, week,
+  month)? lifetime = from first log, or a fixed span? experiments = the habit
+  cycles, or a new thing? grouped by engine?
+
+- [x] **EN4 Habits import link** DONE 2026-11-01 [opus, M] — (owner, 2026-11-01; freeze of
+  30/10 on Habits features lifted by the owner for THIS feature only) a script
+  reads `~/life/_sync/habits-plan.json`, prints a `#/habits/import?d=…` link;
+  the page previews creates (`+ new`) and updates (before → after, merged onto
+  the existing habit by name), applies only on tap via `addHabit`/`updateHabit`,
+  idempotent, never archives/deletes, never touches checks. Copy the streaks
+  link (`scripts/life-streaks-link.ts`, `streaksLink.ts`, `LifeStreaks`). Spec:
+  `~/life/_sync/handoff-dashboard-habits-import.md`. No schema change.
+
 ## Ideas / later
 
 - [ ] **🤝 Sharing review: what can be shared, and better ways to do it** [opus]

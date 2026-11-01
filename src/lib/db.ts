@@ -92,6 +92,9 @@ export interface Habit {
   cycleStart?: string | undefined // 'YYYY-MM-DD'
   cycleEnd?: string | undefined
   verdict?: HabitVerdict | undefined // set when the cycle is judged
+  // The one Life Engine this habit feeds (EN2). Unset = untagged. Not indexed:
+  // no Dexie version bump, old rows simply lack the field.
+  engine?: LifeEngineKey | undefined
 }
 export type HabitDayState = 'done' | 'floor' | 'skip' | 'fail'
 export type HabitGraceScope = 'day' | 'week'
@@ -370,6 +373,38 @@ export interface LifeDayFocus {
   updatedAt: number
 }
 
+// Life Engines (Life → Month): a monthly audit of seven life areas, one row per
+// month and engine, id `${YYYY-MM}:${engine}` (synced owner-only via
+// lifeSync.ts, remote life_engines). Pure helpers and caps:
+// src/projects/life/model/engines.ts. At most one `lead` per month is enforced
+// by the writer (setEngineLead), not by the schema.
+export type LifeEngineKey =
+  | 'physical-health'
+  | 'emotions'
+  | 'mind'
+  | 'relationships'
+  | 'career'
+  | 'money'
+  | 'environment'
+
+export interface LifeEngine {
+  id: string
+  month: string // 'YYYY-MM'
+  engine: LifeEngineKey
+  score: number | null // 1-10, null = not scored
+  lead: boolean
+  // The iceberg: four free-text layers, up to 3 whys, one lever, a free-text
+  // link to a habit/experiment by name. Never exported (counts + lever only).
+  event: string
+  pattern: string
+  system: string
+  belief: string
+  whys: string[]
+  lever: string
+  link: string
+  updatedAt: number
+}
+
 // Learning (src/projects/learning): the learner's state (synced, owner-only,
 // via learningSync.ts).
 // Course content is static bundle data; `id` is `${courseId}:${moduleId}:${itemId}`
@@ -589,6 +624,7 @@ export interface OutboxMap {
   life_weeks: LifeWeek
   life_entries: LifeEntry
   life_day_focus: LifeDayFocus
+  life_engines: LifeEngine
   learning_quiz: LearningQuizAnswer
   learning_cards: LearningCard
   learning_practice: LearningPractice
@@ -717,6 +753,7 @@ export const db = new Dexie('dashboard') as Dexie & {
   lifeWeeks: EntityTable<LifeWeek, 'id'>
   lifeEntries: EntityTable<LifeEntry, 'id'>
   lifeDayFocus: EntityTable<LifeDayFocus, 'id'>
+  lifeEngines: EntityTable<LifeEngine, 'id'>
   learningQuiz: EntityTable<LearningQuizAnswer, 'id'>
   learningCards: EntityTable<LearningCard, 'id'>
   learningPractice: EntityTable<LearningPractice, 'id'>
@@ -1256,6 +1293,41 @@ db.version(21).stores({
   learningQuiz: 'id, courseId, [courseId+moduleId]',
   learningCards: 'id, courseId, [courseId+moduleId]',
   learningPractice: 'id, courseId, [courseId+moduleId]',
+})
+
+// v22: lifeEngines, the monthly Life Engines audit (lifeSync.ts). A brand-new
+// empty table: no upgrade callback.
+db.version(22).stores({
+  files: 'id, name, createdAt, synced',
+  shopItems: 'id, done, createdAt, areaId',
+  shopAreas: 'id, createdAt',
+  outbox: '++seq, rowId',
+  climbSessions: 'id, date',
+  climbs: 'id, sessionId, date',
+  habits: 'id, createdAt',
+  habitChecks: 'id, habitId, day, [habitId+day]',
+  todos: 'id, done, createdAt',
+  bookIdeas: 'id, createdAt',
+  boardgameIdeas: 'id, createdAt',
+  links: 'id, read, createdAt, *tags',
+  projectStats: 'id, opens',
+  lifeWeeks: 'id, importedAt',
+  lifeEntries: 'id, week, [week+kind]',
+  eventsCache: 'id',
+  eventMarks: 'id, state, updatedAt',
+  eventPrefs: 'id',
+  tripIdeas: 'id, done, createdAt, *companionIds',
+  tripCompanions: 'id, createdAt',
+  customEvents: 'id, start, updatedAt',
+  meals: 'id, day, createdAt',
+  projectPrefs: 'id',
+  eventInterest: 'id, value',
+  eventInterestProfile: 'id',
+  lifeDayFocus: 'id, day',
+  learningQuiz: 'id, courseId, [courseId+moduleId]',
+  learningCards: 'id, courseId, [courseId+moduleId]',
+  learningPractice: 'id, courseId, [courseId+moduleId]',
+  lifeEngines: 'id, month',
 })
 
 // Ask the browser not to evict our data under storage pressure (important on iOS).

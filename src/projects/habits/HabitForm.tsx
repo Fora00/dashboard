@@ -2,6 +2,7 @@ import { useState, type FormEvent, type ReactNode } from 'react'
 import type { HabitKind, HabitVerdict } from '../../lib/db'
 import { Button } from '../../components/Button'
 import { MAX_EMOJI_LENGTH, MAX_NAME_LENGTH, MAX_TEXT_LENGTH } from '../../lib/habitSync'
+import { ENGINES } from '../life/model/engines'
 import { shiftDayKey } from './habitStats'
 import { AVOID_IDEAS, AVOID_PRESETS, CYCLE_DAYS, IDEAS, PRESETS, type HabitFormValues } from './habitFormDefaults'
 
@@ -325,6 +326,34 @@ export function HabitForm({ initial, submitLabel, onSubmit, presets, verdict, ex
           </div>
         </>
       )}
+
+      <div role="group" aria-label="Engine" className="space-y-1">
+        <span className="text-sm font-medium">Engine</span>
+        <span className="block text-xs text-slate-500 dark:text-slate-400">
+          The one life area this habit feeds (optional). The Month audit lists the habits of each engine.
+        </span>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            aria-pressed={v.engine === undefined}
+            onClick={() => set('engine', undefined)}
+            className={`${CHIP} ${v.engine === undefined ? CHIP_ON : CHIP_OFF}`}
+          >
+            none
+          </button>
+          {ENGINES.map((e) => (
+            <button
+              key={e.key}
+              type="button"
+              aria-pressed={v.engine === e.key}
+              onClick={() => set('engine', v.engine === e.key ? undefined : e.key)}
+              className={`${CHIP} ${v.engine === e.key ? CHIP_ON : CHIP_OFF}`}
+            >
+              {e.label}
+            </button>
+          ))}
+        </div>
+      </div>
 
       <div role="group" aria-label="Kind" className="space-y-1">
         <span className="text-sm font-medium">Kind</span>

@@ -4,7 +4,8 @@
 // are never drawn, so a miss costs nothing and the book just keeps filling.
 // Pure: the page feeds it the per-habit day data.
 
-import type { Habit, HabitDayState } from '../../lib/db'
+import type { Habit, HabitDayState, HabitKind } from '../../lib/db'
+import { ENGINES, type EngineKey } from '../life/model/engines'
 
 export const PALETTE = [
   '#ef4444', // red
@@ -65,8 +66,13 @@ export function colorsFor(habits: readonly Habit[]): Map<string, string> {
   return new Map(order.map((h, i) => [h.id, PALETTE[i % PALETTE.length]!]))
 }
 
-export function buildLifeboard(habits: readonly Habit[], data: ReadonlyMap<string, DayData>): Lifeboard {
-  const colors = colorsFor(habits)
+/** `colors` defaults to colorsFor(habits); pass the colours of ALL habits when
+ *  `habits` is a subset (one board) so a habit keeps its colour everywhere. */
+export function buildLifeboard(
+  habits: readonly Habit[],
+  data: ReadonlyMap<string, DayData>,
+  colors: ReadonlyMap<string, string> = colorsFor(habits),
+): Lifeboard {
   const rank = new Map(
     [...habits].sort((a, b) => a.createdAt - b.createdAt || a.id.localeCompare(b.id)).map((h, i) => [h.id, i]),
   )
@@ -97,4 +103,74 @@ export function byMonth(boxes: readonly Box[]): [string, Box[]][] {
     else m.set(k, [b])
   }
   return [...m.entries()].sort((a, b) => b[0].localeCompare(a[0]))
+}
+
+// EN3: two boards on the Board tab, one per habit kind, each with its legend
+// grouped by Life Engine. Boxes stay one strip per board (engines interleaved,
+// coloured per habit); counts stay lifetime per habit.
+
+/** A habit's kind; legacy rows without one are 'forever' (as in the form). */
+export function habitKind(h: Pick<Habit, 'kind'>): HabitKind {
+  return h.kind ?? 'forever'
+}
+
+export function splitByKind(habits: readonly Habit[]): Record<HabitKind, Habit[]> {
+  const out: Record<HabitKind, Habit[]> = { forever: [], experiment: [] }
+  for (const h of habits) out[habitKind(h)].push(h)
+  return out
+}
+
+export interface EngineGroup {
+  /** null = the habits without an engine tag. */
+  engine: EngineKey | null
+  label: string
+  rows: LegendRow[]
+  total: number
+}
+
+export const NO_ENGINE_LABEL = 'No engine'
+
+/** Legend rows grouped by engine, in the engines' order, untagged last; empty
+ *  groups are left out. Rows keep their order (most wins first). */
+export function groupByEngine(legend: readonly LegendRow[]): EngineGroup[] {
+  const groups: EngineGroup[] = [
+    ...ENGINES.map((e) => ({
+      engine: e.key as EngineKey | null,
+      label: e.label as string,
+      rows: [] as LegendRow[],
+      total: 0,
+    })),
+    { engine: null, label: NO_ENGINE_LABEL, rows: [], total: 0 },
+  ]
+  for (const row of legend) {
+    const g = groups.find((x) => x.engine === (row.habit.engine ?? null)) ?? groups[groups.length - 1]!
+    g.rows.push(row)
+    g.total += row.total
+  }
+  return groups.filter((g) => g.rows.length > 0)
+}
+
+export interface KindBoard extends Lifeboard {
+  kind: HabitKind
+  habitCount: number
+  groups: EngineGroup[]
+}
+
+/** The forever board and the experiments board, colours shared across both. */
+export function buildKindBoards(
+  habits: readonly Habit[],
+  data: ReadonlyMap<string, DayData>,
+): Record<HabitKind, KindBoard> {
+  const colors = colorsFor(habits)
+  const split = splitByKind(habits)
+  const one = (kind: HabitKind): KindBoard => {
+    const board = buildLifeboard(split[kind], data, colors)
+    return {
+      ...board,
+      kind,
+      habitCount: split[kind].length,
+      groups: groupByEngine(board.legend),
+    }
+  }
+  return { forever: one('forever'), experiment: one('experiment') }
 }

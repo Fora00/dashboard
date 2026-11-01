@@ -23,6 +23,7 @@ queue: `ROADMAP.md` (`npm run roadmap` lists the open tasks).
 | `.githooks/` | Pre-commit runs `npm run check` (installed by `npm run prepare`) |
 | `scripts/events/` | Events crawler (adapters, pipeline, `spot.json`); output `public/events.json`, see `docs/EVENTS.md` |
 | `scripts/new-project.mjs` | Scaffolder behind `docs/NEW_PROJECT.md` |
+| `scripts/life-habits-link.ts` | `npm run life:habits-link -- [plan.json]` (default `~/life/_sync/habits-plan.json`): validates a habits plan (new habits + edits, matched by name) and prints `#/habits/import?d=<base64url JSON>`. The route `/habits/import` (`src/projects/habits/HabitsImport.tsx`; pure model `habitsPlan.ts`, apply `habitsPlanApply.ts`) previews `+ new` / before → after / no change and writes only on tap via `addHabit`/`updateHabit`; never archives, deletes or touches checks. Same pattern as `life-streaks-link.ts` → `/life/streaks`. Caps shared via `src/lib/habitCaps.ts` |
 | `.github/workflows/` | `deploy.yml` (push, reuses published events.json), `crawl.yml` (daily crawl), `_site.yml` (shared build/deploy); see `docs/CI.md` |
 
 ## Sync files and their tables
@@ -40,7 +41,7 @@ queue: `ROADMAP.md` (`npm run roadmap` lists the open tasks).
 | `eventInterestSync.ts` | `event_interest` (owner-only: the 👍 / 👎 on /events with a feature snapshot; a 👎 also writes an `event_marks` hide; never pruned with the events) |
 | `eventInterestProfileSync.ts` | `event_interest_profile` (owner-only: per feature key of the interest model, the seed, a starting guess that fades, and the up/down/mute pins; edited on `/events/interests`, scored by `src/projects/events/interestScore.ts`) |
 | `learningSync.ts` | `learning_quiz`, `learning_cards`, `learning_practice` (owner-only: the learner's progress; content is static bundle data) |
-| `lifeSync.ts` | `life_entries`, `life_weeks`, `life_day_focus` (owner-only) |
+| `lifeSync.ts` | `life_entries`, `life_weeks`, `life_day_focus`, `life_engines` (owner-only; `life_engines` is the monthly Life Engines audit in Life → Month) |
 | `mealDiarySync.ts` | `meal_entries` (owner-only) |
 | `projectPrefsSync.ts` | `project_prefs` (per user: the home grid's `starred`/`hidden`; open counts stay in local-only Dexie `projectStats`) |
 | `projectInvites.ts` | `project_invites`, `shareable_projects` + invite RPCs (not an engine table; per-project invite links) |

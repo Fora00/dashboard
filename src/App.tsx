@@ -31,6 +31,7 @@ const BookIdeas = page(() => import('./projects/book-ideas/BookIdeas'), 'BookIde
 const Climbing = page(() => import('./projects/climbing/Climbing'), 'Climbing')
 const MealDiary = page(() => import('./projects/meal-diary/MealDiary'), 'MealDiary')
 const Habits = page(() => import('./projects/habits/Habits'), 'Habits')
+const HabitsImport = page(() => import('./projects/habits/HabitsImport'), 'HabitsImport')
 const Events = page(() => import('./projects/events/Events'), 'Events')
 const Shows = page(() => import('./projects/events/Shows'), 'Shows')
 const EventInterests = page(() => import('./projects/events/Interests'), 'Interests')
@@ -94,6 +95,7 @@ export default function App() {
           <Route path="/todo" element={<Todo />} />
           <Route path="/climbing" element={<Climbing />} />
           <Route path="/habits" element={<Habits />} />
+          <Route path="/habits/import" element={<HabitsImport />} />
           <Route path="/meal-diary" element={<MealDiary />} />
           <Route path="/book-ideas" element={<BookIdeas />} />
           <Route path="/boardgame-ideas" element={<BoardgameIdeas />} />

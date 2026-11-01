@@ -1,0 +1,45 @@
+// Made-up habits plan for the habits import tests (EN4): same shape as
+// ~/life/_sync/habits-plan.json, no personal text.
+export const FIXTURE = {
+  asOf: '2026-11-02',
+  habits: [
+    {
+      name: 'Habit test A',
+      emoji: '🧪',
+      engine: 'relationships',
+      kind: 'experiment',
+      direction: 'do',
+      target: 1,
+      perDay: 1,
+      floor: 'test floor A',
+      why: 'test why A',
+      cycleStart: '2026-11-02',
+      cycleEnd: '2026-12-06',
+    },
+    {
+      name: 'Habit test B',
+      emoji: '🎯',
+      engine: 'mind',
+      kind: 'experiment',
+      direction: 'do',
+      target: 3,
+      perDay: 1,
+      floor: 'test floor B',
+      anchor: 'test anchor B',
+      why: 'test why B',
+      cycleStart: '2026-11-02',
+      cycleEnd: '2026-12-06',
+    },
+    {
+      name: 'Habit test C',
+      emoji: '🧹',
+      engine: 'environment',
+      kind: 'experiment',
+      target: 3,
+      floor: 'test floor C',
+      cycleStart: '2026-11-02',
+      cycleEnd: '2026-12-06',
+    },
+    { name: 'habit test existing', engine: 'emotions', anchor: 'test anchor new', floor: 'test floor new' },
+  ],
+}
