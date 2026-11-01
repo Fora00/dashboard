@@ -26,7 +26,7 @@ import { RecapItems } from './RecapSection'
 import { EnginesSection } from './EnginesSection'
 import { HabitRecap } from '../../habits/HabitRecap'
 import { buildRecap, recapPeriod } from '../../habits/habitRecapData'
-import { reasonLabel } from '../../habits/habitStates'
+import { hasStarted, reasonLabel } from '../../habits/habitStates'
 import { activeDaysOf, habitDayStates, type HabitDays } from '../../habits/habitDayStates'
 
 const MONTHS = [
@@ -165,7 +165,7 @@ function HabitsMonthCard({ month, today }: { month: string; today: string }) {
   const habits = useLiveQuery(() => db.habits.orderBy('createdAt').toArray(), [])
   const checks = useLiveQuery(() => db.habitChecks.toArray(), [])
   if (!habits || !checks) return null
-  const active = habits.filter((h) => h.archivedAt === undefined)
+  const active = habits.filter((h) => h.archivedAt === undefined && hasStarted(h, today))
   if (active.length === 0) return null
   const activeDays = activeDaysOf(checks)
   const days = new Map<string, HabitDays>(active.map((h) => [h.id, habitDayStates(h, checks, activeDays, today)]))
@@ -206,7 +206,7 @@ export function MonthView({
   const dayFocus = useLiveQuery(() => db.lifeDayFocus.toArray(), [])
   const habitRows = useLiveQuery(() => db.habits.orderBy('createdAt').toArray(), [])
   const habitChecks = useLiveQuery(() => db.habitChecks.toArray(), [])
-  const liveHabits = habitRows?.filter((h) => h.archivedAt === undefined).length ?? 0
+  const liveHabits = habitRows?.filter((h) => h.archivedAt === undefined && hasStarted(h, today)).length ?? 0
   const [picked, setPicked] = useState<string | null>(null)
   const [copied, flashCopied] = useFlash(2000)
 
@@ -256,7 +256,7 @@ export function MonthView({
       now: lineMean(points, month, l.key),
       before: lineMean(points, prev, l.key),
     }))
-    const live = (habitRows ?? []).filter((h) => h.archivedAt === undefined)
+    const live = (habitRows ?? []).filter((h) => h.archivedAt === undefined && hasStarted(h, today))
     const activeDays = activeDaysOf(habitChecks ?? [])
     const dayStates = new Map(live.map((h) => [h.id, habitDayStates(h, habitChecks ?? [], activeDays, today)]))
     const habits: MonthHabit[] = buildRecap(

@@ -1,4 +1,5 @@
 import type { Habit, HabitCheck, LifeEntry, LifePlan } from './db'
+import { hasStarted } from '../projects/habits/habitStates'
 import { isLongRunning, isOver, localDay, romeDate } from '../projects/events/model'
 import type { EventItem } from '../projects/events/types'
 import { summarizeWeek } from '../projects/life/model/summary'
@@ -13,7 +14,7 @@ export interface HabitProgress {
 
 /** Active (non-archived) habits and how many are checked on `day`. */
 export function habitProgress(habits: readonly Habit[], checks: readonly HabitCheck[], day: string): HabitProgress {
-  const active = habits.filter((h) => h.archivedAt === undefined)
+  const active = habits.filter((h) => h.archivedAt === undefined && hasStarted(h, day))
   const doneIds = new Set(checks.filter((c) => c.day === day).map((c) => c.habitId))
   return {
     total: active.length,

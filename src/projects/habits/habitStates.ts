@@ -29,6 +29,12 @@ export const NEG_OVERSHOOT_TEXT = 'text-rose-600 dark:text-rose-400'
 
 /** The slips at which a "don't" habit's day already counts as a slip: past the
  *  daily grace, or the first one without it. Slips beyond it are overshoot. */
+/** A habit whose cycle starts in the future stays out of sight until that day
+ *  (e.g. a planned experiment imported ahead of time). No cycleStart = started. */
+export function hasStarted(habit: Pick<Habit, 'cycleStart'>, today: string): boolean {
+  return !habit.cycleStart || habit.cycleStart <= today
+}
+
 export function slipLimit(habit: Habit): number {
   return habit.graceScope === 'day' && (habit.grace ?? 0) > 0 ? (habit.grace ?? 0) + 1 : 1
 }

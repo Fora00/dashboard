@@ -16,7 +16,15 @@ import { activeDaysOf, habitDayStates } from './habitDayStates'
 import { HabitTile } from './HabitTile'
 import { HabitLegend } from './HabitLegend'
 import { resetDemoHabits } from './demoHabits'
-import { MISS_REASONS, NEG_OVERSHOOT_ICON, OVERSHOOT_ICON, REST_REASONS, slipLimit, STATE_ICON } from './habitStates'
+import {
+  hasStarted,
+  MISS_REASONS,
+  NEG_OVERSHOOT_ICON,
+  OVERSHOOT_ICON,
+  REST_REASONS,
+  slipLimit,
+  STATE_ICON,
+} from './habitStates'
 import { HabitRecap } from './HabitRecap'
 import { HabitRules } from './HabitRules'
 import { Lifeboard } from './Lifeboard'
@@ -76,7 +84,7 @@ export function Habits() {
   const [pickId, setPickId] = useState<string | null>(null)
   const [resetId, setResetId] = useState<string | null>(null)
 
-  const active = habits?.filter((h) => h.archivedAt === undefined) ?? []
+  const active = habits?.filter((h) => h.archivedAt === undefined && hasStarted(h, today)) ?? []
   const archived = habits?.filter((h) => h.archivedAt !== undefined) ?? []
   const isDone = (h: Habit) => {
     const st = statesByHabit.get(h.id)?.get(today)

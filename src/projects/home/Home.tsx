@@ -2,6 +2,7 @@ import type { ChangeEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../../lib/db'
+import { hasStarted } from '../habits/habitStates'
 import type { ProjectMeta } from '../../lib/projects'
 import { formatBytes } from '../../lib/format'
 import { usePersistedState, type Codec } from '../../lib/safeStorage'
@@ -151,7 +152,7 @@ export function Home() {
   })
   const habitStats = useLiveQuery(async () => {
     const habits = await db.habits.toArray()
-    const active = habits.filter((h) => h.archivedAt === undefined)
+    const active = habits.filter((h) => h.archivedAt === undefined && hasStarted(h, todayKey()))
     if (active.length === 0) return { remaining: 0 }
     const checksToday = await db.habitChecks.where('day').equals(todayKey()).toArray()
     const doneIds = new Set(checksToday.map((c) => c.habitId))

@@ -6,6 +6,7 @@ import { activeDaysOf, habitDayStates, type HabitDays } from '../../habits/habit
 import { HabitRecap } from '../../habits/HabitRecap'
 import { setDayCount, setDayState, setSlipCount } from '../../../lib/habitSync'
 import { tapHabit } from '../../habits/habitTap'
+import { hasStarted } from '../../habits/habitStates'
 import { useToday } from '../useToday'
 import { CollapsibleSection } from './CollapsibleSection'
 
@@ -24,7 +25,7 @@ export function HabitsLiveSection({ open, onToggle, readOnly }: Props) {
   const habits = useLiveQuery(() => db.habits.orderBy('createdAt').toArray(), [])
   const checks = useLiveQuery(() => db.habitChecks.toArray(), [])
   if (!habits || !checks) return null
-  const active = habits.filter((h) => h.archivedAt === undefined)
+  const active = habits.filter((h) => h.archivedAt === undefined && hasStarted(h, today))
   if (active.length === 0) return null
 
   const activeDays = activeDaysOf(checks)

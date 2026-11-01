@@ -1,5 +1,6 @@
 import type { Habit, HabitCheck } from '../../../lib/db'
 import { activeDaysOf, habitDayStates } from '../../habits/habitDayStates'
+import { hasStarted } from '../../habits/habitStates'
 import { buildRecap, recapPeriod } from '../../habits/habitRecapData'
 
 /**
@@ -14,7 +15,7 @@ export function liveHabitRatiosByWeek(
   today: string,
 ): Map<string, number[]> {
   const out = new Map<string, number[]>()
-  const live = habits.filter((h) => h.archivedAt === undefined)
+  const live = habits.filter((h) => h.archivedAt === undefined && hasStarted(h, today))
   if (live.length === 0) return out
   const activeDays = activeDaysOf(checks)
   const days = new Map(live.map((h) => [h.id, habitDayStates(h, checks, activeDays, today)]))
