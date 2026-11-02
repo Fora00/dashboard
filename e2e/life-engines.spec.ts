@@ -61,7 +61,7 @@ test('a habit tagged with an engine shows in that engine and counts in the expor
   const form = page.getByRole('dialog', { name: 'New habit' })
   await form.getByLabel('Name').fill('Engine test habit')
   const engine = form.getByRole('group', { name: 'Engine' })
-  await expect(engine.getByRole('button', { name: 'none' })).toHaveAttribute('aria-pressed', 'true')
+  await expect(form.getByRole('button', { name: 'Create habit' })).toBeDisabled()
   await engine.getByRole('button', { name: 'Mind' }).click()
   await expect(engine.getByRole('button', { name: 'Mind' })).toHaveAttribute('aria-pressed', 'true')
   await form.getByRole('button', { name: 'Create habit' }).click()

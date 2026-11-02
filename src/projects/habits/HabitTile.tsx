@@ -9,6 +9,7 @@ import {
   STATE_ICON,
 } from './habitStates'
 import type { HabitStats } from './habitStats'
+import { engineLabel } from '../life/model/engines'
 
 export type WeekCell = HabitDayState | 'empty' | 'future'
 const CELL_STROKE: Record<WeekCell, string> = {
@@ -169,6 +170,14 @@ export function HabitTile({
           <span className="text-2xl">{avoid && state === 'done' ? '🚫' : (STATE_ICON[state] ?? habit.emoji)}</span>
         </span>
         <span className="line-clamp-2 w-full text-sm leading-tight font-medium">{habit.name}</span>
+        {habit.engine && (
+          <span
+            data-testid="tile-engine"
+            className="text-[11px] font-medium tracking-wide text-slate-500 uppercase dark:text-slate-400"
+          >
+            {engineLabel(habit.engine)}
+          </span>
+        )}
         {avoid ? (
           <>
             {slips > slipLimit(habit) && (

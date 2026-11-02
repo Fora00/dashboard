@@ -25,6 +25,7 @@ test('the board shows forever wins and experiments, grouped by engine', async ({
     .getByRole('group', { name: 'Kind' })
     .getByRole('button', { name: /Experiment/ })
     .click()
+  await form.getByRole('group', { name: 'Engine' }).getByRole('button', { name: 'Money' }).click()
   await form.getByRole('button', { name: 'Create habit' }).click()
   await expect(form).toBeHidden()
 
@@ -39,8 +40,6 @@ test('the board shows forever wins and experiments, grouped by engine', async ({
   const experiments = page.getByTestId('lifeboard-experiment')
   await expect(experiments).toBeVisible()
   await expect(page.getByTestId('lifeboard-experiment-total')).toHaveText('0')
-  await expect(experiments.getByTestId('lifeboard-experiment-group')).toHaveText([
-    /No engine\s*0.*Board test experiment/s,
-  ])
+  await expect(experiments.getByTestId('lifeboard-experiment-group')).toHaveText([/Money\s*0.*Board test experiment/s])
   await expect(page.getByTestId('no-experiments')).toBeHidden()
 })
