@@ -26,8 +26,9 @@ export const CATEGORIES: { id: string; label: string }[] = [
 ]
 /**
  * Shown by default when no favourite categories are set (the owner's picks,
- * 2026-10-03). Concerts, food, exhibitions, talks and "other" stay reachable
- * from Filters. Starring categories there replaces this list.
+ * 2026-10-03; cinema dropped 2026-11-02, it lives in Spettacoli). Theatre,
+ * concerts, exhibitions and talks are in only through DEFAULT_SUBS
+ * (subcategories.ts). Food and "other" stay reachable from Filters. Starring categories there replaces this list.
  */
 export const DEFAULT_CATEGORIES: readonly string[] = [
   'boardgames',
@@ -35,10 +36,13 @@ export const DEFAULT_CATEGORIES: readonly string[] = [
   'creative',
   'courses',
   'festivals',
-  'theatre',
-  'cinema',
   'outdoor',
   'tours',
+  // Only through DEFAULT_SUBS (subcategories.ts).
+  'theatre',
+  'concerts',
+  'exhibitions',
+  'talks',
 ]
 const KNOWN = new Set(CATEGORIES.map((c) => c.id))
 

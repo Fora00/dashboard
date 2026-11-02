@@ -15,6 +15,7 @@ import { FOCUS_RING, FOCUS_RING_INSET } from '../../components/focus'
 import { Snackbar } from '../../components/Snackbar'
 import { formatDate as formatDateLocal } from '../../lib/dates'
 import { SkeletonList } from '../../components/Skeleton'
+import { zoneLabel } from './zones'
 import { FilterSheet } from './FilterSheet'
 import { FilterPanel, type FilterPanelProps } from './FilterPanel'
 import { subLabel } from './subcategories'
@@ -26,7 +27,7 @@ import { PREFILL_KEYS, mergeEvents, parsePrefill, type CustomEventForm } from '.
 import { DATE_CHIPS } from './filters'
 import { NEAR_MINUTES, minutesLabel } from './distance'
 import { formatLabel } from './format'
-import { SelectionBar, WeekSections } from './EventsList'
+import { DAY_CAP, SelectionBar, WeekSections } from './EventsList'
 import { ListChecksIcon, PlusIcon, XIcon } from './icons'
 import { isPastEvent } from './marks'
 import { useEventFilters, type View } from './useEventFilters'
@@ -157,6 +158,8 @@ export function Events() {
     selectedFormats,
     selectedSubs,
     activeCats,
+    activeZones,
+    zonesTouched,
     favourites,
     filtering,
     filterCount,
@@ -356,6 +359,11 @@ export function Events() {
     catCounts: counts.catCounts,
     activeCats,
     favourites,
+    zoneCounts: counts.zoneCounts,
+    activeZones,
+    zonesTouched,
+    onToggleZone: toggles.toggleZone,
+    onAllZones: toggles.setAllZones,
     distanceCounts: counts.distanceCounts,
     maxMin,
     onToggleMaxMin: toggles.toggleMaxMin,
@@ -522,6 +530,7 @@ export function Events() {
         <div className="space-y-5">
           <WeekSections
             weeks={weeks}
+            dayCap={view === 'all' && !nq && !dateChip ? DAY_CAP : undefined}
             collapsedWeeks={collapsedWeeks}
             onToggleWeek={toggleWeek}
             marks={marks}
@@ -621,6 +630,14 @@ export function Events() {
       {controls}
       <div className="-mx-4 mb-4 overflow-x-auto px-4 pb-1">
         <div className="flex w-max items-center gap-2">
+          <Chip toggle={false} active={zonesTouched} onClick={() => setSheetOpen(true)}>
+            📍{' '}
+            {activeZones.length === 0
+              ? 'Tutte le zone'
+              : activeZones.length > 2
+                ? `${activeZones.length} zone`
+                : activeZones.map(zoneLabel).join(' + ')}
+          </Chip>
           <Chip active={maxMin !== null} onClick={() => toggles.toggleMaxMin(maxMin ?? NEAR_MINUTES)}>
             {maxMin === null ? `Vicino · ${NEAR_MINUTES} min` : `Entro ${minutesLabel(maxMin)} ✕`}
           </Chip>

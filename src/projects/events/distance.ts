@@ -199,3 +199,23 @@ export function tooFarForCategory(e: Pick<EventItem, 'city' | 'category'>): bool
   const m = driveMinutes(e.city)
   return max !== undefined && m !== null && m > max
 }
+
+/**
+ * Sources whose events are only worth listing in a few towns (owner,
+ * 2026-11-02): Ludimus lists board-game nights all over the region, but only
+ * Trento, Rovereto and Piné are a normal evening out. Others stay in the file.
+ */
+export const SOURCE_CITIES: Record<string, readonly string[]> = {
+  ludimus: ['Trento', 'Rovereto', 'Baselga di Piné'],
+}
+
+export function outsideSourceCities(e: Pick<EventItem, 'city' | 'source'>): boolean {
+  const cities = SOURCE_CITIES[e.source]
+  if (cities === undefined) return false
+  const plain = (s: string) =>
+    s
+      .normalize('NFD')
+      .replace(/[̀-ͯ]/g, '')
+      .toLowerCase()
+  return !cities.some((c) => plain(c) === plain(e.city))
+}

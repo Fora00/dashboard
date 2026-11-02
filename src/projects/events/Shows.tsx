@@ -14,6 +14,9 @@ import { HORIZON_DAYS, showDay, showKind, stageOn, upcomingShows, type ShowKind 
 import type { EventItem } from './types'
 import { useEventsFile } from './useEventsFile'
 import { useEventActions } from './useEventActions'
+import { DEFAULT_ZONES, ZONES, inZones, zoneOf } from './zones'
+
+const ALL_ZONES = '*'
 
 /** Synopses from some sources end in a cut-off tag: show text only. */
 const plain = (s: string) => s.replace(/<[^>]*>?/g, '').trim()
@@ -76,33 +79,41 @@ export function Shows() {
   )
   const [kind, setKind] = useState<ShowKind | null>(null)
   const [picked, setPicked] = useState<string | null>(null)
-  const [city, setCity] = useState<string | null>(null)
+  // null = Trento and Rovereto (the default), ALL_ZONES = everywhere, else one zone id.
+  const [zone, setZone] = useState<string | null>(null)
 
   const today = romeDate(now)
   const last = romeDate(now + HORIZON_DAYS * 86_400_000)
-  const ofKind = useMemo(() => (kind ? shows.filter((e) => showKind(e) === kind) : shows), [shows, kind])
+  const zoneIds = useMemo(() => (zone === null ? DEFAULT_ZONES : zone === ALL_ZONES ? [] : [zone]), [zone])
+  const inZone = useMemo(() => shows.filter((e) => inZones(e, zoneIds)), [shows, zoneIds])
+  const ofKind = useMemo(() => (kind ? inZone.filter((e) => showKind(e) === kind) : inZone), [inZone, kind])
   const days = useMemo(
     () => [...new Set(ofKind.map((e) => showDay(e, now)))].filter((d) => d >= today && d <= last).sort(),
     [ofKind, now, today, last],
   )
-  const cities = useMemo(() => [...new Set(ofKind.map((e) => e.city))].sort((a, b) => a.localeCompare(b)), [ofKind])
+  // Zones outside the default that have something of this kind (any day).
+  const otherZones = useMemo(() => {
+    const ofThisKind = kind ? shows.filter((e) => showKind(e) === kind) : shows
+    const present = new Set(ofThisKind.map((e) => zoneOf(e)))
+    return ZONES.filter((z) => present.has(z.id) && !DEFAULT_ZONES.includes(z.id))
+  }, [shows, kind])
   // The chosen day, else the first day that has something.
   const day = picked && days.includes(picked) ? picked : (days[0] ?? today)
   const films = useMemo(
     () =>
       kind === null || kind === 'cinema'
         ? filmsOn(
-            shows.filter((e) => showKind(e) === 'cinema'),
+            inZone.filter((e) => showKind(e) === 'cinema'),
             day,
             now,
-            city,
+            null,
           )
         : [],
-    [shows, kind, day, now, city],
+    [inZone, kind, day, now],
   )
   const stage = useMemo(
-    () => (kind === 'cinema' ? [] : stageOn(shows, day, now, kind, city)),
-    [shows, kind, day, now, city],
+    () => (kind === 'cinema' ? [] : stageOn(inZone, day, now, kind, null)),
+    [inZone, kind, day, now],
   )
   const plays = stage.filter((e) => e.category === 'theatre')
   const concerts = stage.filter((e) => e.category === 'concerts')
@@ -193,23 +204,26 @@ export function Shows() {
             </div>
           </div>
 
-          {cities.length > 1 && (
-            <div className="-mx-4 mb-3 overflow-x-auto px-4 pb-1" role="group" aria-label="Town">
+          {otherZones.length > 0 && (
+            <div className="-mx-4 mb-3 overflow-x-auto px-4 pb-1" role="group" aria-label="Zona">
               <div className="flex w-max items-center gap-2">
-                <Chip active={city === null} onClick={() => setCity(null)}>
-                  All towns
+                <Chip active={zone === null} onClick={() => setZone(null)}>
+                  Trento + Rovereto
                 </Chip>
-                {cities.map((c) => (
-                  <Chip key={c} active={city === c} onClick={() => setCity(city === c ? null : c)}>
-                    {c}
+                {otherZones.map((z) => (
+                  <Chip key={z.id} active={zone === z.id} onClick={() => setZone(zone === z.id ? null : z.id)}>
+                    {z.label}
                   </Chip>
                 ))}
+                <Chip active={zone === ALL_ZONES} onClick={() => setZone(zone === ALL_ZONES ? null : ALL_ZONES)}>
+                  Tutte
+                </Chip>
               </div>
             </div>
           )}
 
           {films.length + stage.length === 0 ? (
-            <EmptyState emoji="🎭" title="Nothing here" hint="Nothing on this day here: try another day or town." />
+            <EmptyState emoji="🎭" title="Nothing here" hint="Nothing on this day here: try another day or zone." />
           ) : (
             <>
               {films.length > 0 && (

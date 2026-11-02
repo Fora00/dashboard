@@ -8,6 +8,7 @@ import { DISTANCE_STEPS, NEAR_MINUTES, minutesLabel } from './distance'
 import { FORMAT_CHIPS, formatLabel } from './format'
 import { categoryOfSubcategory, subLabel, subcategoriesOf } from './subcategories'
 import { INTEREST_WEIGHTS } from './interestScore'
+import { ZONES, zoneLabel } from './zones'
 
 /** Everything the filters need; shared by the sheet (< lg) and the rail (lg+). */
 export interface FilterPanelProps {
@@ -15,6 +16,14 @@ export interface FilterPanelProps {
   catCounts: Map<string, number>
   activeCats: string[]
   favourites: string[]
+  /** Events per zone (zones.ts), respecting every filter except the zone one. */
+  zoneCounts: Map<string, number>
+  /** Zones in effect; empty = all of them. */
+  activeZones: string[]
+  /** The zones were changed from the default (Trento and Rovereto). */
+  zonesTouched: boolean
+  onToggleZone: (id: string) => void
+  onAllZones: (all: boolean) => void
   /** Events within each distance step (max driving minutes from Rovereto). */
   distanceCounts: Map<number, number>
   maxMin: number | null
@@ -250,6 +259,42 @@ export function FilterPanel({ variant, ...p }: FilterPanelProps & { variant: Fil
           Reset
         </button>
       </div>
+
+      <Section
+        title="Zona"
+        summary={p.activeZones.length === 0 ? 'tutte' : summarize(p.activeZones, zoneLabel)}
+        defaultOpen
+      >
+        <ul className={gridClass}>
+          <li>
+            <Chip
+              shape="row"
+              active={p.activeZones.length === 0}
+              onClick={() => p.onAllZones(p.activeZones.length > 0)}
+            >
+              Tutte le zone
+            </Chip>
+          </li>
+          {ZONES.map(({ id, label }) => {
+            const count = p.zoneCounts.get(id) ?? 0
+            const on = p.activeZones.includes(id)
+            return (
+              <li key={id}>
+                <Chip
+                  shape="row"
+                  active={on}
+                  count={count}
+                  disabled={count === 0 && !on}
+                  onClick={() => p.onToggleZone(id)}
+                  className={count === 0 ? 'opacity-60' : ''}
+                >
+                  {label}
+                </Chip>
+              </li>
+            )
+          })}
+        </ul>
+      </Section>
 
       <Section
         title="Distanza da Rovereto"

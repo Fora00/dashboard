@@ -7,6 +7,29 @@ import { eventPlace } from './display'
 import type { EventItem } from './types'
 import type { InterestValue } from './interest'
 import { EyeOffIcon, ListChecksIcon } from './icons'
+import { isManual } from './custom'
+
+/** Events per day shown before "altri N" (owner, 2026-11-02). */
+export const DAY_CAP = 8
+
+/**
+ * The events of a day within the cap: the first `cap` in list order (already
+ * ranked: ring, favourites, time), plus the ones that always stay (saved or
+ * going, hand-added), which do not count. `hidden` is how many are left out.
+ */
+export function capDay(
+  events: readonly EventItem[],
+  cap: number,
+  keep: (e: EventItem) => boolean,
+): { shown: EventItem[]; hidden: number } {
+  let used = 0
+  const shown = events.filter((e) => {
+    if (keep(e)) return true
+    used += 1
+    return used <= cap
+  })
+  return { shown, hidden: events.length - shown.length }
+}
 
 /** Floating bar shown while multi-selecting events to hide. */
 export function SelectionBar({
@@ -143,6 +166,7 @@ export function WeekSections({
   onActivate,
   repeats,
   explain,
+  dayCap,
 }: {
   weeks: WeekGroup[]
   collapsedWeeks: ReadonlySet<string>
@@ -169,7 +193,12 @@ export function WeekSections({
   repeats?: ReadonlyMap<string, EventItem[]>
   /** "Ordina per te" on: why an event ranks where it does ("perché: …"). */
   explain?: ((e: EventItem) => string) | undefined
+  /** Events per day before "altri N"; undefined = no cap. */
+  dayCap?: number | undefined
 }) {
+  // Days whose "altri N" was opened (this visit only).
+  const [openDays, setOpenDays] = useState<ReadonlySet<string>>(new Set())
+  const keep = (e: EventItem) => isManual(e) || marks.get(e.id)?.state === 'saved' || marks.get(e.id)?.state === 'going'
   const cardProps = (e: EventItem): React.ComponentProps<typeof EventCard> => ({
     event: e,
     saved: marks.get(e.id)?.state === 'saved',
@@ -227,7 +256,13 @@ export function WeekSections({
                       <h3 className="mb-2 text-sm font-semibold text-slate-500 dark:text-slate-400">{g.label}</h3>
                     )}
                     <ul className="space-y-2">
-                      {g.events.map((e) => (
+                      {(() => {
+                        const capped =
+                          dayCap !== undefined && !isOpenNow && !selecting && !openDays.has(`${w.key}|${g.key}`)
+                            ? capDay(g.events, dayCap, keep)
+                            : { shown: g.events, hidden: 0 }
+                        return capped.shown
+                      })().map((e) => (
                         <Fragment key={`${g.key}-${e.id}`}>
                           <EventCard {...cardProps(e)} />
                           {!selecting && repeats?.get(e.id) && (
@@ -236,6 +271,21 @@ export function WeekSections({
                         </Fragment>
                       ))}
                     </ul>
+                    {(() => {
+                      if (dayCap === undefined || isOpenNow || selecting || openDays.has(`${w.key}|${g.key}`))
+                        return null
+                      const { hidden } = capDay(g.events, dayCap, keep)
+                      if (hidden === 0) return null
+                      return (
+                        <button
+                          type="button"
+                          onClick={() => setOpenDays((prev) => new Set(prev).add(`${w.key}|${g.key}`))}
+                          className={`mt-1 flex min-h-10 w-full items-center justify-center rounded-lg border border-dashed border-slate-300 text-sm font-medium text-slate-600 dark:border-slate-700 dark:text-slate-300 ${FOCUS_RING}`}
+                        >
+                          Altri {hidden}
+                        </button>
+                      )
+                    })()}
                   </div>
                 ))}
               </div>

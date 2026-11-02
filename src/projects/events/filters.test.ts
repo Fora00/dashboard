@@ -228,7 +228,7 @@ describe('remembered selection', () => {
       formats: ['solo-ok'],
       showHidden: false,
       maxMin: null,
-      subs: [],
+      subs: null,
     })
   })
 
@@ -298,7 +298,7 @@ describe('subcategory filter', () => {
 
   it('stored filters without subs (older values) load with none; unknown ids are dropped', () => {
     stubStorage({ 'dashboard:events-filters': JSON.stringify({ cats: ['theatre'] }) })
-    expect(loadFilters().subs).toEqual([])
+    expect(loadFilters().subs).toBeNull()
     stubStorage({ 'dashboard:events-filters': JSON.stringify({ subs: ['danza', 'bogus', 3] }) })
     expect(loadFilters().subs).toEqual(['danza'])
   })

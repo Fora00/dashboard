@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { NEAR_MINUTES, driveLabel, driveMinutes, isNear } from './distance'
+import { NEAR_MINUTES, driveLabel, driveMinutes, isNear, outsideSourceCities } from './distance'
 
 describe('distance from Rovereto', () => {
   it('knows towns, ignoring case, accents and parenthesised suffixes', () => {
@@ -35,5 +35,17 @@ describe('category distance limit', () => {
     expect(tooFarForCategory({ city: 'Verona', category: 'theatre' })).toBe(true)
     expect(tooFarForCategory({ city: 'Padova', category: 'concerts' })).toBe(false)
     expect(tooFarForCategory({ city: 'Trentino', category: 'theatre' })).toBe(false) // unknown town: kept
+  })
+})
+
+describe('outsideSourceCities', () => {
+  it('keeps Ludimus to Trento, Rovereto and Piné, whatever the accent', () => {
+    for (const city of ['Trento', 'Rovereto', 'Baselga di Piné', 'Baselga di Pinè'])
+      expect(outsideSourceCities({ source: 'ludimus', city })).toBe(false)
+    for (const city of ['Arco', 'Ala', 'Riva del Garda', 'Trentino'])
+      expect(outsideSourceCities({ source: 'ludimus', city })).toBe(true)
+  })
+  it('leaves every other source alone', () => {
+    expect(outsideSourceCities({ source: 'comune-trento', city: 'Arco' })).toBe(false)
   })
 })

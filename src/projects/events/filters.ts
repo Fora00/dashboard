@@ -147,8 +147,8 @@ export interface StoredFilters {
   showHidden: boolean
   /** Only towns within this many driving minutes of Rovereto (distance.ts); null = any. */
   maxMin: number | null
-  /** Subcategory ids (subcategories.ts); missing in older stored values = none. */
-  subs: string[]
+  /** Subcategory ids (subcategories.ts); null = not touched, DEFAULT_SUBS apply. */
+  subs: string[] | null
 }
 
 export const EMPTY_FILTERS: StoredFilters = {
@@ -157,7 +157,7 @@ export const EMPTY_FILTERS: StoredFilters = {
   formats: [],
   showHidden: false,
   maxMin: null,
-  subs: [],
+  subs: null,
 }
 
 function strings(v: unknown): string[] {
@@ -172,7 +172,7 @@ function sanitizeFilters(v: unknown): StoredFilters {
     chip: DATE_CHIPS.some((c) => c.id === o.chip) ? (o.chip as DateChip) : null,
     formats: cleanFormats(strings(o.formats)),
     showHidden: o.showHidden === true,
-    subs: strings(o.subs).filter((id) => categoryOfSubcategory(id) !== null),
+    subs: Array.isArray(o.subs) ? strings(o.subs).filter((id) => categoryOfSubcategory(id) !== null) : null,
     maxMin: typeof o.maxMin === 'number' && DISTANCE_STEPS.includes(o.maxMin as never) ? o.maxMin : null,
   }
 }

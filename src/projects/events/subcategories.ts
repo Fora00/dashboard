@@ -60,3 +60,18 @@ export function subLabel(id: string): string {
   const cat = categoryOfSubcategory(id)
   return (cat && subcategoryLabel(cat, id)) || id
 }
+
+/**
+ * Subcategories shown by default (owner, 2026-11-02): the four big categories
+ * are in the default view only through these, so what the crawler could not
+ * place (most theatre) stays one tap away instead of flooding the list.
+ */
+export const DEFAULT_SUBS: readonly string[] = [
+  'libri',
+  'conferenze',
+  'classica',
+  'arte',
+  'fotografia',
+  'prosa',
+  'stand-up',
+]

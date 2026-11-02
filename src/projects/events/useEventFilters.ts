@@ -17,8 +17,8 @@ import type { EventItem } from './types'
 import { isManual } from './custom'
 import { collapseRepeats } from './groups'
 import { compareForYou } from './interestScore'
-import { categoryOfSubcategory } from './subcategories'
-import { DISTANCE_STEPS, tooFarForCategory, withinMinutes } from './distance'
+import { DEFAULT_SUBS, categoryOfSubcategory } from './subcategories'
+import { DISTANCE_STEPS, outsideSourceCities, tooFarForCategory, withinMinutes } from './distance'
 import {
   CATEGORIES,
   DEFAULT_CATEGORIES,
@@ -34,6 +34,7 @@ import {
   type DayGroup,
 } from './model'
 import { isPastEvent } from './marks'
+import { DEFAULT_ZONES, inZones, isSourceHome, zoneOf } from './zones'
 
 export type View = 'all' | 'open' | 'saved' | 'went' | 'series'
 export const PAGE = 60
@@ -100,7 +101,9 @@ export function useEventFilters(
   const [rawFormats, setSelectedFormats] = useState<string[]>(initial.formats)
   const [showHidden, setShowHiddenState] = useState(initial.showHidden)
   const [maxMin, setMaxMin] = useState<number | null>(initial.maxMin)
-  const [rawSubs, setSelectedSubs] = useState<string[]>(initial.subs)
+  const [rawSubs, setSelectedSubs] = useState<string[] | null>(initial.subs)
+  // Not remembered (like the search): every visit starts with Trento and Rovereto. null = default, [] = every zone.
+  const [selectedZones, setSelectedZones] = useState<string[] | null>(null)
   const [query, setQueryState] = useState('')
   const [limit, setLimit] = useState(PAGE)
 
@@ -131,8 +134,19 @@ export function useEventFilters(
   // Untouched = the favourites, or the default picks when there are none.
   const defaultCats = useMemo(() => (favourites.length > 0 ? favourites : [...DEFAULT_CATEGORIES]), [favourites])
   const activeCats = selectedCats ?? defaultCats
+  const activeZones = useMemo(() => selectedZones ?? [...DEFAULT_ZONES], [selectedZones])
+  // Zones narrow the main lists only: Saved and the history show what the owner marked.
+  // Untouched, what is hand-added, curated (spot) or marked also stays, wherever it is.
+  const passZone = useCallback(
+    (e: EventItem) => {
+      if (view === 'saved' || view === 'went') return true
+      if (inZones(e, activeZones)) return true
+      return selectedZones === null && (isManual(e) || isSpot(e) || isSourceHome(e) || marks.has(e.id))
+    },
+    [view, activeZones, selectedZones, marks],
+  )
   // Subcategory picks only count while their category is selected.
-  const selectedSubs = useMemo(() => effectiveSubs(rawSubs, activeCats), [rawSubs, activeCats])
+  const selectedSubs = useMemo(() => effectiveSubs(rawSubs ?? DEFAULT_SUBS, activeCats), [rawSubs, activeCats])
 
   // Base list of the current view, before category/city filters.
   const base = useMemo(() => {
@@ -166,6 +180,7 @@ export function useEventFilters(
     return events.filter((e) => {
       if (isOver(e, now)) return false
       if (tooFarForCategory(e) && !isManual(e) && !isSpot(e)) return false
+      if (outsideSourceCities(e) && !isManual(e) && !isSpot(e)) return false
       if (!showHidden && marks.get(e.id)?.state === 'hidden') return false
       if (view === 'open') return isOngoingNow(e, now)
       return true
@@ -173,9 +188,25 @@ export function useEventFilters(
   }, [view, events, marksRaw, marks, now, showHidden])
 
   // Date chip and search narrow the whole list, so the sheet counts follow them.
-  const scoped = useMemo(
+  const preZone = useMemo(
     () => base.filter((e) => (!dateChip || matchesChip(e, dateChip, now)) && matchesQuery(e, nq)),
     [base, dateChip, nq, now],
+  )
+  const scoped = useMemo(() => preZone.filter(passZone), [preZone, passZone])
+
+  // Zone counts respect every filter except the zone one.
+  const zoneCounts = useMemo(
+    () =>
+      countBy(
+        preZone,
+        (e) =>
+          inCats(e, activeCats) &&
+          matchesSubcategory(e, selectedSubs) &&
+          matchesFormat(e, selectedFormats) &&
+          (maxMin === null || withinMinutes(e, maxMin)),
+        (e) => [zoneOf(e)],
+      ),
+    [preZone, activeCats, selectedSubs, selectedFormats, maxMin],
   )
 
   // Sheet counts: each one respects every filter except its own.
@@ -311,8 +342,14 @@ export function useEventFilters(
     return out
   }, [groups, limit])
 
-  const filtering = activeCats.length > 0 || selectedFormats.length > 0 || maxMin !== null
-  const filterCount = activeCats.length + selectedSubs.length + selectedFormats.length + (maxMin !== null ? 1 : 0)
+  const zonesTouched = selectedZones !== null
+  const filtering = activeCats.length > 0 || selectedFormats.length > 0 || maxMin !== null || zonesTouched
+  const filterCount =
+    activeCats.length +
+    selectedSubs.length +
+    selectedFormats.length +
+    (maxMin !== null ? 1 : 0) +
+    (zonesTouched ? 1 : 0)
 
   // --- Toggles ---------------------------------------------------------------------
 
@@ -352,12 +389,23 @@ export function useEventFilters(
   )
 
   function toggleSub(id: string) {
-    setSelectedSubs((cur) => toggleIn(cur, id))
+    setSelectedSubs((cur) => toggleIn(cur ?? DEFAULT_SUBS, id))
     resetLimit()
   }
 
   function toggleFormat(id: string) {
     setSelectedFormats((cur) => toggleIn(cur, id))
+    resetLimit()
+  }
+
+  function toggleZone(id: string) {
+    setSelectedZones((cur) => toggleIn(cur ?? DEFAULT_ZONES, id))
+    resetLimit()
+  }
+
+  /** Every zone (the empty list), or back to the default. */
+  function setAllZones(all: boolean) {
+    setSelectedZones(all ? [] : null)
     resetLimit()
   }
 
@@ -377,6 +425,7 @@ export function useEventFilters(
     setSelectedCats([])
     setSelectedSubs([])
     setMaxMin(null)
+    setSelectedZones(null)
     setShowHiddenState(false)
     resetLimit()
   }
@@ -397,6 +446,8 @@ export function useEventFilters(
       selectedFormats,
       selectedSubs,
       activeCats,
+      activeZones,
+      zonesTouched,
       favourites,
       filtering,
       filterCount,
@@ -409,12 +460,14 @@ export function useEventFilters(
       toggleFormat,
       toggleSub,
       toggleMaxMin,
+      toggleZone,
+      setAllZones,
       setShowHidden,
       clearAll,
       toggleFavourite,
       showMore,
     },
-    counts: { distanceCounts, catCounts, formatCounts, subCounts, noSubHidden, catOrder },
+    counts: { zoneCounts, distanceCounts, catCounts, formatCounts, subCounts, noSubHidden, catOrder },
     groups: { visibleGroups, total, limit, repeats },
     marks,
   }
