@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { capDay } from './EventsList'
+import { capDay } from './dayCap'
 import type { EventItem } from './types'
 
 const ev = (id: string) => ({ id }) as EventItem
