@@ -21,4 +21,13 @@ describe('liveHabitRatiosByWeek', () => {
     expect(liveHabitRatiosByWeek([{ ...habit, archivedAt: 1 }], [], ['2026-10-26'], '2026-11-01').size).toBe(0)
     expect(liveHabitRatiosByWeek([habit], [], ['2026-12-07'], '2026-11-01').size).toBe(0)
   })
+
+  it('leaves out a habit that overshot its weekly target', () => {
+    const weekly = { ...habit, target: 3 }
+    const checks = ['2026-10-26', '2026-10-27', '2026-10-28', '2026-10-29'].map(check)
+    expect(liveHabitRatiosByWeek([weekly], checks, ['2026-10-26'], '2026-11-01').size).toBe(0)
+    // exactly on target still counts as 100%
+    const exact = liveHabitRatiosByWeek([weekly], checks.slice(0, 3), ['2026-10-26'], '2026-11-01')
+    expect(exact.get('2026-10-26')).toEqual([1])
+  })
 })

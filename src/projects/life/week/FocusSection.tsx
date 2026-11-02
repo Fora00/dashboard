@@ -24,7 +24,7 @@ export function FocusSection({
 }) {
   return (
     <CollapsibleSection
-      title="Focus"
+      title="⭐ Focus"
       summary={`${focusDone.size}/${focusTotal}`}
       open={open}
       onToggle={onToggle}

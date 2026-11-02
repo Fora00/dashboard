@@ -5,8 +5,8 @@ import { buildRecap, recapPeriod } from '../../habits/habitRecapData'
 
 /**
  * Per week (Monday), the share of its expected days each live Habits-page habit
- * got done (0-1, capped), for the progress line "Habits". A habit with nothing
- * expected that week (too new, only rest days) is left out. Pure.
+ * got done (0-1), for the progress line "Habits". A habit with nothing
+ * expected that week (too new, only rest days) or that overshot its target (more done days than expected) is left out. Pure.
  */
 export function liveHabitRatiosByWeek(
   habits: readonly Habit[],
@@ -23,8 +23,9 @@ export function liveHabitRatiosByWeek(
   const notes = new Map([...days].map(([id, d]) => [id, d.notes]))
   for (const week of weeks) {
     const ratios = buildRecap(live, states, notes, recapPeriod('week', week), today)
-      .filter((r) => r.expected > 0)
-      .map((r) => Math.min(1, r.done / r.expected))
+      // Overshoot (more done days than the week's target) is left out, not counted as a full 100%.
+      .filter((r) => r.expected > 0 && r.done <= r.expected)
+      .map((r) => r.done / r.expected)
     if (ratios.length > 0) out.set(week, ratios)
   }
   return out
