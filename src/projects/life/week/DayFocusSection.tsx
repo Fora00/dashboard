@@ -62,7 +62,7 @@ export function DayFocusSection({ day }: { day: string }) {
     <section className="mb-6" aria-label="Oggi">
       <div className="rounded-xl border border-amber-300/70 bg-amber-50/60 dark:border-amber-400/30 dark:bg-amber-400/5">
         <div className="flex min-h-12 items-center justify-between gap-3 px-4 text-sm font-medium text-amber-800 dark:text-amber-300">
-          <h2>🎯 Oggi</h2>
+          <h2>🎯 Daily focus</h2>
           {items.length > 0 && (
             <span className="text-xs font-normal text-slate-500 dark:text-slate-400">
               {items.filter((i) => i.done && !i.cancelled).length}/{items.filter((i) => !i.cancelled).length}
