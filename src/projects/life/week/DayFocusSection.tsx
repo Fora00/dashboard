@@ -2,14 +2,14 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db, type LifeDayFocus } from '../../../lib/db'
 import { toggleDayFocus, toggleDayFocusCancelled } from '../../../lib/lifeSync'
 import { runSafe } from '../../../lib/runSafe'
-import { isUrgentSlot } from '../model'
+import { daysBetween, isUrgentSlot } from '../model'
 
 // "Oggi": the current day's lines (up to 3), filled by the /oggi command, here
 // only ticked or cancelled (Things-style: kept, struck through, restorable). Shows only `day`'s list; yesterday's lines are never
 // carried over. Amber, so it reads apart from the weekly Focus.
 // Local-first via Dexie; writes go through lifeSync.ts.
 
-function Row({ item }: { item: LifeDayFocus }) {
+function Row({ item, age }: { item: LifeDayFocus; age?: number | undefined }) {
   const { done, title, cancelled } = item
 
   return (
@@ -41,6 +41,11 @@ function Row({ item }: { item: LifeDayFocus }) {
         <span className={`min-w-0 flex-1 break-words ${done || cancelled ? 'text-slate-500 line-through' : ''}`}>
           {title}
         </span>
+        {age !== undefined && age >= 2 && !done && !cancelled && (
+          <span className="shrink-0 rounded-full bg-amber-200/60 px-2 py-0.5 text-xs font-normal text-amber-900 dark:bg-amber-400/20 dark:text-amber-200">
+            da {age} gg
+          </span>
+        )}
       </button>
       <button
         type="button"
@@ -57,7 +62,23 @@ function Row({ item }: { item: LifeDayFocus }) {
 export function DayFocusSection({ day }: { day: string }) {
   const items = useLiveQuery(() => db.lifeDayFocus.where('day').equals(day).sortBy('slot'), [day])
 
+  // Days on the board: how many days (counting today) a line with the same title
+  // has been in the daily focus, from its first appearance.
+  const ages = useLiveQuery(async () => {
+    const older = await db.lifeDayFocus.where('day').below(day).toArray()
+    const first = new Map<string, string>()
+    for (const r of older) {
+      const f = first.get(r.title)
+      if (f === undefined || r.day < f) first.set(r.title, r.day)
+    }
+    return first
+  }, [day])
+
   if (items === undefined) return null
+  const ageOf = (i: LifeDayFocus) => {
+    const f = ages?.get(i.title)
+    return f === undefined ? undefined : daysBetween(f, day) + 1
+  }
   const focus = items.filter((i) => !isUrgentSlot(i.slot))
   const urgent = items.filter((i) => isUrgentSlot(i.slot))
 
@@ -76,7 +97,7 @@ export function DayFocusSection({ day }: { day: string }) {
           {focus.length > 0 ? (
             <ul className="space-y-2">
               {focus.map((i) => (
-                <Row key={`${i.id}:${i.updatedAt}`} item={i} />
+                <Row key={`${i.id}:${i.updatedAt}`} item={i} age={ageOf(i)} />
               ))}
             </ul>
           ) : (
@@ -93,7 +114,7 @@ export function DayFocusSection({ day }: { day: string }) {
               </h3>
               <ul className="space-y-2">
                 {urgent.map((i) => (
-                  <Row key={`${i.id}:${i.updatedAt}`} item={i} />
+                  <Row key={`${i.id}:${i.updatedAt}`} item={i} age={ageOf(i)} />
                 ))}
               </ul>
             </div>
