@@ -42,8 +42,16 @@ function Row({ item, age }: { item: LifeDayFocus; age?: number | undefined }) {
           {title}
         </span>
         {age !== undefined && age >= 2 && !done && !cancelled && (
-          <span className="shrink-0 rounded-full bg-amber-200/60 px-2 py-0.5 text-xs font-normal text-amber-900 dark:bg-amber-400/20 dark:text-amber-200">
-            da {age} gg
+          <span
+            className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-normal ${
+              age >= 5
+                ? 'bg-rose-200/70 text-rose-900 dark:bg-rose-400/20 dark:text-rose-200'
+                : age >= 3
+                  ? 'bg-orange-200/70 text-orange-900 dark:bg-orange-400/20 dark:text-orange-200'
+                  : 'bg-amber-200/60 text-amber-900 dark:bg-amber-400/20 dark:text-amber-200'
+            }`}
+          >
+            {age >= 5 ? '🔥' : age >= 3 ? '⚠️' : '⏳'} da {age} gg
           </span>
         )}
       </button>
