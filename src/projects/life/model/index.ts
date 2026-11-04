@@ -46,7 +46,15 @@ export {
   type ThingsUrlOptions,
 } from './things.ts'
 export { buildExportMarkdown } from './export.ts'
-export { dayFocusId, parseFocusLines, freeSlots } from './dayFocus.ts'
+export {
+  dayFocusId,
+  parseFocusLines,
+  freeSlots,
+  freeUrgentSlots,
+  isUrgentSlot,
+  splitUrgent,
+  URGENT_FIRST_SLOT,
+} from './dayFocus.ts'
 export { summarizeUpgrades, upgradesForExport, isUpgrade, type UpgradeSummary } from './upgrades.ts'
 export {
   STREAK_STALE_DAYS,

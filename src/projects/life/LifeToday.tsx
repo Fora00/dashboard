@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { db } from '../../lib/db'
-import { importChores, importStreaks, setDayFocus } from '../../lib/lifeSync'
+import { addDayFocus, importChores, importStreaks } from '../../lib/lifeSync'
 import { useAuth } from '../../lib/useAuth'
 import { decodeDayFocusParam, parseDayFocusJson, weekKey } from './model'
 import { Button } from '../../components/Button'
@@ -45,7 +45,7 @@ export function LifeToday() {
     setSaveError(null)
     try {
       const { day, lines, streaks, chores } = result.plan
-      if (lines.length > 0) await setDayFocus(day, lines)
+      if (lines.length > 0) await addDayFocus(day, lines)
       if (streaks) await importStreaks(weekKey(), streaks)
       if (chores) await importChores(weekKey(), chores)
       await navigate('/life', { replace: true })

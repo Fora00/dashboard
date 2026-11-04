@@ -364,7 +364,7 @@ export interface LifeWeek {
 export interface LifeDayFocus {
   id: string
   day: string // local 'YYYY-MM-DD'
-  slot: number // 0-2
+  slot: number // 0-2 focus, 3-8 urgent (Urgenze)
   title: string
   done: boolean
   // Things-style cancel: kept and struck through, restorable; absent = false.

@@ -2,6 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db, type LifeDayFocus } from '../../../lib/db'
 import { toggleDayFocus, toggleDayFocusCancelled } from '../../../lib/lifeSync'
 import { runSafe } from '../../../lib/runSafe'
+import { isUrgentSlot } from '../model'
 
 // "Oggi": the current day's lines (up to 3), filled by the /oggi command, here
 // only ticked or cancelled (Things-style: kept, struck through, restorable). Shows only `day`'s list; yesterday's lines are never
@@ -57,29 +58,45 @@ export function DayFocusSection({ day }: { day: string }) {
   const items = useLiveQuery(() => db.lifeDayFocus.where('day').equals(day).sortBy('slot'), [day])
 
   if (items === undefined) return null
+  const focus = items.filter((i) => !isUrgentSlot(i.slot))
+  const urgent = items.filter((i) => isUrgentSlot(i.slot))
 
   return (
     <section className="mb-6" aria-label="Oggi">
       <div className="rounded-xl border border-amber-300/70 bg-amber-50/60 dark:border-amber-400/30 dark:bg-amber-400/5">
         <div className="flex min-h-12 items-center justify-between gap-3 px-4 text-sm font-medium text-amber-800 dark:text-amber-300">
           <h2>🎯 Daily focus</h2>
-          {items.length > 0 && (
+          {focus.length > 0 && (
             <span className="text-xs font-normal text-slate-500 dark:text-slate-400">
-              {items.filter((i) => i.done && !i.cancelled).length}/{items.filter((i) => !i.cancelled).length}
+              {focus.filter((i) => i.done && !i.cancelled).length}/{focus.filter((i) => !i.cancelled).length}
             </span>
           )}
         </div>
         <div className="space-y-2 border-t border-amber-300/70 px-4 py-3 dark:border-amber-400/30">
-          {items.length > 0 ? (
+          {focus.length > 0 ? (
             <ul className="space-y-2">
-              {items.map((i) => (
+              {focus.map((i) => (
                 <Row key={`${i.id}:${i.updatedAt}`} item={i} />
               ))}
             </ul>
           ) : (
-            <p className="text-sm text-slate-500 dark:text-slate-400">
-              Niente per oggi. Lancia <code>/oggi</code> per impostarlo.
-            </p>
+            urgent.length === 0 && (
+              <p className="text-sm text-slate-500 dark:text-slate-400">
+                Niente per oggi. Lancia <code>/oggi</code> per impostarlo.
+              </p>
+            )
+          )}
+          {urgent.length > 0 && (
+            <div className={focus.length > 0 ? 'border-t border-amber-300/70 pt-3 dark:border-amber-400/30' : ''}>
+              <h3 className="mb-2 text-xs font-medium uppercase tracking-wide text-rose-700 dark:text-rose-300">
+                🚨 Urgenze
+              </h3>
+              <ul className="space-y-2">
+                {urgent.map((i) => (
+                  <Row key={`${i.id}:${i.updatedAt}`} item={i} />
+                ))}
+              </ul>
+            </div>
           )}
         </div>
       </div>

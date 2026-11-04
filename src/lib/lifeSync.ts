@@ -29,6 +29,8 @@ import { useSyncStatus } from './useSyncStatus'
 import {
   LIFE_CAPS,
   dayFocusId,
+  freeUrgentSlots,
+  splitUrgent,
   dayKey,
   emptyEngine,
   engineId,
@@ -711,59 +713,29 @@ export async function markTasksSent(week: string, taskIds: string[], sent = true
 // --- Today's focus ("Focus di oggi") ----------------------------------------
 
 /**
- * Add focus lines to a day, each into the lowest free slot, up to
- * LIFE_CAPS.dayFocus per day. Blank titles are skipped, titles are trimmed and
- * capped. Returns how many were added (the rest did not fit).
+ * Add lines to a day WITHOUT touching the ones already there: each goes into
+ * the lowest free slot (focus 0-2, or 3-8 for "!"-prefixed urgent lines).
+ * Blank titles and titles the day already has are skipped; titles are trimmed
+ * and capped. Returns how many were added (the rest did not fit).
  */
 export async function addDayFocus(day: string, titles: string[]): Promise<number> {
-  const clean = titles.map((t) => t.trim().slice(0, LIFE_CAPS.dayFocusTitle)).filter((t) => t.length > 0)
   const rows = await db.lifeDayFocus.where('day').equals(day).toArray()
-  const slots = freeSlots(rows.map((r) => r.slot))
+  const seen = new Set(rows.map((r) => r.title))
+  const focus = freeSlots(rows.map((r) => r.slot))
+  const urgent = freeUrgentSlots(rows.map((r) => r.slot))
   const now = Date.now()
-  const added = clean.slice(0, slots.length).map((title, i): LifeDayFocus => ({
-    id: dayFocusId(day, slots[i] ?? 0),
-    day,
-    slot: slots[i] ?? 0,
-    title,
-    done: false,
-    createdAt: now,
-    updatedAt: now,
-  }))
+  const added: LifeDayFocus[] = []
+  for (const raw of titles) {
+    const { urgent: isUrgent, title: t } = splitUrgent(raw)
+    const title = t.slice(0, LIFE_CAPS.dayFocusTitle)
+    if (title.length === 0 || seen.has(title)) continue
+    const slot = (isUrgent ? urgent : focus).shift()
+    if (slot === undefined) continue
+    seen.add(title)
+    added.push({ id: dayFocusId(day, slot), day, slot, title, done: false, createdAt: now, updatedAt: now })
+  }
   if (added.length > 0) await engine.upsertMany('life_day_focus', added)
   return added.length
-}
-
-/**
- * Make a day's focus exactly `titles` (the /oggi command's result): slot i
- * gets titles[i], a line that is unchanged keeps its done state, slots past
- * the end are deleted. Blank titles are skipped, at most LIFE_CAPS.dayFocus.
- */
-export async function setDayFocus(day: string, titles: string[]): Promise<void> {
-  const clean = titles
-    .map((t) => t.trim().slice(0, LIFE_CAPS.dayFocusTitle))
-    .filter((t) => t.length > 0)
-    .slice(0, LIFE_CAPS.dayFocus)
-  const prev = await db.lifeDayFocus.where('day').equals(day).toArray()
-  const bySlot = new Map(prev.map((r) => [r.slot, r]))
-  const now = Date.now()
-  const rows = clean.flatMap((title, slot): LifeDayFocus[] => {
-    const old = bySlot.get(slot)
-    if (old && old.title === title) return []
-    return [
-      {
-        id: dayFocusId(day, slot),
-        day,
-        slot,
-        title,
-        done: false,
-        createdAt: old?.createdAt ?? now,
-        updatedAt: now,
-      },
-    ]
-  })
-  if (rows.length > 0) await engine.upsertMany('life_day_focus', rows)
-  const stale = prev.filter((r) => r.slot >= clean.length).map((r) => r.id)
-  if (stale.length > 0) await engine.removeMany('life_day_focus', stale)
 }
 
 /** Tick / untick a day-focus line. Returns the new state (null if it is gone). */

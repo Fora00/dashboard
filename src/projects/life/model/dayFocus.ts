@@ -24,8 +24,27 @@ export function parseFocusLines(text: string): string[] {
     .filter((l) => l.length > 0)
 }
 
-/** Free slots (0-2) given the slots already taken, lowest first. */
+/** Free focus slots (0-2) given the slots already taken, lowest first. */
 export function freeSlots(taken: Iterable<number>): number[] {
   const used = new Set(taken)
   return Array.from({ length: LIFE_CAPS.dayFocus }, (_, i) => i).filter((i) => !used.has(i))
+}
+
+/** Urgent lines ("Urgenze") live in slots 3-8, outside the 3-line focus. */
+export const URGENT_FIRST_SLOT = LIFE_CAPS.dayFocus
+
+export function isUrgentSlot(slot: number): boolean {
+  return slot >= URGENT_FIRST_SLOT
+}
+
+/** Free urgent slots (3-8) given the slots already taken, lowest first. */
+export function freeUrgentSlots(taken: Iterable<number>): number[] {
+  const used = new Set(taken)
+  return Array.from({ length: LIFE_CAPS.dayFocusUrgent }, (_, i) => URGENT_FIRST_SLOT + i).filter((i) => !used.has(i))
+}
+
+/** A title starting with "!" is urgent: `{ urgent: true, title }` without the mark. */
+export function splitUrgent(raw: string): { urgent: boolean; title: string } {
+  const t = raw.trim()
+  return t.startsWith('!') ? { urgent: true, title: t.replace(/^!+\s*/, '') } : { urgent: false, title: t }
 }

@@ -20,6 +20,8 @@ export const LIFE_CAPS = {
   focusTitle: 200,
   /** Today's focus lines per day and their length (SQL: life_day_focus). */
   dayFocus: 3,
+  /** Urgent lines per day (slots 3-8, outside the 3-line focus; SQL: life_day_focus). */
+  dayFocusUrgent: 6,
   dayFocusTitle: 200,
   rules: 20,
   rule: 300,
