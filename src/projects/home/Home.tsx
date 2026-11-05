@@ -28,11 +28,11 @@ function todayKey(): string {
 // separate and always wins — see the sort in Home()). Persisted per-device
 // as a UI preference, deliberately NOT a Dexie table: no schema bump for a
 // value this small, and it never needs to sync.
-type HomeOrder = 'used' | 'recent' | 'name' | 'default'
+type HomeOrder = 'used' | 'recent' | 'name' | 'default' | 'custom'
 const HOME_ORDER_KEY = 'dashboard:home-order'
 
 function isHomeOrder(value: string | null): value is HomeOrder {
-  return value === 'used' || value === 'recent' || value === 'name' || value === 'default'
+  return value === 'used' || value === 'recent' || value === 'name' || value === 'default' || value === 'custom'
 }
 
 // Guarded storage (see safeStorage.ts): this runs on the app's entry point, an
@@ -67,6 +67,11 @@ const groupedCodec: Codec<boolean> = {
   serialize: (grouped) => (grouped ? 'true' : 'false'),
 }
 
+// Per-device hand-picked project order ('custom' mode), ids first to last.
+const HOME_PROJECT_ORDER_KEY = 'dashboard:home-project-order'
+const sanitizeIds = (raw: unknown): string[] =>
+  Array.isArray(raw) ? raw.filter((v): v is string => typeof v === 'string') : []
+
 // Per-device order of the home sections (Riordina mode, up/down buttons).
 const HOME_AREA_ORDER_KEY = 'dashboard:home-area-order'
 
@@ -89,6 +94,7 @@ export function Home() {
     sanitizeAreaOrder(null),
     sanitizeAreaOrder,
   )
+  const [customIds, setCustomIds] = usePersistedState<string[]>(HOME_PROJECT_ORDER_KEY, [], sanitizeIds)
   const [rearranging, setRearranging] = useState(false)
 
   function handleOrderChange(e: ChangeEvent<HTMLSelectElement>) {
@@ -115,6 +121,11 @@ export function Home() {
         return (sb?.lastOpenedAt ?? 0) - (sa?.lastOpenedAt ?? 0)
       case 'name':
         return a.name.localeCompare(b.name)
+      case 'custom': {
+        const ia = customIds.indexOf(a.id)
+        const ib = customIds.indexOf(b.id)
+        return (ia < 0 ? 1e6 : ia) - (ib < 0 ? 1e6 : ib)
+      }
       case 'default':
         // Registry order — let the stable sort's tie-breaking do the work.
         return 0
@@ -140,12 +151,25 @@ export function Home() {
       : (() => {
           const starredGroup = visible.filter((p) => isStarred(p.id)).sort(compareWithinGroup)
           const unstarredGroup = visible.filter((p) => !isStarred(p.id)).sort(compareWithinGroup)
-          if (reversed) {
+          if (reversed && order !== 'custom') {
             starredGroup.reverse()
             unstarredGroup.reverse()
           }
           return [...starredGroup, ...unstarredGroup]
         })()
+  // Move a project one step inside its section (swaps with its neighbour in the
+  // shown order) and switch to the hand-picked order so the move sticks.
+  function moveProject(sectionIds: string[], id: string, dir: -1 | 1) {
+    const j = sectionIds.indexOf(id) + dir
+    const other = sectionIds[j]
+    if (other === undefined) return
+    const all = ordered.map((p) => p.id)
+    const a = all.indexOf(id)
+    const b = all.indexOf(other)
+    ;[all[a], all[b]] = [other, id]
+    setCustomIds(all)
+    setOrder('custom')
+  }
   const fileStats = useLiveQuery(async () => {
     const files = await db.files.toArray()
     return {
@@ -197,7 +221,7 @@ export function Home() {
     return null
   }
 
-  function renderCard(p: ProjectMeta) {
+  function renderCard(p: ProjectMeta, sectionIds: string[] = []) {
     const starred = isStarred(p.id)
     return (
       <div key={p.id} className="relative">
@@ -210,8 +234,25 @@ export function Home() {
         >
           {starred ? <span className="text-amber-500 dark:text-amber-400">★</span> : '☆'}
         </button>
+        {rearranging && sectionIds.length > 0 && (
+          <div className="absolute bottom-1 right-1 z-10 flex gap-1">
+            {([-1, 1] as const).map((dir) => (
+              <button
+                key={dir}
+                type="button"
+                onClick={() => moveProject(sectionIds, p.id, dir)}
+                aria-label={`${dir === -1 ? 'Sposta prima' : 'Sposta dopo'}: ${p.name}`}
+                className={`flex size-10 items-center justify-center rounded-lg border border-slate-300 bg-white text-base dark:border-slate-700 dark:bg-slate-800 ${FOCUS_RING_INSET}`}
+              >
+                {dir === -1 ? '◀' : '▶'}
+              </button>
+            ))}
+          </div>
+        )}
         <Link to={p.path} className="group">
-          <Card className="h-full !p-3 transition-colors group-hover:border-slate-400 group-active:bg-slate-100 dark:group-hover:border-slate-600 dark:group-active:bg-slate-800">
+          <Card
+            className={`h-full !p-3 ${rearranging ? '!pb-12' : ''} transition-colors group-hover:border-slate-400 group-active:bg-slate-100 dark:group-hover:border-slate-600 dark:group-active:bg-slate-800`}
+          >
             <div className="mb-2 flex items-center justify-between pr-10">
               <ProjectIcon project={p} />
               {p.status === 'planned' ? (
@@ -254,6 +295,7 @@ export function Home() {
             <option value="recent">Recently opened</option>
             <option value="name">Name</option>
             <option value="default">Default order</option>
+            <option value="custom">Mio ordine</option>
           </select>
           <button
             type="button"
@@ -333,12 +375,19 @@ export function Home() {
                   </span>
                 )}
               </h2>
-              <div className={GRID}>{section.projects.map(renderCard)}</div>
+              <div className={GRID}>
+                {section.projects.map((p) =>
+                  renderCard(
+                    p,
+                    section.projects.map((x) => x.id),
+                  ),
+                )}
+              </div>
             </section>
           ))}
         </div>
       ) : (
-        <div className={GRID}>{ordered.map(renderCard)}</div>
+        <div className={GRID}>{ordered.map((p) => renderCard(p))}</div>
       )}
       {hiddenCount > 0 && (
         <div className="mt-6 flex justify-center">
