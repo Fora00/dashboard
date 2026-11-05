@@ -1,11 +1,20 @@
 import { createElement, type ReactNode } from 'react'
 import { parseHtml, type HtmlNode } from './html'
+import { figures } from './figures'
 
 function render(nodes: HtmlNode[]): ReactNode[] {
   return nodes.map((n, i) =>
-    typeof n === 'string'
-      ? n
-      : createElement(n.tag, { key: i, className: n.cls }, ...(n.tag === 'br' ? [] : render(n.children))),
+    typeof n === 'string' ? (
+      n
+    ) : n.tag === 'fig' ? (
+      figures[n.fig ?? ''] ? (
+        <figure key={i} className="learning-fig">
+          {figures[n.fig ?? '']}
+        </figure>
+      ) : null
+    ) : (
+      createElement(n.tag, { key: i, className: n.cls }, ...(n.tag === 'br' ? [] : render(n.children)))
+    ),
   )
 }
 

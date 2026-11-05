@@ -16,6 +16,12 @@ describe('parseHtml', () => {
     expect(htmlToText('<p>hi<script>alert(1)</script></p>')).toBe('hialert(1)')
   })
 
+  it('turns <fig id> into a registry reference and drops anything else', () => {
+    expect(parseHtml('<fig id="light">')).toEqual([{ tag: 'fig', cls: undefined, fig: 'light', children: [] }])
+    expect(parseHtml('<fig>')).toEqual([])
+    expect(JSON.stringify(parseHtml('<fig id="x&quot; onload=y">'))).not.toMatch(/onload/)
+  })
+
   it('never produces markup from escaped text', () => {
     expect(parseHtml('&lt;script&gt;x&lt;/script&gt;')).toEqual(['<script>x</script>'])
   })

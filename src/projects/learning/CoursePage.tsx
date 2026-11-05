@@ -4,8 +4,9 @@ import { Button } from '../../components/Button'
 import { Card } from '../../components/Card'
 import { courseById } from './courses'
 import { NotFound } from './NotFound'
-import { ProgressBar } from './ProgressBar'
+import { ProgressBar, ProgressBars } from './ProgressBar'
 import { courseProgress, EMPTY_STATE } from './progress'
+import { resetChecks } from '../../lib/learningLocal'
 import { resetCourse } from '../../lib/learningSync'
 import { useCourseState } from './store'
 import type { Course } from './types'
@@ -17,7 +18,8 @@ function ResetCourse({ course }: { course: Course }) {
       <Button
         variant="danger"
         onClick={() => {
-          void resetCourse(course.id)
+          // Ticks go with the progress; the photo diary stays (delete photos one by one).
+          void Promise.all([resetCourse(course.id), resetChecks(course.id)])
           setArmed(false)
         }}
       >
@@ -51,14 +53,24 @@ function CourseView({ course }: { course: Course }) {
           {course.title}
         </h1>
         <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">{course.intro}</p>
-        <div className="mt-4 flex items-center gap-3">
-          <div className="flex-1">
-            <ProgressBar percent={progress.percent} label="Progresso complessivo" />
-          </div>
-          <span className="text-sm text-slate-500 tabular-nums">
-            {progress.percent}% · {progress.done}/{progress.total}
-          </span>
+        <div className="mt-4">
+          <ProgressBars
+            split={progress.split}
+            overall={progress}
+            know={progress.know}
+            skill={progress.skill}
+            label="Progresso complessivo"
+            counts
+          />
         </div>
+        {progress.split && (
+          <Link
+            to={`/learning/${course.id}/diario`}
+            className="mt-3 inline-flex min-h-10 items-center gap-1.5 rounded-lg bg-slate-100 px-3.5 text-sm font-medium text-slate-800 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+          >
+            📷 Diario dei fogli
+          </Link>
+        )}
         {course.notes?.map((n) => (
           <p key={n} className="mt-3 text-xs text-slate-500">
             {n}
@@ -86,7 +98,9 @@ function CourseView({ course }: { course: Course }) {
                       <Card className="flex h-full min-h-10 flex-col gap-1.5 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800">
                         <div className="flex items-start justify-between gap-2">
                           <strong className="font-medium">{m.title}</strong>
-                          <span className="text-sm text-slate-500 tabular-nums">{p?.percent ?? 0}%</span>
+                          {!progress.split && (
+                            <span className="text-sm text-slate-500 tabular-nums">{p?.percent ?? 0}%</span>
+                          )}
                         </div>
                         <span className="text-sm text-slate-500 dark:text-slate-400">{m.subtitle}</span>
                         {m.verify && (
@@ -94,7 +108,17 @@ function CourseView({ course }: { course: Course }) {
                             ⚠ da verificare
                           </span>
                         )}
-                        <ProgressBar percent={p?.percent ?? 0} label={`${m.title}: progresso`} />
+                        {progress.split && p ? (
+                          <ProgressBars
+                            split
+                            overall={p}
+                            know={p.know}
+                            skill={p.skill}
+                            label={`${m.title}: progresso`}
+                          />
+                        ) : (
+                          <ProgressBar percent={p?.percent ?? 0} label={`${m.title}: progresso`} />
+                        )}
                       </Card>
                     </Link>
                   </li>

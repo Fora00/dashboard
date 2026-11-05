@@ -5,6 +5,10 @@ import { db, type OutboxTable } from './db'
 // to remove it from the device right after a sign-out; it is NEVER run
 // automatically. Keep in sync with the owner-only synced tables (Life incl. Life Engines, Meal
 // Diary, Learning progress, the owner's custom events, event marks/prefs, event interests and the interest profile).
+// NOT here on purpose: learningChecks and learningSketches (learningLocal.ts).
+// They are local-only with no cloud copy, so "remove from this device" would
+// destroy them for good, and they are written signed out too (not tied to the
+// owner's account).
 
 /** Local Dexie tables holding owner-only data. */
 const PRIVATE_TABLES = [

@@ -1,6 +1,7 @@
 import { Button } from '../../components/Button'
 import { FOCUS_RING } from '../../components/focus'
 import { HtmlText } from './HtmlText'
+import { figures } from './figures'
 import { moduleProgress, type CourseState } from './progress'
 import { answerQuiz, resetQuiz } from '../../lib/learningSync'
 import type { CourseModule } from './types'
@@ -35,7 +36,12 @@ export function QuizTab({ courseId, mod, state }: Props) {
             <p className="font-medium">
               {i + 1}. <HtmlText html={q.q} />
             </p>
-            <div className="mt-3 flex flex-col gap-2">
+            {q.fig && figures[q.fig] && <div className="mt-3 [&_svg]:mx-auto [&_svg]:max-w-sm">{figures[q.fig]}</div>}
+            <div
+              className={
+                q.optionFigs ? 'mt-3 grid grid-cols-1 gap-2 min-[420px]:grid-cols-3' : 'mt-3 flex flex-col gap-2'
+              }
+            >
               {q.options.map((o, j) => {
                 const isRight = j === q.answer
                 const isPicked = a?.selected === j
@@ -53,8 +59,13 @@ export function QuizTab({ courseId, mod, state }: Props) {
                     disabled={!!a}
                     aria-pressed={isPicked}
                     onClick={() => void answerQuiz(courseId, mod.id, q.id, j, q.answer)}
-                    className={`flex min-h-10 w-full items-center justify-between gap-2 rounded-lg border-2 px-3 py-2 text-left text-sm disabled:cursor-default ${FOCUS_RING} ${tone}`}
+                    className={`flex min-h-10 w-full ${q.optionFigs ? 'flex-col' : ''} items-center justify-between gap-2 rounded-lg border-2 px-3 py-2 text-left text-sm disabled:cursor-default ${FOCUS_RING} ${tone}`}
                   >
+                    {q.optionFigs?.[j] && figures[q.optionFigs[j]] && (
+                      <span className="block w-full max-w-40 [&_svg]:h-auto [&_svg]:w-full">
+                        {figures[q.optionFigs[j]]}
+                      </span>
+                    )}
                     <span>
                       <HtmlText html={o} />
                     </span>

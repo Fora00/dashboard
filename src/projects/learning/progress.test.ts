@@ -101,3 +101,57 @@ describe('percent', () => {
     expect(percent(0, 0)).toBe(0)
   })
 })
+
+describe('sapere / saper fare', () => {
+  const drawing = (id: string): CourseModule => ({
+    ...mod(id, 2, 2, 0),
+    practice: [
+      { id: 'p0', question: '', answer: '', checklist: ['a', 'b', 'c'] },
+      { id: 'p1', question: '', answer: '' },
+    ],
+  })
+  const check = (moduleId: string, index: number, checked: number[]) => ({ ...row('p', moduleId, index), checked })
+
+  it('a course without checklist exercises keeps one bar and the same numbers as before', () => {
+    const c = course(mod('a', 4, 4, 2))
+    const state: CourseState = {
+      quiz: [quiz('a', 0, 1)],
+      cards: [card('a', 0)],
+      practice: [practice('a', 0, 1)],
+    }
+    const p = courseProgress(c, state)
+    expect(p.split).toBe(false)
+    expect(p).toMatchObject({ done: 3, total: 10, percent: 30 })
+    expect(p.modules.a).toMatchObject({ practice: { done: 1, total: 2 }, done: 3, total: 10, percent: 30 })
+    // The extra fields are consistent with the old ones.
+    expect(p.know).toEqual({ done: 2, total: 8, percent: 25 })
+    expect(p.skill).toEqual({ done: 1, total: 2, percent: 50 })
+  })
+
+  it('splits quiz + cards ("sapere") from practice ("saper fare") for checklist courses', () => {
+    const c = course(drawing('a'))
+    const state: CourseState = {
+      quiz: [quiz('a', 0, 1), quiz('a', 1, 1)],
+      cards: [card('a', 0)],
+      practice: [practice('a', 1, 1)],
+    }
+    const p = courseProgress(c, state)
+    expect(p.split).toBe(true)
+    expect(p.know).toEqual({ done: 3, total: 4, percent: 75 })
+    expect(p.skill).toEqual({ done: 1, total: 2, percent: 50 })
+    expect(p).toMatchObject({ done: 4, total: 6 })
+  })
+
+  it('a checklist exercise counts only when marked done AND at least one criterion is ticked', () => {
+    const m = drawing('a')
+    const at = (practiceRows: CourseState['practice'], checks: NonNullable<CourseState['checks']>) =>
+      moduleProgress('c', m, { quiz: [], cards: [], practice: practiceRows, checks }).skill.done
+    expect(at([practice('a', 0, 1)], [])).toBe(0) // done, no ticks
+    expect(at([practice('a', 0, 0)], [check('a', 0, [0, 1, 2])])).toBe(0) // ticks, not done
+    expect(at([practice('a', 0, 1)], [check('a', 0, [2])])).toBe(1)
+    expect(at([practice('a', 0, 1)], [check('a', 0, [7])])).toBe(0) // index the checklist no longer has
+    expect(at([practice('a', 0, 1)], [check('b', 0, [0])])).toBe(0) // another module's ticks
+    // state without `checks` (older callers) behaves as no ticks.
+    expect(moduleProgress('c', m, { quiz: [], cards: [], practice: [practice('a', 0, 1)] }).skill.done).toBe(0)
+  })
+})

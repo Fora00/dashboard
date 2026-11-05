@@ -10,7 +10,7 @@ queue: `ROADMAP.md` (`npm run roadmap` lists the open tasks).
 | `src/lib/projects.ts` | Registry (home grid); `isInvitable()` decides what `/sharing` can grant |
 | `src/App.tsx` | One route per project (HashRouter, `base: '/dashboard/'`) |
 | `src/projects/<id>/` | One folder per project (UI, model, tests) |
-| `src/projects/learning/` | Course engine: static content in `courses/` (one data file + one line per course), learner state in Dexie (`learning*` tables, synced owner-only by `learningSync.ts`) |
+| `src/projects/learning/` | Course engine: static content in `courses/` (one data file + one line per course), learner state in Dexie (`learning*` tables, synced owner-only by `learningSync.ts`; except `learningChecks` + `learningSketches`, the checklist ticks and photo diary, which are local-only via `learningLocal.ts`, not synced, photos not in the JSON backup) |
 | `src/lib/db.ts` | The ONE shared Dexie database (local-first, every page works offline/signed out) |
 | `src/lib/cloudSync.ts` | Generic sync engine: Dexie outbox, flush on reconnect/foreground, pull remote as truth, realtime |
 | `src/lib/*Sync.ts` | Per-project glue on top of the engine (below) |

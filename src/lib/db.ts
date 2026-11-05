@@ -440,6 +440,33 @@ export interface LearningPractice {
   updatedAt: number
 }
 
+// Learning, LOCAL ONLY (src/lib/learningLocal.ts): never synced, never in the
+// outbox. Checklist ticks of one practice item (same id as learningPractice)
+// and the photo diary of the learner's sheets.
+export interface LearningCheck {
+  id: string
+  courseId: string
+  moduleId: string
+  itemId: string
+  /** Indices into the item's `checklist` that are ticked, ascending. */
+  checked: number[]
+  updatedAt: number
+}
+
+export interface LearningSketch {
+  /** uuid */
+  id: string
+  courseId: string
+  moduleId: string
+  itemId: string
+  /** JPEG, already downscaled (max 1600px long side). */
+  photo: Blob
+  note: string
+  /** "How happy are you with it", 1-5; absent until the learner picks one. */
+  selfScore?: number
+  createdAt: number
+}
+
 export type LifeEntryKind =
   | 'focus'
   | 'tracker'
@@ -757,6 +784,8 @@ export const db = new Dexie('dashboard') as Dexie & {
   learningQuiz: EntityTable<LearningQuizAnswer, 'id'>
   learningCards: EntityTable<LearningCard, 'id'>
   learningPractice: EntityTable<LearningPractice, 'id'>
+  learningChecks: EntityTable<LearningCheck, 'id'>
+  learningSketches: EntityTable<LearningSketch, 'id'>
   eventsCache: EntityTable<EventsCacheRow, 'id'>
   eventMarks: EntityTable<EventMark, 'id'>
   eventPrefs: EntityTable<EventPrefs, 'id'>
@@ -1328,6 +1357,44 @@ db.version(22).stores({
   learningCards: 'id, courseId, [courseId+moduleId]',
   learningPractice: 'id, courseId, [courseId+moduleId]',
   lifeEngines: 'id, month',
+})
+
+// v23: learningChecks + learningSketches, local-only Learning state
+// (learningLocal.ts: checklist ticks and the photo diary). Brand-new empty
+// tables: no upgrade callback, nothing queued.
+db.version(23).stores({
+  files: 'id, name, createdAt, synced',
+  shopItems: 'id, done, createdAt, areaId',
+  shopAreas: 'id, createdAt',
+  outbox: '++seq, rowId',
+  climbSessions: 'id, date',
+  climbs: 'id, sessionId, date',
+  habits: 'id, createdAt',
+  habitChecks: 'id, habitId, day, [habitId+day]',
+  todos: 'id, done, createdAt',
+  bookIdeas: 'id, createdAt',
+  boardgameIdeas: 'id, createdAt',
+  links: 'id, read, createdAt, *tags',
+  projectStats: 'id, opens',
+  lifeWeeks: 'id, importedAt',
+  lifeEntries: 'id, week, [week+kind]',
+  eventsCache: 'id',
+  eventMarks: 'id, state, updatedAt',
+  eventPrefs: 'id',
+  tripIdeas: 'id, done, createdAt, *companionIds',
+  tripCompanions: 'id, createdAt',
+  customEvents: 'id, start, updatedAt',
+  meals: 'id, day, createdAt',
+  projectPrefs: 'id',
+  eventInterest: 'id, value',
+  eventInterestProfile: 'id',
+  lifeDayFocus: 'id, day',
+  learningQuiz: 'id, courseId, [courseId+moduleId]',
+  learningCards: 'id, courseId, [courseId+moduleId]',
+  learningPractice: 'id, courseId, [courseId+moduleId]',
+  lifeEngines: 'id, month',
+  learningChecks: 'id, courseId, [courseId+moduleId]',
+  learningSketches: 'id, courseId, [courseId+moduleId+itemId], createdAt',
 })
 
 // Ask the browser not to evict our data under storage pressure (important on iOS).

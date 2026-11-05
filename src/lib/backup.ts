@@ -5,7 +5,11 @@ import { sync as projectPrefsEngine } from './projectPrefsSync'
 // left out (a restored outbox would replay stale writes); everything else is
 // restored with put, so importing merges into, and never wipes, current data.
 
-const SKIPPED = new Set(['outbox'])
+// learningSketches is left out too: its rows hold the photo as a Blob, which
+// JSON cannot carry (it would serialise to {} and a restore would overwrite
+// good photos with broken rows). The photo diary is local-only and is NOT in
+// the backup; its ticks (learningChecks) are plain JSON and are.
+const SKIPPED = new Set(['outbox', 'learningSketches'])
 const FORMAT = 'dashboard-backup'
 
 export interface Backup {

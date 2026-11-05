@@ -11,6 +11,10 @@ export interface QuizQuestion {
   /** Index into `options`. */
   answer: number
   explanation: string
+  /** Optional figure id (figures.tsx) shown above the options. */
+  fig?: string
+  /** Optional figure id per option (same order as `options`); the option text is then its caption. */
+  optionFigs?: string[]
 }
 
 export interface Flashcard {
@@ -26,6 +30,12 @@ export interface PracticeItem {
   question: string
   /** Model answer, revealed on demand. */
   answer: string
+  /** Drawing exercises: observable yes/no criteria to check against your own sheet. */
+  checklist?: string[]
+  /** Drawing exercises: time box. */
+  minutes?: number
+  /** Drawing exercises: figure id (figures.tsx) to compare with. */
+  modelFig?: string
 }
 
 export interface CourseModule {

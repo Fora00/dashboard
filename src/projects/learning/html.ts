@@ -3,7 +3,7 @@
 // as React elements through an allowlist, so nothing outside it can ever reach
 // the DOM. Pure (no DOM), so it is unit-tested in node.
 
-export type HtmlNode = string | { tag: string; cls?: string | undefined; children: HtmlNode[] }
+export type HtmlNode = string | { tag: string; cls?: string | undefined; fig?: string; children: HtmlNode[] }
 
 const ALLOWED = new Set([
   'p',
@@ -27,8 +27,9 @@ const ALLOWED = new Set([
   'tr',
   'th',
   'td',
+  'fig', // <fig id="name"> = a figure from the registry in figures.tsx (never raw SVG)
 ])
-const VOID = new Set(['br'])
+const VOID = new Set(['br', 'fig'])
 const ALLOWED_CLASSES = new Set(['lead', 'say', 'tblw'])
 
 const ENTITIES: Record<string, string> = {
@@ -80,7 +81,16 @@ export function parseHtml(html: string): HtmlNode[] {
       if (i > 0) stack.length = i
       continue
     }
-    const node = { tag, cls: classOf(attrs ?? ''), children: [] as HtmlNode[] }
+    const node: { tag: string; cls: string | undefined; fig?: string; children: HtmlNode[] } = {
+      tag,
+      cls: classOf(attrs ?? ''),
+      children: [],
+    }
+    if (tag === 'fig') {
+      const id = /\sid\s*=\s*"([a-z0-9-]+)"/i.exec(' ' + (attrs ?? ''))?.[1]
+      if (!id) continue
+      node.fig = id
+    }
     top().children.push(node)
     if (!VOID.has(tag)) stack.push(node)
   }

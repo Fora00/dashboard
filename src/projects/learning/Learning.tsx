@@ -6,6 +6,7 @@ import { SyncCard } from '../../components/SyncCard'
 import { sync } from '../../lib/learningSync'
 import { courses } from './courses'
 import { CoursePage } from './CoursePage'
+import { DiaryPage } from './DiaryPage'
 import { ModulePage } from './ModulePage'
 import { ProgressBar } from './ProgressBar'
 import { courseProgress } from './progress'
@@ -58,6 +59,8 @@ export function Learning() {
     <Routes>
       <Route index element={<CourseList />} />
       <Route path=":courseId" element={<CoursePage />} />
+      {/* Static segment: ranks above :moduleId, so no module can shadow it. */}
+      <Route path=":courseId/diario" element={<DiaryPage />} />
       <Route path=":courseId/:moduleId" element={<ModulePage />} />
     </Routes>
   )

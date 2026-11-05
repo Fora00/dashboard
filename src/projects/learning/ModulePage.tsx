@@ -6,8 +6,8 @@ import { CardsTab } from './CardsTab'
 import { HtmlText } from './HtmlText'
 import { NotFound } from './NotFound'
 import { PracticeTab } from './PracticeTab'
-import { ProgressBar } from './ProgressBar'
-import { EMPTY_STATE, moduleProgress } from './progress'
+import { ProgressBars } from './ProgressBar'
+import { courseHasChecklist, EMPTY_STATE, moduleProgress } from './progress'
 import { QuizTab } from './QuizTab'
 import { useCourseState } from './store'
 import type { Course, CourseModule } from './types'
@@ -40,11 +40,14 @@ function ModuleView({ course, mod }: { course: Course; mod: CourseModule }) {
         </Link>
         <h1 className="text-2xl font-semibold tracking-tight">{mod.title}</h1>
         <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{mod.subtitle}</p>
-        <div className="mt-3 flex items-center gap-3">
-          <div className="flex-1">
-            <ProgressBar percent={p.percent} label={`${mod.title}: progresso`} />
-          </div>
-          <span className="text-sm text-slate-500 tabular-nums">{p.percent}%</span>
+        <div className="mt-3">
+          <ProgressBars
+            split={courseHasChecklist(course)}
+            overall={p}
+            know={p.know}
+            skill={p.skill}
+            label={`${mod.title}: progresso`}
+          />
         </div>
       </div>
 
@@ -84,9 +87,11 @@ function ModuleView({ course, mod }: { course: Course; mod: CourseModule }) {
         {tab === 'lesson' && (
           <div>
             <HtmlText html={mod.lesson} block />
-            <p className="mt-6 rounded-lg bg-slate-100 px-3 py-2 text-sm text-slate-600 dark:bg-slate-800 dark:text-slate-400">
-              <strong>Dal tuo vault.</strong> <HtmlText html={mod.vault} />
-            </p>
+            {mod.vault && (
+              <p className="mt-6 rounded-lg bg-slate-100 px-3 py-2 text-sm text-slate-600 dark:bg-slate-800 dark:text-slate-400">
+                <strong>Dal tuo vault.</strong> <HtmlText html={mod.vault} />
+              </p>
+            )}
           </div>
         )}
         {/* Mounted only once the saved state has loaded, so inputs start from it. */}

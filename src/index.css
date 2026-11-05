@@ -109,3 +109,14 @@ body {
 .learning-html .say {
   @apply rounded-lg border-l-4 border-(color:--accent) bg-(--accent-soft) px-3 py-2;
 }
+
+.learning-fig {
+  margin: 0.75rem 0;
+}
+.learning-fig svg {
+  display: block;
+  width: 100%;
+  max-width: 420px;
+  height: auto;
+  margin: 0 auto;
+}

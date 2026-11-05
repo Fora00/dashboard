@@ -42,6 +42,24 @@ describe('backup', () => {
     expect(await db.projectStats.get('events')).toEqual({ id: 'events', opens: 3, lastOpenedAt: 9 })
     expect((await db.outbox.toArray()).filter((e) => e.table === 'project_prefs').length).toBe(2)
   })
+  it('keeps the checklist ticks but leaves out the photo diary (Blobs are not JSON)', async () => {
+    await db.learningChecks.put({ id: 'd:m:p', courseId: 'd', moduleId: 'm', itemId: 'p', checked: [1], updatedAt: 1 })
+    await db.learningSketches.add({
+      id: 's1',
+      courseId: 'd',
+      moduleId: 'm',
+      itemId: 'p',
+      photo: new Blob(['x']),
+      note: '',
+      createdAt: 1,
+    })
+    const b = parseBackup(JSON.stringify(await buildBackup()))
+    expect(b.tables.learningChecks).toHaveLength(1)
+    expect(b.tables).not.toHaveProperty('learningSketches')
+    // A backup that somehow carries the table never overwrites real photos.
+    await restoreBackup({ ...b, tables: { ...b.tables, learningSketches: [{ id: 's1', photo: {} }] } })
+    expect((await db.learningSketches.get('s1'))?.photo).toBeInstanceOf(Blob)
+  })
   it('rejects files that are not backups or are newer', () => {
     expect(() => parseBackup('nope')).toThrow(/not JSON/)
     expect(() => parseBackup('{"a":1}')).toThrow(/not a dashboard backup/i)

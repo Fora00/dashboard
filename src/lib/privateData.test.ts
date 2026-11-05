@@ -58,4 +58,22 @@ describe('private data on this device', () => {
     expect(await db.todos.get('t1')).toBeDefined()
     expect((await db.outbox.toArray()).map((e) => e.table)).toEqual(['todos'])
   })
+
+  it('never removes the local-only Learning ticks and photo diary (no cloud copy to fall back on)', async () => {
+    await seed()
+    await db.learningChecks.put({ id: 'd:m:p', courseId: 'd', moduleId: 'm', itemId: 'p', checked: [0], updatedAt: 1 })
+    await db.learningSketches.add({
+      id: 's1',
+      courseId: 'd',
+      moduleId: 'm',
+      itemId: 'p',
+      photo: new Blob(['x']),
+      note: '',
+      createdAt: 1,
+    })
+    expect((await privateDataSummary()).rows).toBe(6)
+    await clearPrivateData()
+    expect(await db.learningChecks.count()).toBe(1)
+    expect(await db.learningSketches.count()).toBe(1)
+  })
 })
