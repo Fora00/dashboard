@@ -107,9 +107,11 @@ function Item({
         </p>
       )}
       {shown && (
-        <p className="mt-3 border-t border-slate-200 pt-3 text-sm text-slate-700 dark:border-slate-700 dark:text-slate-300">
-          <strong>Traccia di risposta.</strong> <HtmlText html={item.answer} />
-        </p>
+        <div className="mt-3 border-t border-slate-200 pt-3 text-sm text-slate-700 dark:border-slate-700 dark:text-slate-300">
+          <strong>Traccia di risposta.</strong>{' '}
+          {/* Answers with a code block get the lesson typography (styled <pre>, horizontal scroll). */}
+          <HtmlText html={item.answer} block={item.answer.includes('<pre')} />
+        </div>
       )}
     </div>
   )
