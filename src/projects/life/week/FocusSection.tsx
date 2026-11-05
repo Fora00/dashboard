@@ -1,6 +1,8 @@
 import type { LifeFocus } from '../../../lib/db'
-import { toggleFocus, toggleFocusCancelled } from '../../../lib/lifeSync'
+import { AddLine } from './AddLine'
+import { addFocus, toggleFocus, toggleFocusCancelled } from '../../../lib/lifeSync'
 import { CollapsibleSection } from './CollapsibleSection'
+import { LIFE_CAPS } from '../model'
 import { runSafe } from '../../../lib/runSafe'
 
 export function FocusSection({
@@ -80,6 +82,15 @@ export function FocusSection({
           )
         })}
       </ul>
+      {!readOnly && focus.length < LIFE_CAPS.focus && (
+        <div className={focus.length > 0 ? 'mt-2' : ''}>
+          <AddLine
+            onAdd={(t) => addFocus(week, t)}
+            placeholder="Aggiungi focus settimanale"
+            maxLength={LIFE_CAPS.focusTitle}
+          />
+        </div>
+      )}
     </CollapsibleSection>
   )
 }

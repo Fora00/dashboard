@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Link, useSearchParams } from 'react-router-dom'
 import { db } from '../../lib/db'
-import { sync } from '../../lib/lifeSync'
+import { startQuickWeek, sync } from '../../lib/lifeSync'
+import { runSafe } from '../../lib/runSafe'
 import { parseDayKey, weekKey } from './model'
 import { useToday } from './useToday'
 import { Button } from '../../components/Button'
@@ -118,8 +119,9 @@ export function Life() {
           hint="Import this week's plan to get started — paste JSON or open an import link from your Mac."
         />
         <div className="mt-4 flex flex-wrap justify-center gap-2">
+          <Button onClick={() => void runSafe(startQuickWeek, 'Could not save')(week)}>Inizia la settimana</Button>
           <Link to="/life/import">
-            <Button>Import week</Button>
+            <Button variant="ghost">Import week</Button>
           </Link>
           <Link to="/life/edit">
             <Button variant="ghost">Create by hand</Button>

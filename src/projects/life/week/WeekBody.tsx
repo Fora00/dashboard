@@ -158,7 +158,7 @@ export function WeekBody({ week, plan, entries, readOnly, lateEdit = false, dayF
         trigger={trigger}
       />
     )
-  if (plan.focus.length > 0)
+  if (plan.focus.length > 0 || !readOnly)
     blocks.focus = (
       <FocusSection
         week={week}

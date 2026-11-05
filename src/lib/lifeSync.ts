@@ -28,6 +28,7 @@ import { createCloudSync, type TableSync } from './cloudSync'
 import { useSyncStatus } from './useSyncStatus'
 import {
   LIFE_CAPS,
+  addDays,
   dayFocusId,
   freeUrgentSlots,
   splitUrgent,
@@ -280,6 +281,33 @@ export async function importWeek(plan: LifePlan, streaks?: readonly LifeStreakVa
 }
 
 /**
+ * "Start the week" from the phone: a minimal plan for `week` (no Mac, no
+ * /settimana). Keeps the previous week's rules and Sunday questions (their
+ * tracker links dropped); no focus, tasks, trackers or check-ins. Does nothing
+ * when the week already has a plan.
+ */
+export async function startQuickWeek(week: string): Promise<boolean> {
+  if (await db.lifeWeeks.get(week)) return false
+  const prev = await db.lifeWeeks.get(addDays(week, -7))
+  const plan = prev?.plan
+  await importWeek({
+    version: 1,
+    week,
+    focus: [],
+    rules: plan?.rules ?? [],
+    tasks: [],
+    trackers: [],
+    sundayCheck: (plan?.sundayCheck ?? []).map(({ id, label, type }) => ({
+      id,
+      label,
+      type,
+    })),
+    checkins: [],
+  } as LifePlan)
+  return true
+}
+
+/**
  * Apply a Streaks-app snapshot (already validated by parseWeekJson/validatePlan):
  * upsert each habit by ref, delete the habits no longer in it. Unchanged
  * habits write nothing. See planStreakImport for the rules.
@@ -336,6 +364,23 @@ export async function removeFocus(week: string, focusId: string): Promise<void> 
     },
     updatedAt: Date.now(),
   })
+}
+
+/** Add a weekly-focus line from the app (max LIFE_CAPS.focus). Returns false if full/blank/duplicate. */
+export async function addFocus(week: string, titleIn: string): Promise<boolean> {
+  const row = await db.lifeWeeks.get(week)
+  const title = titleIn.trim().slice(0, LIFE_CAPS.focusTitle)
+  if (!row || title.length === 0) return false
+  if (row.plan.focus.length >= LIFE_CAPS.focus || row.plan.focus.some((f) => f.title === title)) return false
+  await engine.upsert('life_weeks', {
+    ...row,
+    plan: {
+      ...row.plan,
+      focus: [...row.plan.focus, { id: crypto.randomUUID().slice(0, 8), title }],
+    },
+    updatedAt: Date.now(),
+  })
+  return true
 }
 
 export interface LogTrackerOptions {
@@ -732,7 +777,15 @@ export async function addDayFocus(day: string, titles: string[]): Promise<number
     const slot = (isUrgent ? urgent : focus).shift()
     if (slot === undefined) continue
     seen.add(title)
-    added.push({ id: dayFocusId(day, slot), day, slot, title, done: false, createdAt: now, updatedAt: now })
+    added.push({
+      id: dayFocusId(day, slot),
+      day,
+      slot,
+      title,
+      done: false,
+      createdAt: now,
+      updatedAt: now,
+    })
   }
   if (added.length > 0) await engine.upsertMany('life_day_focus', added)
   return added.length

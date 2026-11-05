@@ -1,8 +1,9 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, type LifeDayFocus } from '../../../lib/db'
-import { toggleDayFocus, toggleDayFocusCancelled } from '../../../lib/lifeSync'
+import { AddLine } from './AddLine'
+import { addDayFocus, toggleDayFocus, toggleDayFocusCancelled } from '../../../lib/lifeSync'
 import { runSafe } from '../../../lib/runSafe'
-import { daysBetween, isUrgentSlot } from '../model'
+import { LIFE_CAPS, daysBetween, isUrgentSlot } from '../model'
 
 // "Oggi": the current day's lines (up to 3), filled by the /oggi command, here
 // only ticked or cancelled (Things-style: kept, struck through, restorable). Shows only `day`'s list; yesterday's lines are never
@@ -111,7 +112,7 @@ export function DayFocusSection({ day }: { day: string }) {
           ) : (
             urgent.length === 0 && (
               <p className="text-sm text-slate-500 dark:text-slate-400">
-                Niente per oggi. Lancia <code>/oggi</code> per impostarlo.
+                Niente per oggi. Aggiungi qui sotto o lancia <code>/oggi</code>.
               </p>
             )
           )}
@@ -127,6 +128,11 @@ export function DayFocusSection({ day }: { day: string }) {
               </ul>
             </div>
           )}
+          <AddLine
+            onAdd={(t) => addDayFocus(day, [t])}
+            placeholder="Aggiungi (! davanti = urgente)"
+            maxLength={LIFE_CAPS.dayFocusTitle + 1}
+          />
         </div>
       </div>
     </section>
