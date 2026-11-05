@@ -168,7 +168,7 @@ Follow-ups this project surfaced:
       `decodeURIComponent` on the path plus an IDN-aware host display.
       Effort XS. Low priority.
 
-## Project 13 — Learning 🎓 (courses engine; first course Backend Interview Lab)
+## Project 13 — Learning 🎓 (courses engine; courses: Full Stack Interview Lab, Python, Database, API, Disegno)
 
 Handoff 2026-10-22. Generic course engine in `src/projects/learning/`: content
 is static bundle data (`courses/<id>.ts` + one line in `courses/index.ts`),
@@ -204,6 +204,94 @@ parser (`html.ts` + `HtmlText.tsx`), never `dangerouslySetInnerHTML`.
 - [ ] L8 Verify the GCP module against what Open Move really uses, then drop
       its `verify` marker in `courses/backend-interview-lab.ts` [owner].
 - [ ] L9 Real-device pass (iPhone/iPad, dark mode) [owner]; not done in-session.
+- [x] L11 **Python path** (2026-11-05, `courses/python-path*.ts`, id `python-path`): 47 modules in
+      6 groups (basics, objects/types, idiomatic, backend, expert, drills), Italian, for a JS/TS dev
+      going to backend Python, readable offline in Milan. Covers language, data model, memory/GC,
+      CPython internals, typing, async, testing, FastAPI/Django internals, SQL/Redis/security/
+      observability, system design, architecture, deploy, 30 drills, 30 interview questions, 3
+      capstones. Extra lesson text lives in `python-path.deep.ts` keyed by module id. Matching vault
+      notes (all under `knowledge/programming/backend/`, never in this repo): `python/python-data-model`,
+      `memory-model-and-gc`, `python-idioms`, `modern-python-syntax`, `cpython-internals`,
+      `python-native-extensions`, `python-packaging-publishing`, `python-task-queue-patterns`,
+      `python-learning-path`, `django/django-internals`.
+- [x] L12 **Database course** (`courses/databases-path*.ts`, id `databases-path`): 20 modules in 6
+      groups (schema/SQL, SQL+performance, transactions/locks, Postgres ops incl. security/RLS,
+      scaling, migrations, cache/outbox/CDC, NoSQL/workloads/ORM/testing, 15 SQL drills, 25
+      interview questions). Vault: `databases_index` got a Learning Path section.
+- [x] L13 **API course** (`courses/api-path*.ts`, id `api-path`): 20 modules in 6 groups (HTTP, REST,
+      formats, curl/HTTPie, Bruno, Postman, `.http` files, runner/CI, auth, API security, OpenAPI,
+      GraphQL, gRPC/webhook/SSE, async APIs, testing, observability, debug, resilient clients, 12
+      drills on public APIs, 20 interview questions). Vault: new `rest-api-design` and
+      `tooling/testing/api-clients-bruno-postman-curl`, linked from `backend_index`.
+- [x] L14 **Course review ("technical council")** (2026-11-05): four independent reviewers for the
+      Python course, three for Database+API (accuracy by running the code on Python 3.14 / PGlite
+      Postgres 18 / curl+jq, completeness against the goal, rendering/offline/pedagogy). Fixed: stale
+      free-threading claims (supported since 3.14), ctypes on macOS, Bruno CLI (`-r`,
+      `--reporter-junit`), `generate_series` cast, PgBouncer prepared statements, `<token>` lost by
+      the HTML allowlist, quiz answers always in slot 1-2 (now `q()` shuffles options with a PRNG
+      seeded by the question, `python-path.helpers.ts`), code blocks in practice answers unstyled
+      (`PracticeTab.tsx`). Tests: `python-path.test.ts`, `new-courses.test.ts` (counts, answer
+      spread, HTML scan of every field). Estimated coverage after the fixes: about 85-90% of the goal.
+- [x] L15 Disegno course ("Disegno da zero", 19 modules, SVG figures, local photo diary, checklist
+      progress) was added by a parallel session in commit `768ec56`; its notes belong to that session.
+- [ ] L16 **Content debt** [sonnet, each S]: the correct quiz option is the longest in ~85% of the
+      new questions and ~43/70 explanations are under 6 words (pad the wrong options, explain why
+      the tempting distractor is wrong); wrap commands in `<code>` on cards; shorten `<pre>` lines
+      over ~45 chars (iPhone width) by putting comments on their own line; examples never run:
+      HTTPie, Newman, grpcurl, Schemathesis, `.bru`, FastAPI/Django/Celery snippets. Known content
+      gaps: DRF in depth, WebSocket/GraphQL server side, behavioural interview, MySQL/SQLite
+      differences, API gateway/CDN, designing a whole API end to end, file uploads.
+- [ ] L17 **Learning refactor** [opus, see the plan below].
+
+### Learning refactor (proposal 2026-11-05, nothing built yet)
+
+Why: the engine was written for one course; there are now five, with different needs (quiz
+and cards, drills, checklists and photos). Pain points seen in this session: the course helpers
+live in a file named `python-path.helpers.ts` yet serve three courses; invariants are checked by
+three separate test files; all courses ship in one 645 KB chunk (`ProgressBar-*.js`); the quiz
+locks after the first answer and "Rifai" wipes the correct answers too; cards have no review
+schedule; authoring means HTML inside TS strings (escaping `\\`, `&lt;`, `${`).
+Order: R1, R2 first (cheap, safe), then R5a/c/d (quick wins), R3, R5b, R6, R7, R8.
+
+- [ ] R1 **Neutral course kit** [sonnet, XS]: move `q`/`card`/`prac`/`mod` and the seeded shuffle from
+      `courses/python-path.helpers.ts` to `courses/kit.ts`; keep the exports, update imports; unit
+      test that the shuffle is deterministic and remaps `answer`.
+- [ ] R2 **One lint suite for all courses** [sonnet, S]: fold `python-path.test.ts` and
+      `new-courses.test.ts` into `courses.test.ts` as invariants over every course: ids contain no
+      `:` and fit the SQL checks (`course_id` ≤ 60, `courseId:moduleId:itemId` ≤ 200, see
+      `learning_*` migration), HTML scan of every field (no dropped tag, no unescaped `<` in `<pre>`),
+      4 options and no duplicates, answer slots spread (< 45%), correct option the longest in
+      ≤ 70%, minimum cards/practice per module, explanation length (warning level).
+- [ ] R3 **Registry meta + lazy content** [opus, M]: `courses/registry.ts` holds `{id, title, emoji,
+      summary, moduleCount}` and a `load()` doing `import('./<course>')`; the Learning home lists
+      metas, Course/Module pages load content with a skeleton. Acceptance: first Learning load drops
+      from one 645 KB chunk to the page code only; every course chunk still matches the workbox
+      precache (`vite.config.ts` globPatterns, 5 MiB cap) and a course opens offline after the
+      update prompt (check with Playwright `setOffline`). Risk: a course not yet precached when
+      offline; mitigate by listing the course chunks in the precache manifest.
+- [ ] R4 **Unified item model** [opus, M, optional]: `PracticeItem` and `QuizQuestion` carry optional
+      bolt-ons for drawing (`checklist`, `modelFig`, `fig`, `optionFigs`, `minutes`). Replace with a
+      discriminated union of item kinds and a per-course `progressModel` (single bar vs "Sapere/Saper
+      fare") so `progress.ts`, `CoursePage` and `ModulePage` stop special-casing. Needs a Dexie
+      read-compat check: row keys `courseId:moduleId:itemId` must not change.
+- [ ] R5 **Engine features**:
+      - a [sonnet, S] "Rifai" resets only the wrong answers (keep correct ones);
+      - b [opus, M] **review queue** ("Ripasso") across courses: intervals 1/3/7/21 days with
+        again/good grades per card; needs a `dueAt` + `ease` column on `learning_cards` (migration,
+        Dexie version, sync) and a Today-style entry on the Learning home;
+      - c [sonnet, S] "Modulo successivo" link at the end of a lesson and "continua da dove eri"
+        (last module per course, guarded localStorage);
+      - d [sonnet, S] in-lesson jump list built from the `<h3>`s;
+      - e [sonnet, M] search across module titles, lessons and cards.
+- [ ] R6 **Authoring in Markdown** [opus, L, optional]: `scripts/learning/md2course.mjs` turns
+      `content/<course>/<module>.md` (front matter + sections for lesson, quiz, cards, practice) into
+      the TS data using the same allowlist, so no escaping and diffs are readable; the existing TS
+      courses stay valid. Do only if more courses are planned.
+- [ ] R7 **Vault links as data** [sonnet, S]: replace the free-text `vault` HTML by `notes: string[]`
+      (vault-relative paths, shown as plain text) and add `npm run courses:vault-check` that verifies
+      the notes exist; runs on the owner's Mac only, never in CI (the vault never leaves the Mac).
+- [ ] R8 **Docs** [sonnet, S]: `docs/COURSES.md` (how to write a course, authoring rules, the review
+      checklist used by the council) and a Learning section in `docs/ARCHITECTURE.md`.
 
 ## Home grid — stars, usage ordering, sort selector
 
@@ -1328,6 +1416,32 @@ after the month ends; (c) whys show in the sheet only, never in the export.
   idempotent, never archives/deletes, never touches checks. Copy the streaks
   link (`scripts/life-streaks-link.ts`, `streaksLink.ts`, `LifeStreaks`). Spec:
   `~/life/_sync/handoff-dashboard-habits-import.md`. No schema change.
+
+## Phone-first week and home (owner, 2026-11-05)
+
+Context: the owner travels to Milan 9-13 Nov with no Mac. Needs: add focus lines from the phone,
+run a week without `/settimana`, rearrange the home, study offline.
+
+- [x] Life: add lines from the phone, done 2026-11-05 (`1babba1`). `AddLine` under Daily focus
+      (`!` prefix = Urgenze, appends via `addDayFocus`) and under Weekly focus (`addFocus`, max 3);
+      the weekly block shows on an empty week; on a week with no plan the button **Inizia la
+      settimana** (`startQuickWeek`) builds a plan from last week's rules and Sunday questions
+      (no trackers, tasks or check-ins: habits are live from the Habits page).
+- [x] Home: **Riordina** mode, done 2026-11-05 (`6dae66b`, `f6aede9`). ▲▼ moves a section,
+      ◀▶ moves a card inside its section, sort option "Mio ordine"; per device in localStorage
+      (`dashboard:home-area-order`, `dashboard:home-project-order`).
+- [ ] Home follow-ups [owner to decide]: sync stars and order across iPhone/iPad/Mac (needs a synced
+      table, migration, owner-only is fine); move a card to another section (the area is a registry
+      field today, would need a per-device override).
+- [ ] Weekly recap [owner]: the recap for week 2-8 Nov is skipped; plan is a **double recap** when
+      back (export weeks 2-8 and 9-15 from History, run `/settimana` over both). The week of 9 Nov
+      has no plan until then (the quick week covers it).
+- [ ] Milan 9-13 Nov [owner]: no verified board-game/creative event found; Milan is a spot area
+      (hand-curated). If the owner finds one, add it with `/add-spot-event`. Frecciarossa times
+      were not confirmed (no November timetable found); check Trenitalia.
+- [ ] Learning offline before leaving [owner]: after the deploy open the app online on iPhone and
+      iPad, accept the update prompt, open one module of each course, test one in airplane mode.
+      iOS keeps the Home Screen icon from install time: a new icon needs remove + re-add (sync first).
 
 ## Ideas / later
 
