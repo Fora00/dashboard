@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { groupByArea } from './groupByArea'
+import { groupByArea, moveArea, sanitizeAreaOrder } from './groupByArea'
 import type { ProjectMeta } from './projects'
 
 const mk = (id: string, area: ProjectMeta['area']): ProjectMeta => ({
@@ -41,5 +41,28 @@ describe('groupByArea', () => {
   it('preserves a reversed/sorted input order', () => {
     const s = groupByArea([...list].reverse(), () => false)
     expect(ids(s.find((x) => x.id === 'svago')!)).toEqual(['c', 'a'])
+  })
+})
+
+describe('section order', () => {
+  it('follows a custom area order', () => {
+    const s = groupByArea(list, () => false, ['svago', 'casa', 'utility', 'sport', 'organizzazione'])
+    expect(s.map((x) => x.id)).toEqual(['svago', 'casa', 'utility'])
+  })
+  it('sanitizes a stored order', () => {
+    expect(sanitizeAreaOrder(['sport', 'x', 'sport', 'casa'])).toEqual([
+      'sport',
+      'casa',
+      'utility',
+      'organizzazione',
+      'svago',
+    ])
+    expect(sanitizeAreaOrder(null)).toEqual(['utility', 'casa', 'organizzazione', 'sport', 'svago'])
+  })
+  it('moves one step and stops at the ends', () => {
+    const o = sanitizeAreaOrder(null)
+    expect(moveArea(o, 'casa', -1)[0]).toBe('casa')
+    expect(moveArea(o, 'utility', -1)).toEqual(o)
+    expect(moveArea(o, 'svago', 1)).toEqual(o)
   })
 })

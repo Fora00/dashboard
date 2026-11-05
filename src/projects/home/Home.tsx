@@ -1,7 +1,8 @@
-import type { ChangeEvent } from 'react'
+import { useState, type ChangeEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../../lib/db'
+import type { AreaId } from '../../lib/areas'
 import { hasStarted } from '../habits/habitStates'
 import type { ProjectMeta } from '../../lib/projects'
 import { formatBytes } from '../../lib/format'
@@ -10,7 +11,7 @@ import { toggleStar } from '../../lib/projectStats'
 import { useVisibleProjects } from '../../lib/useVisibleProjects'
 import { Card } from '../../components/Card'
 import { ProjectIcon } from '../../components/ProjectIcon'
-import { groupByArea } from '../../lib/groupByArea'
+import { groupByArea, moveArea, sanitizeAreaOrder } from '../../lib/groupByArea'
 import { FOCUS_RING_INSET } from '../../components/focus'
 import { InstallHint } from '../../components/InstallHint'
 import { runSafe } from '../../lib/runSafe'
@@ -66,6 +67,9 @@ const groupedCodec: Codec<boolean> = {
   serialize: (grouped) => (grouped ? 'true' : 'false'),
 }
 
+// Per-device order of the home sections (Riordina mode, up/down buttons).
+const HOME_AREA_ORDER_KEY = 'dashboard:home-area-order'
+
 // Project grid: 2 columns at sm, 3 at lg, 4 at xl (the content is up to 72rem wide from lg).
 const GRID = 'grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 sm:gap-4'
 
@@ -79,6 +83,13 @@ export function Home() {
   const [reversed, setReversed] = usePersistedState<boolean>(HOME_REVERSED_KEY, false, undefined, reversedCodec)
 
   const [grouped, setGrouped] = usePersistedState<boolean>(HOME_GROUPED_KEY, true, undefined, groupedCodec)
+
+  const [areaOrder, setAreaOrder] = usePersistedState<AreaId[]>(
+    HOME_AREA_ORDER_KEY,
+    sanitizeAreaOrder(null),
+    sanitizeAreaOrder,
+  )
+  const [rearranging, setRearranging] = useState(false)
 
   function handleOrderChange(e: ChangeEvent<HTMLSelectElement>) {
     const next = e.target.value
@@ -226,7 +237,7 @@ export function Home() {
     )
   }
 
-  const sections = grouped ? groupByArea(ordered, isStarred) : []
+  const sections = grouped ? groupByArea(ordered, isStarred, areaOrder) : []
 
   return (
     <div>
@@ -256,6 +267,20 @@ export function Home() {
           >
             Group by area
           </button>
+          {grouped && (
+            <button
+              type="button"
+              onClick={() => setRearranging(!rearranging)}
+              aria-pressed={rearranging}
+              className={`min-h-10 rounded-lg border px-3 text-sm transition-colors ${FOCUS_RING_INSET} ${
+                rearranging
+                  ? 'border-indigo-400 bg-indigo-500/10 text-indigo-700 dark:text-indigo-300'
+                  : 'border-slate-300 bg-white text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200'
+              }`}
+            >
+              {rearranging ? 'Fatto' : 'Riordina'}
+            </button>
+          )}
           <button
             type="button"
             onClick={handleReversedToggle}
@@ -292,6 +317,21 @@ export function Home() {
                   />
                 )}
                 {section.title}
+                {rearranging && section.id !== 'starred' && (
+                  <span className="ml-auto flex gap-1">
+                    {([-1, 1] as const).map((dir) => (
+                      <button
+                        key={dir}
+                        type="button"
+                        onClick={() => setAreaOrder(moveArea(areaOrder, section.id as AreaId, dir))}
+                        aria-label={`${dir === -1 ? 'Sposta su' : 'Sposta giù'}: ${section.title}`}
+                        className={`flex size-10 items-center justify-center rounded-lg border border-slate-300 bg-white text-base dark:border-slate-700 dark:bg-slate-800 ${FOCUS_RING_INSET}`}
+                      >
+                        {dir === -1 ? '▲' : '▼'}
+                      </button>
+                    ))}
+                  </span>
+                )}
               </h2>
               <div className={GRID}>{section.projects.map(renderCard)}</div>
             </section>
