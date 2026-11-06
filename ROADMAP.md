@@ -242,31 +242,40 @@ parser (`html.ts` + `HtmlText.tsx`), never `dangerouslySetInnerHTML`.
       gaps: DRF in depth, WebSocket/GraphQL server side, behavioural interview, MySQL/SQLite
       differences, API gateway/CDN, designing a whole API end to end, file uploads.
 - [ ] L17 **Learning refactor** [opus, see the plan below].
-- [x] L18 **Language courses** (2026-11-06; ids `spagnolo` 29 modules, `francese` 31, `tedesco` 30; A1->B2
-      for an Italian speaker, `courses/<lang>.*.ts`, 6 groups a1/a2/b1/b2/voc/drill). Pronunciation is an
-      Italian-based respelling in `[ ]` (no IPA, stressed syllable in CAPS), one legend per language:
-      `spagnolo.pron.ts`, `francese.b.pron.ts`, `tedesco.pron.ts` (also the `vsec` vocab-table helper). Test:
-      `languages.test.ts` (module counts, minimums, answer spread, HTML scan). Council round 1 (accuracy,
-      phonetics, pedagogy, completeness; reports were in the session scratchpad) found accuracy 93/100 (es)
-      and 8.5/10 (fr), fixed in a fix round; completeness measured BEFORE the fixes: es 70%, fr 78.8%.
-      Stopped at a stable base version on purpose. The Learning chunk grew to 1.7 MB; R3 (lazy courses) fixed it.
-- [ ] L19 **Language courses, next steps** [sonnet, each M]:
-      - RESUME HERE (2026-11-06, usage ran out): accuracy + phonetics council on `tedesco` was running; partial
-        findings are in `docs/learning-drafts/council/de-accuracy-r1.md` and `de-phonetics-r1.md` (copied from the session scratchpad,
-        with the briefs and all round-1 reports of es/fr; accuracy covered 16 of 30 modules, score ~8.5/10; phonetics ~6.5/10 provisional, main bug: the "ng" rule says no g but ~90 transcriptions spell it, plus inconsistent È:/É:/J between tedesco.a and tedesco.b). Plan: one fix builder per language, then re-review, until accuracy and
-        phonetics >= 9/10 for tedesco first, then re-verify spagnolo and francese (their fixes were never
-        re-checked);
-      - re-run the council (completeness, native accuracy, phonetics) on the fixed courses and on `tedesco`
-        (never reviewed); target completeness >= 90%;
-      - extra modules already drafted, not in the course, in `docs/learning-drafts/` (`spagnolo.c.*.ts`,
-        `francese.c.*.ts`, possibly incomplete, unreviewed): es indefiniti/relativi/cambi/numeri/funciones/
-        natura vocab, fr determinants/ortho-lecture/geo-reggenze/natura vocab; wire in as `<lang>C` after review;
-      - known gaps: es avverbi in -mente beyond nomi, dequeísmo, idioms; fr proverbs, ordinals in a module;
-        de reviewers' list still open;
-      - pronunciation was written by hand by models: a native speaker should check the `[ ]` transcriptions;
-      - automated test that the respelling convention is uniform across a language's halves.
+- [x] L18 **Language courses** (2026-11-06): `spagnolo` (29 modules), `francese` (31), `tedesco` (30), A1 -> B2
+      for an Italian speaker, `courses/<lang>.*.ts`, groups a1/a2/b1/b2/voc/drill, text only, offline.
+      Pronunciation is an Italian-based respelling in `[ ]` (no IPA, stressed syllable in CAPS) with one legend
+      per language: `spagnolo.pron.ts`, `francese.b.pron.ts`, `tedesco.pron.ts` (also the `vsec` vocab-table
+      helper). Test: `languages.test.ts` (module counts, content minimums, answer spread, HTML scan).
+      Council round 1 reports, briefs and rubric are in `docs/learning-drafts/council/`.
+      Round-1 scores (BEFORE the fix round): accuracy es 93/100, fr 8.5/10; phonetics es 6.5/10, fr 7/10 (two
+      halves written by different authors used different notations, then unified); completeness es 70%, fr 78.8%.
+      Fix round applied to es and fr (accuracy, phonetics, pedagogy findings); never re-verified.
+      `tedesco` was only partly reviewed: accuracy 16/30 modules ~8.5/10, phonetics ~6.5/10 provisional.
+- [x] L18b Lazy course content = R3 below (commit `adfa26b`): Learning chunk 1.7 MB -> one chunk per course.
+- [ ] L19 **Language courses: reach >= 90% accuracy and phonetics** [sonnet builders + sonnet reviewers],
+      do in this order, one language at a time, reviewers write their report incrementally:
+      - a) `tedesco` accuracy: finish the review from `de-plusquam` on (14 modules, status header and line
+        numbers in `docs/learning-drafts/council/de-accuracy-r1.md` + `de-dump.txt`), then fix. Open B findings:
+        numbers skip 15, noun-gender exceptions, am-Progressiv, dative prepositions list, sein verbs in Perfekt,
+        "am größten" vs -esten rule, `damit` wording, `ich käme` note;
+      - b) `tedesco` phonetics: fix the "ng" rule (legend says no g, ~90 transcriptions spell it), unify
+        `È:`/`É:`/`E:` and `J`/`I` between `tedesco.a*` and `tedesco.b*`, stress-mark case, the listed wrong
+        respellings (Dusche, gehabt, Hähnchen, Gymnasium, Städte, Metzger, England, des, Ihrer, Billett), add
+        intonation, rhythm, glottal stop and separable-verb stress to `de-pron`; then re-review;
+      - c) `spagnolo` and `francese`: re-verify accuracy and phonetics on the fixed text (only changed modules),
+        fix, repeat until both >= 9/10;
+      - d) measure completeness again (all three) and write the missing modules; drafts exist, unreviewed, in
+        `docs/learning-drafts/` (`spagnolo.c.*.ts`, `francese.c.*.ts`; es indefiniti/relativi/cambi/numeri/
+        funciones/natura, fr determinants/ortho-lecture/geo-reggenze/natura); wire in as `<lang>C` after review.
+        German completeness never measured;
+      - e) automated test that the respelling convention is uniform across a language's halves;
+      - f) [owner] a native speaker (or an audio dictionary) checks the `[ ]` transcriptions and the exam
+        data (DELE, DELF, Goethe/ÖSD durations and points are indicative).
+      Known content gaps: es -mente adverbs beyond nomi, dequeísmo, idioms; fr proverbs, ordinals in their own
+      module; de see a).
 
-### Learning refactor (proposal 2026-11-05, nothing built yet)
+### Learning refactor (proposal 2026-11-05; R3 done 2026-11-06, the rest not built)
 
 Why: the engine was written for one course; there are now five, with different needs (quiz
 and cards, drills, checklists and photos). Pain points seen in this session: the course helpers
@@ -285,7 +294,7 @@ Order: R1, R2 first (cheap, safe), then R5a/c/d (quick wins), R3, R5b, R6, R7, R
       `learning_*` migration), HTML scan of every field (no dropped tag, no unescaped `<` in `<pre>`),
       4 options and no duplicates, answer slots spread (< 45%), correct option the longest in
       ≤ 70%, minimum cards/practice per module, explanation length (warning level).
-- [x] R3 **Registry meta + lazy content** (2026-11-06, done in-session, not committed yet; `courses/registry.ts`,
+- [x] R3 **Registry meta + lazy content** (2026-11-06, commit `adfa26b`; `courses/registry.ts`,
       `useCourse.ts`, `CourseLoading.tsx`; each course is its own chunk 55-327 KB, precache 3.29 MiB, no chunk
       over 500 KB; the home lists metas and fills the % as chunks load, one per idle tick; `index.ts` stays the
       eager list for tests only; test `lazy registry` keeps metas equal to the content. Offline open of a
