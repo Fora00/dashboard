@@ -168,7 +168,7 @@ Follow-ups this project surfaced:
       `decodeURIComponent` on the path plus an IDN-aware host display.
       Effort XS. Low priority.
 
-## Project 13 — Learning 🎓 (courses engine; courses: Full Stack Interview Lab, Python, Database, API, Disegno)
+## Project 13 — Learning 🎓 (courses engine; courses: Full Stack Interview Lab, Python, Database, API, Disegno, Spagnolo, Francese, Tedesco)
 
 Handoff 2026-10-22. Generic course engine in `src/projects/learning/`: content
 is static bundle data (`courses/<id>.ts` + one line in `courses/index.ts`),
@@ -242,6 +242,25 @@ parser (`html.ts` + `HtmlText.tsx`), never `dangerouslySetInnerHTML`.
       gaps: DRF in depth, WebSocket/GraphQL server side, behavioural interview, MySQL/SQLite
       differences, API gateway/CDN, designing a whole API end to end, file uploads.
 - [ ] L17 **Learning refactor** [opus, see the plan below].
+- [x] L18 **Language courses** (2026-11-06; ids `spagnolo` 29 modules, `francese` 31, `tedesco` 30; A1->B2
+      for an Italian speaker, `courses/<lang>.*.ts`, 6 groups a1/a2/b1/b2/voc/drill). Pronunciation is an
+      Italian-based respelling in `[ ]` (no IPA, stressed syllable in CAPS), one legend per language:
+      `spagnolo.pron.ts`, `francese.b.pron.ts`, `tedesco.pron.ts` (also the `vsec` vocab-table helper). Test:
+      `languages.test.ts` (module counts, minimums, answer spread, HTML scan). Council round 1 (accuracy,
+      phonetics, pedagogy, completeness; reports were in the session scratchpad) found accuracy 93/100 (es)
+      and 8.5/10 (fr), fixed in a fix round; completeness measured BEFORE the fixes: es 70%, fr 78.8%.
+      Stopped at a stable base version on purpose. The Learning chunk grew to 1.7 MB (precache 3.3 MiB of the
+      5 MiB cap): do R3 (lazy courses) before adding more content.
+- [ ] L19 **Language courses, next steps** [sonnet, each M]:
+      - re-run the council (completeness, native accuracy, phonetics) on the fixed courses and on `tedesco`
+        (never reviewed); target completeness >= 90%;
+      - extra modules already drafted, not in the course, in `docs/learning-drafts/` (`spagnolo.c.*.ts`,
+        `francese.c.*.ts`, possibly incomplete, unreviewed): es indefiniti/relativi/cambi/numeri/funciones/
+        natura vocab, fr determinants/ortho-lecture/geo-reggenze/natura vocab; wire in as `<lang>C` after review;
+      - known gaps: es avverbi in -mente beyond nomi, dequeísmo, idioms; fr proverbs, ordinals in a module;
+        de reviewers' list still open;
+      - pronunciation was written by hand by models: a native speaker should check the `[ ]` transcriptions;
+      - automated test that the respelling convention is uniform across a language's halves.
 
 ### Learning refactor (proposal 2026-11-05, nothing built yet)
 
