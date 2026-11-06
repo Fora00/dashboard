@@ -251,6 +251,11 @@ parser (`html.ts` + `HtmlText.tsx`), never `dangerouslySetInnerHTML`.
       and 8.5/10 (fr), fixed in a fix round; completeness measured BEFORE the fixes: es 70%, fr 78.8%.
       Stopped at a stable base version on purpose. The Learning chunk grew to 1.7 MB; R3 (lazy courses) fixed it.
 - [ ] L19 **Language courses, next steps** [sonnet, each M]:
+      - RESUME HERE (2026-11-06, usage ran out): accuracy + phonetics council on `tedesco` was running; partial
+        findings are in `docs/learning-drafts/council/de-accuracy-r1.md` and `de-phonetics-r1.md` (copied from the session scratchpad,
+        with the briefs and all round-1 reports of es/fr; accuracy covered 16 of 30 modules). Plan: one fix builder per language, then re-review, until accuracy and
+        phonetics >= 9/10 for tedesco first, then re-verify spagnolo and francese (their fixes were never
+        re-checked);
       - re-run the council (completeness, native accuracy, phonetics) on the fixed courses and on `tedesco`
         (never reviewed); target completeness >= 90%;
       - extra modules already drafted, not in the course, in `docs/learning-drafts/` (`spagnolo.c.*.ts`,
