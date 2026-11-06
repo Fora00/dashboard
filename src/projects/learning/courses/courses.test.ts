@@ -99,3 +99,22 @@ describe('course data', () => {
       }
   })
 })
+
+describe('lazy registry', () => {
+  it('has a meta for every course, matching the content', async () => {
+    const { courseMetas, loadCourse } = await import('./registry')
+    const { courses: all } = await import('./index')
+    expect(courseMetas.map((m) => m.id)).toEqual(all.map((c) => c.id))
+    for (const m of courseMetas) {
+      const c = await loadCourse(m.id)
+      expect(c, m.id).toBeDefined()
+      expect({ title: m.title, emoji: m.emoji, summary: m.summary, moduleCount: m.moduleCount }, m.id).toEqual({
+        title: c!.title,
+        emoji: c!.emoji,
+        summary: c!.summary,
+        moduleCount: c!.modules.length,
+      })
+    }
+    expect(await loadCourse('nope')).toBeUndefined()
+  })
+})

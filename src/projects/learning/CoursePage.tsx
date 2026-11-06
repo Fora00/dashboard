@@ -2,8 +2,9 @@ import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Button } from '../../components/Button'
 import { Card } from '../../components/Card'
-import { courseById } from './courses'
+import { CourseLoading } from './CourseLoading'
 import { NotFound } from './NotFound'
+import { useCourse } from './useCourse'
 import { ProgressBar, ProgressBars } from './ProgressBar'
 import { courseProgress, EMPTY_STATE } from './progress'
 import { resetChecks } from '../../lib/learningLocal'
@@ -145,6 +146,7 @@ function CourseView({ course }: { course: Course }) {
 
 export function CoursePage() {
   const { courseId } = useParams()
-  const course = courseId ? courseById(courseId) : undefined
+  const { course, status } = useCourse(courseId)
+  if (status === 'loading') return <CourseLoading />
   return course ? <CourseView course={course} /> : <NotFound what="Course" />
 }

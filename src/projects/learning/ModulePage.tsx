@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { FOCUS_RING_INSET } from '../../components/focus'
-import { courseById } from './courses'
+import { CourseLoading } from './CourseLoading'
 import { CardsTab } from './CardsTab'
 import { HtmlText } from './HtmlText'
 import { NotFound } from './NotFound'
@@ -11,6 +11,7 @@ import { courseHasChecklist, EMPTY_STATE, moduleProgress } from './progress'
 import { QuizTab } from './QuizTab'
 import { useCourseState } from './store'
 import type { Course, CourseModule } from './types'
+import { useCourse } from './useCourse'
 
 type TabId = 'lesson' | 'quiz' | 'cards' | 'practice'
 
@@ -105,7 +106,8 @@ function ModuleView({ course, mod }: { course: Course; mod: CourseModule }) {
 
 export function ModulePage() {
   const { courseId, moduleId } = useParams()
-  const course = courseId ? courseById(courseId) : undefined
+  const { course, status } = useCourse(courseId)
+  if (status === 'loading') return <CourseLoading />
   const mod = course?.modules.find((m) => m.id === moduleId)
   if (!course || !mod) return <NotFound what="Module" />
   // key: switching module resets the tab and any per-module local state.

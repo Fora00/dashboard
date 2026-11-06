@@ -3,8 +3,9 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { Link, useParams } from 'react-router-dom'
 import { EmptyState } from '../../components/EmptyState'
 import { courseSketches } from '../../lib/learningLocal'
-import { courseById } from './courses'
+import { CourseLoading } from './CourseLoading'
 import { NotFound } from './NotFound'
+import { useCourse } from './useCourse'
 import { courseHasChecklist } from './progress'
 import { SketchThumb, SketchViewer } from './Sketches'
 import type { Course } from './types'
@@ -55,6 +56,7 @@ function DiaryView({ course }: { course: Course }) {
 
 export function DiaryPage() {
   const { courseId } = useParams()
-  const course = courseId ? courseById(courseId) : undefined
+  const { course, status } = useCourse(courseId)
+  if (status === 'loading') return <CourseLoading />
   return course && courseHasChecklist(course) ? <DiaryView course={course} /> : <NotFound what="Diario" />
 }

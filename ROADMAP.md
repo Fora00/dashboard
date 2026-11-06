@@ -249,8 +249,7 @@ parser (`html.ts` + `HtmlText.tsx`), never `dangerouslySetInnerHTML`.
       `languages.test.ts` (module counts, minimums, answer spread, HTML scan). Council round 1 (accuracy,
       phonetics, pedagogy, completeness; reports were in the session scratchpad) found accuracy 93/100 (es)
       and 8.5/10 (fr), fixed in a fix round; completeness measured BEFORE the fixes: es 70%, fr 78.8%.
-      Stopped at a stable base version on purpose. The Learning chunk grew to 1.7 MB (precache 3.3 MiB of the
-      5 MiB cap): do R3 (lazy courses) before adding more content.
+      Stopped at a stable base version on purpose. The Learning chunk grew to 1.7 MB; R3 (lazy courses) fixed it.
 - [ ] L19 **Language courses, next steps** [sonnet, each M]:
       - re-run the council (completeness, native accuracy, phonetics) on the fixed courses and on `tedesco`
         (never reviewed); target completeness >= 90%;
@@ -281,7 +280,11 @@ Order: R1, R2 first (cheap, safe), then R5a/c/d (quick wins), R3, R5b, R6, R7, R
       `learning_*` migration), HTML scan of every field (no dropped tag, no unescaped `<` in `<pre>`),
       4 options and no duplicates, answer slots spread (< 45%), correct option the longest in
       ≤ 70%, minimum cards/practice per module, explanation length (warning level).
-- [ ] R3 **Registry meta + lazy content** [opus, M]: `courses/registry.ts` holds `{id, title, emoji,
+- [x] R3 **Registry meta + lazy content** (2026-11-06, done in-session, not committed yet; `courses/registry.ts`,
+      `useCourse.ts`, `CourseLoading.tsx`; each course is its own chunk 55-327 KB, precache 3.29 MiB, no chunk
+      over 500 KB; the home lists metas and fills the % as chunks load, one per idle tick; `index.ts` stays the
+      eager list for tests only; test `lazy registry` keeps metas equal to the content. Offline open of a
+      not-yet-visited course after an update still to be checked on a device [owner]). Original brief: `courses/registry.ts` holds `{id, title, emoji,
       summary, moduleCount}` and a `load()` doing `import('./<course>')`; the Learning home lists
       metas, Course/Module pages load content with a skeleton. Acceptance: first Learning load drops
       from one 645 KB chunk to the page code only; every course chunk still matches the workbox
