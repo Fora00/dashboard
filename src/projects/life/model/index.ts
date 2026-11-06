@@ -50,8 +50,12 @@ export {
   dayFocusId,
   parseFocusLines,
   freeSlots,
+  freeLateSlots,
   freeUrgentSlots,
+  isLateSlot,
   isUrgentSlot,
+  LATE_FIRST_SLOT,
+  splitLate,
   splitUrgent,
   URGENT_FIRST_SLOT,
 } from './dayFocus.ts'

@@ -33,14 +33,33 @@ export function freeSlots(taken: Iterable<number>): number[] {
 /** Urgent lines ("Urgenze") live in slots 3-8, outside the 3-line focus. */
 export const URGENT_FIRST_SLOT = LIFE_CAPS.dayFocus
 
+/** Overdue lines ("In ritardo", Things tag 🐌) live in slots 9-14, after the urgent ones. */
+export const LATE_FIRST_SLOT = URGENT_FIRST_SLOT + LIFE_CAPS.dayFocusUrgent
+
 export function isUrgentSlot(slot: number): boolean {
-  return slot >= URGENT_FIRST_SLOT
+  return slot >= URGENT_FIRST_SLOT && slot < LATE_FIRST_SLOT
+}
+
+export function isLateSlot(slot: number): boolean {
+  return slot >= LATE_FIRST_SLOT
 }
 
 /** Free urgent slots (3-8) given the slots already taken, lowest first. */
 export function freeUrgentSlots(taken: Iterable<number>): number[] {
   const used = new Set(taken)
   return Array.from({ length: LIFE_CAPS.dayFocusUrgent }, (_, i) => URGENT_FIRST_SLOT + i).filter((i) => !used.has(i))
+}
+
+/** Free late slots (9-14) given the slots already taken, lowest first. */
+export function freeLateSlots(taken: Iterable<number>): number[] {
+  const used = new Set(taken)
+  return Array.from({ length: LIFE_CAPS.dayFocusLate }, (_, i) => LATE_FIRST_SLOT + i).filter((i) => !used.has(i))
+}
+
+/** A title starting with "~" is overdue ("In ritardo"): `{ late: true, title }` without the mark. */
+export function splitLate(raw: string): { late: boolean; title: string } {
+  const t = raw.trim()
+  return t.startsWith('~') ? { late: true, title: t.replace(/^~+\s*/, '') } : { late: false, title: t }
 }
 
 /** A title starting with "!" is urgent: `{ urgent: true, title }` without the mark. */

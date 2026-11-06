@@ -30,7 +30,9 @@ import {
   LIFE_CAPS,
   addDays,
   dayFocusId,
+  freeLateSlots,
   freeUrgentSlots,
+  splitLate,
   splitUrgent,
   dayKey,
   emptyEngine,
@@ -759,7 +761,8 @@ export async function markTasksSent(week: string, taskIds: string[], sent = true
 
 /**
  * Add lines to a day WITHOUT touching the ones already there: each goes into
- * the lowest free slot (focus 0-2, or 3-8 for "!"-prefixed urgent lines).
+ * the lowest free slot (focus 0-2, 3-8 for "!"-prefixed urgent lines, 9-14 for
+ * "~"-prefixed overdue lines).
  * Blank titles and titles the day already has are skipped; titles are trimmed
  * and capped. Returns how many were added (the rest did not fit).
  */
@@ -768,13 +771,15 @@ export async function addDayFocus(day: string, titles: string[]): Promise<number
   const seen = new Set(rows.map((r) => r.title))
   const focus = freeSlots(rows.map((r) => r.slot))
   const urgent = freeUrgentSlots(rows.map((r) => r.slot))
+  const late = freeLateSlots(rows.map((r) => r.slot))
   const now = Date.now()
   const added: LifeDayFocus[] = []
   for (const raw of titles) {
-    const { urgent: isUrgent, title: t } = splitUrgent(raw)
+    const { late: isLate, title: afterLate } = splitLate(raw)
+    const { urgent: isUrgent, title: t } = splitUrgent(afterLate)
     const title = t.slice(0, LIFE_CAPS.dayFocusTitle)
     if (title.length === 0 || seen.has(title)) continue
-    const slot = (isUrgent ? urgent : focus).shift()
+    const slot = (isLate ? late : isUrgent ? urgent : focus).shift()
     if (slot === undefined) continue
     seen.add(title)
     added.push({

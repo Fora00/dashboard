@@ -3,7 +3,7 @@ import { db, type LifeDayFocus } from '../../../lib/db'
 import { AddLine } from './AddLine'
 import { addDayFocus, toggleDayFocus, toggleDayFocusCancelled } from '../../../lib/lifeSync'
 import { runSafe } from '../../../lib/runSafe'
-import { LIFE_CAPS, daysBetween, isUrgentSlot } from '../model'
+import { LIFE_CAPS, daysBetween, isLateSlot, isUrgentSlot } from '../model'
 
 // "Oggi": the current day's lines (up to 3), filled by the /oggi command, here
 // only ticked or cancelled (Things-style: kept, struck through, restorable). Shows only `day`'s list; yesterday's lines are never
@@ -88,8 +88,9 @@ export function DayFocusSection({ day }: { day: string }) {
     const f = ages?.get(i.title)
     return f === undefined ? undefined : daysBetween(f, day) + 1
   }
-  const focus = items.filter((i) => !isUrgentSlot(i.slot))
   const urgent = items.filter((i) => isUrgentSlot(i.slot))
+  const late = items.filter((i) => isLateSlot(i.slot))
+  const focus = items.filter((i) => !isUrgentSlot(i.slot) && !isLateSlot(i.slot))
 
   return (
     <section className="mb-6" aria-label="Oggi">
@@ -110,7 +111,8 @@ export function DayFocusSection({ day }: { day: string }) {
               ))}
             </ul>
           ) : (
-            urgent.length === 0 && (
+            urgent.length === 0 &&
+            late.length === 0 && (
               <p className="text-sm text-slate-500 dark:text-slate-400">
                 Niente per oggi. Aggiungi qui sotto o lancia <code>/oggi</code>.
               </p>
@@ -128,9 +130,27 @@ export function DayFocusSection({ day }: { day: string }) {
               </ul>
             </div>
           )}
+          {late.length > 0 && (
+            <div
+              className={
+                focus.length > 0 || urgent.length > 0
+                  ? 'border-t border-amber-300/70 pt-3 dark:border-amber-400/30'
+                  : ''
+              }
+            >
+              <h3 className="mb-2 text-xs font-medium uppercase tracking-wide text-slate-600 dark:text-slate-300">
+                🐌 In ritardo
+              </h3>
+              <ul className="space-y-2">
+                {late.map((i) => (
+                  <Row key={`${i.id}:${i.updatedAt}`} item={i} age={ageOf(i)} />
+                ))}
+              </ul>
+            </div>
+          )}
           <AddLine
             onAdd={(t) => addDayFocus(day, [t])}
-            placeholder="Aggiungi (! davanti = urgente)"
+            placeholder="Aggiungi (! = urgente, ~ = in ritardo)"
             maxLength={LIFE_CAPS.dayFocusTitle + 1}
           />
         </div>

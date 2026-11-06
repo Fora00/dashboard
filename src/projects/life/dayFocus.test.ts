@@ -1,5 +1,16 @@
 import { describe, expect, it } from 'vitest'
-import { LIFE_CAPS, dayFocusId, freeSlots, freeUrgentSlots, isUrgentSlot, parseFocusLines, splitUrgent } from './model'
+import {
+  LIFE_CAPS,
+  dayFocusId,
+  freeLateSlots,
+  freeSlots,
+  freeUrgentSlots,
+  isLateSlot,
+  isUrgentSlot,
+  parseFocusLines,
+  splitLate,
+  splitUrgent,
+} from './model'
 
 describe('parseFocusLines', () => {
   it('one title per non-empty line; bullets, numbering, checkboxes and the target tag are stripped', () => {
@@ -28,9 +39,15 @@ describe('urgent lines', () => {
     expect(freeUrgentSlots([3, 5])).toEqual([4, 6, 7, 8])
     expect(isUrgentSlot(2)).toBe(false)
     expect(isUrgentSlot(3)).toBe(true)
+    expect(isUrgentSlot(9)).toBe(false)
+    expect(isLateSlot(8)).toBe(false)
+    expect(isLateSlot(9)).toBe(true)
+    expect(freeLateSlots([9, 11])).toEqual([10, 12, 13, 14])
   })
   it('reads the "!" mark', () => {
     expect(splitUrgent('! Visita casa')).toEqual({ urgent: true, title: 'Visita casa' })
     expect(splitUrgent('Scrivania')).toEqual({ urgent: false, title: 'Scrivania' })
+    expect(splitLate('~ Scrivania')).toEqual({ late: true, title: 'Scrivania' })
+    expect(splitLate('Scrivania')).toEqual({ late: false, title: 'Scrivania' })
   })
 })

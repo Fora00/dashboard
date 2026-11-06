@@ -1,12 +1,12 @@
 import type { LifeChoreValue, LifeStreakValue } from '../../../lib/db'
 import { decodeLinkParam, toBase64Url } from '../../../lib/base64url.ts'
 import { LIFE_CAPS } from './constants.ts'
-import { splitUrgent } from './dayFocus.ts'
+import { splitLate, splitUrgent } from './dayFocus.ts'
 import { LIFE_IMPORT_BASE } from './importLink.ts'
 import { choresField, streaksField } from './validate.ts'
 
 // "Oggi" link: the day's lines ride in the URL fragment as base64url of
-// {"day","lines"}; a line starting with "!" is urgent (Urgenze). The /life/oggi screen decodes it, shows the preview, and
+// {"day","lines"}; a line starting with "!" is urgent (Urgenze), one starting with "~" is overdue (In ritardo). The /life/oggi screen decodes it, shows the preview, and
 // only saves on an explicit tap. Built by scripts/life-oggi-link.ts (/oggi).
 
 export interface DayFocusPlan {
@@ -53,11 +53,14 @@ export function parseDayFocusJson(text: string): { ok: true; plan: DayFocusPlan 
   if (errors.length > 0 || !lines) return { ok: false, errors }
   const clean = (lines as string[]).map((l) => l.trim().slice(0, LIFE_CAPS.dayFocusTitle)).filter((l) => l.length > 0)
   if (clean.length === 0 && !streaks && !chores) return { ok: false, errors: ['"lines" is empty'] }
+  const lateCount = clean.filter((l) => splitLate(l).late).length
   const urgentCount = clean.filter((l) => splitUrgent(l).urgent).length
-  if (clean.length - urgentCount > LIFE_CAPS.dayFocus)
+  if (clean.length - urgentCount - lateCount > LIFE_CAPS.dayFocus)
     return { ok: false, errors: [`At most ${LIFE_CAPS.dayFocus} lines`] }
   if (urgentCount > LIFE_CAPS.dayFocusUrgent)
     return { ok: false, errors: [`At most ${LIFE_CAPS.dayFocusUrgent} urgent lines`] }
+  if (lateCount > LIFE_CAPS.dayFocusLate)
+    return { ok: false, errors: [`At most ${LIFE_CAPS.dayFocusLate} overdue lines`] }
   return {
     ok: true,
     plan: {

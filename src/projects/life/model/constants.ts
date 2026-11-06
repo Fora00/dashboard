@@ -22,6 +22,8 @@ export const LIFE_CAPS = {
   dayFocus: 3,
   /** Urgent lines per day (slots 3-8, outside the 3-line focus; SQL: life_day_focus). */
   dayFocusUrgent: 6,
+  /** Overdue ("in ritardo") lines per day (slots 9-14; SQL: life_day_focus). */
+  dayFocusLate: 6,
   dayFocusTitle: 200,
   rules: 20,
   rule: 300,
