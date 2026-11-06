@@ -29,7 +29,7 @@ ${vsec('Casa', [
   ['el sofá', 'so-FA', 'divano'],
   ['el suelo', 'SUE-lo', 'pavimento'],
   ['el techo', 'TE-cio', 'soffitto'],
-  ['el jardín', 'har-DIN', 'giardino'],
+  ['el jardín', 'har-DHIN', 'giardino'],
   ['el balcón', 'bal-KON', 'balcone'],
   ['la lavadora', 'la-ba-DHO-ra', 'lavatrice'],
   ['el espejo', 'es-PE-ho', 'specchio'],
@@ -99,7 +99,7 @@ ${vsec('Cibo e ristorante', [
   ['la cuenta', 'CUEN-ta', 'il conto'],
   ['el pan', 'pan', 'pane'],
   ['la carne', 'KAR-ne', 'carne'],
-  ['la verdura', 'ber-DU-ra', 'verdura'],
+  ['la verdura', 'ber-DHU-ra', 'verdura'],
   ['la fruta', 'FRU-ta', 'frutta'],
   ['el vino', 'BI-no', 'vino'],
   ['la cerveza', 'ther-BE-tha', 'birra'],
@@ -146,7 +146,7 @@ ${vsec('Shopping', [
   ['la tarjeta', 'tar-HE-ta', 'carta (di credito)'],
   ['el supermercado', 'su-per-mer-KA-dho', 'supermercato'],
   ['el descuento', 'des-KUEN-to', 'sconto'],
-  ['el recibo', 'rre-THI-bo', 'scontrino'],
+  ['el recibo', 'rre-THI-bo', 'ricevuta, scontrino'],
   ['pagar en efectivo', 'pa-GAR en e-fek-TI-bo', 'pagare in contanti'],
   ['probarse', 'pro-BAR-se', 'provare (un capo)'],
   ['devolver', 'de-bol-BER', 'restituire'],
@@ -346,13 +346,13 @@ ${vsec('Emergenze', [
   ['la ambulancia', 'am-bu-LAN-thia', 'ambulanza'],
   ['el robo', 'RRO-bo', 'furto'],
   ['Me han robado', 'me an rro-BA-dho', 'Mi hanno derubato'],
-  ['he perdido…', 'e per-DI-dho', 'ho perso…'],
+  ['he perdido…', 'e per-DHI-dho', 'ho perso…'],
   ['el accidente', 'ak-thi-DHEN-te', 'incidente'],
   ['la farmacia de guardia', 'far-MA-thia de GUAR-dhia', 'farmacia di turno'],
   ['¡Ayuda!', 'a-YU-dha', 'Aiuto!'],
   ['el médico', 'ME-dhi-ko', 'medico'],
-  ['la urgencia', 'ur-HEN-thia', 'pronto soccorso'],
-  ['perdido/a', 'per-DI-dho', 'smarrito'],
+  ['las urgencias', 'ur-HEN-thias', 'pronto soccorso'],
+  ['perdido/a', 'per-DHI-dho', 'smarrito'],
   ['denunciar', 'de-nun-THIAR', 'denunciare'],
 ])}
 ${vsec('Banca e posta', [
@@ -367,7 +367,7 @@ ${vsec('Banca e posta', [
   ['la cuenta bancaria', 'KUEN-ta ban-KA-ria', 'conto corrente'],
   ['la moneda', 'mo-NE-dha', 'moneta'],
   ['transferir', 'trans-fe-RIR', 'fare un bonifico'],
-  ['la comisión', 'ko-mi-SION', 'commissione'],
+  ['la comisión', 'ko-mi-SSION', 'commissione'],
   ['enviar', 'en-BIAR', 'spedire'],
 ])}
 ${vsec('Divertimento', [
@@ -378,7 +378,7 @@ ${vsec('Divertimento', [
   ['la playa', 'PLA-ya', 'spiaggia'],
   ['quedar', 'ke-DHAR', 'darsi appuntamento'],
   ['tomar una copa', 'to-MAR U-na KO-pa', 'bere qualcosa'],
-  ['la exposición', 'eks-po-si-THION', 'mostra'],
+  ['la exposición', 'eks-po-ssi-THION', 'mostra'],
   ['el teatro', 'te-A-tro', 'teatro'],
   ['la discoteca', 'dis-ko-TE-ka', 'discoteca'],
   ['la excursión', 'eks-kur-SION', 'gita'],
@@ -386,7 +386,7 @@ ${vsec('Divertimento', [
 ])}
 <h3>Trappole per italiani</h3>
 <ul><li><b>Billete</b> (ES) / <b>boleto</b> (MX) / <b>pasaje</b> (AR) = biglietto del viaggio; <b>entrada</b> = biglietto del cinema.</li><li><b>Estación</b> è sia stazione sia stagione: <i>la estación de tren</i>, <i>las cuatro estaciones</i>.</li><li><b>Carta</b> = lettera, ma al ristorante è il menu.</li><li>Preposizioni: <i>en autobús, en tren, a pie</i>; <i>voy a Madrid</i>, <i>estoy en Madrid</i>.</li></ul>
-<div class="say"><b>Cosa dire.</b> «Perdone, ¿dónde está la estación?» [per-DO-ne DON-de es-TA la es-ta-THION] · «Siga todo recto y gire a la izquierda.» [SI-ga TO-dho RREK-to i HI-re a la ith-KIER-dha] · «He perdido mi maleta.» [e per-DI-dho mi ma-LE-ta]</div>`,
+<div class="say"><b>Cosa dire.</b> «Perdone, ¿dónde está la estación?» [per-DHO-ne DON-de es-TA la es-ta-THION] · «Siga todo recto y gire a la izquierda.» [SI-ga TO-dho RREK-to i HI-re a la ith-KIER-dha] · «He perdido mi maleta.» [e per-DHI-dho mi ma-LE-ta]</div>`,
   [
     q(
       'q1',
@@ -472,7 +472,7 @@ ${vsec('Divertimento', [
     prac(
       `p1`,
       `Chiedi la strada: «Scusi, dov'è la stazione? È lontana?»`,
-      `Perdone, ¿dónde está la estación? ¿Está lejos? Pronuncia: [per-DO-ne DON-de es-TA la es-ta-THION es-TA LE-hos].`,
+      `Perdone, ¿dónde está la estación? ¿Está lejos? Pronuncia: [per-DHO-ne DON-de es-TA la es-ta-THION es-TA LE-hos].`,
     ),
     prac(
       `p2`,
@@ -539,9 +539,9 @@ ${vsec('Studio', [
   ['el título', 'TI-tu-lo', 'titolo, laurea'],
   ['aprobar', 'a-pro-BAR', 'superare'],
   ['suspender', 'sus-pen-DER', 'essere bocciato'],
-  ['el profesor / la profesora', 'pro-fe-SOR / pro-fe-SO-ra', 'insegnante'],
+  ['el profesor / la profesora', 'pro-fe-SSOR / pro-fe-SSO-ra', 'insegnante'],
   ['el curso', 'KUR-so', 'corso, anno'],
-  ['estudiar', 'es-tu-DIAR', 'studiare'],
+  ['estudiar', 'es-tu-DHIAR', 'studiare'],
   ['los deberes', 'los de-BE-res', 'compiti'],
   ['la nota', 'NO-ta', 'voto'],
   ['matricularse', 'ma-tri-ku-LAR-se', 'iscriversi'],
@@ -564,8 +564,8 @@ ${vsec('Tecnologia e informatica', [
   ['el cargador', 'kar-ga-DHOR', 'caricabatterie'],
   ['la batería', 'ba-te-RI-a', 'batteria'],
   ['el enlace', 'en-LA-the', 'link'],
-  ['guardar', 'guar-DAR', 'salvare'],
-  ['la impresora', 'im-pre-SO-ra', 'stampante'],
+  ['guardar', 'guar-DHAR', 'salvare'],
+  ['la impresora', 'im-pre-SSO-ra', 'stampante'],
 ])}
 ${vsec('Opinioni e sentimenti', [
   ['me parece que…', 'me pa-RE-the ke', 'mi sembra che…'],
@@ -593,7 +593,7 @@ ${vsec('Politica ed economia di base', [
   ['la inflación', 'in-fla-THION', 'inflazione'],
   ['el ahorro', 'a-O-rro', 'risparmio'],
   ['el alquiler', 'al-ki-LER', 'affitto'],
-  ['el presidente', 'pre-si-DEN-te', 'presidente'],
+  ['el presidente', 'pre-ssi-DHEN-te', 'presidente'],
   ['el partido', 'par-TI-dho', 'partito'],
   ['la huelga', 'UEL-ga', 'sciopero'],
   ['la ley', 'LEI', 'legge'],

@@ -29,8 +29,8 @@ ${PRON_FULL}
 <h3>4. Dal medico</h3>
 <p><b>Médico:</b> ¿Qué le pasa?<br><i>[ke le PA-ssa] — Cosa ha?</i></p>
 <p><b>Paciente:</b> Me duele la garganta y tengo fiebre.<br><i>[me DUE-le la gar-GAN-ta i TEN-go FIE-bre] — Mi fa male la gola e ho la febbre.</i></p>
-<p><b>Médico:</b> ¿Desde cuándo?<br><i>[DES-de CUAN-do] — Da quando?</i></p>
-<p><b>Paciente:</b> Desde ayer.<br><i>[DES-de a-YER] — Da ieri.</i></p>
+<p><b>Médico:</b> ¿Desde cuándo?<br><i>[DES-dhe CUAN-do] — Da quando?</i></p>
+<p><b>Paciente:</b> Desde ayer.<br><i>[DES-dhe a-YER] — Da ieri.</i></p>
 <h3>5. Colloquio di lavoro</h3>
 <p><b>Entrevistador:</b> Hábleme de su experiencia.<br><i>[A-ble-me de su eks-pe-RIEN-thia] — Mi parli della sua esperienza.</i></p>
 <p><b>Candidato:</b> Trabajé cinco años como ingeniero.<br><i>[tra-ba-HE THIN-ko A-gnos KO-mo in-he-NIE-ro] — Ho lavorato cinque anni come ingegnere.</i></p>
@@ -48,7 +48,7 @@ ${PRON_FULL}
 <p><b>Viajero:</b> Un billete a Sevilla, por favor.<br><i>[un bi-YE-te a se-BI-ya por fa-BOR] — Un biglietto per Siviglia, per favore.</i></p>
 <p><b>Taquillera:</b> ¿De ida o de ida y vuelta?<br><i>[de I-dha o de I-dha i BUEL-ta] — Solo andata o andata e ritorno?</i></p>
 <p><b>Viajero:</b> De ida y vuelta, para el viernes.<br><i>[de I-dha i BUEL-ta PA-ra el BIER-nes] — Andata e ritorno, per venerdì.</i></p>
-<div class="say"><b>Cosa dire.</b> «Perdone, ¿puede repetir más despacio?» [per-DO-ne PUE-dhe rre-pe-TIR mas des-PA-thio] — Mi scusi, può ripetere più lentamente?</div>`,
+<div class="say"><b>Cosa dire.</b> «Perdone, ¿puede repetir más despacio?» [per-DHO-ne PUE-dhe rre-pe-TIR mas des-PA-thio] — Mi scusi, può ripetere più lentamente?</div>`,
   [
     q(
       'q1',
@@ -355,7 +355,7 @@ ${PRON_SHORT}
     prac(
       `p29`,
       `Chiedi l'ora a uno sconosciuto (formale).`,
-      `Perdone, ¿me puede decir qué hora es? (o ¿tiene hora?) Pronuncia: [per-DO-ne me PUE-dhe de-THIR ke O-ra es].`,
+      `Perdone, ¿me puede decir qué hora es? (o ¿tiene hora?) Pronuncia: [per-DHO-ne me PUE-dhe de-THIR ke O-ra es].`,
     ),
     prac(
       `p30`,

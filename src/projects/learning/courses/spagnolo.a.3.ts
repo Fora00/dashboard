@@ -611,7 +611,7 @@ export const esFuturo = mod(
     q(
       'q6',
       'Come dici «sono appena arrivato»?',
-      ['Acabo de llegar', 'Acabé de llegar', 'Estoy llegado', 'Llego recién'],
+      ['Acabo de llegar', 'Acabé de llegar', 'Estoy llegado', 'Acabo llegar'],
       0,
       "Acabar de si coniuga al presente quando l'azione è appena compiuta: acabo de llegar, non acabé.",
     ),

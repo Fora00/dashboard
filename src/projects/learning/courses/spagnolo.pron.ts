@@ -2,7 +2,7 @@
 // The reference is the es-pron lesson in spagnolo.a.ts: keep the two in sync.
 // Full version (vocabulary, dialogues, variants) and a one-line version (grammar modules).
 // Rules in short: ss = voiceless s (also between vowels, and in seseo: GRA-ssias); dh = soft d (between vowels,
-// after r/l, final); y = consonant i for ll/y; h = jota (NEVER silent); th = English "think" (Spain);
+// after r/s, final; NOT after n/l; in the dr cluster madre/Madrid the d is written plain); y = consonant i for ll/y; h = jota (NEVER silent); th = English "think" (Spain);
 // gn = n tilde; gh/ghi = hard g before e/i; c before i/e/o/a/u as in "cena" = Spanish ch; rr = rolled r;
 // Rioplatense ll/y = sc (calle [KA-sce]); aspirated s = h (los amigos [loh a-MI-goh]).
 // Function words (articles, short prepositions, possessives, unstressed pronouns, que, y) are lowercase;

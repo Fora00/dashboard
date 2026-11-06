@@ -196,7 +196,7 @@ ${PRON_SHORT}
 <h3>Sempre subjuntivo</h3>
 <ul><li><b>para que</b> (affinché), <b>a fin de que</b>, <b>antes de que</b> (prima che), <b>sin que</b> (senza che), <b>con tal de que</b>, <b>a condición de que</b>, <b>a menos que / a no ser que</b> (a meno che), <b>en caso de que</b> (nel caso che).</li><li><i>Te lo explico para que lo entiendas.</i> (Te lo spiego perché tu lo capisca.)</li><li><i>Llámame antes de que salgas.</i> (Chiamami prima che tu esca.)</li><li>Con lo <b>stesso soggetto</b> si usa l'infinito: <i>Estudio para aprobar</i>, <i>Antes de salir, llama</i>, <i>Salió sin despedirse</i>.</li></ul>
 <h3>Congiunzioni di tempo</h3>
-<p>Con <b>cuando, en cuanto, tan pronto como, hasta que, después de que, mientras</b>: indicativo per abitudine e passato, <b>subjuntivo per il futuro</b> (<i>cuando llegues</i> [KUAN-do YE-gues], <i>en cuanto termine</i> [en KUAN-to ter-MI-ne], <i>hasta que vuelvas</i> [AS-ta ke BUEL-bas]). Attenzione: <i>mientras que</i> (mentre, invece) vuole l'indicativo: <i>Yo trabajo mientras que tú descansas.</i></p>
+<p>Con <b>cuando, en cuanto, tan pronto como, hasta que, después de que, mientras</b>: indicativo per abitudine e passato, <b>subjuntivo per il futuro</b> (<i>cuando llegues</i> [KUAN-do YE-ghes], <i>en cuanto termine</i> [en KUAN-to ter-MI-ne], <i>hasta que vuelvas</i> [AS-ta ke BUEL-bas]). Attenzione: <i>mientras que</i> (mentre, invece) vuole l'indicativo: <i>Yo trabajo mientras que tú descansas.</i></p>
 <table><tr><td>Abitudine</td><td>Cuando llego, te llamo.</td></tr>
 <tr><td>Passato</td><td>Cuando llegué, te llamé.</td></tr>
 <tr><td>Futuro</td><td>Cuando llegues, llámame.</td></tr></table>

@@ -173,9 +173,9 @@ ${PRON_SHORT}
 <tr><td>hablar</td><td>hablas</td><td>hablás [a-BLAS]</td></tr>
 <tr><td>comer</td><td>comes</td><td>comés [ko-MES]</td></tr>
 <tr><td>vivir</td><td>vives</td><td>vivís [bi-BIS]</td></tr>
-<tr><td>ser</td><td>eres</td><td>sos [sos]</td></tr>
+<tr><td>ser</td><td>eres</td><td>sos [SOS]</td></tr>
 <tr><td>tener</td><td>tienes</td><td>tenés [te-NES]</td></tr></table>
-<ul><li>Esempio: <i>Vos tenés razón</i> [bos te-NES ra-SSON]. Imperativo: <i>hablá, comé, viví, decí, vení</i> [a-BLA, ko-ME, bi-BI, de-SI, be-NI].</li><li>Con preposizione: <i>con vos</i> (non <i>contigo</i>), <i>para vos</i>. I pronomi restano <i>te</i> e <i>tu</i>: <i>Vos te levantás temprano.</i></li><li>In Spagna il voseo non esiste: usa sempre <i>tú</i>.</li></ul>
+<ul><li>Esempio: <i>Vos tenés razón</i> [bos te-NES ra-SSON]. Imperativo: <i>hablá, comé, viví, decí, vení</i> [a-BLA, ko-ME, bi-BI, de-SSI, be-NI].</li><li>Con preposizione: <i>con vos</i> (non <i>contigo</i>), <i>para vos</i>. I pronomi restano <i>te</i> e <i>tu</i>: <i>Vos te levantás temprano.</i></li><li>In Spagna il voseo non esiste: usa sempre <i>tú</i>.</li></ul>
 <h3>Ustedes al posto di vosotros</h3>
 <p>In tutta l'America (e alle Canarie) <b>vosotros</b> non si usa: si dice sempre <i>ustedes</i> + 3ª persona plurale, anche tra amici: <i>Ustedes son amables</i>, <i>¿Ustedes quieren café?</i>. In Spagna: <i>vosotros sois, queréis</i>.</p>
 <h3>Pretérito o perfecto?</h3>

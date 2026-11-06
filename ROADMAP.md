@@ -263,7 +263,8 @@ parser (`html.ts` + `HtmlText.tsx`), never `dangerouslySetInnerHTML`.
         `È:`/`É:`/`E:` and `J`/`I` between `tedesco.a*` and `tedesco.b*`, stress-mark case, the listed wrong
         respellings (Dusche, gehabt, Hähnchen, Gymnasium, Städte, Metzger, England, des, Ihrer, Billett), add
         intonation, rhythm, glottal stop and separable-verb stress to `de-pron`; then re-review;
-      - c) `spagnolo` and `francese`: re-verify accuracy and phonetics on the fixed text (only changed modules),
+      - c) `spagnolo` DONE 2026-11-07 (round 2: accuracy 96/100, phonetics 9/10, reports `es-*-r2.md`, A/B fixed;
+        open choice: `dr` cluster written plain `d`); `francese` still to do. `spagnolo` and `francese`: re-verify accuracy and phonetics on the fixed text (only changed modules),
         fix, repeat until both >= 9/10;
       - d) measure completeness again (all three) and write the missing modules; drafts exist, unreviewed, in
         `docs/learning-drafts/` (`spagnolo.c.*.ts`, `francese.c.*.ts`; es indefiniti/relativi/cambi/numeri/
