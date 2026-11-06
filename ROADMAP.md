@@ -253,7 +253,7 @@ parser (`html.ts` + `HtmlText.tsx`), never `dangerouslySetInnerHTML`.
 - [ ] L19 **Language courses, next steps** [sonnet, each M]:
       - RESUME HERE (2026-11-06, usage ran out): accuracy + phonetics council on `tedesco` was running; partial
         findings are in `docs/learning-drafts/council/de-accuracy-r1.md` and `de-phonetics-r1.md` (copied from the session scratchpad,
-        with the briefs and all round-1 reports of es/fr; accuracy covered 16 of 30 modules). Plan: one fix builder per language, then re-review, until accuracy and
+        with the briefs and all round-1 reports of es/fr; accuracy covered 16 of 30 modules, score ~8.5/10; phonetics ~6.5/10 provisional, main bug: the "ng" rule says no g but ~90 transcriptions spell it, plus inconsistent È:/É:/J between tedesco.a and tedesco.b). Plan: one fix builder per language, then re-review, until accuracy and
         phonetics >= 9/10 for tedesco first, then re-verify spagnolo and francese (their fixes were never
         re-checked);
       - re-run the council (completeness, native accuracy, phonetics) on the fixed courses and on `tedesco`
