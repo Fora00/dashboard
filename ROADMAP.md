@@ -270,8 +270,12 @@ parser (`html.ts` + `HtmlText.tsx`), never `dangerouslySetInnerHTML`.
         funciones/natura, fr determinants/ortho-lecture/geo-reggenze/natura); wire in as `<lang>C` after review.
         German completeness never measured;
       - e) automated test that the respelling convention is uniform across a language's halves;
-      - f) [owner] a native speaker (or an audio dictionary) checks the `[ ]` transcriptions and the exam
-        data (DELE, DELF, Goethe/ÖSD durations and points are indicative).
+      - f) no native speaker available, so check pronunciation mechanically [sonnet, M]: for the ~300 most
+        frequent words per language take the IPA from Wiktionary, convert it to the expected respelling by the
+        language legend, and diff it against the course `[ ]` (stress, vowel length, sounds); fix the
+        discrepancies. Optional [owner]: listen with macOS `say -v <voice> "<word>"` (voices installed in System
+        Settings) and compare. Exam data (DELE, DELF, Goethe/ÖSD durations and points) stays "indicative": check
+        it on the official sites;
       Known content gaps: es -mente adverbs beyond nomi, dequeísmo, idioms; fr proverbs, ordinals in their own
       module; de see a).
 
