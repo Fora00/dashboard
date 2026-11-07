@@ -7,9 +7,8 @@ import { NotFound } from './NotFound'
 import { useCourse } from './useCourse'
 import { ProgressBar, ProgressBars } from './ProgressBar'
 import { courseProgress, EMPTY_STATE } from './progress'
-import { resetChecks } from '../../lib/learningLocal'
 import { resetCourse } from '../../lib/learningSync'
-import { useCourseState } from './store'
+import { useCourseState, useResume } from './store'
 import type { Course } from './types'
 
 function ResetCourse({ course }: { course: Course }) {
@@ -20,7 +19,7 @@ function ResetCourse({ course }: { course: Course }) {
         variant="danger"
         onClick={() => {
           // Ticks go with the progress; the photo diary stays (delete photos one by one).
-          void Promise.all([resetCourse(course.id), resetChecks(course.id)])
+          void resetCourse(course.id)
           setArmed(false)
         }}
       >
@@ -40,6 +39,8 @@ function ResetCourse({ course }: { course: Course }) {
 function CourseView({ course }: { course: Course }) {
   const state = useCourseState(course.id) ?? EMPTY_STATE
   const progress = courseProgress(course, state)
+  const resume = useResume(course.id)
+  const resumeModule = resume && course.modules.find((m) => m.id === resume.moduleId)
   return (
     <div className="flex flex-col gap-6">
       <div>
@@ -64,6 +65,14 @@ function CourseView({ course }: { course: Course }) {
             counts
           />
         </div>
+        {resume && resumeModule && (
+          <Link
+            to={`/learning/${course.id}/${resume.moduleId}?tab=${resume.tab}`}
+            className="mt-3 flex min-h-10 items-center gap-1.5 rounded-lg bg-slate-900 px-3.5 text-sm font-medium text-white hover:bg-slate-700 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-300"
+          >
+            ▶ Riprendi da: {resumeModule.title}
+          </Link>
+        )}
         {progress.split && (
           <Link
             to={`/learning/${course.id}/diario`}

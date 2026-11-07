@@ -11,7 +11,7 @@ import { DiaryPage } from './DiaryPage'
 import { ModulePage } from './ModulePage'
 import { ProgressBar } from './ProgressBar'
 import { courseProgress } from './progress'
-import { useCourseState } from './store'
+import { useCourseState, useResume } from './store'
 
 // Course content is lazy (own chunk per course). The list shows the lightweight meta at once and
 // fills in the progress percentages as chunks arrive, one at a time while the browser is idle.
@@ -25,6 +25,8 @@ function CourseCard({ meta }: { meta: CourseMeta }) {
   const course = loadedCourse(meta.id)
   const state = useCourseState(meta.id)
   const p = course && state ? courseProgress(course, state) : null
+  const resume = useResume(meta.id)
+  const resumeTitle = course?.modules.find((m) => m.id === resume?.moduleId)?.title
   return (
     <Link to={meta.id} className="block rounded-xl focus-visible:outline-none">
       <Card className="flex flex-col gap-2 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800">
@@ -37,7 +39,9 @@ function CourseCard({ meta }: { meta: CourseMeta }) {
         </div>
         <p className="text-sm text-slate-500 dark:text-slate-400">{meta.summary}</p>
         <ProgressBar percent={p?.percent ?? 0} label={`${meta.title}: progresso`} />
-        <p className="text-xs text-slate-500">{meta.moduleCount} moduli</p>
+        <p className="text-xs text-slate-500">
+          {meta.moduleCount} moduli{resumeTitle ? ` · ▶ ${resumeTitle}` : ''}
+        </p>
       </Card>
     </Link>
   )

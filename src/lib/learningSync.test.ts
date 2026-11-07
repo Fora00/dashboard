@@ -11,7 +11,9 @@ import {
   resetQuiz,
   setCardKnown,
   setPracticeDone,
+  setPosition,
   setPracticeNotes,
+  toggleCheck,
 } from './learningSync'
 
 beforeEach(resetDb)
@@ -86,5 +88,27 @@ describe('progress survives (reads straight from Dexie)', () => {
 
     await resetCourse(C)
     expect(courseProgress(course, await state()).done).toBe(0)
+  })
+})
+
+describe('checklist ticks and position (synced)', () => {
+  it('ticks queue upserts and resetCourse also clears ticks and position', async () => {
+    await toggleCheck(C, 'http', 'p1', 1, true)
+    await setPosition(C, 'http', 'quiz')
+    expect(await db.learningChecks.count()).toBe(1)
+    expect(await db.learningPosition.get(C)).toMatchObject({ moduleId: 'http', tab: 'quiz' })
+    expect((await ops('learning_checks')).length).toBe(1)
+    await resetCourse(C)
+    expect(await db.learningChecks.count()).toBe(0)
+    expect(await db.learningPosition.count()).toBe(0)
+  })
+
+  it('setPosition keeps one row per course and skips unchanged writes', async () => {
+    await setPosition(C, 'http', 'lesson')
+    await setPosition(C, 'http', 'lesson')
+    await setPosition(C, 'api', 'cards')
+    expect(await db.learningPosition.count()).toBe(1)
+    expect(await db.learningPosition.get(C)).toMatchObject({ moduleId: 'api', tab: 'cards' })
+    expect((await ops('learning_position')).length).toBe(2)
   })
 })

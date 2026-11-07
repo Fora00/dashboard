@@ -440,9 +440,8 @@ export interface LearningPractice {
   updatedAt: number
 }
 
-// Learning, LOCAL ONLY (src/lib/learningLocal.ts): never synced, never in the
-// outbox. Checklist ticks of one practice item (same id as learningPractice)
-// and the photo diary of the learner's sheets.
+// Learning checklist ticks of one practice item (same id as learningPractice),
+// synced owner-only by learningSync.ts since v24.
 export interface LearningCheck {
   id: string
   courseId: string
@@ -453,6 +452,17 @@ export interface LearningCheck {
   updatedAt: number
 }
 
+/** Where the learner left off in a course (one row per course, id = courseId). Synced. */
+export interface LearningPosition {
+  id: string
+  courseId: string
+  moduleId: string
+  tab: 'lesson' | 'quiz' | 'cards' | 'practice'
+  updatedAt: number
+}
+
+// Learning photo diary, LOCAL ONLY (src/lib/learningLocal.ts): never synced,
+// never in the outbox, not in the JSON backup (Blobs).
 export interface LearningSketch {
   /** uuid */
   id: string
@@ -655,6 +665,8 @@ export interface OutboxMap {
   learning_quiz: LearningQuizAnswer
   learning_cards: LearningCard
   learning_practice: LearningPractice
+  learning_checks: LearningCheck
+  learning_position: LearningPosition
   meal_entries: MealEntry
   trip_ideas: TripIdea
   trip_companions: TripCompanion
@@ -785,6 +797,7 @@ export const db = new Dexie('dashboard') as Dexie & {
   learningCards: EntityTable<LearningCard, 'id'>
   learningPractice: EntityTable<LearningPractice, 'id'>
   learningChecks: EntityTable<LearningCheck, 'id'>
+  learningPosition: EntityTable<LearningPosition, 'id'>
   learningSketches: EntityTable<LearningSketch, 'id'>
   eventsCache: EntityTable<EventsCacheRow, 'id'>
   eventMarks: EntityTable<EventMark, 'id'>
@@ -1396,6 +1409,56 @@ db.version(23).stores({
   learningChecks: 'id, courseId, [courseId+moduleId]',
   learningSketches: 'id, courseId, [courseId+moduleId+itemId], createdAt',
 })
+
+// v24: learningChecks becomes synced (owner-only, learningSync.ts) and
+// learningPosition (where the learner left off) is new. Ticks already on this
+// device are queued once so the first pull does not delete them as "not on the
+// server".
+db.version(24)
+  .stores({
+    files: 'id, name, createdAt, synced',
+    shopItems: 'id, done, createdAt, areaId',
+    shopAreas: 'id, createdAt',
+    outbox: '++seq, rowId',
+    climbSessions: 'id, date',
+    climbs: 'id, sessionId, date',
+    habits: 'id, createdAt',
+    habitChecks: 'id, habitId, day, [habitId+day]',
+    todos: 'id, done, createdAt',
+    bookIdeas: 'id, createdAt',
+    boardgameIdeas: 'id, createdAt',
+    links: 'id, read, createdAt, *tags',
+    projectStats: 'id, opens',
+    lifeWeeks: 'id, importedAt',
+    lifeEntries: 'id, week, [week+kind]',
+    eventsCache: 'id',
+    eventMarks: 'id, state, updatedAt',
+    eventPrefs: 'id',
+    tripIdeas: 'id, done, createdAt, *companionIds',
+    tripCompanions: 'id, createdAt',
+    customEvents: 'id, start, updatedAt',
+    meals: 'id, day, createdAt',
+    projectPrefs: 'id',
+    eventInterest: 'id, value',
+    eventInterestProfile: 'id',
+    lifeDayFocus: 'id, day',
+    learningQuiz: 'id, courseId, [courseId+moduleId]',
+    learningCards: 'id, courseId, [courseId+moduleId]',
+    learningPractice: 'id, courseId, [courseId+moduleId]',
+    lifeEngines: 'id, month',
+    learningChecks: 'id, courseId, [courseId+moduleId]',
+    learningSketches: 'id, courseId, [courseId+moduleId+itemId], createdAt',
+    learningPosition: 'id',
+  })
+  .upgrade(async (tx) => {
+    const ts = Date.now()
+    const checks = (await tx.table('learningChecks').toArray()) as LearningCheck[]
+    await tx
+      .table('outbox')
+      .bulkAdd(
+        checks.map((c): OutboxEntry => ({ table: 'learning_checks', op: 'upsert', rowId: c.id, payload: c, ts })),
+      )
+  })
 
 // Ask the browser not to evict our data under storage pressure (important on iOS).
 export async function requestPersistentStorage(): Promise<boolean> {

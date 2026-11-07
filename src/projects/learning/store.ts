@@ -3,6 +3,7 @@
 // src/lib/learningLocal.ts for the local-only checklist ticks and photo diary.
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../../lib/db'
+import type { LearningPosition } from '../../lib/db'
 import type { CourseState } from './progress'
 
 /** Live state of one course; `undefined` while the first read is loading. */
@@ -16,4 +17,9 @@ export function useCourseState(courseId: string): CourseState | undefined {
     ])
     return { quiz, cards, practice, checks }
   }, [courseId])
+}
+
+/** Where the learner left off in a course (synced across devices); undefined until read or if never opened. */
+export function useResume(courseId: string): LearningPosition | undefined {
+  return useLiveQuery(() => db.learningPosition.get(courseId), [courseId])
 }

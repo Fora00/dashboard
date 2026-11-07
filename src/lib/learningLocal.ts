@@ -1,56 +1,14 @@
-import { db, type LearningCheck, type LearningSketch } from './db'
-import { itemKey } from '../projects/learning/progress'
+import { db, type LearningSketch } from './db'
 
-// Learning state that stays on THIS device only: checklist ticks of drawing
-// exercises and the photo diary of the learner's sheets. Deliberately not in
-// learningSync.ts: no outbox, no Supabase table, no migration. Photos are
-// Blobs (too big for the free tier and private by nature); ticks are cheap to
-// redo, and keeping them next to the photos keeps "saper fare" consistent on
-// one device. Works offline and signed out like every other Dexie write.
+// Learning state that stays on THIS device only: the photo diary of the
+// learner's sheets. Deliberately not in learningSync.ts: no outbox, no Supabase
+// table. Photos are Blobs (too big for the free tier and private by nature).
+// Checklist ticks used to live here; they are synced now (learningSync.ts) and
+// re-exported below for existing callers. Works offline and signed out.
 
 export const MAX_SKETCH_NOTE_LENGTH = 500
 
-/** Normalised tick list: unique, non-negative integers, ascending. */
-export function normaliseChecked(checked: readonly number[]): number[] {
-  return [...new Set(checked.filter((i) => Number.isInteger(i) && i >= 0))].sort((a, b) => a - b)
-}
-
-export async function setChecks(
-  courseId: string,
-  moduleId: string,
-  itemId: string,
-  checked: readonly number[],
-): Promise<void> {
-  const row: LearningCheck = {
-    id: itemKey(courseId, moduleId, itemId),
-    courseId,
-    moduleId,
-    itemId,
-    checked: normaliseChecked(checked),
-    updatedAt: Date.now(),
-  }
-  await db.learningChecks.put(row)
-}
-
-/** Tick or untick one checklist line (read-modify-write in one transaction). */
-export async function toggleCheck(
-  courseId: string,
-  moduleId: string,
-  itemId: string,
-  index: number,
-  on: boolean,
-): Promise<void> {
-  await db.transaction('rw', db.learningChecks, async () => {
-    const prev = (await db.learningChecks.get(itemKey(courseId, moduleId, itemId)))?.checked ?? []
-    const next = on ? [...prev, index] : prev.filter((i) => i !== index)
-    await setChecks(courseId, moduleId, itemId, next)
-  })
-}
-
-/** Clears the ticks of one course ("Azzera i progressi"). The photo diary is kept on purpose. */
-export async function resetChecks(courseId: string): Promise<void> {
-  await db.learningChecks.where('courseId').equals(courseId).delete()
-}
+export { normaliseChecked, resetChecks, setChecks, toggleCheck } from './learningSync'
 
 // --- Photo diary ------------------------------------------------------------
 

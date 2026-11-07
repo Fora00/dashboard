@@ -1,5 +1,5 @@
 // One-off extraction of the Backend Interview Lab prototype's content array `M`
-// into src/projects/learning/courses/backend-interview-lab.modules.ts.
+// into src/projects/learning/courses/backend-interview-lab/modules.ts.
 // The prototype HTML is read-only source; re-run only if it changes (it now
 // includes the frontend, mobile and logic modules):
 //   node scripts/learning/extract-bil.mjs <path-to-backend-interview-lab.html>
@@ -41,7 +41,7 @@ import type { CourseModule } from '../types'
 export const modules: CourseModule[] = ${JSON.stringify(modules, null, 2)}
 `
 fs.mkdirSync('src/projects/learning/courses', { recursive: true })
-fs.writeFileSync('src/projects/learning/courses/backend-interview-lab.modules.ts', out)
+fs.writeFileSync('src/projects/learning/courses/backend-interview-lab/modules.ts', out)
 console.log(
   modules.map((m) => `${m.id}:${m.group ?? '-'} q${m.quiz.length} c${m.cards.length} p${m.practice.length}`).join('\n'),
 )

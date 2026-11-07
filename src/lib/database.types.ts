@@ -436,6 +436,57 @@ export type Database = {
         }
         Relationships: []
       }
+      learning_checks: {
+        Row: {
+          checked: number[]
+          course_id: string
+          id: string
+          item_id: string
+          module_id: string
+          updated_at: number
+        }
+        Insert: {
+          checked?: number[]
+          course_id: string
+          id: string
+          item_id: string
+          module_id: string
+          updated_at: number
+        }
+        Update: {
+          checked?: number[]
+          course_id?: string
+          id?: string
+          item_id?: string
+          module_id?: string
+          updated_at?: number
+        }
+        Relationships: []
+      }
+      learning_position: {
+        Row: {
+          course_id: string
+          id: string
+          module_id: string
+          tab: string
+          updated_at: number
+        }
+        Insert: {
+          course_id: string
+          id: string
+          module_id: string
+          tab: string
+          updated_at: number
+        }
+        Update: {
+          course_id?: string
+          id?: string
+          module_id?: string
+          tab?: string
+          updated_at?: number
+        }
+        Relationships: []
+      }
       learning_practice: {
         Row: {
           course_id: string

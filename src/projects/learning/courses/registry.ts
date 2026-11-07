@@ -60,8 +60,8 @@ export const courseMetas: CourseMeta[] = [
     title: 'Spagnolo: da A1 a B2',
     emoji: '🇪🇸',
     summary:
-      'Pronuncia, grammatica, vocabolario (anche natura e ambiente), indefiniti, relativi, funzioni comunicative, falsi amici, varianti latinoamericane, dialoghi, esercizi e preparazione al DELE.',
-    moduleCount: 35,
+      'Pronuncia, grammatica, vocabolario (anche natura, sport e tempo libero, feste e civiltà), indefiniti, relativi, funzioni comunicative, falsi amici, varianti latinoamericane, dialoghi, esercizi e preparazione al DELE.',
+    moduleCount: 37,
     load: () => import('./spagnolo').then((m) => m.spagnolo),
   },
   {

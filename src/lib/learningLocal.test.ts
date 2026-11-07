@@ -20,7 +20,7 @@ const C = 'disegno'
 const photo = (s = 'x') => new Blob([s], { type: 'image/jpeg' })
 
 describe('checklist ticks', () => {
-  it('saves one row per exercise, toggles indices and never touches the outbox', async () => {
+  it('saves one row per exercise, toggles indices and queues one upsert per change (synced)', async () => {
     await toggleCheck(C, 'm1', 'p1', 2, true)
     await toggleCheck(C, 'm1', 'p1', 0, true)
     await toggleCheck(C, 'm1', 'p1', 2, true) // twice: still once
@@ -32,7 +32,10 @@ describe('checklist ticks', () => {
     })
     await toggleCheck(C, 'm1', 'p1', 0, false)
     expect((await db.learningChecks.get(`${C}:m1:p1`))?.checked).toEqual([2])
-    expect(await db.outbox.count()).toBe(0)
+    expect((await db.outbox.toArray()).every((o) => o.table === 'learning_checks' && o.rowId === `${C}:m1:p1`)).toBe(
+      true,
+    )
+    expect(await db.outbox.count()).toBe(4)
   })
 
   it('normalises and resets per course only', async () => {

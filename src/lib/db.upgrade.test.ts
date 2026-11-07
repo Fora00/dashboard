@@ -91,7 +91,7 @@ describe('db upgrade paths', () => {
       },
     )
     await db.open()
-    expect(db.verno).toBe(23)
+    expect(db.verno).toBe(24)
     expect((await db.shopAreas.get(DEFAULT_AREA_ID))?.name).toBe('Groceries')
     const items = await db.shopItems.orderBy('createdAt').toArray()
     expect(items.map((i) => [i.id, i.text, i.areaId])).toEqual([
@@ -132,7 +132,7 @@ describe('db upgrade paths', () => {
       await old.table('outbox').add({ table: 'links', op: 'upsert', rowId: 'l1', ts: 1 })
     })
     await db.open()
-    expect(db.verno).toBe(23)
+    expect(db.verno).toBe(24)
     expect(await db.eventMarks.count()).toBe(2)
     // Prefs written before v15 get updatedAt 0 ("merge me" on the server).
     expect(await db.eventPrefs.get('prefs')).toEqual({ id: 'prefs', favouriteCategories: ['music'], updatedAt: 0 })
@@ -170,7 +170,7 @@ describe('db upgrade paths', () => {
       await old.table('outbox').add({ table: 'links', op: 'upsert', rowId: 'l1', ts: 1 })
     })
     await db.open()
-    expect(db.verno).toBe(23)
+    expect(db.verno).toBe(24)
     expect(await db.projectPrefs.orderBy('id').toArray()).toEqual([
       { id: 'events', starred: 0, hidden: 1, updatedAt: 0 },
       { id: 'links', starred: 1, hidden: null, updatedAt: 0 },
@@ -218,7 +218,7 @@ describe('db upgrade paths', () => {
       await old.table('outbox').add({ table: 'event_marks', op: 'upsert', rowId: 'e1', ts: 1 })
     })
     await db.open()
-    expect(db.verno).toBe(23)
+    expect(db.verno).toBe(24)
     expect(await db.eventInterest.count()).toBe(0)
     expect(await db.eventMarks.get('e1')).toMatchObject({ state: 'hidden', updatedAt: 5 })
     expect(await db.projectPrefs.get('links')).toEqual({ id: 'links', starred: 1, hidden: null, updatedAt: 3 })
@@ -236,7 +236,7 @@ describe('db upgrade paths', () => {
       await old.table('outbox').add({ table: 'event_interest', op: 'upsert', rowId: 'e1', ts: 1 })
     })
     await db.open()
-    expect(db.verno).toBe(23)
+    expect(db.verno).toBe(24)
     expect(await db.eventInterestProfile.count()).toBe(0)
     expect(await db.eventInterest.get('e1')).toMatchObject({ value: -1, updatedAt: 7 })
     expect(await db.eventMarks.get('e1')).toMatchObject({ state: 'hidden', updatedAt: 7 })
@@ -266,7 +266,7 @@ describe('db upgrade paths', () => {
       await old.table('outbox').add({ table: 'life_day_focus', op: 'upsert', rowId: '2026-10-31:0', ts: 1 })
     })
     await db.open()
-    expect(db.verno).toBe(23)
+    expect(db.verno).toBe(24)
     expect(await db.lifeEngines.count()).toBe(0)
     expect(await db.lifeDayFocus.get('2026-10-31:0')).toMatchObject({ title: 'Engine test' })
     expect(await db.lifeWeeks.count()).toBe(1)
@@ -304,8 +304,9 @@ describe('db upgrade paths', () => {
       await old.table('outbox').add({ table: 'learning_practice', op: 'upsert', rowId: 'disegno:m1:p1', ts: 1 })
     })
     await db.open()
-    expect(db.verno).toBe(23)
+    expect(db.verno).toBe(24)
     expect(await db.learningChecks.count()).toBe(0)
+    expect(await db.learningPosition.count()).toBe(0)
     expect(await db.learningSketches.count()).toBe(0)
     expect(await db.learningPractice.get('disegno:m1:p1')).toMatchObject({ done: 1 })
     expect((await db.outbox.toArray()).map((e) => `${e.table} ${e.rowId}`)).toEqual(['learning_practice disegno:m1:p1'])
@@ -331,5 +332,31 @@ describe('db upgrade paths', () => {
     expect(await db.learningSketches.where('[courseId+moduleId+itemId]').equals(['disegno', 'm1', 'p1']).count()).toBe(
       1,
     )
+  })
+
+  it('v23 → current: ticks already on the device are queued once for sync', async () => {
+    await writeOld(
+      23,
+      {
+        ...V22_STORES,
+        learningChecks: 'id, courseId, [courseId+moduleId]',
+        learningSketches: 'id, courseId, [courseId+moduleId+itemId], createdAt',
+      },
+      async (old) => {
+        await old.table('learningChecks').add({
+          id: 'disegno:m1:p1',
+          courseId: 'disegno',
+          moduleId: 'm1',
+          itemId: 'p1',
+          checked: [0, 2],
+          updatedAt: 1,
+        })
+      },
+    )
+    await db.open()
+    expect((await db.outbox.toArray()).map((e) => `${e.table} ${e.op} ${e.rowId}`)).toEqual([
+      'learning_checks upsert disegno:m1:p1',
+    ])
+    expect(await db.learningChecks.count()).toBe(1)
   })
 })

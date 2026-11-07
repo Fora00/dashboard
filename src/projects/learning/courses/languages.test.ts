@@ -6,7 +6,7 @@ const nodes = (n: ReturnType<typeof parseHtml>): number =>
   n.reduce<number>((k, x) => (typeof x === 'string' ? k : k + 1 + nodes(x.children)), 0)
 
 describe.each([
-  ['spagnolo', 35],
+  ['spagnolo', 37],
   ['francese', 31],
   ['tedesco', 30],
 ])('%s', (id, total) => {

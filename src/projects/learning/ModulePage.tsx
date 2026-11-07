@@ -1,6 +1,7 @@
-import { useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { FOCUS_RING_INSET } from '../../components/focus'
+import { setPosition } from '../../lib/learningSync'
 import { CourseLoading } from './CourseLoading'
 import { CardsTab } from './CardsTab'
 import { HtmlText } from './HtmlText'
@@ -25,7 +26,15 @@ function tabsFor(m: CourseModule): { id: TabId; label: string }[] {
 }
 
 function ModuleView({ course, mod }: { course: Course; mod: CourseModule }) {
-  const [tab, setTab] = useState<TabId>('lesson')
+  const [params] = useSearchParams()
+  const wanted = params.get('tab')
+  const [tab, setTab] = useState<TabId>(() =>
+    tabsFor(mod).some((t) => t.id === wanted) ? (wanted as TabId) : 'lesson',
+  )
+  // Remember where I am, so any device can offer "Riprendi da…".
+  useEffect(() => {
+    void setPosition(course.id, mod.id, tab)
+  }, [course.id, mod.id, tab])
   const loaded = useCourseState(course.id)
   const state = loaded ?? EMPTY_STATE
   const p = moduleProgress(course.id, mod, state)
