@@ -41,7 +41,7 @@ ${PRON_SHORT}
 <tr><td>preocuparse por</td><td>preoccuparsi per</td></tr>
 <tr><td>quejarse de</td><td>lamentarsi di</td></tr>
 <tr><td>enamorarse de</td><td>innamorarsi di</td></tr>
-<tr><td>fijarse en</td><td>accorgersi di (fijarse en)</td></tr>
+<tr><td>fijarse en</td><td>notare, fare caso a</td></tr>
 <tr><td>darse cuenta de</td><td>rendersi conto di</td></tr>
 <tr><td>jugar a</td><td>giocare a</td></tr>
 <tr><td>interesarse por</td><td>interessarsi a</td></tr>
@@ -51,7 +51,7 @@ ${PRON_SHORT}
 <tr><td>salir de</td><td>uscire da</td></tr>
 <tr><td>llegar a</td><td>arrivare a</td></tr>
 <tr><td>empezar a / comenzar a</td><td>cominciare a</td></tr>
-<tr><td>terminar de / acabar de</td><td>finire di / appena</td></tr>
+<tr><td>terminar de / acabar de</td><td>finire di / avere appena (acabo de llegar)</td></tr>
 <tr><td>dejar de</td><td>smettere di</td></tr>
 <tr><td>tratar de</td><td>cercare di</td></tr>
 <tr><td>tratarse de</td><td>trattarsi di</td></tr>
@@ -238,7 +238,7 @@ ${PRON_SHORT}
 export const esFunciones = mod(
   'es-funciones',
   'Funciones comunicativas e modi di dire',
-  'Consigli, permessi, inviti, scuse, reclami, accordo, ipotesi; 28 espressioni e proverbi',
+  'Consigli, permessi, inviti, scuse, reclami, accordo, ipotesi; 29 espressioni e proverbi',
   'b2',
   `<p class="lead">All'esame e nella vita non basta la grammatica: serve sapere <b>cosa dire</b> per chiedere, consigliare, rifiutare con garbo. Ecco le formule dell'esame B1-B2, ognuna con il suo tono, e una lista di modi di dire e proverbi con l'equivalente italiano.</p>
 ${PRON_SHORT}
@@ -253,7 +253,7 @@ ${PRON_SHORT}
 </table>
 <p>Dopo <i>¿Te importa si...?</i> si usa l'indicativo presente; dopo <i>¿Te molesta que...?</i> il congiuntivo. <b>Ojo</b>: la risposta <i>No, no me importa</i> significa «puoi farlo» (non mi disturba).</p>
 <h3>Invitare, accettare, rifiutare</h3>
-<ul><li><b>Invitar</b>: <i>¿Te apetece ir al cine?</i> [te a-pe-THE ir al THI-ne] · <i>¿Quieres venir a cenar?</i> · <i>¿Qué te parece si salimos?</i> · <i>Te invito yo.</i> (offro io)</li><li><b>Accettare</b>: <i>Me encantaría.</i> · <i>Con mucho gusto.</i> · <i>Vale, de acuerdo.</i></li><li><b>Rifiutare con garbo</b>: <i>Me gustaría, pero no puedo.</i> · <i>Lo siento, ya tengo planes.</i> · <i>Otro día, quizá.</i></li></ul>
+<ul><li><b>Invitar</b>: <i>¿Te apetece ir al cine?</i> [te a-pe-TE-the ir al THI-ne] · <i>¿Quieres venir a cenar?</i> · <i>¿Qué te parece si salimos?</i> · <i>Te invito yo.</i> (offro io)</li><li><b>Accettare</b>: <i>Me encantaría.</i> · <i>Con mucho gusto.</i> · <i>Vale, de acuerdo.</i></li><li><b>Rifiutare con garbo</b>: <i>Me gustaría, pero no puedo.</i> · <i>Lo siento, ya tengo planes.</i> · <i>Otro día, quizá.</i></li></ul>
 <h3>Scusarsi e rispondere</h3>
 <table><tr><th>Scusa</th><th>Risposta</th></tr>
 <tr><td>Perdón. / Perdona (tú) / Perdone (usted)</td><td>No pasa nada.</td></tr>
@@ -276,8 +276,8 @@ ${PRON_SHORT}
 <h3>Ipotesi e probabilità</h3>
 <ul><li><b>A lo mejor</b> + indicativo: <i>A lo mejor llueve.</i></li><li><b>Quizá / Tal vez</b> + indicativo (più certo) o congiuntivo (più dubbio).</li><li><b>Puede que</b> + congiuntivo: <i>Puede que llegue tarde.</i></li><li><b>Futuro di probabilità</b>: <i>Serán las diez.</i> (saranno le dieci); <i>Estará en casa.</i></li><li><b>Deber de</b> + inf.: <i>Debe de estar cansado.</i> (sarà stanco)</li></ul>
 <h3>Chiedere con cortesia</h3>
-<p><i>¿Podría ayudarme?</i> · <i>¿Sería tan amable de abrir la puerta?</i> · <i>Quisiera reservar una mesa.</i> · <i>Le agradecería que me enviara la factura.</i> Grazie: <i>Gracias</i> → <i>De nada</i> / <i>No hay de qué</i> / <i>A ti</i>.</p>
-<h3>28 modi di dire e proverbi</h3>
+<p><i>¿Podría ayudarme?</i> · <i>¿Sería tan amable de abrir la puerta?</i> · <i>Quisiera reservar una mesa.</i> · <i>Le agradecería que me enviara la factura.</i> Grazie: <i>Gracias</i> → <i>De nada</i> / <i>No hay de qué</i>.</p>
+<h3>29 modi di dire e proverbi</h3>
 <table><tr><th>Spagnolo</th><th>Italiano</th></tr>
 <tr><td>costar un ojo de la cara [kos-TAR un O-ho de la KA-ra]</td><td>costare un occhio della testa</td></tr>
 <tr><td>estar en las nubes [es-TAR en las NU-bes]</td><td>avere la testa tra le nuvole</td></tr>
@@ -304,7 +304,7 @@ ${PRON_SHORT}
 <tr><td>quien mucho abarca, poco aprieta [kien MU-cio a-BAR-ka PO-ko a-PRIE-ta]</td><td>chi troppo vuole nulla stringe</td></tr>
 <tr><td>dime con quién andas y te diré quién eres [DI-me kon KIEN AN-das i te di-RE kien E-res]</td><td>dimmi con chi vai e ti dirò chi sei</td></tr>
 <tr><td>del dicho al hecho hay mucho trecho [del DI-cio al E-cio ai MU-cio TRE-cio]</td><td>tra il dire e il fare c'è di mezzo il mare</td></tr>
-<tr><td>camarón que se duerme se lo lleva la corriente [ka-ma-RON ke se DUER-me se lo YE-ba la rro-RRIEN-te]</td><td>chi dorme non piglia pesci</td></tr>
+<tr><td>camarón que se duerme se lo lleva la corriente [ka-ma-RON ke se DUER-me se lo YE-ba la ko-RRIEN-te]</td><td>chi dorme non piglia pesci</td></tr>
 <tr><td>a buen entendedor, pocas palabras bastan [a buen en-ten-de-DHOR PO-kas pa-LA-bras BAS-tan]</td><td>a buon intenditor poche parole</td></tr>
 <tr><td>al mal tiempo, buena cara [al mal TIEM-po BUE-na KA-ra]</td><td>fare buon viso a cattivo gioco</td></tr>
 <tr><td>en casa del herrero, cuchillo de palo [en KA-ssa del e-RRE-ro ku-CI-yo de PA-lo]</td><td>il calzolaio ha le scarpe rotte</td></tr>
@@ -456,8 +456,8 @@ ${PRON_SHORT}
     ),
     prac(
       'p5',
-      "Traduci: «Forse arriva tardi», «Sarà in casa», «Non sono d'accordo fino a un certo punto».",
-      'A lo mejor llega tarde (o Puede que llegue tarde). / Estará en casa. / No estoy de acuerdo del todo (o Estoy de acuerdo hasta cierto punto).',
+      "Traduci: «Forse arriva tardi», «Sarà in casa», «Sono d'accordo fino a un certo punto».",
+      'A lo mejor llega tarde (o Puede que llegue tarde). / Estará en casa. / Estoy de acuerdo hasta cierto punto.',
     ),
     prac(
       'p6',

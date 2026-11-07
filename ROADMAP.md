@@ -266,7 +266,9 @@ parser (`html.ts` + `HtmlText.tsx`), never `dangerouslySetInnerHTML`.
       - c) `spagnolo` DONE 2026-11-07 (round 2: accuracy 96/100, phonetics 9/10, reports `es-*-r2.md`, A/B fixed;
         open choice: `dr` cluster written plain `d`); `francese` still to do. `spagnolo` and `francese`: re-verify accuracy and phonetics on the fixed text (only changed modules),
         fix, repeat until both >= 9/10;
-      - d) measure completeness again (all three) and write the missing modules; drafts exist, unreviewed, in
+      - d) `spagnolo` DONE 2026-11-07: 6 modules reviewed twice and wired as `spagnoloC` (35 modules, incl. new
+        es-natura; reviews `es-drafts-review*.md`); es completeness not re-measured. fr/de still to do.
+        Original text: measure completeness again (all three) and write the missing modules; drafts (es now moved) in
         `docs/learning-drafts/` (`spagnolo.c.*.ts`, `francese.c.*.ts`; es indefiniti/relativi/cambi/numeri/
         funciones/natura, fr determinants/ortho-lecture/geo-reggenze/natura); wire in as `<lang>C` after review.
         German completeness never measured;

@@ -35,12 +35,12 @@ ${PRON_SHORT}
 <tr><td>1/10</td><td>un décimo</td></tr>
 <tr><td>da 1/11</td><td>cardinale + -avo: un onceavo, dos doceavos</td></tr>
 </table>
-<p><b>Medio</b> è un aggettivo (<i>medio kilo</i>, <i>media hora</i>, <i>las tres y media</i>); <b>la mitad</b> è un nome (<i>la mitad de la clase</i>). Altri: <b>el doble</b>, <b>el triple</b>. <i>Gasto la mitad que tú.</i> (spendo la metà di te) Decimali: <i>3,5</i> = <i>tres coma cinco</i> (America spesso <i>tres punto cinco</i>).</p>
+<p><b>Medio</b> è un aggettivo (<i>medio kilo</i>, <i>media hora</i>, <i>las tres y media</i>); <b>la mitad</b> è un nome (<i>la mitad de la clase</i>). Altri: <b>el doble</b>, <b>el triple</b>. <i>Gasto la mitad de lo que gastas tú.</i> (spendo la metà di te) Decimali: <i>3,5</i> = <i>tres coma cinco</i> (America spesso <i>tres punto cinco</i>).</p>
 <h3>Percentuali</h3>
 <p><b>por ciento</b> [por-THIEN-to]: <i>el cincuenta por ciento</i> (50 %). Si usa l'articolo (<i>el 20 %</i>) oppure <i>un 20 %</i> quando è un'indicazione approssimata o un cambiamento: <i>Hay un 20 % de descuento.</i> <i>Los precios subieron un 5 %.</i> Dopo percentuale + <i>de</i> + plurale, il verbo può restare singolare o andare al plurale: <i>El 30 % de los alumnos aprobó / aprobaron.</i> Altre formule: <i>la mayoría de</i> (la maggior parte), <i>uno de cada tres</i> (1 su 3), <i>una de cada diez personas</i>.</p>
 <h3>Avverbi in -mente</h3>
 <p>Si formano con l'<b>aggettivo al femminile singolare</b> + <b>-mente</b> (come l'italiano «-mente»): <i>lento → lentamente</i>, <i>rápido → rápidamente</i> [RRA-pi-dha-MEN-te], <i>fácil → fácilmente</i> [FA-thil-MEN-te], <i>claro → claramente</i> [kla-ra-MEN-te], <i>feliz → felizmente</i>.</p>
-<ul><li>L'<b>accento</b> dell'aggettivo resta: <i>rápido → rápidamente</i>, <i>fácil → fácilmente</i>. In italiano la tilde non esiste, quindi è una dimenticanza frequente.</li><li><b>Doppio avverbio</b>: solo l'ultimo prende -mente e il primo resta al femminile: <i>Habla lenta y claramente.</i> (parla lentamente e chiaramente)</li><li>Spesso si può evitare con <i>con + nome</i> o <i>de forma + aggettivo</i>: <i>con cuidado</i> = <i>cuidadosamente</i>.</li><li>Molti aggettivi fanno da avverbio senza -mente: <i>hablar alto / bajo / claro</i>, <i>trabajar duro</i>, <i>ir recto / derecho</i>.</li><li>Non esistono: <i>bien</i> (non «buenamente»), <i>mal</i>, <i>pronto</i>, <i>ya</i>, <i>ahora</i>, <i>aquí</i>.</li><li>Frequenti: <i>realmente</i> [rre-al-MEN-te], <i>finalmente</i>, <i>solamente</i>, <i>últimamente</i> [UL-ti-ma-MEN-te] (negli ultimi tempi), <i>actualmente</i> (attualmente, non «actually»), <i>evidentemente</i>.</li></ul>
+<ul><li>L'<b>accento</b> dell'aggettivo resta: <i>rápido → rápidamente</i>, <i>fácil → fácilmente</i>. In italiano la tilde non esiste, quindi è una dimenticanza frequente.</li><li><b>Doppio avverbio</b>: solo l'ultimo prende -mente e il primo resta al femminile: <i>Habla lenta y claramente.</i> (parla lentamente e chiaramente)</li><li>Spesso si può evitare con <i>con + nome</i> o <i>de forma + aggettivo</i>: <i>con cuidado</i> = <i>cuidadosamente</i>.</li><li>Molti aggettivi fanno da avverbio senza -mente: <i>hablar alto / bajo / claro</i>, <i>trabajar duro</i>, <i>ir recto / derecho</i>.</li><li>Hanno una forma propria e non si fanno con -mente: <i>bien</i> (non «buenamente»), <i>mal</i>, <i>pronto</i>, <i>ya</i>, <i>ahora</i>, <i>aquí</i>.</li><li>Frequenti: <i>realmente</i> [rre-al-MEN-te], <i>finalmente</i>, <i>solamente</i>, <i>últimamente</i> [UL-ti-ma-MEN-te] (negli ultimi tempi), <i>actualmente</i> (attualmente, non «actually»), <i>evidentemente</i>.</li></ul>
 <h3>Apocope: forme accorciate davanti al nome</h3>
 <table><tr><th>Forma piena</th><th>Accorciata (davanti a)</th><th>Esempio</th></tr>
 <tr><td>uno</td><td>un (m. sing.)</td><td>un libro</td></tr>
@@ -91,7 +91,7 @@ ${PRON_SHORT}
     q(
       'q5',
       "Qual è l'avverbio di «rápido»?",
-      ['rápidamente', 'rapidamente', 'rápidomente', 'rápidamientos'],
+      ['rápidamente', 'rapidamente', 'rápidomente', 'rápidemente'],
       0,
       "Si aggiunge -mente alla forma femminile e si mantiene la tilde dell'aggettivo: rápida + mente. La grafia italiana senza tilde è un errore.",
     ),
@@ -226,14 +226,14 @@ ${PRON_SHORT}
 <table><tr><th>Verbo</th><th>Uso</th><th>Esempio</th></tr>
 <tr><td>ponerse + agg.</td><td>cambio temporaneo (stato fisico, emozione, colore)</td><td>Me puse nervioso.</td></tr>
 <tr><td>volverse + agg./nome</td><td>cambio improvviso o profondo</td><td>Se volvió loco.</td></tr>
-<tr><td>hacerse + nome/agg.</td><td>cambio voluntario o graduale (professione, religione)</td><td>Se hizo médico.</td></tr>
+<tr><td>hacerse + nome/agg.</td><td>cambio volontario o graduale (professione, religione)</td><td>Se hizo médico.</td></tr>
 <tr><td>llegar a ser + nome/agg.</td><td>risultato dopo uno sforzo</td><td>Llegó a ser presidente.</td></tr>
 <tr><td>convertirse en + nome</td><td>trasformazione</td><td>Se convirtió en una estrella.</td></tr>
 <tr><td>quedarse + agg.</td><td>risultato di una perdita o situazione</td><td>Se quedó sordo.</td></tr>
 </table>
 <p>Altri esempi: <i>ponerse rojo</i> [po-NER-se RRO-ho] (arrossire), <i>ponerse enfermo</i>, <i>hacerse mayor</i> (crescere), <i>hacerse rico</i>, <i>quedarse solo</i>, <i>quedarse sin dinero</i>, <i>quedarse dormido</i> (addormentarsi), <i>volverse desconfiado</i>. Il verbo «diventare» ha anche <i>pasar a ser</i>, <i>acabar siendo</i>. Con attività: <i>ponerse a + inf.</i> = mettersi a (<i>Se puso a llorar</i>), <i>volver a + inf.</i> = rifare (<i>Volvió a llamar</i>).</p>
 <h3>Ser o estar + participio</h3>
-<ul><li><b>estar + participio</b> = stato risultante: <i>La puerta está cerrada.</i> <i>Estamos cansados.</i> <i>Está prohibido fumar.</i> Il participio concorda.</li><li><b>ser + participio</b> = passiva, azione con agente: <i>La puerta fue cerrada por el portero.</i> (In pratica preferisci <i>El portero cerró la puerta</i> o la passiva con <i>se</i>.)</li><li>Aggettivi che cambiano senso: <i>estar aburrido</i> (annoiato) / <i>ser aburrido</i> (noioso); <i>estar listo</i> (pronto) / <i>ser listo</i> (furbo); <i>estar interesado</i> / <i>ser interesado</i> (interessato).</li><li>Il participio si usa anche come nome: <i>los heridos</i> (i feriti), <i>lo dicho</i> (quanto detto), e in costruzione assoluta: <i>Terminada la reunión, salimos.</i> <i>Una vez terminado el trabajo, descansé.</i></li><li>Con <b>tener, llevar, dejar</b> + participio che concorda con l'oggetto: <i>Tengo escritas tres cartas.</i> <i>Llevo hechas dos páginas.</i> <i>Dejó la puerta abierta.</i> Con <i>haber</i> invece resta invariabile.</li></ul>
+<ul><li><b>estar + participio</b> = stato risultante: <i>La puerta está cerrada.</i> <i>Estamos cansados.</i> <i>Está prohibido fumar.</i> Il participio concorda.</li><li><b>ser + participio</b> = passiva, azione con agente: <i>La puerta fue cerrada por el portero.</i> (In pratica preferisci <i>El portero cerró la puerta</i> o la passiva con <i>se</i>.)</li><li>Aggettivi che cambiano senso: <i>estar aburrido</i> (annoiato) / <i>ser aburrido</i> (noioso); <i>estar listo</i> (pronto) / <i>ser listo</i> (furbo); <i>estar interesado</i> (interessato a qualcosa) / <i>ser interesado</i> (che agisce per interesse).</li><li>Il participio si usa anche come nome: <i>los heridos</i> (i feriti), <i>lo dicho</i> (quanto detto), e in costruzione assoluta: <i>Terminada la reunión, salimos.</i> <i>Una vez terminado el trabajo, descansé.</i></li><li>Con <b>tener, llevar, dejar</b> + participio che concorda con l'oggetto: <i>Tengo escritas tres cartas.</i> <i>Llevo hechas dos páginas.</i> <i>Dejó la puerta abierta.</i> Con <i>haber</i> invece resta invariabile.</li></ul>
 <h3>Comparativi in dettaglio</h3>
 <table><tr><th>Struttura</th><th>Esempio</th></tr>
 <tr><td>más / menos + agg. + que</td><td>Es más alto que yo.</td></tr>
@@ -241,7 +241,7 @@ ${PRON_SHORT}
 <tr><td>tan + agg./avv. + como</td><td>Es tan alta como tú.</td></tr>
 <tr><td>tanto/a/os/as + nome + como</td><td>Tengo tantos libros como tú.</td></tr>
 <tr><td>verbo + tanto como</td><td>Trabaja tanto como yo.</td></tr>
-<tr><td>igual de + agg. + que</td><td>Es igual de caro que aquél.</td></tr>
+<tr><td>igual de + agg. + que</td><td>Es igual de caro que aquel.</td></tr>
 <tr><td>más + agg. + de lo que + verbo</td><td>Es más difícil de lo que pensaba.</td></tr>
 <tr><td>tan + agg. + que + verbo</td><td>Es tan alto que no cabe.</td></tr>
 </table>
@@ -249,7 +249,7 @@ ${PRON_SHORT}
 <h3>Superlativo assoluto in -ísimo</h3>
 <p>Si forma con la fine dell'aggettivo (senza vocale finale) + <b>-ísimo</b>: <i>carísimo</i> [ka-RI-ssi-mo], <i>riquísimo</i>, <i>facilísimo</i>, <i>buenísimo</i>, <i>muchísimo</i>, <i>poquísimo</i>, <i>grandísimo</i>. Cambi ortografici: <b>-co → -quísimo</b> (<i>riquísimo</i>, da rico), <b>-go → -guísimo</b> (<i>larguísimo</i>), <b>-z → -císimo</b> (<i>felicísimo</i>), <b>-ble → -bilísimo</b> (<i>amabilísimo</i>). Come l'italiano <i>-issimo</i>, ma la tilde cade sempre sulla i. Colloquiali: <i>súper</i> + agg., <i>requete-</i>.</p>
 <h3>Trappole italiane</h3>
-<ul><li>«Più di tre» = <b>más de tres</b> (non «más que tres», che vale «solo»: <i>No tengo más que tres</i> = ne ho solo tre).</li><li>«Il più alto della classe» = <b>el más alto de la clase</b> (preposizione <i>de</i>, non <i>en</i>).</li><li>«Sono diventato rosso» = <b>me puse rojo</b>, non «me devine».</li><li>«Mi sono dimenticato di...» si dice di solito <b>se me olvidó</b> + cosa; <b>me olvidé de</b> + infinito/nome è corretto ma meno scorrevole.</li></ul>
+<ul><li>«Più di tre» = <b>más de tres</b> (non «más que tres», che vale «solo»: <i>No tengo más que tres</i> = ne ho solo tre).</li><li>«Il più alto della classe» = <b>el más alto de la clase</b> (preposizione <i>de</i>, non <i>en</i>).</li><li>«Sono diventato rosso» = <b>me puse rojo</b>, non «me hice rojo» (hacerse indica una scelta o un percorso).</li><li>«Mi sono dimenticato le chiavi»: <b>se me olvidaron las llaves</b> (mi sono sfuggite di mente, nessuna colpa) oppure <b>olvidé las llaves</b> / <b>me olvidé de las llaves</b> (colpa mia, perfettamente naturale).</li></ul>
 <div class="say"><b>Da ricordare.</b> «Per le disgrazie usa se me; per "diventare" scegli ponerse (temporaneo), hacerse (volontario), volverse (profondo), quedarse (esito).» <i>Se me cayó el café y me puse rojo.</i> [se me ka-YO el ka-FE i me PU-sse RRO-ho]</div>`,
   [
     q(
@@ -283,7 +283,7 @@ ${PRON_SHORT}
       'Quale verbo scegli per «è diventato medico» (scelta professionale)?',
       ['se hizo médico', 'se puso médico', 'se quedó médico', 'se volvió médico'],
       0,
-      'Hacerse + professione indica un cambio voluntario e graduale. Ponerse e quedarse esprimono stati, non professioni.',
+      'Hacerse + professione indica un cambio volontario e graduale. Ponerse e quedarse esprimono stati, non professioni.',
     ),
     q(
       'q5',
@@ -361,7 +361,7 @@ ${PRON_SHORT}
     ),
     card('c2', 'ponerse', 'Cambio temporaneo: ponerse nervioso, rojo, triste, enfermo.'),
     card('c3', 'volverse', 'Cambio profondo o improvviso: volverse loco, volverse desconfiado.'),
-    card('c4', 'hacerse', 'Cambio voluntario o graduale: hacerse médico, rico, mayor, vegetariano.'),
+    card('c4', 'hacerse', 'Cambio volontario o graduale: hacerse médico, rico, mayor, vegetariano.'),
     card('c5', 'quedarse', 'Risultato: quedarse solo, ciego, sordo, dormido, sin dinero.'),
     card('c6', 'convertirse en', 'Trasformazione: el agua se convierte en hielo; se convirtió en una estrella.'),
     card('c7', 'llegar a ser', 'Dopo uno sforzo: Llegó a ser presidente.'),
@@ -382,7 +382,7 @@ ${PRON_SHORT}
   [
     prac(
       'p1',
-      'Traduci con se involontario: «Mi è finito il caffè», «A Marta è caduto il telefono», «Ci si sono dimenticati i biglietti».',
+      'Traduci con se involontario: «Mi è finito il caffè», «A Marta è caduto il telefono», «Abbiamo dimenticato i biglietti (senza volere)».',
       'Se me acabó el café. / A Marta se le cayó el teléfono. / Se nos olvidaron los billetes. (il verbo concorda con la cosa).',
     ),
     prac(
