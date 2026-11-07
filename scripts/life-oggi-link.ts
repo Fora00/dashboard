@@ -1,10 +1,11 @@
 // Prints the "Oggi" link (#/life/oggi?d=…): 0-3 focus lines plus, when their
-// snapshots exist, the Streaks habits and the household chores, so one Save on
-// the page updates all three. Used by /oggi.
+// snapshots exist, the Streaks habits and (opt-in, --chores) the household
+// chores, so one Save on the page updates them together. Used by /oggi.
 //
-//   npm run life:oggi-link -- <YYYY-MM-DD> "line 1" "line 2" ...  [--no-streaks] [--no-chores]
+//   npm run life:oggi-link -- <YYYY-MM-DD> "line 1" "line 2" ...  [--no-streaks] [--chores]
 //
-// Streaks: ~/life/_sync/streaks/snapshot.json (streaks-sync.py). Chores:
+// Streaks: ~/life/_sync/streaks/snapshot.json (streaks-sync.py). Chores
+// (only with --chores; the section is switched off for now):
 // ~/life/_sync/chores/snapshot.json (chores-sync.py; each chore gets the
 // snapshot's asOf). A missing file is skipped. Exit 1 with one error per line
 // if the input is invalid — nothing to open.
@@ -21,7 +22,7 @@ const read = (file: string): string | null => (existsSync(file) ? readFileSync(f
 const payload: Record<string, unknown> = { day, lines }
 const streaks = flags.includes('--no-streaks') ? null : read(join(homedir(), 'life/_sync/streaks/snapshot.json'))
 if (streaks) payload.streaks = JSON.parse(streaks)
-const choresRaw = flags.includes('--no-chores') ? null : read(join(homedir(), 'life/_sync/chores/snapshot.json'))
+const choresRaw = flags.includes('--chores') ? read(join(homedir(), 'life/_sync/chores/snapshot.json')) : null
 if (choresRaw) {
   const { asOf, chores } = JSON.parse(choresRaw) as {
     asOf: string
