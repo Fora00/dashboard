@@ -254,6 +254,120 @@ parser (`html.ts` + `HtmlText.tsx`), never `dangerouslySetInnerHTML`.
       `tedesco` was only partly reviewed: accuracy 16/30 modules ~8.5/10, phonetics ~6.5/10 provisional.
 - [x] L18b Lazy course content = R3 below (commit `adfa26b`): Learning chunk 1.7 MB -> one chunk per course.
 - [ ] L19 **Language courses: reach >= 90% accuracy and phonetics** [sonnet builders + sonnet reviewers],
+      PRIORITY (owner, 2026-11-14): first make A1-A2 solid in all three languages (accuracy and phonetics
+      >= 9/10 on the A1/A2 modules, A1-A2 completeness against the CEFR A1-A2 syllabus >= 90%), B1-B2 after.
+      Plan: de A1-A2 fixes + course-wide notation sweep (DONE 2026-11-14, not committed: ng never split, É:/È: kept and applied to B,
+      j = J, CAPS = stress, glottal stop ʼ, `tedesco/respell.test.ts`; log `council/de-a1a2-fixes.md`) ->
+      de A1-A2 re-review (DONE: accuracy 96/100, phonetics 9/10, completeness 89%, B 2, C 14; report
+      `council/de-a1a2-review-r2.md`) -> round-2 fixes + gaps (DONE, log appended to `de-a1a2-fixes.md`) -> delta review r3 (DONE: de A1-A2 accuracy 97/100,
+      phonetics 9/10, completeness 99%; its B/C fixes applied by the orchestrator; `council/de-a1a2-review-r3.md`) -> fr A1-A2 review r2 (DONE: accuracy 95/100, phonetics 9/10,
+      completeness 83%, 93% with drafts; `council/fr-a1a2-review-r2.md`) -> fr fixes + drafts wired as `franceseC`
+      + gaps (DONE, francese now 36 modules, log `council/fr-a1a2-fixes.md`) -> fr delta review r3 (DONE: fr A1-A2 accuracy 95/100,
+      phonetics 9.5/10, completeness 99%; its 2 B fixed by the orchestrator, C items open in `council/fr-a1a2-review-r3.md`) -> fr A1-A2 re-verify + gaps (feminine rules, irregular presents, pronominals,
+      geography prepositions, quantifiers, liaison/e muet/intonation = drafts fr-pron2/determinants/geo-reggenze)
+      -> A1-A2 completeness check for all three. es A1-A2 already passed (round 2).
+      A1-A2 GOAL MET 2026-11-15 (not committed): de 97/100, 9/10, 99%; fr 95/100, 9.5/10, 99%. Open C items in
+      `de-a1a2-review-r3.md`, `fr-a1a2-review-r3.md`. B1-B2 work below (a-f) continues from here.
+- [ ] L20 **Russian A1** (owner, 2026-11-14): course `russo` BUILT 2026-11-14 (not committed, check + build green),
+      15 modules, groups a1/voc/drill; review r1 DONE (accuracy 88/100, phonetics 8/10,
+      completeness 74%, A 4 B 13 C 20; `council/ru-a1-review-r1.md`); fixes DONE (log `council/ru-a1-fixes.md`,
+      all A/B, 19/20 C, gaps closed inside the 15 modules); review r2 DONE (accuracy 95/100,
+      phonetics 9/10, completeness 99%, B 2, C 22; `council/ru-a1-review-r2.md`); polish of its B/C DONE
+      (log `ru-a1-fixes.md` Round 2). Open: real-device look [owner]; A2 later if wanted. Gaps left by the builder:
+      ordinals/dates, genitive/dative/instrumental beyond chunks, imperative only as chunks.
+      Spec: Cyrillic with stress marks + Italian-based respelling (reduction
+      shown), `russo/respell.test.ts` (stress mark + syllable/CAPS check). Then accuracy + phonetics review
+      to >= 9/10 as in L19.
+- [ ] L21 **Shared vocabulary across languages** (owner, 2026-11-14; decided 2026-11-15): inside Learning,
+      route `/learning/vocabolario`; dictionary (Italian word -> es/fr/de/ru side by side with the course
+      notation, gender, example; search + theme/level filter) + flashcards per theme choosing the languages.
+      Words: a NEW curated list, ~600-1000 frequent A1-A2 words by theme, same respelling legends as the
+      courses, reviewed. Progress reuses `learningCards` (courseId `vocabolario`, moduleId = theme, itemId =
+      `<wordId>.<lang>`): no migration, already synced owner-only.
+      - V1 DONE 2026-11-15 (not committed): `learning/vocab/` (types, index, progress, store, VocabPage,
+        vocab.test.ts), themes persone-famiglia 40 + cibo-bevande 41, Learning home card, route
+        `vocabolario/*`. Then (owner) a simple search (`vocab/search.ts`, accent/stress-insensitive,
+        Italian + selected languages) + part-of-speech chips + "Pronuncia" screen
+        (`/learning/vocabolario/pronuncia`, the courses' PRON_SHORT + PRON_FULL). No level filter.
+      - V2/V3 replaced by the atomic queue below (one theme per task).
+- [ ] L22 **Languages: atomic queue** (owner, 2026-11-15; REPLACES the big rounds of L19 a-f, L20 next steps,
+      L21 V2/V3, which burned too many tokens). Rules:
+      1. One task = one module (or one vocab theme, or one fix list), one language, done interactively in the
+         main session: no reviewer fan-out, at most one worker. Stop after each task; the owner picks the next.
+      2. Nothing breaks: only that module's file(s) change; `npm run check` + `npm run build` green and the
+         language's respell test passing BEFORE the task is ticked. If it can't be made green, revert it.
+      3. The >= 90% rule: on the touched module, accuracy >= 9/10 and phonetics >= 9/10 (one inline review
+         against `council/rubric.md` and the course legend, score written down), and nothing the owner
+         asked for is lost (local-first, mobile-first, course notation, no IPA in the UI).
+      4. Log: one line per task appended to `council/<lang>-atomic.md` (module, score before/after,
+         fixes); tick the task here with the score. Commit only when the owner says so.
+      Per language (in order; ids are module ids):
+      - **de** (B1-B2 accuracy review was never finished): DE1 C items of `de-a1a2-review-r3.md`; then one task
+        per module: DE2 de-plusquam, DE3 de-konj2, DE4 de-passiv, DE5 de-konj1, DE6 de-konnektoren,
+        DE7 de-registri, DE8 de-nebensaetze2, DE9 de-relativ, DE10 de-aggettivi, DE11 de-varianti,
+        DE12 de-falsiamici, DE13 de-esame, DE14 de-voc-lavoro, DE15 de-drills (open B list in L19 a).
+      - **fr** (A1-A2 met, B modules fixed in round 1 but never re-verified): FR1 C items of
+        `fr-a1a2-review-r3.md`; then FR2 fr-subj1, FR3 fr-subj2, FR4 fr-trapas, FR5 fr-cond, FR6 fr-passiva,
+        FR7 fr-relatifs, FR8 fr-connecteurs, FR9 fr-registres, FR10 fr-variantes, FR11 fr-falsiamici +
+        fr-falsiamici2, FR12 fr-esame, FR13 fr-voc-lavoro, FR14 fr-drills.
+      - **es** (met: 96/100, 9/10, 91%; only margin work): ES1 owner choice on the `dr` cluster; ES2-ES4 thin vocab
+        themes to >= 40 words, one module each (es-voc-vita, es-voc-viaggi, es-voc-lavoro); ES5 lenition drill;
+        ES6 b/v + g/j spelling rules + abbreviations.
+      - **ru** (A1 met: 95/100, 9/10, 99%): RU1 C items of `ru-a1-review-r2.md`; RU2 ordinals/dates inside
+        an existing module; A2 only if the owner asks, one module per task.
+      - **vocab** (L21): VO1 review persone-famiglia, VO2 review cibo-bevande (each: 4 languages, >= 9/10);
+        then one new theme per task (~40 words, same format, `vocab.test.ts` green), owner picks the theme.
+      - **all**: the Wiktionary IPA cross-check (L19 f) in batches of 50 words per language per task.
+      5. Vocabulary is ONE source (owner, 2026-11-15): every language keeps its words in
+         `courses/<lang>/words.ts`; course tables are built from it and Vocabolario reads it, so a course
+         task that adds words updates Vocabolario automatically (no script). Words are linked across
+         languages by a shared id; a word missing in some languages still shows, with "—" for the gaps,
+         and a test lists the gaps (not a failure) so filling them becomes a task.
+      - **words** (do first, then the language queues): WS0 [opus, M] engine: the `words.ts` format (id, it,
+        w, pron, g, pl, theme, note, ex), `vsecW(heading, ids)` that renders a course table from it,
+        Vocabolario merging the four lists by id (one lazy chunk per language, theme files become metas
+        only), the two existing themes converted, gap report test; check + build green, the page looks
+        the same. Then one task per course vocab file, moving its `vsec` rows into `words.ts` with ids
+        (de: a, a.2, b.1, b.4, b.5; es: b.4, c.4, c.5; fr: b.4; ru: its voc modules get rows first). Each
+        move keeps the rendered course table identical (test compares the HTML before/after).
+        WS0 DONE 2026-11-15 (not committed): `courses/<lang>/words.ts` + `vsecw.ts`, `courses/vocabTable.ts`
+        (`vtable`, `tableRow`, `groupRow`), `vocab/merge.ts`; theme files removed (metas in `vocab/index.ts`,
+        counts derived); 81 words moved with ids unchanged; gap report printed by `vocab.test.ts`.
+        Move rules learned on the first move: list rows ("null, eins, zwei, drei", "Deutschland, Deutscher")
+        are SPLIT into one entry per real word and rendered as a group row (`vsecW` row = id | id[], joined
+        with ", "); every word gets a real theme (`dai-corsi` only as a last resort); `t` only where the table
+        form differs; run `npm run format` before check.
+        - [x] de `a.ts` (2026-11-15): 3 tables, 55 new de-only ids, themes `saluti`/`numeri`/`paesi` added.
+          Gap report: es/fr/ru 81/136, de 136/136.
+        - [x] de `a.2.ts` (2026-11-15): 4 group rows, 10 new ids, theme `domande`; gap es/fr/ru 81/146.
+        - [x] de `b.1.ts` (2026-11-15): 2/8 tables moved (6 are sentences/phrases, stay `vsec`), 17 new ids,
+          2 reused, themes `connettivi`, `aggettivi`; gap es/fr/ru 81/164. Rule: sentence tables stay `vsec`.
+        - [ ] de `b.4.ts` (12) - [ ] de `b.5.ts` (24): PAUSED (owner, 2026-11-15: "too deep on German").
+          The b.4 attempt was stopped and fully reverted (b.4.ts restored byte-identical from the pre-move
+          snapshot, its words.ts entries and themes removed). Next: other languages, not more German.
+          Workers must never use `git stash`/`checkout` on files with uncommitted work.
+        - [x] Gaps filled (owner: "fill for all languages the vocabulary we have until here", 2026-11-15):
+          es, fr, ru each +83 entries -> all four languages 164/164, 0 missing. Course respellings copied
+          where the course has the word. Fixes by the orchestrator: unstressed one-syllable pos 'x' words
+          may stay lowercase (que [ke]/[kë]) instead of fake CAPS; ru `respell.ts` learned что -> што and
+          мно́го (so что = [SHTO] like the course, molto = мно́го). Not yet reviewed (VO-review tasks).
+        - [ ] es `b.4.ts`, `c.4.ts`, `c.5.ts` - [ ] fr `b.4.ts` - [ ] ru voc modules (rows first)
+      Session notes (owner chat, 2026-11-15), the decisions behind L21/L22:
+      - Vocabolario V1 had to "just work": search dropped, then brought back simple (accent-insensitive
+        search, part-of-speech chips) with a Pronuncia recap reusing the courses' legends.
+      - Big multi-reviewer rounds cost too many tokens -> atomic per-language tasks, interactive, each one
+        green and >= 9/10 on what it touches (rules 1-4 above).
+      - Every language updates its own vocabulary and the cross-language Vocabolario follows automatically
+        -> one source per language (`words.ts`, rule 5), chosen over a generator script; words missing in
+        some languages are shown with "—", never hidden.
+      - Owner asked whether languages should become their own project. Answer: not now. The course engine,
+        progress tables and sync belong to Learning; splitting means a cross-project refactor mid-migration.
+        Cheaper: a "Lingue" group on the Learning home (4 languages + Vocabolario), optionally a home tile
+        deep-linking to it. Revisit when languages get their own features (audio, conjugation tables, one
+        review schedule across vocabulary), after moving the engine to `src/lib` (Learning refactor).
+        Pending owner answer: add the "Lingue" grouping task after the de moves?
+      - Lost in WS0: the comments inside the two old theme files (untracked, deleted after conversion);
+        data verified identical against the morning build.
       do in this order, one language at a time, reviewers write their report incrementally:
       - a) `tedesco` accuracy: finish the review from `de-plusquam` on (14 modules, status header and line
         numbers in `docs/learning-drafts/council/de-accuracy-r1.md` + `de-dump.txt`), then fix. Open B findings:

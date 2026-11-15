@@ -5,16 +5,19 @@ import { courseById } from './index'
 const nodes = (n: ReturnType<typeof parseHtml>): number =>
   n.reduce<number>((k, x) => (typeof x === 'string' ? k : k + 1 + nodes(x.children)), 0)
 
+const FULL = ['a1', 'a2', 'b1', 'b2', 'voc', 'drill']
+
 describe.each([
-  ['spagnolo', 37],
-  ['francese', 31],
-  ['tedesco', 30],
-])('%s', (id, total) => {
+  ['spagnolo', 37, FULL],
+  ['francese', 36, FULL],
+  ['tedesco', 30, FULL],
+  ['russo', 15, ['a1', 'voc', 'drill']],
+])('%s', (id, total, groups) => {
   const c = courseById(id)!
-  it('is registered with its modules in 6 groups', () => {
+  it(`is registered with its modules in ${groups.length} groups`, () => {
     expect(c).toBeDefined()
     expect(c.modules).toHaveLength(total)
-    expect(c.groups.map((g) => g.id)).toEqual(['a1', 'a2', 'b1', 'b2', 'voc', 'drill'])
+    expect(c.groups.map((g) => g.id)).toEqual(groups)
     expect(new Set(c.modules.map((m) => m.id)).size).toBe(total)
     for (const m of c.modules)
       expect(

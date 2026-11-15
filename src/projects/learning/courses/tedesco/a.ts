@@ -1,14 +1,16 @@
 import { card, mod, prac, q } from '../kit'
-import { PRON_FULL, PRON_SHORT, vsec } from './pron'
+import { PRON_FULL, PRON_SHORT } from './pron'
+import { vsecW } from './vsecw'
 import { deNomi, dePresente, deQuotidiano } from './a.2'
 import { deCasi, dePerfekt, dePraeteritum } from './a.3'
 import { deFuturo, deImperativo, deRiflessivi, deNebensaetze1 } from './a.4'
 
 // German course, groups A1 and A2 (13 modules), for an Italian speaker. Standard German (Germany), AT/CH variants noted.
 // Pronunciation: Italian-based respelling in [ ], legend = tedesco.pron.ts (PRON_FULL / PRON_SHORT).
-// Conventions used on top of the legend (explained in de-pron): long vowel = ":" after it; stressed e: "É:" long closed,
-// "E" short (open); a-umlaut: "È:" long, "E" short; final unstressed -er = "a"; "ng" is written "n" (velar n, no g);
-// glottal stop and p/t/k aspiration are explained in words but not marked; "tsh" = tsch (sound of Italian "ci").
+// Notation (all of it is in PRON_FULL, one convention for the whole course, checked by respell.test.ts): long vowel = ":" after it;
+// "É:" long closed e, "È:" long a-umlaut, "E" short open; final unstressed -er = "a", final -e = "ë"; "ng" always inside one
+// syllable, never followed by a heard g (Zeitung [TSAI-tung], bringen [BRING-ën]); j is written J; CAPS = stressed syllable;
+// glottal stop is written ʼ (only in de-pron examples); p/t/k aspiration is explained in words; "tsh" = tsch.
 //
 // CLAIMS THE AUTHOR IS NOT FULLY SURE ABOUT (reviewers: please check):
 //  1. de-pron: vowel length of a-umlaut and o-umlaut/u-umlaut words in the respellings (Käse, Mädchen, später, nächste long; Städte,
@@ -35,11 +37,10 @@ import { deFuturo, deImperativo, deRiflessivi, deNebensaetze1 } from './a.4'
 export const dePron = mod(
   'de-pron',
   'Pronuncia e ortografia',
-  'Alfabeto, vocali lunghe e brevi, umlaut, ch, sch, z, s, w/v, ie/ei, r, Auslautverhärtung, accento, ß e maiuscole',
+  'Alfabeto, vocali lunghe e brevi, umlaut, ch, sch, z, s, w/v, ie/ei, r, Auslautverhärtung, accento, melodia, ritmo, ng, ß e maiuscole',
   'a1',
   `<p class="lead">Il tedesco si legge molto più regolarmente dell'inglese o del francese: imparate le regole, ogni parola si legge come è scritta. Le trappole per un italiano sono poche ma costanti: <b>h, ch, sch, z, s, w/v, ie/ei, le doppie e la r</b>.</p>
 ${PRON_FULL}
-<p>Altre convenzioni usate in tutto il corso: <b>É:</b> = e chiusa lunga (Lehrer), <b>E</b> = e breve (aperta, come «bello»), <b>È:</b> = ä lunga (Käse), <b>ai</b> = ei, <b>oi</b> = eu/äu, <b>i:</b> = ie, <b>tsh</b> = tsch (come la «c» di «cena»). Il suono di <b>ng</b> (Zeitung) è la «n» di «banca» senza la g: lo scrivo «n».</p>
 <h3>1. Vocale lunga o breve, doppia consonante</h3>
 <p>Regola: vocale <b>lunga</b> davanti a una sola consonante, a <b>h</b> muta, nelle vocali doppie (aa, ee, oo) e in <b>ie</b>; <b>breve</b> davanti a due o più consonanti. In tedesco la doppia NON raddoppia il suono come in italiano: serve solo a rendere breve la vocale prima (Mitte [MI-të], non «mit-te»). Parole corte con vocale breve anche davanti a una consonante: in, an, mit, bis, was, das, es, ab, um, von.</p>
 <div class="tblw"><table><tr><th>Lunga</th><th>Breve</th></tr>
@@ -56,9 +57,9 @@ ${PRON_FULL}
 <h3>4. ch, sch, sp, st, z, s</h3>
 <p><b>ch</b>: suono debole <b>ç</b> dopo e, i, ä, ö, ü, ei, eu e dopo l, n, r (ich [IÇ], Milch [MILÇ], durch [DURÇ], Bücher [BÜ:-ça]); raschiato <b>ch</b> dopo a, o, u, au (Bach [BACH], Buch [BU:CH], auch [AUCH]). <b>-chen</b> è sempre ç (Mädchen [MÈ:T-çën]); <b>-ig</b> finale = [iç] (König [KÖ:-niç]; nel sud anche -ik). <b>chs</b> = ks (sechs [ZEKS]). In parole straniere: Chemie [çe-MI:] (sud: ke-), China [ÇI:-na], Chor [KO:R], Chef [SHEF]. L'italiano legge «ch» come k: trappola tipica (Buch ≠ «Buk»). Coppie: ich [IÇ] / ach [ACH]; Kirche [KIR-çë] chiesa / Kirsche [KIR-shë] ciliegia; Buch [BU:CH] / Bücher [BÜ:-ça].</p>
 <p><b>sch = sh</b> (Schule [SHU:-lë], Fisch [FISH]); <b>sp- e st- a inizio di parola o di radice = shp-, sht-</b> (Sport [SHPORT], Stein [SHTAIN], Straße [SHTRA:-ssë], verstehen [fer-SHTÉ:-ën]); altrove sp/st sono come in italiano (Wespe [VES-pë], Fest [FEST]). Nel nord (Amburgo, Hannover) a inizio parola si sente s-t, s-p. <b>tsch = tsh</b> (Deutsch [DOITSH], Tschüss [TSHÜS]). Coppie: Stein [SHTAIN] / Schein [SHAIN] luce, banconota; Schuh [SHU:] scarpa / Stuhl [SHTU:L] sedia.</p>
-<p><b>z, tz = ts sempre</b> (Zeit [TSAIT], Zimmer [TSI-ma], Katze [KA-tsë], Platz [PLATS]; la z di «zero» sonora non esiste). <b>s</b> prima di vocale è <b>sonora z</b> (Sonne [ZO-në], lesen [LÉ:-zën], Rose [RO:-zë]); a fine parola o prima di consonante è sorda (Haus [HAUS], das [DAS], Wespe). <b>ß e ss</b> = s sorda: ß dopo vocale lunga o dittongo (Straße, Fuß [FU:SS], heiß [HAISS]), ss dopo vocale breve (Fluss [FLUSS], muss [MUS], Wasser [VA-ssa]). In Svizzera non si usa la ß (Strasse); in maiuscolo STRASSE. Coppia: reisen [RAI-zën] viaggiare / reißen [RAI-ssën] strappare; Maße [MA:-ssë] misure / Masse [MA-ssë] massa.</p>
+<p><b>z, tz = ts sempre</b> (Zeit [TSAIT], Zimmer [TSI-ma], Katze [KA-tsë], Platz [PLATS]; la z di «zero» sonora non esiste). <b>s</b> prima di vocale è <b>sonora z</b> (Sonne [ZO-në], lesen [LÉ:-zën], Rose [RO:-zë]); a fine parola o prima di consonante è sorda (Haus [HAUS], das [DAS], Wespe). <b>ß e ss</b> = s sorda: ß dopo vocale lunga o dittongo (Straße [SHTRA:-ssë], Fuß [FU:S], heiß [HAIS]), ss dopo vocale breve (Fluss [FLUS], muss [MUS], Wasser [VA-ssa]). Nella trascrizione scriviamo «s» a fine parola e davanti a consonante, «ss» solo tra due vocali. In Svizzera non si usa la ß (Strasse); in maiuscolo STRASSE. Coppia: reisen [RAI-zën] viaggiare / reißen [RAI-ssën] strappare; Maße [MA:-ssë] misure / Masse [MA-ssë] massa.</p>
 <h3>5. w, v, j, qu, pf, ph, h</h3>
-<p><b>w = v</b> italiana (Wasser, Wein); <b>v = f</b> nelle parole tedesche (Vater [FA:-ta], viel [FI:L], von [FON]) e v nelle straniere (Vase [VA:-zë], Klavier [kla-VI:R]). <b>j = i</b> consonantica (Ja [IA:], Jahr [IA:R]). <b>qu = kv</b> (Quelle [KVE-lë]). <b>pf</b>: p e f insieme, senza perdere la p (Pferd [PFÉ:RT], Apfel [AP-fël]); ph = f (Philosophie). <b>h iniziale</b> si dice, soffiata (Haus, Hund [HUNT]); l'italiano la omette: Haus [HAUS] ≠ aus [AUS]; Hund ≠ und [UNT]. Dopo vocale è muta e allunga (sehen [ZÉ:-ën], Zahl [TSA:L]). Le parole che iniziano per vocale hanno un piccolo colpo di glottide (Knacklaut): beobachten [bë-O:-bach-tën] ≠ a una voce sola.</p>
+<p><b>w = v</b> italiana (Wasser, Wein); <b>v = f</b> nelle parole tedesche (Vater [FA:-ta], viel [FI:L], von [FON]) e v nelle straniere (Vase [VA:-zë], Klavier [kla-VI:R]). <b>j = i</b> consonantica (Ja [JA:], Jahr [JA:R]). <b>qu = kv</b> (Quelle [KVE-lë]). <b>pf</b>: p e f insieme, senza perdere la p (Pferd [PFÉ:RT], Apfel [AP-fël]); ph = f (Philosophie). <b>h iniziale</b> si dice, soffiata (Haus, Hund [HUNT]); l'italiano la omette: Haus [HAUS] ≠ aus [AUS]; Hund ≠ und [UNT]. Dopo vocale è muta e allunga (sehen [ZÉ:-ën], Zahl [TSA:L]). Le parole che iniziano per vocale hanno un piccolo colpo di glottide (Knacklaut): beobachten [bë-ʼO:-bach-tën] ≠ a una voce sola (il segno ʼ indica lo stacco).</p>
 <h3>6. La r e la -er finale</h3>
 <p>La <b>r</b> tedesca è gutturale (come una g sfregata in gola, simile alla «ch» di Bach ma sonora): rot [RO:T], Brot [BRO:T]. A fine sillaba si indebolisce quasi a una vocale «a»: wir [VI:R], Tür [TÜ:R]; la <b>-er</b> finale è proprio una «a» (Lehrer [LÉ:-ra], Wasser [VA-ssa], aber [A:-ba]). L'r arrotata italiana si capisce, ma suona straniera.</p>
 <h3>7. Auslautverhärtung: b, d, g finali diventano p, t, k</h3>
@@ -66,7 +67,14 @@ ${PRON_FULL}
 <h3>8. Accento tonico e parole composte</h3>
 <p>Di norma l'accento cade sulla <b>prima sillaba della radice</b> (ARbeit, KINder, FREUNDlich). I prefissi inseparabili (be-, ge-, er-, ver-, zer-, ent-, emp-) non sono accentati: bekommen [bë-KO-mën], verstehen [fer-SHTÉ:-ën]. I prefissi separabili sono accentati: ANkommen [AN-ko-mën]. Coppia: UMfahren [UM-fa:-rën] investire / umFAHren [um-FA:-rën] aggirare. Parole straniere sull'ultima: Student [shtu-DENT], Musik [mu-ZI:K]; Kaffee in Germania [KA-fe], in Austria [ka-FÉ:]. Nelle <b>parole composte</b> l'accento va sul primo elemento, il genere dall'ultimo: Haustür [HAUS-tü:r], Bahnhof [BA:N-ho:f]; ogni parte si legge come da sola (Staubecken, Stau-becken, ≠ Staub-ecken).</p>
 <h3>9. Alfabeto e maiuscole</h3>
-<p>Nomi delle lettere: A [A:], B [BE:], C [TSE:], D [DE:], E [E:], F [EF], G [GE:], H [HA:], I [I:], J [IOT], K [KA:], L [EL], M [EM], N [EN], O [O:], P [PE:], Q [KU:], R [ER], S [ES], T [TE:], U [U:], V [FAU], W [VE:], X [IKS], Y [ÜP-si-lon], Z [TSET]; più Ä, Ö, Ü, ß [ES-TSET]. Spiegare un nome: «Wie schreibt man das?» [VI: SHRAIPT man DAS]. <b>Tutti i sostantivi hanno la maiuscola</b> (das Haus, die Liebe, der Montag), come i verbi e gli aggettivi sostantivati (das Essen, das Gute), Sie / Ihr / Ihnen di cortesia e la lingua (Ich lerne Deutsch). Minuscole: ich, gli aggettivi (deutsche Küche, italienisch), i verbi (essen), gli avverbi di tempo (montags, abends).</p>
+<p>Nomi delle lettere: A [A:], B [BÉ:], C [TSÉ:], D [DÉ:], E [É:], F [EF], G [GÉ:], H [HA:], I [I:], J [JOT], K [KA:], L [EL], M [EM], N [EN], O [O:], P [PÉ:], Q [KU:], R [ER], S [ES], T [TÉ:], U [U:], V [FAU], W [VÉ:], X [IKS], Y [ÜP-si-lon], Z [TSET]; più Ä, Ö, Ü, ß [ES-tset]. Spiegare un nome: «Wie schreibt man das?» [VI: SHRAIPT man DAS]. <b>Tutti i sostantivi hanno la maiuscola</b> (das Haus, die Liebe, der Montag), come i verbi e gli aggettivi sostantivati (das Essen, das Gute), Sie / Ihr / Ihnen di cortesia e la lingua (Ich lerne Deutsch). Minuscole: ich, gli aggettivi (deutsche Küche, italienisch), i verbi (essen), gli avverbi di tempo (montags, abends).</p>
+<h3>10. Melodia, ritmo, colpo di glottide e ng</h3>
+<p><b>Melodia</b>: l'affermazione <b>scende</b> alla fine (Ich wohne in Wien. ↘); la domanda sì/no <b>sale</b> (Wohnst du in Wien? ↗); la domanda con parola interrogativa <b>scende</b> (Wo wohnst du? ↘). In italiano le domande sì/no salgono come in tedesco, ma le W-Fragen non vanno rialzate.</p>
+<p><b>Ritmo</b>: il tedesco ha un ritmo «a battute»: le sillabe accentate cadono a intervalli regolari e quelle atone si comprimono. L'italiano dà a ogni vocale lo stesso peso. La <b>ë</b> è davvero brevissima, quasi un soffio: bekommen [bë-KO-mën] non è «be-ko-men», Name [NA:-më] non è «na-me» con la e piena. Leggi forte la sillaba maiuscola e sussurra le altre.</p>
+<p><b>Colpo di glottide</b> (ʼ): una vocale iniziale di parola o di radice parte con un piccolo stacco netto, come se tossissi piano: ʼArzt [ʼA:RTST], in ʼAmerika [in ʼa-MÉ:-ri-ka], verʼändern [fer-ʼEN-dërn], beʼobachten [bë-ʼO:-bach-tën]. Evita il legato italiano «inamerika».</p>
+<p><b>Verbi separabili in frase</b>: la particella finale porta l'accento della frase: Ich rufe dich AN [iç RU:-fë diç AN]; Er steht früh AUF [e:r SHTÉ:T FRÜ: AUF]. Nell'infinito l'accento resta sulla particella (ANrufen [AN-ru:-fën]).</p>
+<p><b>Allenamento ng</b> (un solo suono nasale, la g non si sente): singen [ZING-ën], Zeitung [TSAI-tung], lang [LANG], Finger [FING-a], bringen [BRING-ën], Hunger [HUNG-a], Übung [Ü:-bung]. Compara l'italiano «lungo», dove la g si sente: in tedesco lang non ha la g di «lungo».</p>
+<p><b>Per ascoltare</b>: su iPhone attiva una voce tedesca in Impostazioni > Accessibilità > Contenuto letto ad alta voce > Voci > Tedesco, poi seleziona un testo e usa «Leggi». Ripeti le parole di questo modulo e confronta ritmo e melodia.</p>
 <div class="say"><b>Cosa dire.</b> «Ich heiße Marco [IÇ HAI-ssë MAR-ko]. Wie schreibt man das? [VI: SHRAIPT man DAS] M-A-R-C-O.»</div>`,
   [
     q(
@@ -183,10 +191,10 @@ ${PRON_FULL}
       'q11',
       `Dove cade l'accento in «verstehen» (capire)?`,
       [
-        `ver-SHTÉ:-ën: ver- non è accentato`,
+        `fer-SHTÉ:-ën: ver- non è accentato`,
         `FER-shte:-ën: sempre sulla prima sillaba`,
         `fer-shte-HEN: sull'ultima sillaba`,
-        `FER-SHTÉ:-ën: uguale su ogni sillaba`,
+        `FER-SHTÉ:-ën: due sillabe accentate`,
       ],
       0,
       `I prefissi inseparabili (be-, ge-, er-, ver-, zer-, ent-) non portano l'accento, che va sulla radice. Quello sulla prima sillaba vale per le parole senza prefisso.`,
@@ -214,6 +222,42 @@ ${PRON_FULL}
       ],
       0,
       `La ß segue una vocale lunga o un dittongo, e la s singola tra vocali sarebbe sonora. Strasse è la grafia svizzera, non quella usata in Germania e Austria.`,
+    ),
+    q(
+      'q14',
+      `Come cambia la melodia in «Wohnst du in Wien?» e in «Wo wohnst du?»`,
+      [
+        `La domanda sì/no sale alla fine, quella con Wo scende`,
+        `Entrambe salgono alla fine, come in italiano`,
+        `Entrambe scendono alla fine, come un'affermazione`,
+        `La domanda sì/no scende, quella con Wo sale`,
+      ],
+      0,
+      `Nel tedesco la domanda a cui si risponde sì o no sale, mentre le domande con parola interrogativa (Wo, Wann, Wer) scendono. Rialzare anche le W-Fragen è una tentazione da evitare.`,
+    ),
+    q(
+      'q15',
+      `Come si legge «Finger» (dito)?`,
+      [
+        `FING-a: ng è un solo suono nasale, senza g`,
+        `FIN-ger: n e g separate come in «fingere»`,
+        `FIN-ga: g dura come in «lungo»`,
+        `FINJ-a: g dolce come in «gentile»`,
+      ],
+      0,
+      `La ng tedesca è un'unica nasale come nella n di «panca»: la g non si sente mai. La tentazione è leggere la g come in «lungo» o «fingere».`,
+    ),
+    q(
+      'q16',
+      `Su quale parola cade l'accento di frase in «Ich rufe dich an»?`,
+      [
+        `an: la particella separata a fine frase`,
+        `rufe: il verbo, come in italiano`,
+        `ich: il soggetto all'inizio`,
+        `dich: il pronome oggetto`,
+      ],
+      0,
+      `Nei verbi separabili l'accento resta sulla particella, anche quando sta in fondo alla frase. Accentare il verbo fa perdere il significato di anrufen (telefonare).`,
     ),
   ],
   [
@@ -286,7 +330,22 @@ ${PRON_FULL}
     card(
       'c15',
       `Alfabeto: J, V, W, Y, Z, ß`,
-      `J [IOT], V [FAU], W [VE:], Y [ÜP-si-lon], Z [TSET], ß [ES-TSET]. «Wie schreibt man das?» = come si scrive?`,
+      `J [JOT], V [FAU], W [VÉ:], Y [ÜP-si-lon], Z [TSET], ß [ES-tset]. «Wie schreibt man das?» = come si scrive?`,
+    ),
+    card(
+      'c16',
+      `Melodia e ritmo`,
+      `Affermazione e W-Frage scendono, domanda sì/no sale. Ritmo a battute: sillaba maiuscola forte, le altre brevi, ë brevissima. Colpo di glottide ʼ prima di vocale iniziale (beʼobachten).`,
+    ),
+    card(
+      'c17',
+      `ng`,
+      `Un solo suono nasale, mai la g: singen [ZING-ën], Zeitung [TSAI-tung], Finger [FING-a]. Una g si sente solo se n e g stanno in parti diverse (an-geben [AN-gë-bën]).`,
+    ),
+    card(
+      'c18',
+      `Verbo separabile in frase`,
+      `Accento sulla particella finale: Ich rufe dich AN [iç RU:-fë diç AN]; Er steht früh AUF.`,
     ),
   ],
   [
@@ -318,7 +377,12 @@ ${PRON_FULL}
     prac(
       'p6',
       `Compitati: «Mi chiamo Giulia Fabbri, si scrive con due b.» Chiedi come si scrive il nome dell'altro.`,
-      `Ich heiße Giulia Fabbri, F-A-B-B-R-I [EF A: BE: BE: ER I:]. Wie schreibt man Ihren Namen? Nota: nell'alfabeto tedesco la lettera ß si dice «Es-Zet» [ES-TSET].`,
+      `Ich heiße Giulia Fabbri, F-A-B-B-R-I [EF A: BÉ: BÉ: ER I:]. Wie schreibt man Ihren Namen? Nota: nell'alfabeto tedesco la lettera ß si dice «Es-Zet» [ES-tset].`,
+    ),
+    prac(
+      'p7',
+      `Scrivi la pronuncia di: singen, Hunger, Zeitung, Übung, e di «Ich rufe dich an».`,
+      `singen [ZING-ën]; Hunger [HUNG-a]; Zeitung [TSAI-tung]; Übung [Ü:-bung]; Ich rufe dich an [iç RU:-fë diç AN]. Nota: ng è una sola nasale senza g; l'accento di frase cade su an.`,
     ),
   ],
 )
@@ -330,48 +394,26 @@ export const deSaluti = mod(
   'a1',
   `${PRON_SHORT}
 <p class="lead">Questo modulo ti dà le frasi per le prime conversazioni: salutare, dire chi sei, scegliere tra du e Sie, contare, dire la data e l'ora. Attenzione a due trappole: l'ordine dei numeri (einundzwanzig = uno-e-venti) e <b>halb drei</b>, che significa le due e mezza.</p>
-${vsec('Saluti e frasi di cortesia', [
-  ['Hallo', 'HA-lo', 'ciao'],
-  ['Guten Morgen', 'GU:-tën MOR-gën', 'buongiorno (mattina)'],
-  ['Guten Tag', 'GU:-tën TA:K', 'buongiorno, buon pomeriggio'],
-  ['Guten Abend', 'GU:-tën A:-bënt', 'buonasera'],
-  ['Gute Nacht', 'GU:-të NACHT', 'buonanotte'],
-  ['Tschüss', 'TSHÜS', 'ciao (arrivederci)'],
-  ['Auf Wiedersehen', 'AUF VI:-da-ze:-ën', 'arrivederci'],
-  ['Bis bald', 'BIS BALT', 'a presto'],
-  ['Wie geht’s?', 'VI: GÉ:TS', 'come va?'],
-  ['Danke / Bitte', 'DAN-kë / BI-të', 'grazie / prego, per favore'],
-  ['Entschuldigung', 'ent-SHUL-di-gun', 'scusi, permesso'],
-  ['Es tut mir leid', 'ES TU:T MI:R LAIT', 'mi dispiace'],
-])}
-<p>Varianti regionali: Sud Germania e Austria <b>Grüß Gott</b> [GRÜ:SS GOT] e <b>Servus</b> [ZER-vus] (ciao, sia per salutare sia per congedarsi); nord <b>Moin</b> [MOIN]; Svizzera <b>Grüezi</b> [GRÜ-e-tsi] e <b>Merci</b>. Standard: Guten Tag / Tschüss.</p>
+${vsecW('Saluti e frasi di cortesia', ['ciao', 'buongiorno-mattina', 'buongiorno', 'buonasera', 'buonanotte', 'ciao-arrivederci', 'arrivederci', 'a-presto', 'come-va', 'grazie-prego', 'scusi', 'mi-dispiace'])}
+<p>Varianti regionali: Sud Germania e Austria <b>Grüß Gott</b> [GRÜ:S GOT] e <b>Servus</b> [ZER-vus] (ciao, sia per salutare sia per congedarsi); nord <b>Moin</b> [MOIN]; Svizzera <b>Grüezi</b> [GRÜ-e-tsi] e <b>Merci</b>. Standard: Guten Tag / Tschüss.</p>
 <h3>Presentarsi: du o Sie</h3>
-<ul><li><b>Ich heiße Marco.</b> [IÇ HAI-ssë MAR-ko] Mi chiamo Marco. (non «Ich bin heiße»)</li><li><b>Ich komme aus Italien.</b> [IÇ KO-më AUS i-TA:-li-ën] Vengo dall'Italia.</li><li><b>Ich wohne in Berlin.</b> [IÇ VO:-në IN ber-LIN] Abito a Berlino.</li><li><b>Ich bin 30 Jahre alt.</b> [IÇ BIN DRAI-ssiç IA:-rë ALT] Ho 30 anni (si dice «sono»).</li><li><b>Ich spreche Italienisch.</b> [IÇ SHPRE-çë i-ta-LIÉ:-nish] Parlo italiano.</li><li><b>Freut mich!</b> [FROIT MIÇ] Piacere!</li></ul>
+<ul><li><b>Ich heiße Marco.</b> [IÇ HAI-ssë MAR-ko] Mi chiamo Marco. (non «Ich bin heiße»)</li><li><b>Ich komme aus Italien.</b> [IÇ KO-më AUS i-TA:-li-ën] Vengo dall'Italia.</li><li><b>Ich wohne in Berlin.</b> [IÇ VO:-në IN ber-LIN] Abito a Berlino.</li><li><b>Ich bin 30 Jahre alt.</b> [IÇ BIN DRAI-ssiç JA:-rë ALT] Ho 30 anni (si dice «sono»).</li><li><b>Ich spreche Italienisch.</b> [IÇ SHPRE-çë i-ta-LIÉ:-nish] Parlo italiano.</li><li><b>Freut mich!</b> [FROIT MIÇ] Piacere!</li></ul>
 <p><b>du</b> con amici, famiglia, bambini, colleghi giovani, coetanei; <b>Sie</b> (scritto sempre con la S maiuscola) con sconosciuti, clienti, superiori, persone anziane. Con <b>Sie</b> il verbo è alla terza persona plurale e si aggiunge Herr o Frau con il cognome: <i>Wie heißen Sie?</i> [VI: HAI-ssën ZI:], <i>Guten Tag, Frau Weber.</i> [FRAU VÉ:-ba]. Proporre il du: «Wollen wir uns duzen?» [VO-lën VI:R UNS DU:-tsën]. In Svizzera il du è più diffuso. Il «Lei» italiano corrisponde a Sie, ma Sie vuole il verbo plurale (<i>Sie sind</i>, mai «Sie ist»).</p>
-${vsec('Numeri', [
-  ['null, eins, zwei, drei', 'NUL, AINS, TSVAI, DRAI', '0, 1, 2, 3'],
-  ['vier, fünf, sechs, sieben', 'FI:R, FÜNF, ZEKS, ZI:-bën', '4, 5, 6, 7'],
-  ['acht, neun, zehn, elf, zwölf', 'ACHT, NOIN, TSÉ:N, ELF, TSVÖLF', '8, 9, 10, 11, 12'],
-  ['dreizehn, vierzehn, sechzehn, siebzehn', 'DRAI-tsé:n, FIR-tsé:n, ZEÇ-tsé:n, ZI:P-tsé:n', '13, 14, 16, 17'],
-  ['zwanzig, dreißig, vierzig, fünfzig', 'TSVAN-tsiç, DRAI-ssiç, FIR-tsiç, FÜNF-tsiç', '20, 30, 40, 50'],
-  ['sechzig, siebzig, achtzig, neunzig', 'ZEÇ-tsiç, ZI:P-tsiç, ACH-tsiç, NOIN-tsiç', '60, 70, 80, 90'],
-  ['hundert, tausend', 'HUN-dert, TAU-zënt', '100, 1.000'],
-  ['eine Million', 'AI-në mi-LIO:N', 'un milione'],
-])}
+${vsecW('Numeri', [['zero', 'uno', 'due', 'tre'], ['quattro', 'cinque', 'sei', 'sette'], ['otto', 'nove', 'dieci', 'undici', 'dodici'], ['tredici', 'quattordici', 'quindici', 'sedici', 'diciassette'], ['venti', 'trenta', 'quaranta', 'cinquanta'], ['sessanta', 'settanta', 'ottanta', 'novanta'], ['cento', 'mille'], 'milione'])}
 <p><b>Unità prima delle decine</b>: 21 <i>einundzwanzig</i> [AIN-unt-tsvan-tsiç], 54 <i>vierundfünfzig</i>, 99 <i>neunundneunzig</i>. Una sola parola, anche per 1.234 = <i>eintausendzweihundertvierunddreißig</i>. Anni: 1998 <i>neunzehnhundertachtundneunzig</i>, 2026 <i>zweitausendsechsundzwanzig</i>. Al telefono 2 si dice spesso <b>zwo</b> [TSVO:] per non confonderlo con drei. Trappole: sechzehn / siebzehn perdono lettere; <b>Billion</b> = mille miliardi (10^12), il miliardo è <b>Milliarde</b>. Punto per le migliaia (1.000), virgola per i decimali (3,5 = drei Komma fünf).</p>
 <h3>Giorni, mesi, data</h3>
-<p>Giorni (tutti maschili): <b>Montag</b> [MO:N-ta:k], <b>Dienstag</b> [DI:NS-ta:k], <b>Mittwoch</b> [MIT-voch], <b>Donnerstag</b> [DO-nas-ta:k], <b>Freitag</b> [FRAI-ta:k], <b>Samstag</b> [ZAMS-ta:k] (nord-est anche <i>Sonnabend</i> [ZON-a:-bënt]), <b>Sonntag</b> [ZON-ta:k]. <i>am Montag</i> = lunedì; <i>montags</i> [MO:N-ta:ks] = ogni lunedì. Mesi (maschili): Januar [IA-nu-ar] (Austria: Jänner), Februar [FÉ:-bru-ar], März [MERTS], April [a-PRIL], Mai [MAI], Juni [IU:-ni], Juli [IU:-li], August [au-GUST], September [zep-TEM-ba], Oktober [ok-TO:-ba], November [no-VEM-ba], Dezember [de-TSEM-ba]. <i>im Mai</i> = a maggio.</p>
+<p>Giorni (tutti maschili): <b>Montag</b> [MO:N-ta:k], <b>Dienstag</b> [DI:NS-ta:k], <b>Mittwoch</b> [MIT-voch], <b>Donnerstag</b> [DO-nas-ta:k], <b>Freitag</b> [FRAI-ta:k], <b>Samstag</b> [ZAMS-ta:k] (nord-est anche <i>Sonnabend</i> [ZON-a:-bënt]), <b>Sonntag</b> [ZON-ta:k]. <i>am Montag</i> = lunedì; <i>montags</i> [MO:N-ta:ks] = ogni lunedì. Mesi (maschili): Januar [JA-nu-a:r] (Austria: Jänner), Februar [FÉ:-bru-a:r], März [MERTS], April [a-PRIL], Mai [MAI], Juni [JU:-ni], Juli [JU:-li], August [au-GUST], September [zep-TEM-ba], Oktober [ok-TO:-ba], November [no-VEM-ba], Dezember [de-TSEM-ba]. <i>im Mai</i> = a maggio.</p>
 <p>Data: <b>Der Wievielte ist heute?</b> [DÉ:R VI:-fi:l-të IST HOI-të] — <b>Heute ist der sechste November.</b> Gli ordinali si formano con <b>-te</b> fino a 19 (erste, zweite, dritte, vierte, siebte, achte), con <b>-ste</b> da 20. Si scrive <i>6. November</i> o 06.11.2026; "am 6. November" si legge <i>am sechsten November</i>. Compleanno: <i>Ich habe am dritten Mai Geburtstag.</i> [gë-BURTS-ta:k].</p>
 <h3>L'ora</h3>
 <p><b>Wie spät ist es?</b> [VI: SHPÈ:T IST ES] / <b>Wie viel Uhr ist es?</b> <i>Es ist drei Uhr</i> [ES IST DRAI U:R] (le tre); <i>Es ist ein Uhr</i> (l'una, non «eins»). Ufficiale (orari, treni): 15:30 = fünfzehn Uhr dreißig. Colloquiale: <i>Viertel nach drei</i> (3:15), <i>zehn nach drei</i>, <i>zwanzig nach drei</i>, <i>fünf vor halb vier</i> (3:25), <i>halb vier</i> (3:30), <i>fünf nach halb vier</i> (3:35), <i>Viertel vor vier</i> (3:45). <b>Trappola</b>: <i>halb drei</i> = le due e mezza (mezza ora <i>verso</i> le tre), non le tre e mezza. Nel sud e in Austria <i>viertel vier</i> = 3:15 e <i>dreiviertel vier</i> = 3:45. Orario preciso: <i>um drei Uhr</i> = alle tre. Parti del giorno: morgens, mittags, nachmittags, abends, nachts; <i>heute Morgen</i>, <i>gestern Abend</i>, <i>morgen früh</i>.</p>
-${vsec('Paesi e nazionalità', [
-  ['Deutschland, Deutscher/Deutsche', 'DOITSH-lant, DOI-tsha / DOI-tshë', 'Germania, tedesco/a'],
-  ['Österreich, Österreicher/in', 'Ö:-sta-raiç, Ö:-sta-rai-ça', 'Austria, austriaco/a'],
-  ['die Schweiz, Schweizer/in', 'SHVAITS, SHVAI-tsa', 'Svizzera, svizzero/a'],
-  ['Italien, Italiener/in', 'i-TA:-li-ën, i-ta-LIÉ:-na', 'Italia, italiano/a'],
-  ['Frankreich, Franzose/Französin', 'FRANK-raiç, fran-TSO:-zë / fran-TSÖ:-zin', 'Francia, francese'],
-  ['Spanien, Spanier/in', 'SHPA:-ni-ën, SHPA:-ni-a', 'Spagna, spagnolo/a'],
-  ['England, Engländer/in', 'EN-glant, EN-glen-da', 'Inghilterra, inglese'],
+${vsecW('Paesi e nazionalità', [
+  ['germania', 'tedesco-nazionalita'],
+  ['austria', 'austriaco-nazionalita'],
+  ['svizzera', 'svizzero-nazionalita'],
+  ['italia', 'italiano-nazionalita'],
+  ['francia', 'francese-nazionalita'],
+  ['spagna', 'spagnolo-nazionalita'],
+  ['inghilterra', 'inglese-nazionalita'],
 ])}
 <p>Struttura: <i>Ich komme aus Italien</i>, <i>Ich wohne in Deutschland</i>; con paesi che hanno l'articolo: <i>aus der Schweiz</i>, <i>in der Schweiz</i>, <i>aus den USA</i>. Professione e nazionalità senza articolo: <i>Ich bin Italiener</i>, <i>Sie ist Lehrerin</i>. Le lingue sono sostantivi con la maiuscola (<i>Ich spreche Deutsch</i>); gli aggettivi no (<i>die italienische Küche</i>). Il femminile si fa con <b>-in</b> (Italienerin, Französin).</p>
 <div class="say"><b>Cosa dire.</b> «Guten Tag, ich heiße Marco Rossi [IÇ HAI-ssë MAR-ko RO-ssi]. Ich komme aus Italien und wohne in Berlin. Freut mich!»</div>`,
@@ -407,7 +449,7 @@ ${vsec('Paesi e nazionalità', [
     q(
       'q5',
       `Come si legge «Tschüss»?`,
-      [`TSHÜS: ts + sh + ü breve`, `SHÜS: sh + ü lunga`, `TSÜS: ts + ü breve`, `TSHUS: tsh + u breve`],
+      [`TSHÜS: tsh (un solo suono) + ü breve`, `SHÜS: sh + ü lunga`, `TSÜS: ts + ü breve`, `TSHUS: tsh + u breve`],
       0,
       `Tsch è il suono della «c» di «cena» e la ü ha le labbra tonde. Perdere la t iniziale o leggere u cambia la parola in qualcosa di non tedesco.`,
     ),
@@ -433,7 +475,7 @@ ${vsec('Paesi e nazionalità', [
     q(
       'q8',
       `Come si legge «sechzehn» (16)?`,
-      [`ZEÇ-tsé:n, con ç e senza s`, `ZECHS-tsé:n, con s finale`, `ZEKS-tsé:n, come «sechs»`, `ZEÇ-sé:n, con s sorda`],
+      [`ZEÇ-tse:n, con ç e senza s`, `ZECHS-tse:n, con s finale`, `ZEKS-tse:n, come «sechs»`, `ZEÇ-se:n, con s sorda`],
       0,
       `Sechzehn perde la s di sechs e la ch dopo e è ç. La z di zehn resta ts: leggere ZEKS come nel numero 6 è sbagliato.`,
     ),
@@ -468,8 +510,8 @@ ${vsec('Paesi e nazionalità', [
     ),
     card(
       'c8',
-      `Ordinali: erste, zweite, dritte, siebte, achte`,
-      `1°, 2°, 3°, 7°, 8°: forme irregolari. Da 20: -ste (zwanzigste). Il 6 novembre = der sechste November.`,
+      `Ordinali irregolari: erste, dritte, siebte, achte`,
+      `1°, 3°, 7°, 8°: forme irregolari (zweite, vierte, fünfte, sechste sono regolari: numero + -te). Da 20: -ste (zwanzigste). Il 6 novembre = der sechste November.`,
     ),
     card(
       'c9',
@@ -484,7 +526,7 @@ ${vsec('Paesi e nazionalità', [
     ),
     card(
       'c12',
-      `sechzehn, siebzehn, dreißig [ZEÇ-tsé:n, ZI:P-tsé:n, DRAI-ssiç]`,
+      `sechzehn, siebzehn, dreißig [ZEÇ-tse:n, ZI:P-tse:n, DRAI-ssiç]`,
       `16, 17, 30. Sechzehn perde la s, siebzehn la -en, dreißig usa la ß (s sorda).`,
     ),
   ],
@@ -534,11 +576,11 @@ export const deSein = mod(
 <tr><td>sie / Sie</td><td>sind [ZINT]</td><td>haben [HA:-bën]</td><td>werden [VER-dën]</td></tr></table>
 <p>Pronuncia: <i>habe</i> ha la a lunga ma <i>hat</i>, <i>hast</i> breve. <i>sind</i> finisce in t (Auslautverhärtung); <i>wird</i> [VIRT] uguale. <i>seid</i> (voi siete) e <i>seit</i> (da) suonano uguali [ZAIT]. Il verbo è sempre espresso: <i>Ich bin müde</i>, non «bin müde».</p>
 <h3>Sein: identità, stato, età</h3>
-<ul><li>identità, professione, nazionalità <b>senza articolo</b>: <i>Ich bin Lehrer</i> [LÉ:-ra]; <i>Sie ist Ärztin</i> [È:RTS-tin]; <i>Wir sind Italiener</i>.</li><li>età: <i>Ich bin 30 Jahre alt</i> (non «habe»); <i>Wie alt bist du?</i> [VI: ALT BIST DU:].</li><li>stati e luoghi: <i>Ich bin müde</i> [MÜ:-dë], <i>Er ist zu Hause</i> [TSU: HAU-zë], <i>Das Wetter ist schön</i>; tempo: <i>Es ist kalt</i>, <i>Es ist spät</i>.</li><li>sensazioni fisiche: <i>Mir ist kalt</i> [MI:R IST KALT] (ho freddo), <i>Mir ist warm</i> (ho caldo), <i>Mir ist schlecht</i> (sto male).</li></ul>
+<ul><li>identità, professione, nazionalità <b>senza articolo</b>: <i>Ich bin Lehrer</i> [LÉ:-ra]; <i>Sie ist Ärztin</i> [È:RTS-tin]; <i>Wir sind Italiener</i>.</li><li>età: <i>Ich bin 30 Jahre alt</i> (non «habe»); <i>Wie alt bist du?</i> [VI: ALT BIST DU:].</li><li>stati e luoghi: <i>Ich bin müde</i> [MÜ:-dë], <i>Er ist zu Hause</i> [TSU: HAU-zë], <i>Das Wetter ist schön</i>; tempo: <i>Es ist kalt</i>, <i>Es ist spät</i>.</li><li>sensazioni fisiche: <i>Mir ist kalt</i> [MI:R IST KALT] (ho freddo), <i>Mir ist warm</i> (ho caldo), <i>Mir ist schlecht</i> (ho la nausea, mi sento male).</li></ul>
 <h3>Haben: possesso e molte espressioni</h3>
 <p>Possesso: <i>Ich habe einen Bruder</i> (maschile accusativo, vedi de-nomi), <i>Haben Sie Kinder?</i> [HA:-bën ZI: KIN-da]. Molte espressioni italiane con «avere» o «fare» si costruiscono con haben:</p>
 <table><tr><th>Espressione</th><th>Italiano</th></tr>
-<tr><td>Hunger haben [HUN-ga]</td><td>aver fame</td></tr>
+<tr><td>Hunger haben [HUNG-a]</td><td>aver fame</td></tr>
 <tr><td>Durst haben [DURST]</td><td>aver sete</td></tr>
 <tr><td>Angst haben (vor) [ANGST]</td><td>aver paura (di)</td></tr>
 <tr><td>Zeit / Lust haben [TSAIT / LUST]</td><td>aver tempo / voglia</td></tr>
@@ -548,9 +590,9 @@ export const deSein = mod(
 <tr><td>Glück / Pech haben [GLÜK / PEÇ]</td><td>aver fortuna / sfortuna</td></tr></table>
 <p>Trappola: <b>Hunger/Durst haben</b> ma anche «hungrig sein»; <b>Angst haben</b>, non «sein ängstlich». Non dire «Ich bin Hunger» (che significa «sono la fame»). Per <i>ho ragione</i>: <i>Ich habe recht</i> (anche Recht).</p>
 <h3>Werden: diventare, e non solo</h3>
-<p><i>werden</i> = diventare: <i>Es wird kalt</i> (si sta facendo freddo), <i>Er wird Arzt</i> [ARTST] (diventa medico), <i>Ich werde 30</i> (compio 30 anni), <i>Mir wird kalt</i> (mi viene freddo). Differenza di stato e cambiamento: <i>Ich bin müde</i> (sono stanco) / <i>Ich werde müde</i> (mi sto stancando). Più avanti: <i>werden</i> forma anche il futuro (de-futuro) e il passivo.</p>
+<p><i>werden</i> = diventare: <i>Es wird kalt</i> (si sta facendo freddo), <i>Er wird Arzt</i> [A:RTST] (diventa medico), <i>Ich werde 30</i> (compio 30 anni), <i>Mir wird kalt</i> (mi viene freddo). Differenza di stato e cambiamento: <i>Ich bin müde</i> (sono stanco) / <i>Ich werde müde</i> (mi sto stancando). Più avanti: <i>werden</i> forma anche il futuro (de-futuro) e il passivo.</p>
 <h3>Es gibt: c'è, ci sono</h3>
-<p><b>Es gibt</b> [ES GIPT] + accusativo, sempre singolare e uguale al plurale: <i>Es gibt einen Park in der Nähe</i> [IN DÉ:R NÈ:-ë]; <i>Es gibt viele Restaurants</i> (viele è plurale ma «gibt» resta). Esprime l'esistenza in generale. Per un oggetto preciso e visibile si usa invece <i>sein</i>: <i>Da ist mein Bus!</i> (Ecco il mio autobus). Domanda: <i>Gibt es hier ein Café?</i> [GIPT ES HI:R AIN ka-FÉ:] (nota: accusativo). Negazione: <i>Es gibt keinen Zucker mehr.</i> Il luogo non si dice con «gibt»: <i>Das Buch ist auf dem Tisch</i> (non «es gibt das Buch auf dem Tisch»).</p>
+<p><b>Es gibt</b> [ES GIPT] + accusativo: il verbo resta sempre alla stessa forma (singolare), anche davanti a un nome plurale: <i>Es gibt einen Park in der Nähe</i> [IN DÉ:R NÈ:-ë]; <i>Es gibt viele Restaurants</i> (viele è plurale ma «gibt» resta). Esprime l'esistenza in generale. Per un oggetto preciso e visibile si usa invece <i>sein</i>: <i>Da ist mein Bus!</i> (Ecco il mio autobus). Domanda: <i>Gibt es hier einen Park?</i> [GIPT ES HI:R AI-nën PARK] (accusativo maschile: einen; con Café, neutro, ein non cambia). Negazione: <i>Es gibt keinen Zucker mehr.</i> Il luogo non si dice con «gibt»: <i>Das Buch ist auf dem Tisch</i> (non «es gibt das Buch auf dem Tisch»).</p>
 <h3>Differenze con l'italiano</h3>
 <ul><li>«Mi chiamo» = <i>Ich heiße</i>; «sono d'accordo» = <i>Ich bin einverstanden</i> / <i>Das stimmt</i>.</li><li>«Ho caldo/freddo» = <i>Mir ist heiß/kalt</i> (dativo) o <i>Ich friere</i> (sento freddo).</li><li>«Ha 3 figli» = <i>Er hat drei Kinder</i>.</li><li>I verbi ausiliari: sein e haben servono per il Perfekt (de-perfekt): <i>Ich bin gegangen</i>, <i>Ich habe gegessen</i>.</li></ul>
 <div class="say"><b>Cosa dire.</b> «Ich bin müde und habe Hunger. Gibt es hier ein Restaurant? Mir ist kalt.»</div>`,
@@ -644,7 +686,11 @@ export const deSein = mod(
       `Presente di werden. Wir werden, ihr werdet. Significa diventare; wird si legge [VIRT].`,
     ),
     card('c4', `Hunger / Durst / Angst haben`, `Aver fame / sete / paura. Con haben, non con sein.`),
-    card('c5', `Mir ist kalt / warm / schlecht`, `Ho freddo / caldo / mi sento male. Dativo mir + sein.`),
+    card(
+      'c5',
+      `Mir ist kalt / warm / schlecht`,
+      `Ho freddo / caldo / ho la nausea (mi sento male). Dativo mir + sein.`,
+    ),
     card(
       'c6',
       `Es gibt + Akkusativ`,

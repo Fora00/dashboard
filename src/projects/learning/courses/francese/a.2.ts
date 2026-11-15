@@ -33,13 +33,13 @@ export const fpresente = mod(
 <tr><td>mettre</td><td>mets [MÈ]</td><td>mettons [mè-TÕ]</td><td>mettent [MÈT]</td></tr>
 <tr><td>lire</td><td>lis [LI]</td><td>lisons [li-ZÕ]</td><td>lisent [LIZ]</td></tr>
 <tr><td>boire</td><td>bois [BUA]</td><td>buvons [bü-VÕ]</td><td>boivent [BUAV]</td></tr></table>
-<p>La forma <b>il / elle</b> è di solito quella di je con una <b>-t</b>: <i>il prend</i> (d), <i>il vient, il peut, il veut, il doit, il sait, il voit, il dit, il met, il boit</i>. Eccezioni al plurale: <i>vous dites</i> [vu DIT], <i>vous faites</i> [vu FÈT], <i>vous êtes</i> [vu-ZÈT] (non -ez). Attenzione: <i>je peux</i> e <i>je veux</i> hanno la x anche alla prima persona; <i>je sais</i> [zhë SÈ].</p>
+<p>La forma <b>il / elle</b> è di solito quella di je: nei verbi in -er è identica (<i>il parle</i>), negli altri cambia solo la finale, con una <b>-t</b> o una <b>-d</b> (<i>je prends → il prend</i>) o senza cambiare (<i>je vis → il vit</i>): <i>il vient, il peut, il veut, il doit, il sait, il voit, il dit, il met, il boit</i>; i verbi con je in -s/-x ma il in -t: <i>je dis → il dit, je mets → il met, je peux → il peut</i>. Eccezioni al plurale: <i>vous dites</i> [vu DIT], <i>vous faites</i> [vu FÈT], <i>vous êtes</i> [vu-ZÈT] (non -ez). Attenzione: <i>je peux</i> e <i>je veux</i> hanno la x anche alla prima persona; <i>je sais</i> [zhë SÈ].</p>
 <h3>Cambi ortografici</h3>
 <ul><li><b>-ger</b>: <i>nous mangeons</i> [nu mã-ZHÕ] (e davanti a o per tenere la g dolce); <i>voyager</i>, <i>ranger</i>.</li><li><b>-cer</b>: <i>nous commençons</i> [nu kò-mã-SÕ] (ç davanti a o).</li><li><b>appeler, jeter</b> raddoppiano la consonante: <i>j'appelle</i> [zha-PÈL], <i>nous appelons</i> [nu-zap-LÕ]; <i>je jette</i> [zhë ZHÈT].</li><li><b>acheter, lever, mener</b> mettono l'accento grave: <i>j'achète</i> [zha-SHÈT], <i>nous achetons</i> [nu-zash-TÕ].</li><li><b>préférer, espérer</b>: <i>je préfère</i> [zhë pré-FÈR], <i>nous préférons</i> [nu pré-fé-RÕ].</li><li><b>-yer</b>: la y diventa i davanti a e muta: <i>j'envoie</i> [zhã-VUA], <i>nous envoyons</i> [nu-zã-vua-YÕ], <i>je paie</i> o <i>je paye</i> [zhë PÈ].</li></ul>
 <h3>Pouvoir, vouloir, devoir; savoir e connaître</h3>
 <p><i>Je peux</i> [zhë PÖ] possibilità e permesso; <i>je veux</i> [zhë VÖ] volontà (brusco), <i>je voudrais</i> [zhë vu-DRÈ] cortese; <i>je dois</i> [zhë DUA] dovere o probabilità. <b>Savoir</b> = sapere un fatto o saper fare (<i>je sais nager</i> [zhë sè na-ZHÉ]); <b>connaître</b> = conoscere persone e luoghi (<i>je connais Paul</i> [zhë kò-NÈ PÒL]).</p>
 <h3>Come si usa</h3>
-<p>Il presente copre sia «mangio» sia «sto mangiando»: <i>il mange</i> [il MÃZH]. Per l'azione in corso si può anche dire <i>il est en train de manger</i> [i-lè ã trẽ dë mã-ZHÉ]; il gerundio progressivo italiano non ha equivalente, quindi non si dice «je suis mangeant». Il presente indica anche il futuro vicino: <i>Je pars demain</i> [zhë par dë-MẼ]. Per un'azione cominciata nel passato che dura ancora si usa il presente con <i>depuis</i> [dë-PÜI]: <i>J'habite ici depuis 2020</i> «abito qui dal 2020». Mai «j'ai habité ... depuis».</p>
+<p>Il presente copre sia «mangio» sia «sto mangiando»: <i>il mange</i> [il MÃZH]. Per l'azione in corso si può anche dire <i>il est en train de manger</i> [i-lè ã trẽ dë mã-ZHÉ]; il gerundio progressivo italiano non ha equivalente, quindi non si dice «je suis mangeant». Il presente indica anche il futuro vicino: <i>Je pars demain</i> [zhë par dë-MẼ]. Per un'azione cominciata nel passato che dura ancora si usa il presente con <i>depuis</i> [dë-PÜI]: <i>J'habite ici depuis 2020</i> «abito qui dal 2020». Per un'azione ancora in corso non si dice «j'ai habité ... depuis»: il passé composé con depuis esiste solo in casi come la negazione o un tempo concluso (<i>Je ne l'ai pas vu depuis lundi</i>).</p>
 <p>Altre trappole dall'italiano: i pronomi soggetto sono obbligatori (<i>je mange</i>, mai «mange»); <i>on</i> + terza singolare per «noi» nel parlato; <i>vous êtes</i> / <i>vous avez</i> con liaison.</p>
 <div class="say"><b>Cosa dire.</b> «Nous prenons le train [nu prë-nõ lë TRẼ]. Je veux un café, tu veux quoi ? Ils viennent demain.»</div>`,
   [
@@ -105,7 +105,7 @@ export const fpresente = mod(
         "J'habitais ici depuis 2020 (ancora oggi).",
       ],
       0,
-      "Per un'azione ancora in corso depuis vuole il presente. Il passé composé con depuis è l'errore tipico di chi traduce «ho abitato qui dal 2020».",
+      "Per un'azione ancora in corso depuis vuole il presente. Il passé composé con depuis è l'errore tipico di chi traduce «ho abitato qui dal 2020» (è possibile solo con la negazione, come in je ne l'ai pas vu depuis lundi, o per un periodo concluso).",
     ),
     q(
       'q8',
@@ -142,7 +142,11 @@ export const fpresente = mod(
       'nous mangeons [mã-ZHÕ], nous commençons [kò-mã-SÕ]: e e ç tengono il suono dolce davanti a o.',
     ),
     card('c10', 'acheter / appeler', "j'achète (accento) [zha-SHÈT]; j'appelle (doppia l) [zha-PÈL]."),
-    card('c11', 'depuis', "Presente + depuis: j'habite ici depuis 2020. Mai passé composé."),
+    card(
+      'c11',
+      'depuis',
+      "Presente + depuis: j'habite ici depuis 2020. Per un'azione ancora in corso niente passé composé (solo con la negazione: je ne l'ai pas vu depuis lundi).",
+    ),
     card('c12', 'être en train de', 'Azione in corso: je suis en train de manger [zhë süi ã trẽ dë mã-ZHÉ].'),
   ],
   [
@@ -210,6 +214,8 @@ export const fquotidiano = mod(
 <tr><td>chez [SHÉ]</td><td>a casa di, dal</td><td>chez moi, chez le médecin, chez Paul</td></tr>
 <tr><td>sur / sous</td><td>sopra / sotto</td><td>sur la table [SÜR], sous le lit [SU]</td></tr></table>
 <p>Altre: <i>devant</i> [dë-VÃ], <i>derrière</i> [dè-RYÈR], <i>à côté de</i> [a ko-TÉ dë], <i>près de</i> [PRÈ dë], <i>loin de</i> [LUẼ dë], <i>entre</i> [ÃTR], <i>en face de</i>. Trappole: «da Marco» = <i>chez Marco</i>; «tra due giorni» = <i>dans deux jours</i> (mentre <i>en deux jours</i> = «in due giorni», durata). In città: <i>la gare</i> [la GAR], <i>la poste</i> [la PÒST], <i>la mairie</i> [la mè-RI], <i>la boulangerie</i> [la bu-lã-zhë-RI], <i>la pharmacie</i> [la far-ma-SI], <i>le supermarché</i> [lë sü-pèr-mar-SHÉ], <i>le quartier</i> [lë kar-TYÉ], <i>le carrefour</i> [lë kar-FUR], <i>tout droit</i> [tu DRUA], <i>à gauche</i> [a GOSH], <i>à droite</i> [a DRUAT].</p>
+<h3>Il faut: bisogna, occorre</h3>
+<p><b>Il faut</b> [il FO] è un verbo impersonale (sempre la forma il) e traduce «bisogna, occorre, serve». Con l'infinito esprime una necessità generale: <i>Il faut partir</i> [il fo par-TIR] «bisogna partire», <i>Il faut manger</i> [il fo mã-ZHÉ]. Con un pronome indiretto indica chi ha bisogno: <i>Il me faut du temps</i> [il më FO dü TÃ] «mi serve tempo». Attenzione alla negazione: <i>Il ne faut pas fumer</i> [il në fo pa fü-MÉ] vale «non si deve fumare» (divieto), non «non serve»; per «non è necessario» si dice <i>Il n'est pas nécessaire de...</i> o <i>On n'est pas obligé de...</i>. Altri tempi: <i>il fallait</i> [il fa-LÈ], <i>il a fallu</i> [i-la fa-LÜ], <i>il faudra</i> [il fo-DRA]. Quando serve un soggetto preciso si usa <i>il faut que</i> + subjonctif (<i>il faut que tu viennes</i>), che studi nel modulo B1 sul subjonctif.</p>
 <div class="say"><b>Cosa dire.</b> «Pardon, où est la gare, s'il vous plaît [par-DÕ, u è la GAR, sil vu PLÈ] ? — Tout droit, puis à gauche.»</div>`,
   [
     q(
@@ -273,6 +279,25 @@ export const fquotidiano = mod(
       0,
       'Quando il verbo finisce per vocale e il pronome inizia per vocale si inserisce -t- per facilitare la pronuncia. Senza -t- le due vocali si incontrano ([par-lil]).',
     ),
+    q(
+      'q9',
+      'Come si dice «Bisogna partire presto»?',
+      ['Il faut partir tôt.', 'Il faut partez tôt.', 'Ça faut partir tôt.', 'Il est faut de partir tôt.'],
+      0,
+      "Il faut è impersonale e vuole l'infinito: il faut partir. Non si coniuga con vous e non si usa «ça faut» né «il est faut».",
+    ),
+    q(
+      'q10',
+      'Cosa significa «Il ne faut pas fumer ici»?',
+      [
+        'Non si deve fumare qui.',
+        'Non è necessario fumare qui.',
+        'Non serve il fumo qui.',
+        'Non bisogna che io fumi più.',
+      ],
+      0,
+      "Con il faut la negazione esprime un divieto, non una mancanza di necessità. Per dire «non serve» si usa il n'est pas nécessaire de oppure on n'a pas besoin de.",
+    ),
   ],
   [
     card(
@@ -299,6 +324,11 @@ export const fquotidiano = mod(
     card('c10', 'dans vs en', 'dans deux jours = fra due giorni (futuro); en deux jours = in due giorni (durata).'),
     card('c11', 'chez', 'A casa di / dal: chez moi [shé MUA], chez le dentiste.'),
     card('c12', 'savoir vs connaître', 'savoir = fatto/saper fare; connaître = persone e luoghi.'),
+    card(
+      'c13',
+      'il faut + infinito',
+      'Il faut partir [il fo par-TIR] = bisogna partire. Il ne faut pas = divieto. Il me faut = mi serve. il fallait, il faudra.',
+    ),
   ],
   [
     prac(
@@ -325,6 +355,11 @@ export const fquotidiano = mod(
       'p5',
       'Chiedi e spiega la strada per andare dalla stazione alla farmacia.',
       "Pardon, où est la pharmacie ? — Prenez la première rue à gauche, puis tout droit. Elle est à côté de la poste, en face de la gare. Nota: imperativo di cortesia con vous (lo studi nel modulo sull'imperativo).",
+    ),
+    prac(
+      'p6',
+      'Traduci: «Bisogna studiare ogni giorno, ma non si deve studiare di notte. Mi serve un caffè.»',
+      'Il faut étudier tous les jours, mais il ne faut pas étudier la nuit. Il me faut un café. Nota: il faut + infinito; il ne faut pas = divieto; il me faut + nome.',
     ),
   ],
 )
@@ -353,7 +388,9 @@ export const fpassecompose = mod(
 <tr><td>vouloir</td><td>voulu [vu-LÜ]</td><td>ouvrir</td><td>ouvert [u-VÈR]</td></tr>
 <tr><td>devoir</td><td>dû [DÜ]</td><td>apprendre</td><td>appris [a-PRI]</td></tr>
 <tr><td>savoir</td><td>su [SÜ]</td><td>comprendre</td><td>compris [kõ-PRI]</td></tr>
-<tr><td>vivre</td><td>vécu [vé-KÜ]</td><td>recevoir</td><td>reçu [rë-SÜ]</td></tr></table>
+<tr><td>vivre</td><td>vécu [vé-KÜ]</td><td>recevoir</td><td>reçu [rë-SÜ]</td></tr>
+<tr><td>courir</td><td>couru [ku-RÜ]</td><td>suivre</td><td>suivi [süi-VI]</td></tr>
+<tr><td>croire</td><td>cru [KRÜ]</td><td>plaire / falloir</td><td>plu [PLÜ] / fallu [fa-LÜ]</td></tr></table>
 <p>Il suono <b>ü</b> compare in tanti participi: <i>vu, lu, bu, pu, su, eu</i>. Non leggerli con u italiana. Trappola: <i>j'ai eu</i> [zhé Ü] «ho avuto», <i>j'ai été</i> [zhé é-TÉ] «sono stato».</p>
 <h3>I verbi con être</h3>
 <p>Alcuni verbi di movimento e di cambiamento, più tutti i pronominali, usano <b>être</b>: <i>aller, venir, arriver, partir, entrer, sortir, monter, descendre, rester, tomber, naître, mourir, rentrer, retourner, devenir, revenir</i>. Mnemonico «DR &amp; MRS VAN DER TRAMP».</p>
@@ -517,7 +554,7 @@ export const fimparfait = mod(
 <table><tr><th></th><th>Imparfait</th><th>Passé composé</th></tr>
 <tr><td>Funzione</td><td>sfondo, abitudine, durata aperta</td><td>fatto concluso, azione puntuale</td></tr>
 <tr><td>Segnali</td><td>d'habitude, souvent, toujours, chaque été, autrefois, pendant que</td><td>soudain, un jour, hier, une fois, tout à coup, ce jour-là</td></tr></table>
-<p>Esempio dei due piani: <i>Il pleuvait quand je suis sorti.</i> [il plö-VÈ kã zhë süi sòr-TI]; <i>Quand j'étais petit, j'habitais à Lyon.</i> Si possono combinare: <i>Je dormais quand le téléphone a sonné.</i> Alcuni verbi cambiano senso: <i>je savais</i> (sapevo) / <i>j'ai su</i> (ho scoperto); <i>je voulais</i> (volevo) / <i>j'ai voulu</i> (ho voluto, ho deciso; con la negazione <i>je n'ai pas voulu</i> = mi sono rifiutato).</p>
+<p>Esempio dei due piani: <i>Il pleuvait quand je suis sorti.</i> [il plö-VÈ kã zhë süi sòr-TI]; <i>Quand j'étais petit, j'habitais à Lyon</i> (per un periodo concluso e preciso si dice invece <i>j'ai habité à Lyon pendant trois ans</i>). Si possono combinare: <i>Je dormais quand le téléphone a sonné.</i> Alcuni verbi cambiano senso: <i>je savais</i> (sapevo) / <i>j'ai su</i> (ho scoperto); <i>je voulais</i> (volevo) / <i>j'ai voulu</i> (ho voluto, ho deciso; con la negazione <i>je n'ai pas voulu</i> = mi sono rifiutato).</p>
 <p>Trappola dall'italiano: «stavo mangiando» = <i>j'étais en train de manger</i>, mai «j'étais mangeant». Il passé simple («mangiai») non si usa parlando: diventa passé composé o, se descrittivo, imparfait.</p>
 <h3>Plus-que-parfait</h3>
 <p>Ausiliare all'imparfait + participio: <i>j'avais mangé</i> [zha-vè mã-ZHÉ], <i>il était parti</i> [i-lé-tè par-TI], <i>nous avions fini</i>. Indica un fatto <b>prima</b> di un altro passato: <i>Quand je suis arrivé, le train était déjà parti.</i> [lë trẽ é-tè-dé-zha par-TI]. Valgono le stesse regole di ausiliare e accordo: <i>elle était allée</i>, <i>je les avais vus</i>.</p>
@@ -643,7 +680,7 @@ export const fimparfait = mod(
     prac(
       'p1',
       "Coniuga all'imparfait: «faire», «finir», «voir» per nous e ils.",
-      'faire: nous faisions [fë-ZYÕ], ils faisaient [fë-ZÈ]; finir: nous finissions, ils finissaient; voir: nous voyions [vua-YÕ], ils voyaient [vua-YÈ]. Nota: la radice è nous faisons, finissons, voyons.',
+      'faire: nous faisions [fë-ZYÕ], ils faisaient [fë-ZÈ]; finir: nous finissions, ils finissaient; voir: nous voyions [vua-YÕ], ils voyaient [vua-YÈ]. Nota: nous voyions ha in realtà due suoni y ([vua-YYÕ], come voyons + i): qui semplifichiamo con una sola Y. La radice è nous faisons, finissons, voyons.',
     ),
     prac(
       'p2',
@@ -653,7 +690,7 @@ export const fimparfait = mod(
     prac(
       'p3',
       "Correggi: «Hier, il faisait chaud et je suis resté à la maison; quand j'étais enfant, nous avons passé tous les étés à la mer».",
-      "Hier, il faisait chaud et je suis resté à la maison; quand j'étais enfant, nous passions tous les étés à la mer. Nota: l'abitudine ripetuta nel passato vuole l'imparfait (passions); il passé composé avrebbe senso solo per un'estate precisa. Anche «j'ai habité à Lyon» è corretto per un periodo concluso.",
+      "Hier, il faisait chaud et je suis resté à la maison; quand j'étais enfant, nous passions tous les étés à la mer. Nota: l'abitudine ripetuta nel passato vuole l'imparfait (passions); il passé composé avrebbe senso solo per un'estate precisa.",
     ),
     prac(
       'p4',

@@ -1,5 +1,6 @@
 import { card, mod, prac, q } from '../kit'
-import { PRON_SHORT, vsec } from './pron'
+import { PRON_SHORT } from './pron'
+import { vsecW } from './vsecw'
 
 // German course part A, modules 4-6 (nomi, presente, quotidiano). Notation: see tedesco.a.ts.
 
@@ -12,29 +13,29 @@ export const deNomi = mod(
 <p class="lead">Ogni sostantivo tedesco ha un genere (<b>der</b>, <b>die</b>, <b>das</b>) che spesso non coincide con l'italiano. Regola d'oro: <b>impara sempre il nome con l'articolo e il plurale</b>: «der Tisch, -e».</p>
 <h3>Il genere: indizi e trappole</h3>
 <table><tr><th>Genere</th><th>Indizi (tendenze)</th></tr>
-<tr><td>der (m)</td><td>-er (Lehrer), -ling, -ismus; giorni, mesi, stagioni (der Montag, der Mai, der Sommer); fenomeni meteo (der Regen)</td></tr>
+<tr><td>der (m)</td><td>-er (Lehrer; con molte eccezioni neutre: das Wasser, das Fenster, das Zimmer, das Messer), -ling, -ismus, -us (der Zirkus, der Mechanismus); giorni, mesi, stagioni (der Montag, der Mai, der Sommer); fenomeni meteo (der Regen)</td></tr>
 <tr><td>die (f)</td><td>-ung, -heit, -keit, -schaft, -tion, -tät, -ie, -ei, -in; quasi tutte in -e (die Lampe)</td></tr>
-<tr><td>das (n)</td><td>-chen, -lein; -um (das Datum); Ge- (das Gebäude); verbi sostantivati (das Essen); colori (das Blau)</td></tr></table>
-<p>Eccezioni frequenti: <i>die Mutter, die Tochter, die Schwester</i> (in -er ma femminili); <i>der Name, der Käse</i> [KÈ:-zë], <i>der Junge</i> [IUN-gë], <i>das Ende</i> (in -e ma non femminili). Per gli esseri umani vale quasi sempre il sesso, ma <i>das Mädchen</i> [MÈ:T-çën] (la ragazza) e <i>das Kind</i> [KINT] sono neutri. Disaccordi con l'italiano: <i>die Sonne</i> (il sole), <i>der Mond</i> [MO:NT] (la luna), <i>der Apfel</i> [AP-fël] (la mela), <i>die Milch</i> [MILÇ] (il latte), <i>die Butter</i> [BU-ta] (il burro), <i>das Brot</i> [BRO:T] (il pane), <i>das Salz</i> [ZALTS] (il sale), <i>der Bahnhof</i> [BA:N-ho:f] (la stazione).</p>
+<tr><td>das (n)</td><td>-chen, -lein; -um (das Datum, das Museum); Ge- (das Gebäude, solo tendenza: der Gesang, die Geschichte, der Gedanke); verbi sostantivati (das Essen); colori (das Blau)</td></tr></table>
+<p>Attenzione a <b>-tum</b>: di norma è maschile (<i>der Reichtum</i> la ricchezza, <i>der Irrtum</i> l'errore), con poche eccezioni neutre (<i>das Eigentum</i> la proprietà, <i>das Christentum</i>). Eccezioni frequenti: <i>die Mutter, die Tochter, die Schwester</i> (in -er ma femminili); <i>der Name, der Käse</i> [KÈ:-zë], <i>der Junge</i> [JUNG-ë], <i>das Ende</i> (in -e ma non femminili). Per gli esseri umani vale quasi sempre il sesso, ma <i>das Mädchen</i> [MÈ:T-çën] (la ragazza) e <i>das Kind</i> [KINT] sono neutri. Disaccordi con l'italiano: <i>die Sonne</i> (il sole), <i>der Mond</i> [MO:NT] (la luna), <i>der Apfel</i> [AP-fël] (la mela), <i>die Milch</i> [MILÇ] (il latte), <i>die Butter</i> [BU-ta] (il burro), <i>das Brot</i> [BRO:T] (il pane), <i>das Salz</i> [ZALTS] (il sale), <i>der Bahnhof</i> [BA:N-ho:f] (la stazione).</p>
 <h3>Il plurale: 5 tipi</h3>
 <table><tr><th>Tipo</th><th>Esempi</th></tr>
-<tr><td>-e (± umlaut)</td><td>der Tag → die Tage; die Stadt → die Städte [SHTÈ-të]; der Sohn → die Söhne [ZÖ:-në]</td></tr>
+<tr><td>-e (± umlaut)</td><td>der Tag → die Tage; die Stadt → die Städte [SHTE-të]; der Sohn → die Söhne [ZÖ:-në]</td></tr>
 <tr><td>-er (± umlaut)</td><td>das Kind → die Kinder; das Haus → die Häuser [HOI-za]; das Buch → die Bücher [BÜ:-ça]; der Mann → die Männer</td></tr>
 <tr><td>-(e)n</td><td>die Frau → die Frauen; die Blume → die Blumen; die Zeitung → die Zeitungen; der Student → die Studenten</td></tr>
 <tr><td>nessuna desinenza (± umlaut)</td><td>der Lehrer → die Lehrer; der Vater → die Väter [FÈ:-ta]; der Bruder → die Brüder; der Apfel → die Äpfel; das Mädchen → die Mädchen</td></tr>
 <tr><td>-s (parole straniere)</td><td>das Auto → die Autos; das Handy → die Handys; das Hotel → die Hotels</td></tr></table>
-<p>Regole pratiche: i <b>femminili</b> fanno quasi sempre -(e)n (-in → -innen: die Lehrerin → die Lehrerinnen [LÉ:-re-ri-nën]); i maschili e neutri in <b>-er, -el, -en, -chen, -lein</b> non cambiano; i maschili brevi prendono -e; i neutri brevi prendono -e o -er; le parole straniere recenti -s. Il plurale ha sempre l'articolo <b>die</b>. Non indovinare: cerca nel dizionario «der Tag, -e».</p>
+<p>Regole pratiche: i <b>femminili</b> fanno quasi sempre -(e)n (-in → -innen: die Lehrerin → die Lehrerinnen [LÉ:-rë-ri-nën]); i maschili e neutri in <b>-er, -el, -en, -chen, -lein</b> non cambiano; i maschili brevi prendono -e; i neutri brevi prendono -e o -er; le parole straniere recenti -s. Il plurale ha sempre l'articolo <b>die</b>. Non indovinare: cerca nel dizionario «der Tag, -e».</p>
 <h3>Articoli, nominativo e accusativo</h3>
 <table><tr><th></th><th>Nom.</th><th>Akk.</th><th>indet. N / A</th></tr>
 <tr><td>maschile</td><td>der</td><td>den</td><td>ein / einen</td></tr>
 <tr><td>femminile</td><td>die</td><td>die</td><td>eine / eine</td></tr>
 <tr><td>neutro</td><td>das</td><td>das</td><td>ein / ein</td></tr>
 <tr><td>plurale</td><td>die</td><td>die</td><td>– / –</td></tr></table>
-<p>Il nominativo è il soggetto (Wer? Was?): <i>Der Mann kommt.</i> L'accusativo è il complemento oggetto (Wen? Was?): <i>Ich sehe den Mann.</i> Cambia solo il maschile: <i>Ich habe einen Hund, eine Katze, ein Kind.</i> Il nome non cambia, tranne alcuni maschili deboli in -en: <i>den Studenten, den Jungen, den Herrn, den Kollegen, den Franzosen</i>. Al plurale indeterminato non c'è articolo: <i>Ich habe Bücher.</i> Trappola per un italiano: nessun partitivo (del, dei): <i>Ich trinke Wasser</i>, <i>Hier sind Bücher</i>. Professioni e nazionalità senza articolo: <i>Ich bin Lehrer.</i></p>
+<p>Il nominativo è il soggetto (Wer? Was?): <i>Der Mann kommt.</i> L'accusativo è il complemento oggetto (Wen? Was?): <i>Ich sehe den Mann.</i> Cambia solo il maschile: <i>Ich habe einen Hund, eine Katze, ein Kind.</i> Il nome non cambia, tranne alcuni maschili deboli che prendono -n o -en in tutti i casi tranne il nominativo: <i>den Studenten, den Jungen, den Herrn</i> (-n), <i>den Kollegen, den Franzosen</i>. Al plurale indeterminato non c'è articolo: <i>Ich habe Bücher.</i> Trappola per un italiano: nessun partitivo (del, dei): <i>Ich trinke Wasser</i>, <i>Hier sind Bücher</i>. Professioni e nazionalità senza articolo: <i>Ich bin Lehrer.</i></p>
 <h3>Kein: la negazione del nome</h3>
 <p><b>kein-</b> [KAIN] si declina come ein-, con il plurale: <i>Ich habe keinen Hund / keine Katze / kein Auto / keine Kinder</i>. Si usa quando c'è ein- o nessun articolo (Ich habe Zeit → Ich habe <b>keine</b> Zeit). Negazione di nome con articolo determinativo o di verbi: <i>nicht</i> (vedi de-quotidiano).</p>
 <h3>Aggettivi: predicativi e prima del nome</h3>
-<p>Dopo sein/werden l'aggettivo <b>non ha desinenza</b>: <i>Das Haus ist groß</i> [GRO:SS]. Parole utili: klein [KLAIN], gut [GU:T], schlecht [SHLEÇT], neu [NOI], alt [ALT], schön [SHÖ:N], teuer [TOI-a], billig [BI-liç], schnell [SHNEL], langsam [LANG-za:m], müde [MÜ:-dë], hungrig [HUN-griç]. Davanti al nome prende la desinenza: con ein-: <i>ein großer Tisch</i> (m), <i>eine große Lampe</i> (f), <i>ein großes Haus</i> (n); accusativo m: <i>einen großen Tisch</i>; con der-: <i>der große Tisch, den großen Tisch, die große Lampe, das große Haus, die großen Häuser</i>.</p>
+<p>Dopo sein/werden l'aggettivo <b>non ha desinenza</b>: <i>Das Haus ist groß</i> [GRO:S]. Parole utili: klein [KLAIN], gut [GU:T], schlecht [SHLEÇT], neu [NOI], alt [ALT], schön [SHÖ:N], teuer [TOI-a], billig [BI-liç], schnell [SHNEL], langsam [LANG-za:m], müde [MÜ:-dë], hungrig [HUNG-riç]. Davanti al nome prende la desinenza: con ein-: <i>ein großer Tisch</i> (m), <i>eine große Lampe</i> (f), <i>ein großes Haus</i> (n); accusativo m: <i>einen großen Tisch</i>; con der-: <i>der große Tisch, den großen Tisch, die große Lampe, das große Haus, die großen Häuser</i>.</p>
 <h3>I possessivi</h3>
 <table><tr><th>Persona</th><th>Possessivo</th></tr>
 <tr><td>ich / du</td><td>mein [MAIN] / dein [DAIN]</td></tr>
@@ -44,6 +45,20 @@ export const deNomi = mod(
 <p>Si declinano come ein-: <i>mein Bruder, meine Schwester, mein Kind, meine Eltern</i>; accusativo: <i>Ich besuche meinen Bruder</i>; euer perde la e: <i>eure Kinder</i>. Il possessivo concorda con il <b>possessore</b>: <i>sein Vater</i> (suo, di lui) ≠ <i>ihr Vater</i> (suo, di lei). Niente articolo: <i>mein Haus</i>, non «il mio casa».</p>
 <h3>Sostantivi composti</h3>
 <p>Il genere e il plurale vengono dall'<b>ultimo elemento</b>, l'accento cade sul primo: <i>die Haustür</i> [HAUS-tü:r], <i>der Schulhof</i>, <i>das Wörterbuch</i> [VÖR-ta-bu:ch]. Spesso c'è un -s- o -(e)n- di unione: <i>der Geburtstag</i>, <i>das Krankenhaus</i> [KRAN-kën-haus]. Esempi curiosi: <i>der Handschuh</i> (guanto = scarpa della mano), <i>der Staubsauger</i> [SHTAUP-zau-ga] (aspirapolvere), <i>der Kühlschrank</i> [KÜ:L-shrank] (frigorifero), <i>der Flughafen</i> [FLU:K-ha:-fën] (aeroporto).</p>
+<h3>Dieser, jener, welcher</h3>
+<table><tr><th></th><th>m</th><th>f</th><th>n</th><th>pl</th></tr>
+<tr><td>Nom.</td><td>dieser [DI:-za]</td><td>diese [DI:-zë]</td><td>dieses [DI:-zës]</td><td>diese</td></tr>
+<tr><td>Akk.</td><td>diesen [DI:-zën]</td><td>diese</td><td>dieses</td><td>diese</td></tr></table>
+<p><b>dieser</b> (questo) e <b>welcher</b> [VEL-ça] (quale?) si declinano come l'articolo <i>der</i> (welcher, welche, welches, welchen): <i>Dieses Haus ist teuer. Ich nehme diese Jacke. Welchen Film siehst du? Welche Tasche gefällt dir?</i> Per «quello» il parlato usa spesso <i>der / die / das da</i> [DÉ:R / DI: / DAS DA:]: <i>Ich nehme die da.</i> <b>jener</b> [JÉ:-na] è raro e letterario. <b>Was für ein</b> [vas FÜ:R ain] = che tipo di: <i>Was für ein Auto hast du?</i> (ein si declina secondo il nome; für non regge il caso). Trappola: l'italiano distingue «questo / quello» per distanza, il tedesco di solito usa <i>dieser</i> per entrambi.</p>
+<h3>Indefiniti e quantità</h3>
+<table><tr><th>Italiano</th><th>Tedesco</th><th>Esempio</th></tr>
+<tr><td>qualcuno / nessuno</td><td>jemand [JÉ:-mant] / niemand [NI:-mant]</td><td>Ist jemand da? Niemand ist da.</td></tr>
+<tr><td>qualcosa / niente</td><td>etwas [ET-vas] / nichts [NIÇTS]</td><td>Ich möchte etwas trinken. Ich sehe nichts.</td></tr>
+<tr><td>tutti / tutto</td><td>alle [A-lë] / alles [A-lës]</td><td>Alle sind müde. Alles ist gut.</td></tr>
+<tr><td>molti / alcuni / pochi</td><td>viele [FI:-lë] / einige [AI-ni-gë] / wenige [VÉ:-ni-gë]</td><td>Viele Leute lernen Deutsch.</td></tr>
+<tr><td>un paio di</td><td>ein paar [ain PA:R]</td><td>ein paar Euro</td></tr>
+<tr><td>ogni</td><td>jeder / jede / jedes [JÉ:-da]</td><td>jeder Tag, jede Woche, jedes Jahr</td></tr></table>
+<p><b>niemand</b> e <b>nichts</b> sono già negativi: <i>Ich sehe nichts</i> (mai «nicht nichts»). All'accusativo: <i>jemanden, niemanden</i> (<i>Ich sehe niemanden</i>). <b>alle, viele, einige</b> vogliono il plurale e il verbo al plurale (<i>Alle sind da</i>), <b>alles</b> e <b>etwas</b> il singolare. <b>jeder</b> si declina come dieser ed è sempre singolare. <i>ein paar</i> (alcuni) è minuscolo e invariabile; <i>ein Paar</i> è una coppia.</p>
 <div class="say"><b>Cosa dire.</b> «Ich habe einen Bruder und eine Schwester. Mein Bruder ist Lehrer, meine Schwester ist Studentin. Wir haben keinen Hund.»</div>`,
   [
     q(
@@ -136,6 +151,34 @@ export const deNomi = mod(
       0,
       `La d prima di -chen è in fine sillaba e suona t, mentre -chen è sempre ç. La lettura italiana ch = k è la trappola più comune.`,
     ),
+    q(
+      'q11',
+      `Come dici «Questa giacca è cara»?`,
+      [`Diese Jacke ist teuer.`, `Dieser Jacke ist teuer.`, `Dieses Jacke ist teuer.`, `Diesen Jacke ist teuer.`],
+      0,
+      `Jacke è femminile, quindi diese (come die). Dieser è per il maschile, dieses per il neutro.`,
+    ),
+    q(
+      'q12',
+      `Completa: «___ Film siehst du?» (Quale film guardi?)`,
+      [`Welchen`, `Welcher`, `Welches`, `Welche`],
+      0,
+      `Film è maschile e qui è oggetto (accusativo): welchen, come den. Welcher sarebbe il nominativo.`,
+    ),
+    q(
+      'q13',
+      `Come dici «Non vedo niente»?`,
+      [`Ich sehe nichts.`, `Ich sehe nicht nichts.`, `Ich sehe nichts nicht.`, `Ich sehe kein nichts.`],
+      0,
+      `Nichts è già negativo: non si aggiunge nicht. L'italiano accetta «non vedo niente», ma il tedesco non ha il doppio «non ... niente».`,
+    ),
+    q(
+      'q14',
+      `Completa: «Alle ___ müde.»`,
+      [`sind`, `ist`, `bin`, `bist`],
+      0,
+      `Alle è plurale e vuole il verbo al plurale: sind. Alles, invece, è singolare: Alles ist gut.`,
+    ),
   ],
   [
     card('c1', `der / die / das`, `Maschile / femminile / neutro. Plurale sempre die. Impara il nome con l'articolo.`),
@@ -144,7 +187,11 @@ export const deNomi = mod(
       `-ung, -heit, -keit, -schaft, -tion`,
       `Suffissi sempre femminili: die Zeitung, die Gesundheit, die Freundschaft, die Nation.`,
     ),
-    card('c3', `-chen, -lein; -um; Ge-`, `Suffissi neutri: das Mädchen, das Fräulein, das Datum, das Gebäude.`),
+    card(
+      'c3',
+      `-chen, -lein; -um; Ge-`,
+      `Tendenze neutre: das Mädchen, das Fräulein, das Datum, das Museum. Ge- è solo una tendenza (das Gebäude, ma der Gesang, die Geschichte); -tum di norma è maschile (der Reichtum), eccezioni das Eigentum, das Christentum.`,
+    ),
     card(
       'c4',
       `Nominativo → accusativo`,
@@ -171,8 +218,18 @@ export const deNomi = mod(
     card('c11', `Mädchen [MÈ:T-çën]`, `d finale di sillaba = t; -chen = ç. Neutro: das Mädchen.`),
     card(
       'c12',
-      `ß in groß [GRO:SS]`,
+      `ß in groß [GRO:S]`,
       `ß = s sorda dopo vocale lunga. Groß, grüßen, Fuß, Straße. Con vocale breve: ss (Fluss).`,
+    ),
+    card(
+      'c13',
+      `dieser / diese / dieses [DI:-za / DI:-zë / DI:-zës]`,
+      `questo / questa / questo. Come der / die / das; accusativo maschile <i>diesen</i>. Welcher? = quale?`,
+    ),
+    card(
+      'c14',
+      `jemand – niemand, etwas – nichts [JÉ:-mant – NI:-mant, ET-vas – NIÇTS]`,
+      `qualcuno – nessuno, qualcosa – niente. Niemand e nichts già negativi: <i>Ich sehe nichts</i>.`,
     ),
   ],
   [
@@ -201,16 +258,26 @@ export const deNomi = mod(
       `Forma il composto con articolo: l'orologio da polso (braccio + orologio), la porta della cucina (cucina + porta).`,
       `die Armbanduhr (Arm + Band + Uhr); die Küchentür (Küche + Tür). Nota: genere dall'ultimo elemento, quindi die.`,
     ),
+    prac(
+      'p6',
+      `Traduci: «Qualcuno è qui? No, non c'è nessuno. Tutti lavorano.»`,
+      `Ist jemand da? Nein, niemand ist da. Alle arbeiten. Nota: niemand già negativo; alle vuole il verbo al plurale.`,
+    ),
+    prac(
+      'p7',
+      `Traduci: «Quale mela preferisci? Questa o quella?»`,
+      `Welchen Apfel möchtest du? Diesen oder den da? Nota: Apfel maschile all'accusativo, quindi welchen, diesen, den da.`,
+    ),
   ],
 )
 
 export const dePresente = mod(
   'de-presente',
   'Il presente: verbi regolari e irregolari',
-  'Desinenze, a>ä, e>i/ie, -est/-et, wissen e kennen, ordine V2, niente forma progressiva',
+  'Desinenze, a>ä, e>i/ie, -est/-et, wissen e kennen, ordine V2, niente forma progressiva standard (am-Progressiv colloquiale)',
   'a1',
   `${PRON_SHORT}
-<p class="lead">Il presente tedesco serve per ciò che accade ora, le abitudini e (spesso) il futuro. È più semplice dell'italiano: solo tre desinenze diverse. Il punto chiave è l'<b>ordine</b>: il verbo coniugato sta sempre al secondo posto.</p>
+<p class="lead">Il presente tedesco serve per ciò che accade ora, le abitudini e (spesso) il futuro. È più semplice dell'italiano: solo quattro desinenze diverse (-e, -st, -t, -en). Il punto chiave è l'<b>ordine</b>: il verbo coniugato sta sempre al secondo posto.</p>
 <h3>Verbi regolari</h3>
 <p>Si toglie <b>-en</b> dall'infinito e si aggiunge: <b>-e, -st, -t, -en, -t, -en</b>.</p>
 <table><tr><th>Persona</th><th>machen</th><th>arbeiten</th><th>heißen</th></tr>
@@ -220,7 +287,7 @@ export const dePresente = mod(
 <tr><td>wir</td><td>machen</td><td>arbeiten</td><td>heißen</td></tr>
 <tr><td>ihr</td><td>macht</td><td>arbeitet</td><td>heißt</td></tr>
 <tr><td>sie / Sie</td><td>machen</td><td>arbeiten</td><td>heißen</td></tr></table>
-<p><b>-est / -et</b>: se la radice finisce in <b>-t, -d, -chn, -ffn, -tm, -dn</b> si inserisce una e per poter pronunciare: arbeitest, findest [FIN-dëst], wartet [VAR-tët], öffnet [ÖF-nët], regnet [RE:G-nët], atmet. Se la radice finisce in <b>-s, -ß, -z, -x</b> la forma di du è <b>-t</b> (non -st): du heißt [HAIST], du tanzt [TANTST], du reist [RAIST]. Verbi in -eln, -ern: ich wandere, wir wandern.</p>
+<p><b>-est / -et</b>: se la radice finisce in <b>-t, -d, -chn, -ffn, -tm, -dn, -gn</b> si inserisce una e per poter pronunciare: arbeitest, findest [FIN-dëst], wartet [VAR-tët], öffnet [ÖF-nët], regnet [RÉ:G-nët], atmet. Se la radice finisce in <b>-s, -ß, -z, -x</b> la forma di du è <b>-t</b> (non -st): du heißt [HAIST], du tanzt [TANTST], du reist [RAIST]. Verbi in -eln, -ern: ich wandere, wir wandern.</p>
 <h3>Verbi irregolari: a > ä, e > i, e > ie</h3>
 <p>Alcuni verbi cambiano la vocale della radice solo per <b>du</b> e <b>er / sie / es</b> (le altre persone sono regolari):</p>
 <table><tr><th>Persona</th><th>fahren</th><th>sprechen</th><th>lesen</th></tr>
@@ -237,7 +304,7 @@ export const dePresente = mod(
 <h3>L'ordine delle parole: il verbo al secondo posto</h3>
 <p>Nella frase principale il verbo coniugato è sempre in <b>seconda posizione</b> (non seconda parola: la prima posizione può essere un gruppo). Prima posizione: soggetto, o un altro elemento che il parlante vuole mettere in evidenza; in quest'ultimo caso il soggetto passa <b>dopo</b> il verbo (inversione).</p>
 <ul><li><i>Ich fahre morgen nach Berlin.</i></li><li><i>Morgen fahre ich nach Berlin.</i> (non «Morgen ich fahre»)</li><li><i>Nach Berlin fahre ich morgen.</i></li><li><i>Am Montag um acht Uhr beginnt der Kurs.</i> (un gruppo sta in prima posizione)</li></ul>
-<p>Ordine dei complementi: tempo – causa – modo – luogo (<i>Ich fahre morgen wegen der Arbeit mit dem Zug nach Berlin</i>). Il soggetto è sempre espresso: <i>Ich wohne in Wien</i>, non «Wohne in Wien». Niente forma progressiva: «sto mangiando» = <i>Ich esse gerade</i> [GË-RA:-dë]. Il presente è anche futuro con un avverbio: <i>Morgen komme ich</i>. «Da due anni» vedi de-riflessivi.</p>
+<p>Ordine dei complementi: tempo – causa – modo – luogo (<i>Ich fahre morgen wegen der Arbeit mit dem Zug nach Berlin</i>). Il soggetto è sempre espresso: <i>Ich wohne in Wien</i>, non «Wohne in Wien». Niente forma progressiva nel tedesco standard: «sto mangiando» = <i>Ich esse gerade</i> [gë-RA:-dë]. Nella lingua parlata (soprattutto in Germania, e in forma regionale) esiste però l'<b>am-Progressiv</b>: <i>Ich bin am Essen</i>, <i>Ich bin am Arbeiten</i>; lo capirai spesso, ma per lo scritto e per l'esame usa il presente con gerade. Il presente è anche futuro con un avverbio: <i>Morgen komme ich</i>. «Da due anni» vedi de-riflessivi.</p>
 <div class="say"><b>Cosa dire.</b> «Ich spreche ein bisschen Deutsch. Ich lese gern und fahre oft mit dem Zug nach München [MÜN-çën].»</div>`,
   [
     q(
@@ -285,7 +352,7 @@ export const dePresente = mod(
       `Come dici «Sto mangiando adesso»?`,
       [`Ich esse gerade.`, `Ich bin gerade essen.`, `Ich bin essend.`, `Ich esse am essen.`],
       0,
-      `Il tedesco non ha la forma progressiva; si usa il presente con gerade. Essend esiste come participio ma non forma il progressivo.`,
+      `Il tedesco standard non ha una forma progressiva; si usa il presente con gerade. Nel parlato colloquiale esiste l'am-Progressiv (Ich bin am Essen), da capire ma non necessario nello scritto.`,
     ),
     q(
       'q7',
@@ -332,7 +399,11 @@ export const dePresente = mod(
     card('c8', `kennen`, `Conoscere persone, luoghi, cose: Ich kenne Berlin. Kennst du Maria?`),
     card('c9', `können (capacità)`, `Saper fare: Ich kann schwimmen. Ich kann Deutsch = so il tedesco.`),
     card('c10', `Ordine V2`, `Il verbo coniugato è in seconda posizione. Morgen fahre ich (non: Morgen ich fahre).`),
-    card('c11', `Ich esse gerade.`, `Sto mangiando adesso. Nessuna forma progressiva; si usa il presente con gerade.`),
+    card(
+      'c11',
+      `Ich esse gerade.`,
+      `Sto mangiando adesso. Nessuna forma progressiva standard; si usa il presente con gerade (colloquiale: Ich bin am Essen).`,
+    ),
     card(
       'c12',
       `fährst [FÈ:RST], isst [IST], liest [LI:ST]`,
@@ -376,25 +447,25 @@ export const deQuotidiano = mod(
   `${PRON_SHORT}
 <p class="lead">Quattro strumenti per la vita quotidiana: i verbi con prefisso (separabili e no), la negazione, le domande e i verbi modali. Con questi parli di abitudini, permessi e obblighi.</p>
 <h3>Verbi separabili e inseparabili</h3>
-<p>Il prefisso dei verbi <b>separabili</b> è accentato e, al presente, va alla <b>fine</b> della frase: <i>aufstehen</i> [AUF-shté:-ën] → <i>Ich stehe um sieben Uhr auf</i>. Con un modale resta unito all'infinito: <i>Ich muss früh aufstehen</i>. Nelle subordinate si ricongiunge: <i>weil ich früh aufstehe</i>.</p>
+<p>Il prefisso dei verbi <b>separabili</b> è accentato e, al presente, va di norma alla <b>fine</b> della frase: <i>aufstehen</i> [AUF-shte:-ën] → <i>Ich stehe um sieben Uhr auf</i>. Con un modale resta unito all'infinito: <i>Ich muss früh aufstehen</i>. Nelle subordinate si ricongiunge: <i>weil ich früh aufstehe</i>.</p>
 <table><tr><th>Verbo</th><th>Esempio</th></tr>
-<tr><td>aufstehen [AUF-shté:-ën]</td><td>Ich stehe um sieben auf.</td></tr>
+<tr><td>aufstehen [AUF-shte:-ën]</td><td>Ich stehe um sieben auf.</td></tr>
 <tr><td>ankommen [AN-ko-mën]</td><td>Der Zug kommt um acht an.</td></tr>
 <tr><td>einkaufen [AIN-kau-fën]</td><td>Wir kaufen am Samstag ein.</td></tr>
 <tr><td>anrufen [AN-ru:-fën]</td><td>Ich rufe dich morgen an.</td></tr>
 <tr><td>mitkommen [MIT-ko-mën]</td><td>Kommst du mit?</td></tr>
-<tr><td>fernsehen [FERN-zé:-ën]</td><td>Er sieht abends fern.</td></tr></table>
-<p>I prefissi <b>inseparabili</b> non sono accentati e non si staccano: <b>be-, emp-, ent-, er-, ge-, miss-, ver-, zer-</b>: <i>bekommen</i> [bë-KO-mën] (ricevere!), <i>verstehen</i> [fer-SHTÉ:-ën], <i>besuchen</i> [bë-ZU:-chën], <i>erklären</i> [er-KLÈ:-rën], <i>vergessen</i>, <i>gefallen</i>. <i>Ich verstehe dich</i>, non «Ich stehe dich ver». Trappola: <b>bekommen</b> significa ricevere, non «diventare» (si dice <i>werden</i>). I prefissi <i>durch-, über-, um-, unter-, wieder-</i> possono essere separabili o inseparabili a seconda del significato (umFAHren / UMfahren).</p>
+<tr><td>fernsehen [FERN-ze:-ën]</td><td>Er sieht abends fern.</td></tr></table>
+<p>I prefissi <b>inseparabili</b> non sono accentati e non si staccano: <b>be-, emp-, ent-, er-, ge-, miss-, ver-, zer-</b> (più rari: hinter-, voll-, wider-): <i>bekommen</i> [bë-KO-mën] (ricevere!), <i>verstehen</i> [fer-SHTÉ:-ën], <i>besuchen</i> [bë-ZU:-chën], <i>erklären</i> [er-KLÈ:-rën], <i>vergessen</i>, <i>gefallen</i>. <i>Ich verstehe dich</i>, non «Ich stehe dich ver». Trappola: <b>bekommen</b> significa ricevere, non «diventare» (si dice <i>werden</i>). I prefissi <i>durch-, über-, um-, unter-, wieder-</i> possono essere separabili o inseparabili a seconda del significato (umFAHren / UMfahren).</p>
 <h3>Negazione: nicht e kein</h3>
 <ul><li><b>kein</b> nega un nome con ein- o senza articolo: <i>Ich habe kein Auto. Ich trinke keinen Kaffee. Wir haben keine Zeit.</i></li><li><b>nicht</b> nega verbi, aggettivi, avverbi, e nomi con l'articolo determinativo o un possessivo: <i>Ich komme nicht. Das Auto ist nicht neu. Ich kenne den Mann nicht.</i></li></ul>
-<p>Posizione di <b>nicht</b>: alla fine se nega tutta la frase (<i>Ich kaufe das Buch nicht</i>), prima dell'elemento negato (<i>Ich bin nicht müde</i>), prima del prefisso separabile e dell'infinito (<i>Ich stehe nicht auf. Ich kann nicht kommen.</i>). Altre negazioni: <b>nie</b> [NI:] (mai), <b>nichts</b> [NIÇTS], <b>niemand</b> [NI:-mant], <b>nicht mehr</b> (non più), <b>noch nicht</b> (non ancora). <b>Il tedesco non raddoppia la negazione</b>: «non ho visto niente» = <i>Ich habe nichts gesehen</i> (mai «nicht nichts»). Per rispondere a una domanda negativa: <i>Hast du keinen Hunger? – Doch!</i> (sì, ce l'ho). Risposte: <b>ja</b> [IA:], <b>nein</b> [NAIN], <b>doch</b> [DOCH].</p>
+<p>Posizione di <b>nicht</b>: alla fine se nega tutta la frase (<i>Ich kaufe das Buch nicht</i>), prima dell'elemento negato (<i>Ich bin nicht müde</i>), prima del prefisso separabile e dell'infinito (<i>Ich stehe nicht auf. Ich kann nicht kommen.</i>). Altre negazioni: <b>nie</b> [NI:] (mai), <b>nichts</b> [NIÇTS], <b>niemand</b> [NI:-mant], <b>nicht mehr</b> (non più), <b>noch nicht</b> (non ancora). <b>Il tedesco non raddoppia la negazione</b>: «non ho visto niente» = <i>Ich habe nichts gesehen</i> (mai «nicht nichts»). Per rispondere a una domanda negativa: <i>Hast du keinen Hunger? – Doch!</i> (sì, ce l'ho). Risposte: <b>ja</b> [JA:], <b>nein</b> [NAIN], <b>doch</b> [DOCH].</p>
 <h3>Domande</h3>
 <p><b>Sì/no</b>: il verbo va al primo posto: <i>Wohnst du in Berlin?</i> <i>Kommst du mit?</i> <b>Parole interrogative</b> (W-Fragen) in prima posizione, poi il verbo: <i>Wo wohnst du?</i></p>
-${vsec('Parole interrogative', [
-  ['wer, was', 'VÉ:R, VAS', 'chi, che cosa'],
-  ['wo, wohin, woher', 'VO:, vo-HIN, vo-HÉ:R', 'dove, verso dove, da dove'],
-  ['wann, warum, wie', 'VAN, va-RUM, VI:', 'quando, perché, come'],
-  ['wie viel, wie viele', 'VI: FI:L, VI: FI:-lë', 'quanto, quanti'],
+${vsecW('Parole interrogative', [
+  ['chi', 'che-cosa'],
+  ['dove', 'verso-dove', 'da-dove'],
+  ['quando', 'perche', 'come'],
+  ['quanto', 'quanti'],
 ])}
 <p>Esempi: <i>Wo wohnst du? Woher kommst du? Wann stehst du auf? Was machst du heute? Warum lernst du Deutsch?</i> Non confondere <b>wo</b> (dove) con <b>wer</b> (chi). Frasi utili in classe: <i>Wie bitte?</i> (prego?), <i>Wie heißt das auf Deutsch?</i>, <i>Was bedeutet ...?</i>, <i>Können Sie das wiederholen?</i></p>
 <h3>I verbi modali</h3>
@@ -409,7 +480,7 @@ ${vsec('Parole interrogative', [
 <tr><td>wir / sie</td><td>dürfen</td><td>sollen</td><td>mögen [MÖ:-gën]</td><td>möchten</td></tr></table>
 <p>Ich ed er/sie/es sono uguali e senza desinenza. Uso: <b>können</b> = capacità, possibilità; <b>müssen</b> = necessità; <b>wollen</b> = intenzione (diretto, quasi brusco); <b>dürfen</b> = permesso; <b>sollen</b> = dovere imposto da altri o morale; <b>mögen</b> = piacere (<i>Ich mag Kaffee</i>); <b>möchten</b> = desiderio cortese (<i>Ich möchte einen Kaffee</i>). Trappola: <b>nicht müssen</b> = non essere obbligato (<i>Du musst nicht kommen</i>); il divieto è <b>nicht dürfen</b> (<i>Du darfst nicht kommen</i>). Struttura: modale in seconda posizione, infinito in fondo: <i>Ich kann gut kochen. Er muss heute arbeiten. Wir wollen nach Italien fahren.</i> Il verbo di movimento può cadere: <i>Ich muss nach Hause.</i></p>
 <h3>La routine</h3>
-<p><i>Ich stehe um sieben Uhr auf, dusche [DU-shë] und frühstücke [FRÜ:-shtü-kë]. Um acht fahre ich zur Arbeit. Mittags esse ich in der Kantine. Abends sehe ich fern und gehe um elf Uhr schlafen.</i></p>
+<p><i>Ich stehe um sieben Uhr auf, dusche [DU:-shë] und frühstücke [FRÜ:-shtü-kë]. Um acht fahre ich zur Arbeit. Mittags esse ich in der Kantine. Abends sehe ich fern und gehe um elf Uhr schlafen.</i></p>
 <div class="say"><b>Cosa dire.</b> «Ich muss früh aufstehen, aber ich möchte lieber schlafen. Kannst du mich um sieben anrufen?»</div>`,
   [
     q(
@@ -418,11 +489,11 @@ ${vsec('Parole interrogative', [
       [
         `Ich stehe um sieben Uhr auf.`,
         `Ich aufstehe um sieben Uhr.`,
-        `Ich stehe auf um sieben Uhr.`,
+        `Ich stehe um auf sieben Uhr.`,
         `Ich stehe um sieben Uhr an.`,
       ],
       0,
-      `Il prefisso separabile va alla fine della frase principale. Ich aufstehe lascia il verbo intero, come in italiano; an cambia il significato.`,
+      `Il prefisso separabile va di norma alla fine della frase principale (nel parlato qualcuno sposta l'informazione dopo la particella, ma lo standard è questo). Ich aufstehe lascia il verbo intero, come in italiano; Ich stehe um auf sieben Uhr spezza il gruppo di parole senza senso; an cambia il significato.`,
     ),
     q(
       'q2',

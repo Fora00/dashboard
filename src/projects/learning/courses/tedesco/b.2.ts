@@ -23,21 +23,21 @@ ${tbl(
     ['ihr', 'hattet', 'wart'],
   ],
 )}
-<p>Pronuncia: <i>hatte</i> [HA-të], <i>hattest</i> [HA-tëst], <i>war</i> [VA:r], <i>warst</i> [VA:rst], <i>waren</i> [VA:-rën], <i>wart</i> [VA:rt].</p>
+<p>Pronuncia: <i>hatte</i> [HA-të], <i>hattest</i> [HA-tëst], <i>war</i> [VA:R], <i>warst</i> [VA:RST], <i>waren</i> [VA:-rën], <i>wart</i> [VA:RT].</p>
 ${vsec('Esempi', [
   [
     'Als ich ankam, war der Zug schon abgefahren.',
-    'als iç AN-ka:m, va:r de:r TSU:K shon AP-gë-fa:-rën',
+    'als iç AN-ka:m, VA:R de:r TSU:K shon AP-gë-fa:-rën',
     'Quando arrivai, il treno era già partito.',
   ],
   [
     'Sie war müde, weil sie nicht geschlafen hatte.',
-    'zi: va:r MÜ:-dë, vail zi: niçt gë-SHLA:-fën HA-të',
+    'zi: VA:R MÜ:-dë, vail zi: niçt gë-SHLA:-fën HA-të',
     'Era stanca perché non aveva dormito.',
   ],
   [
     'Nachdem er gegessen hatte, trank er einen Kaffee.',
-    'nach-DE:m e:r gë-GE-ssën HA-të, TRANK e:r AI-nën KA-fe',
+    'nach-DÉ:M e:r gë-GE-ssën HA-të, TRANK e:r AI-nën KA-fe',
     'Dopo aver mangiato, bevve un caffè.',
   ],
 ])}
@@ -51,7 +51,7 @@ ${tbl(
     ['Futur / Präsens (gehe)', 'Perfekt (habe gegessen)'],
   ],
 )}
-<p><b>als / wenn / wann:</b> <i>als</i> = «quando» per un fatto singolo nel passato; <i>wenn</i> = «quando/ogni volta che/se» per presente, futuro e abitudini; <i>wann</i> = «quando?» nelle domande. «Als ich Kind war, wohnte ich in Mailand.» [als iç KINT va:r, VO:N-të iç in mai-LANT]; «Wenn es regnet, bleibe ich zu Hause.»</p>
+<p><b>als / wenn / wann:</b> <i>als</i> = «quando» per un fatto singolo nel passato; <i>wenn</i> = «quando/ogni volta che/se» per presente, futuro e abitudini; <i>wann</i> = «quando?» nelle domande. «Als ich Kind war, wohnte ich in Mailand.» [als iç KINT VA:R, VO:N-të iç in MAI-lant]; «Wenn es regnet, bleibe ich zu Hause.»</p>
 <h3>Futur II: werden + participio + haben/sein</h3>
 <p>Raro ma utile: indica un'azione <b>conclusa nel futuro</b> o una <b>supposizione sul passato</b>. Nel parlato si preferisce il Perfekt con un avverbio (<i>schon, bis</i>).</p>
 ${vsec('Futur II', [
@@ -65,32 +65,32 @@ ${vsec('Futur II', [
 <h3>Verbi forti nei testi: Präteritum e participio</h3>
 <p>Nei testi scritti (giornali, romanzi, fiabe) incontri il Präteritum. I verbi forti cambiano la vocale della radice; i deboli aggiungono <b>-te</b> (<i>machte</i> [MACH-të], <i>arbeitete</i> [AR-bai-të-të]). Il Partizip II dei forti finisce in <b>-en</b>.</p>
 ${vsec('Forme da riconoscere', [
-  ['gehen – ging – gegangen', 'GE:-ën – GING – gë-GA-ngën', 'andare'],
+  ['gehen – ging – gegangen', 'GÉ:-ën – GING – gë-GANG-ën', 'andare'],
   ['kommen – kam – gekommen', 'KO-mën – KA:M – gë-KO-mën', 'venire'],
-  ['sehen – sah – gesehen', 'ZE:-ën – ZA: – gë-ZE:-ën', 'vedere'],
-  ['nehmen – nahm – genommen', 'NE:-mën – NA:M – gë-NO-mën', 'prendere'],
-  ['geben – gab – gegeben', 'GE:-bën – GA:P – gë-GE:-bën', 'dare'],
+  ['sehen – sah – gesehen', 'ZÉ:-ën – ZA: – gë-ZÉ:-ën', 'vedere'],
+  ['nehmen – nahm – genommen', 'NÉ:-mën – NA:M – gë-NO-mën', 'prendere'],
+  ['geben – gab – gegeben', 'GÉ:-bën – GA:P – gë-GÉ:-bën', 'dare'],
   ['finden – fand – gefunden', 'FIN-dën – FANT – gë-FUN-dën', 'trovare'],
   ['bleiben – blieb – geblieben', 'BLAI-bën – BLI:P – gë-BLI:-bën', 'restare'],
   ['schreiben – schrieb – geschrieben', 'SHRAI-bën – SHRI:P – gë-SHRI:-bën', 'scrivere'],
   ['sprechen – sprach – gesprochen', 'SHPRE-çën – SHPRA:CH – gë-SHPRO-chën', 'parlare'],
   ['fahren – fuhr – gefahren', 'FA:-rën – FU:R – gë-FA:-rën', 'andare (con mezzo)'],
-  ['essen – aß – gegessen', 'E-ssën – A:SS – gë-GE-ssën', 'mangiare'],
+  ['essen – aß – gegessen', 'E-ssën – A:S – gë-GE-ssën', 'mangiare'],
   ['trinken – trank – getrunken', 'TRIN-kën – TRANK – gë-TRUN-kën', 'bere'],
   ['schlafen – schlief – geschlafen', 'SHLA:-fën – SHLI:F – gë-SHLA:-fën', 'dormire'],
   ['helfen – half – geholfen', 'HEL-fën – HALF – gë-HOL-fën', 'aiutare'],
-  ['stehen – stand – gestanden', 'SHTE:-ën – SHTANT – gë-SHTAN-dën', 'stare in piedi'],
-  ['lesen – las – gelesen', 'LE:-zën – LA:S – gë-LE:-zën', 'leggere'],
+  ['stehen – stand – gestanden', 'SHTÉ:-ën – SHTANT – gë-SHTAN-dën', 'stare in piedi'],
+  ['lesen – las – gelesen', 'LÉ:-zën – LA:S – gë-LÉ:-zën', 'leggere'],
   ['treffen – traf – getroffen', 'TRE-fën – TRA:F – gë-TRO-fën', 'incontrare'],
   ['denken – dachte – gedacht', 'DEN-kën – DACH-të – gë-DACHT', 'pensare (misto)'],
-  ['bringen – brachte – gebracht', 'BRI-ngën – BRACH-të – gë-BRACHT', 'portare (misto)'],
+  ['bringen – brachte – gebracht', 'BRING-ën – BRACH-të – gë-BRACHT', 'portare (misto)'],
   ['wissen – wusste – gewusst', 'VI-ssën – VUS-të – gë-VUST', 'sapere (misto)'],
 ])}
 <h3>Leggere un racconto</h3>
 <p>«Gestern Abend kam Anna spät nach Hause. Sie hatte den ganzen Tag gearbeitet und war sehr müde. Sie aß nur ein Brot, trank ein Glas Wasser und ging sofort ins Bett.»</p>
-<p><i>[GES-tërn A:-bënt KA:M A-na SHPE:T na:ch HAU-zë. zi: HA-të de:n GAN-tsën TA:K gë-AR-bai-tët unt VA:R ze:r MÜ:-dë. zi: A:SS nu:r ain BRO:T, TRANK ain GLA:S VA-ssa unt GING zo-FORT ins BET.]</i></p>
+<p><i>[GES-tërn A:-bënt KA:M A-na SHPÉ:T na:ch HAU-zë. zi: HA-të de:n GAN-tsën TA:K gë-AR-bai-tët unt VA:R ZÉ:R MÜ:-dë. zi: A:S NU:R ain BRO:T, TRANK ain GLA:S VA-ssa unt GING zo-FORT ins BET.]</i></p>
 <p>Anna tornò tardi a casa. Aveva lavorato tutto il giorno ed era molto stanca. Mangiò solo un pezzo di pane, bevve un bicchiere d'acqua e andò subito a letto. Il Plusquamperfekt (<i>hatte gearbeitet</i>) dà lo sfondo <b>prima</b> dei fatti narrati al Präteritum.</p>
-<p>Nell'inizio delle fiabe: «Es war einmal ein König, der hatte drei Töchter.» [es va:r AIN-ma:l ain KÖ:-niç, de:r HA-të drai TÖÇ-ta].</p>
+<p>Nell'inizio delle fiabe: «Es war einmal ein König, der hatte drei Töchter.» [es VA:R AIN-ma:l ain KÖ:-niç, de:r HA-të drai TÖÇ-ta].</p>
 <h3>Trappole per chi parla italiano</h3>
 <ul>
 <li>L'italiano ha <b>passato prossimo / remoto / imperfetto</b>, il tedesco quasi solo Perfekt e Präteritum: <i>ich ging</i> può essere «andai» o «andavo». Nel parlato usa il <b>Perfekt</b>, tranne per <i>war, hatte, konnte, wollte, musste</i>.</li>
@@ -158,14 +158,14 @@ ${vsec('Forme da riconoscere', [
     q(
       'q8',
       'Come si pronuncia «gewesen» (stato)?',
-      ['[gë-VE:-zën]', '[gë-VE:-sën]', '[ge-VE-zen]', '[gë-WE:-zën]'],
+      ['[gë-VÉ:-zën]', '[gë-VÉ:-sën]', '[ge-VE-zen]', '[gë-WÉ:-zën]'],
       0,
       'Il prefisso ge- è debole (ë), la w vale v, la e è lunga e la s tra vocali è sonora [z]. Con la s sorda sarebbe un errore.',
     ),
     q(
       'q9',
       'Come si pronuncia «ging» (andò, andava)?',
-      ['[GING]', '[GIN-gë]', '[GI:NG]', '[JING]'],
+      ['[GING]', '[GING-ë]', '[GI:NG]', '[JING]'],
       0,
       'Ng è un solo suono nasale e la g non si pronuncia separatamente. La i è breve, la g iniziale è dura come in «gatto».',
     ),
@@ -181,14 +181,14 @@ ${vsec('Forme da riconoscere', [
       'Futur II',
       '<i>werde + Partizip II + haben/sein</i>: <i>Bis Freitag werde ich fertig gewesen sein.</i> Anche supposizione sul passato.',
     ),
-    card('c3', 'nachdem [nach-DE:m]', 'dopo che. Plusquamperfekt + Präteritum, oppure Perfekt + Präsens.'),
+    card('c3', 'nachdem [nach-DÉ:M]', 'dopo che. Plusquamperfekt + Präteritum, oppure Perfekt + Präsens.'),
     card(
       'c4',
       'als / wenn / wann',
       'als = quando, fatto singolo nel passato; wenn = quando/se (abitudine, futuro); wann = quando? (domanda).',
     ),
-    card('c5', 'gehen – ging – gegangen [GE:-ën – GING – gë-GA-ngën]', 'andare. Ausiliare sein.'),
-    card('c6', 'sehen – sah – gesehen [ZE:-ën – ZA: – gë-ZE:-ën]', 'vedere. Ausiliare haben.'),
+    card('c5', 'gehen – ging – gegangen [GÉ:-ën – GING – gë-GANG-ën]', 'andare. Ausiliare sein.'),
+    card('c6', 'sehen – sah – gesehen [ZÉ:-ën – ZA: – gë-ZÉ:-ën]', 'vedere. Ausiliare haben.'),
     card('c7', 'wissen – wusste – gewusst [VI-ssën – VUS-të – gë-VUST]', 'sapere (verbo misto).'),
     card(
       'c8',
@@ -249,16 +249,16 @@ ${tbl(
     ['ihr', 'wärt', 'hättet', 'würdet'],
   ],
 )}
-<p>Pronuncia: <i>wäre</i> [VE:-rë], <i>wärst</i> [VE:rst], <i>hätte</i> [HE-të], <i>hättest</i> [HE-tëst], <i>würde</i> [VÜR-dë], <i>würdest</i> [VÜR-dëst].</p>
+<p>Pronuncia: <i>wäre</i> [VÈ:-rë], <i>wärst</i> [VÈ:RST], <i>hätte</i> [HE-të], <i>hättest</i> [HE-tëst], <i>würde</i> [VÜR-dë], <i>würdest</i> [VÜR-dëst].</p>
 ${vsec('Altre forme frequenti', [
   ['ich könnte', 'iç KÖN-të', 'potrei'],
   ['ich müsste', 'iç MÜS-të', 'dovrei (obbligo)'],
   ['ich dürfte', 'iç DÜRF-të', 'potrei (permesso)'],
   ['ich sollte', 'iç ZOL-të', 'dovrei (consiglio)'],
   ['ich möchte', 'iç MÖÇ-të', 'vorrei'],
-  ['ich ginge', 'iç GI-ngë', 'andrei'],
-  ['ich käme', 'iç KE:-më', 'verrei'],
-  ['es gäbe', 'es GE:-bë', 'ci sarebbe'],
+  ['ich ginge', 'iç GING-ë', 'andrei'],
+  ['ich käme', 'iç KÈ:-më', 'verrei'],
+  ['es gäbe', 'es GÈ:-bë', 'ci sarebbe'],
   ['ich wüsste', 'iç VÜS-të', 'saprei'],
 ])}
 <p><b>sollte</b> e <b>wollte</b> non hanno Umlaut e coincidono con il Präteritum: il contesto decide. Con i verbi deboli (<i>machen, arbeiten</i>) la forma del Konjunktiv II è uguale al Präteritum, quindi si usa <b>würde + infinito</b>: «Ich würde das machen.» [iç VÜR-dë das MA-chën].</p>
@@ -270,15 +270,15 @@ ${vsec('Esempi', [
     'ven iç TSAIT HE-të, VÜR-dë iç diç bë-ZU:-chën',
     'Se avessi tempo, ti verrei a trovare.',
   ],
-  ['Hätte ich Zeit, käme ich mit.', 'HE-të iç TSAIT, KE:-më iç MIT', 'Avessi tempo, verrei con te.'],
+  ['Hätte ich Zeit, käme ich mit.', 'HE-të iç TSAIT, KÈ:-më iç MIT', 'Avessi tempo, verrei con te.'],
   [
     'Wenn ich Zeit gehabt hätte, wäre ich gekommen.',
-    'ven iç TSAIT gë-HAPT HE-të, VE:-rë iç gë-KO-mën',
+    'ven iç TSAIT gë-HA:PT HE-të, VÈ:-rë iç gë-KO-mën',
     'Se avessi avuto tempo, sarei venuto.',
   ],
   ['Du hättest anrufen sollen.', 'du HE-tëst AN-ru:-fën ZO-lën', 'Avresti dovuto telefonare.'],
-  ['Wenn ich doch mehr Zeit hätte!', 'ven iç DOCH ME:R TSAIT HE-të', 'Se solo avessi più tempo!'],
-  ['Wäre ich doch reich!', 'VE:-rë iç DOCH RAIÇ', 'Fossi ricco!'],
+  ['Wenn ich doch mehr Zeit hätte!', 'ven iç DOCH MÉ:R TSAIT HE-të', 'Se solo avessi più tempo!'],
+  ['Wäre ich doch reich!', 'VÈ:-rë iç DOCH RAIÇ', 'Fossi ricco!'],
   ['Er tut so, als ob er alles wüsste.', 'e:r TU:T zo, als op e:r A-lës VÜS-të', 'Fa come se sapesse tutto.'],
 ])}
 <h3>Cortesia e consiglio</h3>
@@ -286,8 +286,8 @@ ${vsec('Formule', [
   ['Könnten Sie mir bitte helfen?', 'KÖN-tën zi: mi:r BI-të HEL-fën', 'Potrebbe aiutarmi, per favore?'],
   ['Ich hätte gern einen Kaffee.', 'iç HE-të GERN AI-nën KA-fe', 'Vorrei un caffè.'],
   ['An deiner Stelle würde ich warten.', 'an DAI-na SHTE-lë VÜR-dë iç VAR-tën', 'Al posto tuo aspetterei.'],
-  ['Das wäre schön.', 'das VE:-rë SHÖ:N', 'Sarebbe bello.'],
-  ['Du solltest mehr schlafen.', 'du ZOL-tëst ME:R SHLA:-fën', 'Dovresti dormire di più.'],
+  ['Das wäre schön.', 'das VÈ:-rë SHÖ:N', 'Sarebbe bello.'],
+  ['Du solltest mehr schlafen.', 'du ZOL-tëst MÉ:R SHLA:-fën', 'Dovresti dormire di più.'],
 ])}
 <h3>Trappole per chi parla italiano</h3>
 <ul>
@@ -342,7 +342,7 @@ ${vsec('Formule', [
     q(
       'q6',
       'Come si pronuncia «hätte» (Konjunktiv II di haben)?',
-      ['[HE-të]', '[HA-të]', '[HE:-të]', '[HAT-te]'],
+      ['[HE-të]', '[HA-të]', '[HÉ:-të]', '[HAT-te]'],
       0,
       'La ä breve vale una e aperta come in «bello», mentre hatte (passato) ha la a. La doppia t si legge come una consonante sola.',
     ),
@@ -376,7 +376,7 @@ ${vsec('Formule', [
   [
     card(
       'c1',
-      'wäre / hätte / würde [VE:-rë / HE-të / VÜR-dë]',
+      'wäre / hätte / würde [VÈ:-rë / HE-të / VÜR-dë]',
       'Konjunktiv II di sein / haben / werden. Gli ausiliari più frequenti.',
     ),
     card('c2', 'Formazione', 'Präteritum + Umlaut + -e: <i>kam → käme, ging → ginge, wusste → wüsste</i>.'),
@@ -445,25 +445,25 @@ ${vsec('I tempi del passivo', [
   ['Das Haus wird gebaut.', 'das HAUS virt gë-BAUT', 'La casa viene costruita. (presente)'],
   ['Das Haus wurde gebaut.', 'das HAUS VUR-dë gë-BAUT', 'La casa fu costruita. (Präteritum)'],
   ['Das Haus ist gebaut worden.', 'das HAUS ist gë-BAUT VOR-dën', 'La casa è stata costruita. (Perfekt)'],
-  ['Das Haus war gebaut worden.', 'das HAUS va:r gë-BAUT VOR-dën', 'La casa era stata costruita.'],
+  ['Das Haus war gebaut worden.', 'das HAUS VA:R gë-BAUT VOR-dën', 'La casa era stata costruita.'],
   ['Das Haus wird gebaut werden.', 'das HAUS virt gë-BAUT VER-dën', 'La casa sarà costruita.'],
 ])}
 <p>Nel Perfekt passivo il participio di <i>werden</i> è <b>worden</b>, non <i>geworden</i>. <b>Chi agisce:</b> <b>von + dativo</b> per le persone («Das Buch wurde von einem Autor aus Wien geschrieben.»), <b>durch + accusativo</b> per cause e mezzi («Das Haus wurde durch einen Sturm zerstört.» [… DURÇ AI-nën SHTURM tser-SHTÖRT]).</p>
 <h3>Zustandspassiv: sein + Partizip II</h3>
-<p>Descrive il <b>risultato</b>: «Die Tür ist geschlossen.» [di: TÜ:r ist gë-SHLO-ssën] (è chiusa) ≠ «Die Tür wird geschlossen.» (la stanno chiudendo). «Das Geschäft ist geöffnet.» (il negozio è aperto). Passato: <i>war geschlossen</i>.</p>
+<p>Descrive il <b>risultato</b>: «Die Tür ist geschlossen.» [di: TÜ:R ist gë-SHLO-ssën] (è chiusa) ≠ «Die Tür wird geschlossen.» (la stanno chiudendo). «Das Geschäft ist geöffnet.» (il negozio è aperto). Passato: <i>war geschlossen</i>.</p>
 <h3>Passivo impersonale e con modali</h3>
 <ul>
-<li>Senza soggetto: «Hier wird nicht geraucht.» [hi:r virt niçt gë-RAUCHT]; «Es wird viel getanzt.» [es virt fi:l gë-TANTST].</li>
+<li>Senza soggetto: «Hier wird nicht geraucht.» [HI:R virt niçt gë-RAUCHT]; «Es wird viel getanzt.» [es virt fi:l gë-TANTST].</li>
 <li>Verbi con il dativo: «<b>Mir</b> wurde geholfen.» [mi:r VUR-dë gë-HOL-fën] (mi hanno aiutato). Non «Ich wurde geholfen».</li>
 <li>Con i modali: «Das muss sofort gemacht <b>werden</b>.» [das MUS zo-FORT gë-MACHT VER-dën]; «Das kann nicht erklärt werden.»</li>
 </ul>
 <h3>Alternative al passivo</h3>
 ${vsec('Passiversatzformen', [
-  ['Hier spricht man Deutsch.', 'hi:r SHPRIÇT man DOITSH', 'Qui si parla tedesco. (man)'],
-  ['Das lässt sich leicht erklären.', 'das LEST ziç LAIÇT er-KLE:-rën', 'Si spiega facilmente. (sich lassen)'],
+  ['Hier spricht man Deutsch.', 'HI:R SHPRIÇT man DOITSH', 'Qui si parla tedesco. (man)'],
+  ['Das lässt sich leicht erklären.', 'das LEST ziç LAIÇT er-KLÈ:-rën', 'Si spiega facilmente. (sich lassen)'],
   [
     'Das Problem ist leicht zu lösen.',
-    'das pro-BLE:M ist LAIÇT tsu LÖ:-zën',
+    'das pro-BLÉ:M ist LAIÇT tsu LÖ:-zën',
     'Il problema è facile da risolvere. (sein + zu)',
   ],
   ['Das Wasser ist trinkbar.', 'das VA-ssa ist TRINK-ba:r', "L'acqua è potabile. (-bar)"],
@@ -479,21 +479,21 @@ ${vsec('Verbo + preposizione', [
   ['warten auf + Akk', 'VAR-tën auf', 'aspettare'],
   ['sich freuen auf + Akk', 'ziç FROI-ën auf', 'essere contento di (futuro)'],
   ['sich freuen über + Akk', 'ziç FROI-ën Ü:-ba', 'essere contento di (presente/passato)'],
-  ['sich interessieren für + Akk', 'ziç in-të-re-SI:-rën FÜ:r', 'interessarsi di'],
+  ['sich interessieren für + Akk', 'ziç in-të-re-SI:-rën FÜ:R', 'interessarsi di'],
   ['sich ärgern über + Akk', 'ziç ER-gërn Ü:-ba', 'arrabbiarsi per'],
   ['denken an + Akk', 'DEN-kën an', 'pensare a'],
   ['sich erinnern an + Akk', 'ziç er-I-nërn an', 'ricordarsi di'],
   ['träumen von + Dat', 'TROI-mën fon', 'sognare di'],
-  ['abhängen von + Dat', 'AP-hen-gën fon', 'dipendere da'],
+  ['abhängen von + Dat', 'AP-heng-ën fon', 'dipendere da'],
   ['bitten um + Akk', 'BI-tën um', 'chiedere (qualcosa)'],
   ['fragen nach + Dat', 'FRA:-gën na:ch', 'chiedere di/su'],
   ['teilnehmen an + Dat', 'TAIL-ne:-mën an', 'partecipare a'],
-  ['sich entscheiden für + Akk', 'ziç ent-SHAI-dën FÜ:r', 'decidersi per'],
+  ['sich entscheiden für + Akk', 'ziç ent-SHAI-dën FÜ:R', 'decidersi per'],
   ['sich verlieben in + Akk', 'ziç fer-LI:-bën in', 'innamorarsi di'],
   ['Angst haben vor + Dat', 'ANGST HA:-bën fo:r', 'avere paura di'],
   ['sich konzentrieren auf + Akk', 'ziç kon-tsen-TRI:-rën auf', 'concentrarsi su'],
   ['sich beschäftigen mit + Dat', 'ziç bë-SHEF-ti-gën mit', 'occuparsi di'],
-  ['bestehen aus + Dat', 'bë-SHTE:-ën aus', 'consistere di'],
+  ['bestehen aus + Dat', 'bë-SHTÉ:-ën aus', 'consistere di'],
 ])}
 <p>Con le cose si usa <b>da(r)- / wo(r)-</b>: «<b>Worauf</b> wartest du?» [vo-RAUF VAR-tëst du] – «Ich warte <b>darauf</b>, dass er anruft.» [iç VAR-të da-RAUF, das e:r AN-ru:ft]. Con le persone: «<b>Auf wen</b> wartest du?» – «Auf ihn.»</p>
 <h3>Trappole per chi parla italiano</h3>

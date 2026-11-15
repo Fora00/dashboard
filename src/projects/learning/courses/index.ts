@@ -7,6 +7,7 @@ import { disegno } from './disegno'
 import { spagnolo } from './spagnolo'
 import { francese } from './francese'
 import { tedesco } from './tedesco'
+import { russo } from './russo'
 
 // A new course = one data file in this folder + one line here.
 export const courses: Course[] = [
@@ -18,6 +19,7 @@ export const courses: Course[] = [
   spagnolo,
   francese,
   tedesco,
+  russo,
 ]
 
 export const courseById = (id: string): Course | undefined => courses.find((c) => c.id === id)

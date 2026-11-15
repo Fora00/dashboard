@@ -19,13 +19,13 @@ ${PRON_FULL}
 </ul>
 ${vsec('Casa', [
   ['das Haus (die Häuser)', 'HAUS (HOI-za)', 'la casa'],
-  ['die Wohnung (die Wohnungen)', 'VO:-nung (VO:-nun-gën)', "l'appartamento"],
+  ['die Wohnung (die Wohnungen)', 'VO:-nung (VO:-nung-ën)', "l'appartamento"],
   ['das Zimmer (die Zimmer)', 'TSI-ma (TSI-ma)', 'la stanza'],
   ['das Schlafzimmer (die Schlafzimmer)', 'SHLA:F-tsi-ma', 'la camera da letto'],
   ['das Wohnzimmer (die Wohnzimmer)', 'VO:N-tsi-ma', 'il soggiorno'],
   ['das Badezimmer (die Badezimmer)', 'BA:-dë-tsi-ma', 'il bagno'],
   ['die Küche (die Küchen)', 'KÜ-çë (KÜ-çën)', 'la cucina'],
-  ['die Tür (die Türen)', 'TÜ:r (TÜ:-rën)', 'la porta'],
+  ['die Tür (die Türen)', 'TÜ:R (TÜ:-rën)', 'la porta'],
   ['das Fenster (die Fenster)', 'FEN-sta (FEN-sta)', 'la finestra'],
   ['die Treppe (die Treppen)', 'TRE-pë (TRE-pën)', 'la scala'],
   ['der Schlüssel (die Schlüssel)', 'SHLÜ-ssël', 'la chiave'],
@@ -40,13 +40,13 @@ ${vsec('Famiglia', [
   ['die Familie (die Familien)', 'fa-MI:-li-ë (fa-MI:-li-ën)', 'la famiglia'],
   ['die Eltern (nur Plural)', 'EL-tërn', 'i genitori'],
   ['die Mutter (die Mütter)', 'MU-ta (MÜ-ta)', 'la madre'],
-  ['der Vater (die Väter)', 'FA:-ta (FE:-ta)', 'il padre'],
+  ['der Vater (die Väter)', 'FA:-ta (FÈ:-ta)', 'il padre'],
   ['der Bruder (die Brüder)', 'BRU:-da (BRÜ:-da)', 'il fratello'],
   ['die Schwester (die Schwestern)', 'SHVE-sta (SHVE-stërn)', 'la sorella'],
   ['der Sohn (die Söhne)', 'ZO:N (ZÖ:-në)', 'il figlio'],
   ['die Tochter (die Töchter)', 'TOCH-ta (TÖÇ-ta)', 'la figlia'],
-  ['die Großmutter (die Großmütter)', 'GRO:S-mu-ta', 'la nonna'],
-  ['der Großvater (die Großväter)', 'GRO:S-fa:-ta', 'il nonno'],
+  ['die Großmutter (die Großmütter)', 'GRO:S-MU-ta', 'la nonna'],
+  ['der Großvater (die Großväter)', 'GRO:S-FA:-ta', 'il nonno'],
   ['der Onkel (die Onkel)', 'ON-kël', 'lo zio'],
   ['die Tante (die Tanten)', 'TAN-të (TAN-tën)', 'la zia'],
   ['das Kind (die Kinder)', 'KINT (KIN-da)', 'il bambino'],
@@ -57,18 +57,18 @@ ${vsec('Corpo e salute', [
   ['das Auge (die Augen)', 'AU-gë (AU-gën)', "l'occhio"],
   ['die Nase (die Nasen)', 'NA:-zë (NA:-zën)', 'il naso'],
   ['der Mund (die Münder)', 'MUNT (MÜN-da)', 'la bocca'],
-  ['das Ohr (die Ohren)', 'O:r (O:-rën)', "l'orecchio"],
+  ['das Ohr (die Ohren)', 'O:R (O:-rën)', "l'orecchio"],
   ['der Hals (die Hälse)', 'HALS (HEL-zë)', 'il collo, la gola'],
   ['der Arm (die Arme)', 'ARM (AR-më)', 'il braccio'],
   ['die Hand (die Hände)', 'HANT (HEN-dë)', 'la mano'],
-  ['der Finger (die Finger)', 'FI-nga', 'il dito'],
+  ['der Finger (die Finger)', 'FING-a', 'il dito'],
   ['das Bein (die Beine)', 'BAIN (BAI-në)', 'la gamba'],
-  ['der Fuß (die Füße)', 'FU:SS (FÜ:-ssë)', 'il piede'],
+  ['der Fuß (die Füße)', 'FU:S (FÜ:-ssë)', 'il piede'],
   ['der Rücken (die Rücken)', 'RÜ-kën', 'la schiena'],
   ['der Bauch (die Bäuche)', 'BAUCH (BOI-çë)', 'la pancia'],
   ['das Herz (die Herzen)', 'HERTS (HER-tsën)', 'il cuore'],
   ['der Arzt (die Ärzte)', 'ARTST (ERTS-të)', 'il medico'],
-  ['die Apotheke (die Apotheken)', 'a-po-TE:-kë (a-po-TE:-kën)', 'la farmacia'],
+  ['die Apotheke (die Apotheken)', 'a-po-TÉ:-kë (a-po-TÉ:-kën)', 'la farmacia'],
   ['die Schmerzen (nur Plural)', 'SHMER-tsën', 'il dolore, i dolori'],
   ['das Fieber (kein Plural)', 'FI:-ba', 'la febbre'],
   ['die Erkältung (die Erkältungen)', 'er-KEL-tung', 'il raffreddore'],
@@ -77,7 +77,7 @@ ${vsec('Corpo e salute', [
 ${vsec('Cibo e ristorante', [
   ['das Brot (die Brote)', 'BRO:T (BRO:-të)', 'il pane'],
   ['die Butter (kein Plural)', 'BU-ta', 'il burro'],
-  ['der Käse (die Käse)', 'KE:-zë', 'il formaggio'],
+  ['der Käse (die Käse)', 'KÈ:-zë', 'il formaggio'],
   ['das Fleisch (kein Plural)', 'FLAISH', 'la carne'],
   ['der Fisch (die Fische)', 'FISH (FI-shë)', 'il pesce'],
   ['das Gemüse (kein Plural)', 'gë-MÜ:-zë', 'la verdura'],
@@ -92,7 +92,7 @@ ${vsec('Cibo e ristorante', [
   ['der Wein (die Weine)', 'VAIN (VAI-në)', 'il vino'],
   ['das Bier (die Biere)', 'BI:R (BI:-rë)', 'la birra'],
   ['die Speisekarte (die Speisekarten)', 'SHPAI-zë-kar-të', 'il menu'],
-  ['die Rechnung (die Rechnungen)', 'REÇ-nung (REÇ-nun-gën)', 'il conto'],
+  ['die Rechnung (die Rechnungen)', 'REÇ-nung (REÇ-nung-ën)', 'il conto'],
   ['das Trinkgeld (kein Plural)', 'TRINK-gelt', 'la mancia'],
   ['die Gabel (die Gabeln)', 'GA:-bël (GA:-bëln)', 'la forchetta'],
   ['das Messer (die Messer)', 'ME-ssa', 'il coltello'],
@@ -114,14 +114,14 @@ ${vsec('Vestiti', [
 ${vsec('Tempo atmosferico', [
   ['das Wetter (kein Plural)', 'VE-ta', 'il tempo'],
   ['die Sonne (die Sonnen)', 'ZO-në', 'il sole'],
-  ['der Regen (kein Plural)', 'RE:-gën', 'la pioggia'],
-  ['der Schnee (kein Plural)', 'SHNE:', 'la neve'],
+  ['der Regen (kein Plural)', 'RÉ:-gën', 'la pioggia'],
+  ['der Schnee (kein Plural)', 'SHNÉ:', 'la neve'],
   ['der Wind (die Winde)', 'VINT (VIN-dë)', 'il vento'],
   ['die Wolke (die Wolken)', 'VOL-kë (VOL-kën)', 'la nuvola'],
   ['das Gewitter (die Gewitter)', 'gë-VI-ta', 'il temporale'],
-  ['der Nebel (kein Plural)', 'NE:-bël', 'la nebbia'],
+  ['der Nebel (kein Plural)', 'NÉ:-bël', 'la nebbia'],
   ['die Temperatur (die Temperaturen)', 'tem-pe-ra-TU:R', 'la temperatura'],
-  ['Es regnet. / Es schneit.', 'es RE:G-nët / es SHNAIT', 'Piove. / Nevica.'],
+  ['Es regnet. / Es schneit.', 'es RÉ:G-nët / es SHNAIT', 'Piove. / Nevica.'],
   ['heiß / kalt / windig', 'HAIS / KALT / VIN-diç', 'caldo / freddo / ventoso'],
 ])}
 ${vsec('Shopping', [
@@ -136,6 +136,51 @@ ${vsec('Shopping', [
   ['die Größe (die Größen)', 'GRÖ:-ssë (GRÖ:-ssën)', 'la taglia, la misura'],
   ['billig / teuer', 'BI-liç / TOI-a', 'economico / caro'],
 ])}
+${vsec('Colori', [
+  ['rot', 'RO:T', 'rosso'],
+  ['blau', 'BLAU', 'blu, azzurro'],
+  ['gelb', 'GELP', 'giallo'],
+  ['grün', 'GRÜ:N', 'verde'],
+  ['schwarz', 'SHVARTS', 'nero'],
+  ['weiß', 'VAIS', 'bianco'],
+  ['braun', 'BRAUN', 'marrone'],
+  ['grau', 'GRAU', 'grigio'],
+  ['orange', 'o-RAN-shë', 'arancione (la sh è sonora, come la j francese di «jour»: approssimazione)'],
+  ['rosa / lila', 'RO:-za / LI:-la', 'rosa / viola (invariabili: ein rosa Kleid)'],
+  ['die Farbe (die Farben)', 'FAR-bë (FAR-bën)', 'il colore'],
+  ['Meine Lieblingsfarbe ist Blau.', 'MAI-në LI:P-lings-far-bë ist BLAU', 'Il mio colore preferito è il blu.'],
+])}
+<p><b>Colori davanti al nome (a livello A1 impara solo i blocchi)</b>: il colore prende la desinenza del nome, come ein-: <i>ein roter Pullover</i> [ain RO:-ta pu-LO:-va] (maschile), <i>eine rote Tasche</i> [AI-në RO:-të TA-shë] (femminile), <i>ein rotes Auto</i> [ain RO:-tës AU-to:] (neutro), <i>rote Schuhe</i> [RO:-të SHU:-ë] (plurale). Dopo sein senza desinenza: <i>Das Auto ist rot.</i> Il colore usato come nome è neutro e maiuscolo: <i>das Blau, das Rot</i>. La tabella completa è nel modulo sugli aggettivi (de-aggettivi).</p>
+${vsec('Stagioni', [
+  ['die Jahreszeit (die Jahreszeiten)', 'JA:-rës-tsait (JA:-rës-tsai-tën)', 'la stagione'],
+  ['der Frühling', 'FRÜ:-ling', 'la primavera'],
+  ['der Sommer', 'ZO-ma', "l'estate"],
+  ['der Herbst', 'HERPST', "l'autunno"],
+  ['der Winter', 'VIN-ta', "l'inverno"],
+  ['im Sommer / im Winter', 'im ZO-ma / im VIN-ta', 'in estate / in inverno'],
+  ['Im Winter ist es kalt und es schneit.', 'im VIN-ta ist es KALT unt es SHNAIT', 'In inverno fa freddo e nevica.'],
+])}
+<p>Tutte le stagioni sono <b>maschili</b> (come mesi e giorni) e vogliono <b>im</b>: <i>im Frühling</i>, <i>im Herbst</i> (im = in + dem: l'italiano «in primavera» non ha articolo, il tedesco sì). Sono nomi: maiuscola.</p>
+${vsec('Misure, pesi, denaro e prezzi', [
+  ['das Kilo / das Pfund', 'KI:-lo: / PFUNT', 'il chilo / mezzo chilo (500 g)'],
+  ['hundert Gramm', 'HUN-dërt GRAM', 'cento grammi'],
+  ['der Liter', 'LI:-ta', 'il litro'],
+  ['der Meter / der Kilometer', 'MÉ:-ta / ki-lo-MÉ:-ta', 'il metro / il chilometro'],
+  ['die Flasche (die Flaschen)', 'FLA-shë (FLA-shën)', 'la bottiglia'],
+  ['die Packung (die Packungen)', 'PA-kung (PA-kung-ën)', 'la confezione'],
+  ['die Dose (die Dosen)', 'DO:-zë (DO:-zën)', 'la lattina, il barattolo'],
+  ['das Stück (die Stücke)', 'SHTÜK (SHTÜ-kë)', 'il pezzo'],
+  ['der Euro / der Cent', 'OI-ro: / TSENT', "l'euro / il centesimo"],
+  ['ein Kilo Äpfel', 'ain KI:-lo: EP-fël', 'un chilo di mele'],
+  ['zwei Flaschen Wasser', 'tsvai FLA-shën VA-ssa', 'due bottiglie di acqua'],
+  [
+    'zehn Euro / 2,50 € = zwei Euro fünfzig',
+    'TSÉ:N OI-ro: / tsvai OI-ro: FÜNF-tsiç',
+    'dieci euro / due euro e cinquanta',
+  ],
+  ['Das macht 7,90 €.', 'das MACHT ZI:-bën OI-ro: NOIN-tsiç', 'Fanno 7,90 €.'],
+])}
+<p>Dopo la misura non si mette «di»: <b>ein Kilo Äpfel</b>, <b>eine Flasche Wasser</b>, <b>hundert Gramm Käse</b> [HUN-dërt GRAM KÈ:-zë]. Con i numeri le misure maschili e neutre restano <b>invariate</b> (<i>zwei Kilo, drei Liter, zehn Euro, zwei Pfund</i>), le femminili prendono -n (<i>zwei Flaschen, drei Packungen</i>). Le virgole dei prezzi si leggono: <i>3,20 €</i> = <i>drei Euro zwanzig</i>.</p>
 <h3>Frasi utili</h3>
 ${vsec('Per usare le parole', [
   [
@@ -210,7 +255,7 @@ ${vsec('Per usare le parole', [
     q(
       'q8',
       'Come si pronuncia «Käse»?',
-      ['[KE:-zë]', '[KA:-zë]', '[KE-së]', '[KE:S]'],
+      ['[KÈ:-zë]', '[KA:-zë]', '[KE-së]', '[KÈ:S]'],
       0,
       "Ä lunga vale una e aperta e la s tra due vocali è sonora [z]. Con la a o la s sorda sarebbe un'altra parola.",
     ),
@@ -228,17 +273,53 @@ ${vsec('Per usare le parole', [
       0,
       "Apfel prende solo l'Umlaut: Äpfel (maschile in -el, nessuna desinenza). Apfeln è il dativo plurale con -n.",
     ),
+    q(
+      'q11',
+      'Come dici «due chili di mele»?',
+      ['zwei Kilo Äpfel', 'zwei Kilos von Äpfel', 'zwei Kilo der Äpfel', 'zwei Kilo Apfel'],
+      0,
+      'Dopo una misura non si usa «di» o von: la misura maschile resta invariata dopo il numero e il nome segue direttamente (plurale: Äpfel).',
+    ),
+    q(
+      'q12',
+      'Come dici «in estate» (in primavera, in inverno)?',
+      ['im Sommer', 'in Sommer', 'am Sommer', 'auf Sommer'],
+      0,
+      'Le stagioni vogliono im (in dem): im Frühling, im Sommer, im Herbst, im Winter. Am si usa per i giorni e le parti del giorno.',
+    ),
+    q(
+      'q13',
+      'Come dici «una borsa nera»?',
+      ['eine schwarze Tasche', 'ein schwarze Tasche', 'eine schwarz Tasche', 'eine schwarzes Tasche'],
+      0,
+      'Tasche è femminile: eine e il colore prende -e (schwarze). Ein schwarzes è per un nome neutro, per esempio ein schwarzes Auto.',
+    ),
   ],
   [
-    card('c1', 'das Mädchen [ME:T-çën]', 'la ragazza. Neutro (-chen), plurale invariato: <i>die Mädchen</i>.'),
+    card('c1', 'das Mädchen [MÈ:T-çën]', 'la ragazza. Neutro (-chen), plurale invariato: <i>die Mädchen</i>.'),
     card('c2', 'die Küche [KÜ-çë]', 'la cucina. Plurale: <i>die Küchen</i>.'),
     card('c3', 'der Vater [FA:-ta] / die Mutter [MU-ta]', 'padre / madre. Plurali con Umlaut: <i>Väter, Mütter</i>.'),
     card('c4', 'das Kind [KINT]', 'bambino. Plurale: <i>die Kinder</i> [KIN-da].'),
     card('c5', 'die Rechnung [REÇ-nung]', 'il conto (al ristorante). <i>Zahlen, bitte!</i>'),
     card('c6', 'die Tasche / die Tasse', 'borsa / tazza [TA-shë / TA-ssë].'),
     card('c7', 'der Arzt [ARTST]', 'il medico. Plurale <i>die Ärzte</i>; femminile <i>die Ärztin</i>.'),
-    card('c8', 'Es regnet. [es RE:G-nët]', 'Piove. Nevica = <i>Es schneit</i>.'),
+    card('c8', 'Es regnet. [es RÉ:G-nët]', 'Piove. Nevica = <i>Es schneit</i>.'),
     card('c9', 'Kopfschmerzen [KOPF-shmer-tsën]', 'mal di testa: <i>Ich habe Kopfschmerzen.</i>'),
+    card(
+      'c10',
+      'rot, blau, gelb, grün, schwarz, weiß [RO:T, BLAU, GELP, GRÜ:N, SHVARTS, VAIS]',
+      'rosso, blu, giallo, verde, nero, bianco. Davanti al nome: <i>eine rote Tasche, ein rotes Auto</i>.',
+    ),
+    card(
+      'c11',
+      'der Frühling, Sommer, Herbst, Winter [FRÜ:-ling, ZO-ma, HERPST, VIN-ta]',
+      'primavera, estate, autunno, inverno: tutte maschili, con <i>im</i>.',
+    ),
+    card(
+      'c12',
+      'ein Kilo Äpfel, zwei Euro fünfzig [ain KI:-lo: EP-fël, tsvai OI-ro: FÜNF-tsiç]',
+      'Misura senza «di»; Euro e Kilo invariati dopo il numero. 2,50 € = <i>zwei Euro fünfzig</i>.',
+    ),
   ],
   [
     prac(
@@ -266,6 +347,16 @@ ${vsec('Per usare le parole', [
       'Dì al medico: «Ho la febbre e mal di gola.»',
       '<i>Ich habe Fieber und Halsschmerzen.</i> Nota: Fieber senza articolo, Halsschmerzen sempre plurale.',
     ),
+    prac(
+      'p6',
+      'Al mercato: «Vorrei un chilo di mele e due bottiglie di acqua. Quanto fa?»',
+      '<i>Ich möchte ein Kilo Äpfel und zwei Flaschen Wasser. Was macht das?</i> Nota: nessun «di» dopo la misura; Flaschen con -n dopo zwei.',
+    ),
+    prac(
+      'p7',
+      'Traduci: «In inverno fa freddo e il mio colore preferito è il blu.»',
+      '<i>Im Winter ist es kalt und meine Lieblingsfarbe ist Blau.</i> Nota: im per la stagione; Lieblingsfarbe femminile, quindi meine.',
+    ),
   ],
 )
 
@@ -287,7 +378,7 @@ ${vsec('Viaggio e trasporti', [
   ['die Straßenbahn (die Straßenbahnen)', 'SHTRA:-ssën-ba:n', 'il tram'],
   ['die U-Bahn (die U-Bahnen)', 'U:-ba:n', 'la metropolitana'],
   ['das Gleis (die Gleise)', 'GLAIS (GLAI-zë)', 'il binario'],
-  ['die Verspätung (die Verspätungen)', 'fer-SHPE:-tung (fer-SHPE:-tun-gën)', 'il ritardo'],
+  ['die Verspätung (die Verspätungen)', 'fer-SHPÈ:-tung (fer-SHPÈ:-tung-ën)', 'il ritardo'],
   ['die Abfahrt (die Abfahrten)', 'AP-fa:rt (AP-fa:r-tën)', 'la partenza'],
   ['die Ankunft (die Ankünfte)', 'AN-kunft (AN-künf-të)', "l'arrivo"],
   ['umsteigen', 'UM-shtai-gën', 'cambiare (treno)'],
@@ -304,18 +395,18 @@ ${vsec('Albergo', [
   ['das Doppelzimmer (die Doppelzimmer)', 'DO-pël-tsi-ma', 'la camera doppia'],
   ['die Reservierung (die Reservierungen)', 're-zer-VI:-rung', 'la prenotazione'],
   ['die Rezeption (die Rezeptionen)', 're-tsep-TSIO:N', 'la reception'],
-  ['die Übernachtung (die Übernachtungen)', 'Ü:-ba-NACH-tung', 'il pernottamento'],
+  ['die Übernachtung (die Übernachtungen)', 'ü:-ba-NACH-tung', 'il pernottamento'],
   ['das Frühstück (kein Plural)', 'FRÜ:-shtük', 'la colazione'],
-  ['das WLAN (kein Plural)', 'VE:-lan', 'il wifi'],
+  ['das WLAN (kein Plural)', 'VÉ:-lan', 'il wifi'],
   ['der Aufzug (die Aufzüge)', 'AUF-tsu:k (AUF-tsü:-gë)', "l'ascensore"],
-  ['der Ausgang (die Ausgänge)', 'AUS-gang (AUS-gen-gë)', "l'uscita"],
+  ['der Ausgang (die Ausgänge)', 'AUS-gang (AUS-geng-ë)', "l'uscita"],
 ])}
 ${vsec('Città', [
-  ['die Stadt (die Städte)', 'SHTAT (SHTE:-të)', 'la città'],
+  ['die Stadt (die Städte)', 'SHTAT (SHTE-të)', 'la città'],
   ['die Straße (die Straßen)', 'SHTRA:-ssë (SHTRA:-ssën)', 'la strada'],
   ['der Platz (die Plätze)', 'PLATS (PLE-tsë)', 'la piazza'],
   ['die Kirche (die Kirchen)', 'KIR-çë (KIR-çën)', 'la chiesa'],
-  ['das Museum (die Museen)', 'mu-ZE:-um (mu-ZE:-ën)', 'il museo'],
+  ['das Museum (die Museen)', 'mu-ZÉ:-um (mu-ZÉ:-ën)', 'il museo'],
   ['die Brücke (die Brücken)', 'BRÜ-kë (BRÜ-kën)', 'il ponte'],
   ['der Park (die Parks)', 'PARK (PARKS)', 'il parco'],
   ['die Post (kein Plural)', 'POST', 'la posta'],
@@ -328,7 +419,7 @@ ${vsec('Città', [
 ])}
 ${vsec('Indicazioni', [
   ['Wo ist der Bahnhof?', 'vo: ist de:r BA:N-ho:f', "Dov'è la stazione?"],
-  ['Wie komme ich zum Museum?', 'vi: KO-më iç tsum mu-ZE:-um', 'Come arrivo al museo?'],
+  ['Wie komme ich zum Museum?', 'vi: KO-më iç tsum mu-ZÉ:-um', 'Come arrivo al museo?'],
   ['geradeaus', 'gë-RA:-dë-aus', 'sempre dritto'],
   ['links / rechts', 'LINKS / REÇTS', 'a sinistra / a destra'],
   ['an der Ampel', 'an de:r AM-pël', 'al semaforo'],
@@ -351,9 +442,9 @@ ${vsec('Banca e posta', [
   ['das Konto (die Konten)', 'KON-to (KON-tën)', 'il conto corrente'],
   ['der Geldautomat (die Geldautomaten)', 'GELT-au-to-ma:t', 'il bancomat'],
   ['das Bargeld (kein Plural)', 'BA:R-gelt', 'i contanti'],
-  ['überweisen', 'Ü:-ba-VAI-zën', 'fare un bonifico'],
+  ['überweisen', 'ü:-ba-VAI-zën', 'fare un bonifico'],
   ['abheben', 'AP-he:-bën', 'prelevare'],
-  ['das Paket (die Pakete)', 'pa-KE:T (pa-KE:-të)', 'il pacco'],
+  ['das Paket (die Pakete)', 'pa-KÉ:T (pa-KÉ:-të)', 'il pacco'],
   ['die Briefmarke (die Briefmarken)', 'BRI:F-mar-kë', 'il francobollo'],
   ['der Brief (die Briefe)', 'BRI:F (BRI:-fë)', 'la lettera'],
 ])}
@@ -369,7 +460,7 @@ ${vsec('Divertimento', [
   ['wandern', 'VAN-dërn', 'fare escursioni a piedi'],
 ])}
 <h3>Deutsche Bahn: parole del viaggio</h3>
-<p>Sul tabellone cerca <b>Gleis</b> (binario), <b>Abfahrt</b> (partenza) e <b>Verspätung</b> (ritardo). Gli annunci: «Der Zug nach München hat zehn Minuten Verspätung.» [de:r TSU:K na:ch MÜN-çën hat TSE:N mi-NU:-tën fer-SHPE:-tung]. Se cambi treno: <i>Ich muss in Köln umsteigen.</i> [iç MUS in KÖLN UM-shtai-gën]. Per prenotare: <i>Ich möchte eine Fahrkarte nach Berlin, einfach / hin und zurück.</i></p>
+<p>Sul tabellone cerca <b>Gleis</b> (binario), <b>Abfahrt</b> (partenza) e <b>Verspätung</b> (ritardo). Gli annunci: «Der Zug nach München hat zehn Minuten Verspätung.» [de:r TSU:K na:ch MÜN-çën hat TSÉ:N mi-NU:-tën fer-SHPÈ:-tung]. Se cambi treno: <i>Ich muss in Köln umsteigen.</i> [iç MUS in KÖLN UM-shtai-gën]. Per prenotare: <i>Ich möchte eine Fahrkarte nach Berlin, einfach / hin und zurück.</i></p>
 <h3>Numeri di emergenza</h3>
 <p>In tutta l'Unione europea vale il <b>112</b>. In Germania la polizia ha il <b>110</b>; in Austria polizia 133, ambulanza 144; in Svizzera polizia 117, ambulanza 144, pompieri 118.</p>
 <h3>Trappole per chi parla italiano</h3>
@@ -434,7 +525,7 @@ ${vsec('Divertimento', [
     q(
       'q8',
       'Come si pronuncia «Verspätung»?',
-      ['[fer-SHPE:-tung]', '[ver-SPE-tung]', '[VER-spa-tung]', '[fer-SPE:-tong]'],
+      ['[fer-SHPÉ:-tung]', '[ver-SPE-tung]', '[VER-spa-tung]', '[fer-SPÉ:-tong]'],
       0,
       "Il prefisso ver- vale fer-, sp dopo il prefisso vale shp e ä è lunga. L'accento cade su -spä-.",
     ),
@@ -455,7 +546,7 @@ ${vsec('Divertimento', [
   ],
   [
     card('c1', 'das Gleis [GLAIS]', 'il binario. <i>Auf Gleis 5.</i>'),
-    card('c2', 'die Verspätung [fer-SHPE:-tung]', 'il ritardo. <i>Der Zug hat Verspätung.</i>'),
+    card('c2', 'die Verspätung [fer-SHPÈ:-tung]', 'il ritardo. <i>Der Zug hat Verspätung.</i>'),
     card('c3', 'umsteigen [UM-shtai-gën]', 'cambiare treno. <i>Ich muss in Köln umsteigen.</i>'),
     card('c4', 'einfach / hin und zurück', 'solo andata / andata e ritorno (biglietto).'),
     card('c5', 'Wie komme ich zum …?', 'Come arrivo a …? (zum = zu dem). <i>Wie komme ich zum Bahnhof?</i>'),
@@ -505,13 +596,13 @@ ${vsec('Lavoro', [
   ['der Beruf (die Berufe)', 'bë-RU:F (bë-RU:-fë)', 'la professione'],
   ['die Stelle (die Stellen)', 'SHTE-lë (SHTE-lën)', 'il posto di lavoro'],
   ['der Chef / die Chefin', 'SHEF / SHE-fin', 'il capo / la capa'],
-  ['der Kollege (die Kollegen)', 'ko-LE:-gë (ko-LE:-gën)', 'il collega'],
+  ['der Kollege (die Kollegen)', 'ko-LÉ:-gë (ko-LÉ:-gën)', 'il collega'],
   ['das Büro (die Büros)', 'bü-RO: (bü-ROS)', "l'ufficio"],
   ['die Besprechung (die Besprechungen)', 'bë-SHPRE-çung', 'la riunione'],
   ['das Gehalt (die Gehälter)', 'gë-HALT (gë-HEL-ta)', 'lo stipendio'],
-  ['der Vertrag (die Verträge)', 'fer-TRA:K (fer-TRE:-gë)', 'il contratto'],
+  ['der Vertrag (die Verträge)', 'fer-TRA:K (fer-TRÈ:-gë)', 'il contratto'],
   ['die Bewerbung (die Bewerbungen)', 'bë-VER-bung', 'la candidatura'],
-  ['das Vorstellungsgespräch', 'FO:R-shte-lungs-gë-shpre:ç', 'il colloquio'],
+  ['das Vorstellungsgespräch', 'FO:R-shte-lungs-gë-SHPRÈ:Ç', 'il colloquio'],
   ['die Erfahrung (die Erfahrungen)', 'er-FA:-rung', "l'esperienza"],
   ['die Firma (die Firmen)', 'FIR-ma (FIR-mën)', "l'azienda"],
   ['der Urlaub (kein Plural)', 'U:R-laup', 'le ferie'],
@@ -522,17 +613,17 @@ ${vsec('Lavoro', [
   ['das Projekt (die Projekte)', 'pro-JEKT (pro-JEK-të)', 'il progetto'],
 ])}
 ${vsec('Studio', [
-  ['die Universität (die Universitäten)', 'u-ni-ver-zi-TE:T', "l'università"],
+  ['die Universität (die Universitäten)', 'u-ni-ver-zi-TÈ:T', "l'università"],
   ['das Studium (die Studien)', 'SHTU:-di-um (SHTU:-di-ën)', 'gli studi universitari'],
   ['der Student / die Studentin', 'shtu-DENT / shtu-DEN-tin', 'lo studente / la studentessa'],
   ['die Vorlesung (die Vorlesungen)', 'FO:R-le:-zung', 'la lezione universitaria'],
-  ['die Prüfung (die Prüfungen)', 'PRÜ:-fung (PRÜ:-fun-gën)', "l'esame"],
+  ['die Prüfung (die Prüfungen)', 'PRÜ:-fung (PRÜ:-fung-ën)', "l'esame"],
   ['die Note (die Noten)', 'NO:-të (NO:-tën)', 'il voto'],
   ['das Fach (die Fächer)', 'FACH (FE-ça)', 'la materia'],
   ['die Hausaufgabe (die Hausaufgaben)', 'HAUS-auf-ga:-bë', 'il compito a casa'],
   ['der Kurs (die Kurse)', 'KURS (KUR-zë)', 'il corso'],
   ['das Semester (die Semester)', 'ze-MES-ta', 'il semestre'],
-  ['die Bibliothek (die Bibliotheken)', 'bi-bli-o-TE:K (bi-bli-o-TE:-kën)', 'la biblioteca'],
+  ['die Bibliothek (die Bibliotheken)', 'bi-bli-o-TÉ:K (bi-bli-o-TÉ:-kën)', 'la biblioteca'],
   ['lernen', 'LER-nën', 'imparare, studiare'],
 ])}
 ${vsec('Tecnologia e informatica', [
@@ -551,14 +642,14 @@ ${vsec('Tecnologia e informatica', [
   ['die Software (kein Plural)', 'ZOFT-ve:r', 'il software'],
 ])}
 ${vsec('Opinioni e sentimenti', [
-  ['die Meinung (die Meinungen)', 'MAI-nung (MAI-nun-gën)', "l'opinione"],
+  ['die Meinung (die Meinungen)', 'MAI-nung (MAI-nung-ën)', "l'opinione"],
   ['Ich finde, dass …', 'iç FIN-dë, das', 'Trovo che …'],
   ['meiner Meinung nach', 'MAI-na MAI-nung NA:CH', 'secondo me'],
-  ['dafür / dagegen', 'da-FÜ:R / da-GE:-gën', 'a favore / contro'],
+  ['dafür / dagegen', 'da-FÜ:R / da-GÉ:-gën', 'a favore / contro'],
   ['froh', 'FRO:', 'contento'],
   ['traurig', 'TRAU-riç', 'triste'],
   ['wütend', 'VÜ:-tënt', 'furioso'],
-  ['überrascht', 'Ü:-ba-RASHT', 'sorpreso'],
+  ['überrascht', 'ü:-ba-RASHT', 'sorpreso'],
   ['stolz', 'SHTOLTS', 'orgoglioso'],
   ['enttäuscht', 'ent-TOISHT', 'deluso'],
   ['zufrieden', 'tsu-FRI:-dën', 'soddisfatto'],
@@ -589,10 +680,10 @@ ${vsec('Per conversare', [
   ['Was bedeutet das?', 'vas bë-DOI-tët das', 'Che cosa significa?'],
   ['Das kommt darauf an.', 'das KOMT da-RAUF an', 'Dipende.'],
   ['übrigens', 'Ü:-bri-gëns', 'a proposito'],
-  ['auf jeden Fall', 'auf JE:-dën FAL', 'in ogni caso'],
+  ['auf jeden Fall', 'auf JÉ:-dën FAL', 'in ogni caso'],
   ['natürlich', 'na-TÜR-liç', 'naturalmente'],
   ['leider', 'LAI-da', 'purtroppo'],
-  ['Gern geschehen.', 'GERN gë-SHE:-ën', 'Prego.'],
+  ['Gern geschehen.', 'GERN gë-SHÉ:-ën', 'Prego.'],
   ['Genau!', 'gë-NAU', 'Esatto!'],
 ])}
 <h3>Trappole per chi parla italiano</h3>
@@ -655,7 +746,7 @@ ${vsec('Per conversare', [
     q(
       'q7',
       'Come si pronuncia «Universität»?',
-      ['[u-ni-ver-zi-TE:T]', '[U-ni-ver-si-tet]', '[u-ni-VER-zi-tat]', '[u-ni-ver-sì-TÄT]'],
+      ['[u-ni-ver-zi-TÈ:T]', '[U-ni-ver-si-tet]', '[u-ni-VER-zi-tat]', '[u-ni-ver-sì-TÄT]'],
       0,
       "L'accento cade sull'ultima sillaba (-tät), ä è lunga come e aperta, s tra vocali è sonora. L'accento italiano è sulla penultima.",
     ),
@@ -687,7 +778,7 @@ ${vsec('Per conversare', [
     card('c3', 'die Vorlesung [FO:R-le:-zung]', 'lezione universitaria.'),
     card('c4', 'die Prüfung [PRÜ:-fung]', "l'esame. <i>Eine Prüfung bestehen</i> = superare un esame."),
     card('c5', 'meiner Meinung nach', 'secondo me [MAI-na MAI-nung NA:CH].'),
-    card('c6', 'dafür / dagegen', 'a favore / contro [da-FÜ:R / da-GE:-gën].'),
+    card('c6', 'dafür / dagegen', 'a favore / contro [da-FÜ:R / da-GÉ:-gën].'),
     card('c7', 'Wie bitte?', 'Come, prego? [vi: BI-të]. Per far ripetere.'),
     card('c8', 'Das kommt darauf an.', 'Dipende. [das KOMT da-RAUF an]'),
     card('c9', 'leider / natürlich', 'purtroppo / naturalmente [LAI-da / na-TÜR-liç].'),

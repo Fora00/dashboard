@@ -1,6 +1,7 @@
 import type { CourseModule } from '../../types'
 import { card, mod, prac, q } from '../kit'
 import { PRON_SHORT, vsec } from './pron'
+import { vsecW } from './vsecw'
 import { tbl } from './b.util'
 
 export const deNebensaetze2: CourseModule = mod(
@@ -10,27 +11,13 @@ export const deNebensaetze2: CourseModule = mod(
   'b1',
   `<p class="lead">Al B1 il tedesco si allunga con le <b>subordinate</b>. Una regola le governa tutte: il <b>verbo coniugato va in fondo</b> alla frase, e la subordinata è sempre separata da una <b>virgola</b>. Impara le congiunzioni insieme alla pronuncia: sono parole piccole che userai ogni giorno.</p>
 ${PRON_SHORT}
-${vsec('Le congiunzioni da conoscere', [
-  ['obwohl', 'op-VO:L', 'benché, nonostante (+ indicativo)'],
-  ['damit', 'da-MIT', 'affinché (soggetti diversi)'],
-  ['um … zu', 'UM … tsu', 'per, al fine di (stesso soggetto)'],
-  ['sodass / so … dass', 'zo-DAS / zo … DAS', 'cosicché / così … che'],
-  ['während', 'VE:-rënt', 'mentre'],
-  ['bevor', 'bë-FO:r', 'prima che, prima di'],
-  ['nachdem', 'nach-DE:m', 'dopo che'],
-  ['falls', 'FALS', 'nel caso in cui'],
-  ['sobald', 'zo-BALT', 'appena'],
-  ['solange', 'zo-LA-ngë', 'finché, per tutto il tempo che'],
-  ['bis', 'BIS', 'finché non, fino a quando'],
-  ['ob', 'OP', 'se (domanda indiretta)'],
-  ['dass', 'DAS', 'che (dichiarativa)'],
-])}
+${vsecW('Le congiunzioni da conoscere', ['benche', 'affinche', 'per-al-fine-di', 'cosicche', 'mentre', 'prima-che', 'dopo-che', 'nel-caso-in-cui', 'appena', 'per-tutto-il-tempo-che', 'finche-non', 'se-indiretto', 'che-dichiarativo'])}
 <h3>Il verbo in fondo</h3>
-<p>Schema: <b>principale</b>, <b>congiunzione + soggetto + ... + verbo coniugato</b>. Se la subordinata viene prima, la principale riparte con il <b>verbo subito dopo la virgola</b> (il verbo è in prima posizione, il soggetto dopo).</p>
+<p>Schema: <b>principale</b>, <b>congiunzione + soggetto + ... + verbo coniugato</b>. Se la subordinata viene prima, la subordinata occupa la prima posizione e la principale prosegue con il <b>verbo coniugato subito dopo la virgola</b> (il verbo resta in seconda posizione, il soggetto viene dopo di lui).</p>
 ${vsec('Esempi', [
   [
     'Ich gehe spazieren, obwohl es regnet.',
-    'iç GE:-ë shpa-TSI:-rën, op-VO:L es RE:G-nët',
+    'iç GÉ:-ë shpa-TSI:-rën, op-VO:L es RÉ:G-nët',
     'Vado a passeggiare, anche se piove.',
   ],
   [
@@ -40,47 +27,47 @@ ${vsec('Esempi', [
   ],
   [
     'Ich erkläre es dir, damit du es verstehst.',
-    'iç er-KLE:-rë es di:r, da-MIT du es fer-SHTE:ST',
+    'iç er-KLÈ:-rë es di:r, da-MIT du es fer-SHTÉ:ST',
     'Te lo spiego affinché tu lo capisca.',
   ],
   [
     'Es war so laut, dass ich nichts verstehen konnte.',
-    'es va:r zo LAUT, das iç NIÇTS fer-SHTE:-ën KON-të',
+    'es VA:R zo LAUT, das iç NIÇTS fer-SHTÉ:-ën KON-të',
     'Era così rumoroso che non potevo capire niente.',
   ],
-  ['Ich höre Musik, während ich koche.', 'iç HÖ:-rë mu-ZI:K, VE:-rënt iç KO-chë', 'Ascolto musica mentre cucino.'],
+  ['Ich höre Musik, während ich koche.', 'iç HÖ:-rë mu-ZI:K, VÈ:-rënt iç KO-chë', 'Ascolto musica mentre cucino.'],
   [
     'Bevor du gehst, ruf mich bitte an.',
-    'bë-FO:r du GE:ST, RU:F miç BI-të AN',
+    'bë-FO:R du GÉ:ST, RU:F miç BI-të AN',
     'Prima che tu vada, chiamami per favore.',
   ],
   [
     'Falls es regnet, bleiben wir zu Hause.',
-    'FALS es RE:G-nët, BLAI-bën vi:r tsu HAU-zë',
+    'FALS es RÉ:G-nët, BLAI-bën vi:r tsu HAU-zë',
     'Se per caso piove, restiamo a casa.',
   ],
   ['Ich weiß nicht, ob er kommt.', 'iç VAIS niçt, op e:r KOMT', 'Non so se viene.'],
 ])}
-<p><b>Inversione:</b> «Wenn ich Zeit habe, <b>gehe ich</b> ins Kino.» [ven iç TSAIT HA:-bë, GE:-ë iç ins KI:-no]: il verbo della principale viene subito dopo la virgola. Mai «..., ich gehe ins Kino».</p>
+<p><b>Inversione:</b> «Wenn ich Zeit habe, <b>gehe ich</b> ins Kino.» [ven iç TSAIT HA:-bë, GÉ:-ë iç ins KI:-no]: il verbo della principale viene subito dopo la virgola. Mai «..., ich gehe ins Kino».</p>
 <h3>Infinitiv mit zu</h3>
 <p>Molti verbi, aggettivi e sostantivi reggono un infinito con <b>zu</b>, separato da virgola quando è esteso. Con um, ohne, (an)statt la virgola è obbligatoria. Con i <b>verbi separabili</b> zu si inserisce nel mezzo: <b>auf·zu·stehen</b>.</p>
 ${vsec('Esempi con zu', [
   [
     'Ich habe Lust, heute Abend ins Kino zu gehen.',
-    'iç HA:-bë LUST, HOI-të A:-bënt ins KI:-no tsu GE:-ën',
+    'iç HA:-bë LUST, HOI-të A:-bënt ins KI:-no tsu GÉ:-ën',
     'Ho voglia di andare al cinema stasera.',
   ],
   ['Es ist wichtig, pünktlich zu sein.', 'es ist VIÇ-tiç, PÜNKT-liç tsu ZAIN', 'È importante essere puntuali.'],
   ['Ich versuche, früher aufzustehen.', 'iç fer-ZU:-chë, FRÜ:-a AUF-tsu-shte:-ën', 'Cerco di alzarmi prima.'],
-  ['Er geht, ohne sich zu verabschieden.', 'e:r GE:T, O:-në ziç tsu fer-AP-shi:-dën', 'Se ne va senza salutare.'],
+  ['Er geht, ohne sich zu verabschieden.', 'e:r GÉ:T, O:-në ziç tsu fer-AP-shi:-dën', 'Se ne va senza salutare.'],
   ['Statt zu lernen, schaut er fern.', 'SHTAT tsu LER-nën, SHAUT e:r FERN', 'Invece di studiare, guarda la tv.'],
 ])}
-<p><b>Senza zu</b> dopo: i verbi modali (<i>können, müssen, wollen...</i>), <i>werden, lassen</i>, i verbi di movimento (<i>gehen, fahren</i>) e di percezione (<i>sehen, hören</i>), e <i>bleiben</i>: «Ich gehe schwimmen.» [iç GE:-ë SHVI-mën].</p>
+<p><b>Senza zu</b> dopo: i verbi modali (<i>können, müssen, wollen...</i>), <i>werden, lassen</i>, i verbi di movimento (<i>gehen, fahren</i>) e di percezione (<i>sehen, hören</i>), e <i>bleiben</i>: «Ich gehe schwimmen.» [iç GÉ:-ë SHVI-mën].</p>
 <h3>Doppio infinito</h3>
 <p>Quando un modale (o <i>sehen, hören, lassen</i>) sta al perfetto con un altro infinito, il suo participio diventa un <b>infinito</b> (Ersatzinfinitiv): non <i>gekonnt</i>, ma <b>können</b>.</p>
 ${vsec('Doppio infinito', [
   ['Ich habe nicht kommen können.', 'iç HA:-bë niçt KO-mën KÖ-nën', 'Non sono potuto venire.'],
-  ['Ich habe ihn kommen sehen.', 'iç HA:-bë i:n KO-mën ZE:-ën', "L'ho visto arrivare."],
+  ['Ich habe ihn kommen sehen.', 'iç HA:-bë i:n KO-mën ZÉ:-ën', "L'ho visto arrivare."],
   ['Er hat gestern arbeiten müssen.', 'e:r hat GES-tërn AR-bai-tën MÜ-ssën', 'Ieri ha dovuto lavorare.'],
   ['..., weil er nicht hat kommen können.', 'vail e:r niçt hat KO-mën KÖ-nën', '..., perché non è potuto venire.'],
 ])}
@@ -89,14 +76,14 @@ ${vsec('Doppio infinito', [
 <p>Qui l'ausiliare va <b>dopo il participio</b>, in fondo: «Ich glaube, dass er gestern gearbeitet <b>hat</b>.» [iç GLAU-bë, das e:r GES-tërn gë-AR-bai-tët HAT]; «..., dass sie schon abgereist <b>ist</b>.» [das zi: shon AP-gë-raist IST].</p>
 <h3>Trappole per chi parla italiano</h3>
 <ul>
-<li><b>«Per + infinito»</b> è <i>um … zu</i> solo se il soggetto è lo stesso; con soggetti diversi serve <i>damit</i> + verbo coniugato: «Ti scrivo perché tu sappia» → <i>damit du es weißt</i>.</li>
+<li><b>«Per + infinito»</b> è <i>um … zu</i> solo se il soggetto è lo stesso; con soggetti diversi serve <i>damit</i> + verbo coniugato: «Ti scrivo perché tu sappia» → <i>damit du es weißt</i>. Con lo stesso soggetto <i>damit</i> è comunque possibile, soprattutto con i modali (<i>Ich lerne Deutsch, damit ich in Wien arbeiten kann</i>); è <i>um … zu</i> che richiede lo stesso soggetto.</li>
 <li><b>«Benché» + congiuntivo</b> = <i>obwohl</i> + <b>indicativo</b>: «Benché sia stanco» → <i>obwohl er müde ist</i>.</li>
 <li><b>«Prima di partire», «dopo aver mangiato»</b>: l'italiano usa l'infinito, il tedesco una subordinata: <i>bevor ich fahre</i>, <i>nachdem ich gegessen habe</i> (oppure un nome: <i>vor der Abreise</i>, <i>nach dem Essen</i>).</li>
 <li><b>«Senza che»</b> = <i>ohne dass</i>.</li>
 <li><b>dass non si omette</b> come «che» in «credo venga». Si può togliere solo cambiando ordine: «Ich glaube, er kommt.» (verbo in seconda posizione).</li>
 <li><b>dass / das:</b> <i>dass</i> è la congiunzione [DAS], <i>das</i> articolo o pronome [das]: uguali nel suono, diverse nella scrittura.</li>
 </ul>
-<div class="say"><b>Da ricordare.</b> Subordinata = verbo in fondo, virgola obbligatoria. <i>um … zu</i> stesso soggetto, <i>damit</i> soggetti diversi. Doppio infinito: <i>Ich habe es nicht machen können</i> [iç HA:-bë es niçt MA-chën KÖ-nën].</div>`,
+<div class="say"><b>Da ricordare.</b> Subordinata = verbo in fondo, virgola obbligatoria. <i>um … zu</i> solo con lo stesso soggetto, <i>damit</i> obbligatorio con soggetti diversi (possibile anche con lo stesso). Doppio infinito: <i>Ich habe es nicht machen können</i> [iç HA:-bë es niçt MA-chën KÖ-nën].</div>`,
   [
     q(
       'q1',
@@ -150,14 +137,14 @@ ${vsec('Doppio infinito', [
       'Come si pronuncia «obwohl»?',
       ['[op-VO:L]', '[ob-VOL]', '[op-WO:L]', '[OP-vol]'],
       0,
-      "La b davanti a w si ammorbidisce in p, la w tedesca vale v e la o di «wohl» è lunga (h che allunga). L'accento cade su «wohl».",
+      "La b finale della sillaba ob- si indurisce in p (Auslautverhärtung), la w tedesca vale v e la o di «wohl» è lunga (h che allunga). L'accento cade su «wohl».",
     ),
     q(
       'q8',
       'Come si pronuncia «bevor»?',
-      ['[bë-FO:r]', '[BE-vor]', '[bë-VO:R]', '[be-FOR]'],
+      ['[bë-FO:R]', '[BE-vor]', '[bë-VO:R]', '[be-FOR]'],
       0,
-      "Il prefisso be- è debole (ë), l'accento cade su -vor e la v tedesca vale f. La o di «vor» è lunga: [FO:r].",
+      "Il prefisso be- è debole (ë), l'accento cade su -vor e la v tedesca vale f. La o di «vor» è lunga: [FO:R].",
     ),
     q(
       'q9',
@@ -171,14 +158,18 @@ ${vsec('Doppio infinito', [
     card(
       'c1',
       'obwohl [op-VO:L]',
-      "benché, nonostante. Regge l'indicativo, il verbo va in fondo: <i>obwohl es regnet</i>.",
+      "benché, sebbene (non «nonostante» + nome, che è trotz). Regge l'indicativo, il verbo va in fondo: <i>obwohl es regnet</i>.",
     ),
-    card('c2', 'damit [da-MIT]', 'affinché. Soggetti diversi. <i>Ich erkläre es dir, damit du es verstehst.</i>'),
+    card(
+      'c2',
+      'damit [da-MIT]',
+      'affinché. Obbligatorio con soggetti diversi, possibile anche con lo stesso. <i>Ich erkläre es dir, damit du es verstehst.</i>',
+    ),
     card('c3', 'um … zu [um … tsu]', 'per + infinito, stesso soggetto: <i>um in Wien zu arbeiten</i>.'),
     card('c4', 'sodass / so … dass', 'cosicché / così … che (conseguenza): <i>so laut, dass ich nichts verstand</i>.'),
     card(
       'c5',
-      'während [VE:-rënt] / bevor [bë-FO:r] / nachdem [nach-DE:m]',
+      'während [VÈ:-rënt] / bevor [bë-FO:R] / nachdem [nach-DÉ:M]',
       'mentre / prima che / dopo che. Verbo in fondo.',
     ),
     card(
@@ -249,7 +240,7 @@ ${tbl(
     ['Genitivo', 'dessen', 'deren', 'dessen / deren'],
   ],
 )}
-<p>Quasi uguale all'articolo determinativo. Solo il <b>dativo plurale (denen)</b> e il <b>genitivo (dessen, deren)</b> sono diversi. Pronuncia: <i>dessen</i> [DE-ssën] (e breve), <i>deren</i> [DE:-rën] (e lunga), <i>denen</i> [DE:-nën].</p>
+<p>Quasi uguale all'articolo determinativo. Solo il <b>dativo plurale (denen)</b> e il <b>genitivo (dessen, deren)</b> sono diversi. Pronuncia: <i>dessen</i> [DE-ssën] (e breve), <i>deren</i> [DÉ:-rën] (e lunga), <i>denen</i> [DÉ:-nën].</p>
 ${vsec('Esempi', [
   [
     'Der Mann, der dort wohnt, ist Arzt.',
@@ -258,7 +249,7 @@ ${vsec('Esempi', [
   ],
   [
     'Der Film, den ich gesehen habe, war gut.',
-    'de:r FILM, de:n iç gë-ZE:-ën HA:-bë, va:r GU:T',
+    'de:r FILM, de:n iç gë-ZÉ:-ën HA:-bë, VA:R GU:T',
     'Il film che ho visto era bello. (accusativo)',
   ],
   [
@@ -268,12 +259,12 @@ ${vsec('Esempi', [
   ],
   [
     'Das Kind, dessen Mutter Ärztin ist, ist sechs.',
-    'das KINT, DE-ssën MU-ta E:RTS-tin ist, ist ZEKS',
+    'das KINT, DE-ssën MU-ta È:RTS-tin ist, ist ZEKS',
     'Il bambino la cui madre è medico ha sei anni. (genitivo)',
   ],
   [
     'Die Leute, mit denen ich arbeite, sind nett.',
-    'di: LOI-të, mit DE:-nën iç AR-bai-të, zint NET',
+    'di: LOI-të, mit DÉ:-nën iç AR-bai-të, zint NET',
     'Le persone con cui lavoro sono gentili.',
   ],
   [
@@ -292,16 +283,16 @@ ${vsec('Esempi', [
 <h3>Genitivo e preposizioni con il genitivo</h3>
 <p>Il genitivo maschile e neutro prende <b>-(e)s</b> sul nome (<i>des Mannes, des Kindes</i>); femminile e plurale usano <b>der</b>. Preposizioni: <b>wegen</b> (a causa di), <b>trotz</b> (nonostante), <b>während</b> (durante), <b>statt/anstatt</b> (invece di), <b>innerhalb, außerhalb, aufgrund</b>.</p>
 ${vsec('Genitivo in uso', [
-  ['wegen des Wetters', 'VE:-gën dës VE-ta', 'a causa del tempo'],
-  ['trotz des Regens', 'TROTS dës RE:-gëns', 'nonostante la pioggia'],
-  ['während des Films', 'VE:-rënt dës FILMS', 'durante il film'],
+  ['wegen des Wetters', 'VÉ:-gën des VE-ta', 'a causa del tempo'],
+  ['trotz des Regens', 'TROTS des RÉ:-gëns', 'nonostante la pioggia'],
+  ['während des Films', 'VÈ:-rënt des FILMS', 'durante il film'],
   ['statt eines Briefes', 'SHTAT AI-nës BRI:-fës', 'invece di una lettera'],
   ['innerhalb der Stadt', 'I-na-halp de:r SHTAT', "all'interno della città"],
 ])}
 <p>Nel parlato si sente «wegen dem Wetter» (dativo); nello scritto e agli esami usa il genitivo. <b>während</b> è anche congiunzione (<i>während ich koche</i>): preposizione = nome al genitivo, congiunzione = verbo in fondo.</p>
 <h3>La declinazione n</h3>
-<p>Alcuni maschili animati prendono <b>-(e)n</b> in tutti i casi tranne il nominativo singolare: <i>der Junge</i> [JU-ngë], <i>der Kollege</i> [ko-LE:-gë], <i>der Student</i> [shtu-DENT], <i>der Mensch</i> [MENSH], <i>der Kunde</i> [KUN-dë], <i>der Nachbar</i> [NACH-bar], <i>der Herr</i> [HER] (<i>den Herrn</i>). Eccezione: <i>der Name</i> fa <i>des Namens</i> [NA:-mëns].</p>
-<p>«Ich kenne den Studenten.» [iç KE-në de:n shtu-DEN-tën]. «Das ist das Auto des Nachbarn.» [das ist das AU-to dës NACH-barn].</p>
+<p>Alcuni maschili animati prendono <b>-(e)n</b> in tutti i casi tranne il nominativo singolare: <i>der Junge</i> [JUNG-ë], <i>der Kollege</i> [ko-LÉ:-gë], <i>der Student</i> [shtu-DENT], <i>der Mensch</i> [MENSH], <i>der Kunde</i> [KUN-dë], <i>der Nachbar</i> [NACH-bar], <i>der Herr</i> [HER] (<i>den Herrn</i>). Eccezione: <i>der Name</i> fa <i>des Namens</i> [NA:-mëns].</p>
+<p>«Ich kenne den Studenten.» [iç KE-në de:n shtu-DEN-tën]. «Das ist das Auto des Nachbarn.» [das ist das AU-to des NACH-barn].</p>
 <h3>Trappole per chi parla italiano</h3>
 <ul>
 <li><b>«Il cui»</b> = <i>dessen / deren</i> e <b>dopo non c'è l'articolo</b>: «der Mann, dessen Auto» (non «dessen das Auto»).</li>
@@ -356,7 +347,7 @@ ${vsec('Genitivo in uso', [
     q(
       'q7',
       'Come si pronuncia «dessen»?',
-      ['[DE-ssën]', '[DE:-sën]', '[DE-zën]', '[DE:-ssën]'],
+      ['[DE-ssën]', '[DÉ:-sën]', '[DE-zën]', '[DÉ:-ssën]'],
       0,
       "Dessen ha la e breve (la doppia s la segnala) e la s sorda [ss]. Con la e lunga e la s sonora sarebbe un'altra parola.",
     ),
@@ -383,12 +374,12 @@ ${vsec('Genitivo in uso', [
     ),
     card(
       'c2',
-      'dessen [DE-ssën] / deren [DE:-rën]',
+      'dessen [DE-ssën] / deren [DÉ:-rën]',
       "il cui / la cui. Dopo non c'è articolo: <i>das Kind, dessen Mutter...</i>",
     ),
-    card('c3', 'denen [DE:-nën]', 'dativo plurale del relativo: <i>die Leute, mit denen ich arbeite</i>.'),
+    card('c3', 'denen [DÉ:-nën]', 'dativo plurale del relativo: <i>die Leute, mit denen ich arbeite</i>.'),
     card('c4', 'was (relativo)', 'dopo alles, nichts, etwas, viel, das Beste o riferito a tutta la frase.'),
-    card('c5', 'wegen [VE:-gën] / trotz [TROTS] / während [VE:-rënt]', 'a causa di / nonostante / durante + genitivo.'),
+    card('c5', 'wegen [VÉ:-gën] / trotz [TROTS] / während [VÈ:-rënt]', 'a causa di / nonostante / durante + genitivo.'),
     card(
       'c6',
       'Genitivo maschile e neutro',
@@ -485,20 +476,12 @@ ${vsec('Participi in funzione di aggettivo', [
 ])}
 <h3>Comparativo e superlativo</h3>
 <p>Comparativo: <b>-er</b>; superlativo: <b>am -sten</b> (predicativo) o <b>der/die/das -ste</b> (attributivo). Molti monosillabi prendono l'<b>Umlaut</b>. Confronto: <b>so … wie</b> (uguaglianza), <b>… als</b> (maggioranza): «Er ist älter als ich.» [e:r ist EL-ta als iç].</p>
-${vsec('Forme da sapere', [
-  ['alt – älter – am ältesten', 'ALT – EL-ta – am EL-të-stën', 'vecchio'],
-  ['groß – größer – am größten', 'GRO:SS – GRÖ:-ssa – am GRÖ:S-tën', 'grande'],
-  ['gut – besser – am besten', 'GU:T – BE-ssa – am BE-stën', 'buono'],
-  ['viel – mehr – am meisten', 'FI:L – ME:R – am MAI-stën', 'molto'],
-  ['gern – lieber – am liebsten', 'GERN – LI:-ba – am LI:P-stën', 'volentieri'],
-  ['hoch – höher – am höchsten', 'HO:CH – HÖ:-a – am HÖ:ç-stën', 'alto (altezza)'],
-  ['nah – näher – am nächsten', 'NA: – NE:-a – am NE:ç-stën', 'vicino'],
-])}
-<p>Declinato: «der bessere Plan» [de:r BE-ssë-rë PLA:N], «ein besserer Plan». Attenzione: <b>hoch</b> perde la c davanti a una desinenza: <i>ein hoher Berg</i> [ain HO:-ha BERK].</p>
+${vsecW('Forme da sapere', ['anziano', 'alto', 'buono-qualita', 'molto', 'volentieri', 'alto-altezza', 'vicino'])}
+<p>Declinato: «der bessere Plan» [de:r BE-ssë-rë PLA:N], «ein besserer Plan». Attenzione: <b>hoch</b> perde la c davanti a una desinenza: <i>ein hoher Berg</i> [ain HO:-a BERK].</p>
 <h3>Aggettivi come nomi</h3>
 <p>Gli aggettivi si possono nominalizzare con la <b>maiuscola</b> e la declinazione dell'aggettivo: <i>der Deutsche / ein Deutscher</i> [de:r DOI-tshë], <i>die Angestellte</i> [AN-gë-shtel-të], <i>das Gute</i>, <i>alles Gute</i>, <i>nichts Neues</i> [niçts NOI-ës], <i>etwas Schönes</i> [ET-vas SHÖ:-nës]. Dopo <b>etwas, nichts, viel, wenig</b> l'aggettivo prende <b>-es</b> (neutro) e la maiuscola; dopo <b>alles</b> prende <b>-e</b>: <i>alles Gute</i>.</p>
 <h3>Ordine nel Mittelfeld: TeKaMoLo</h3>
-<p>Dopo il verbo, i complementi seguono questo ordine: <b>Te</b>mporale, <b>Ka</b>usale, <b>Mo</b>dale, <b>Lo</b>kale. «Ich fahre <b>morgen</b> <b>wegen der Arbeit</b> <b>mit dem Zug</b> <b>nach Berlin</b>.» [iç FA:-rë MOR-gën VE:-gën de:r AR-bait mit dem TSU:K na:ch ber-LI:N]. I pronomi vanno prima dei nomi: «Ich gebe <b>es ihm</b>» (due pronomi: accusativo prima del dativo), ma «Ich gebe <b>dem Mann das Buch</b>» (due nomi: dativo prima dell'accusativo).</p>
+<p>Dopo il verbo, i complementi seguono questo ordine: <b>Te</b>mporale, <b>Ka</b>usale, <b>Mo</b>dale, <b>Lo</b>kale. «Ich fahre <b>morgen</b> <b>wegen der Arbeit</b> <b>mit dem Zug</b> <b>nach Berlin</b>.» [iç FA:-rë MOR-gën VÉ:-gën de:r AR-bait mit dem TSU:K na:ch ber-LI:N]. I pronomi vanno prima dei nomi: «Ich gebe <b>es ihm</b>» (due pronomi: accusativo prima del dativo), ma «Ich gebe <b>dem Mann das Buch</b>» (due nomi: dativo prima dell'accusativo).</p>
 <h3>Trappole per chi parla italiano</h3>
 <ul>
 <li>L'italiano non declina l'aggettivo: in tedesco una desinenza sbagliata si nota subito. Controlla sempre <b>articolo → caso → genere</b>.</li>
@@ -599,7 +582,7 @@ ${vsec('Forme da sapere', [
       '<i>-er … als</i> / <i>am -sten</i>; Umlaut: <i>alt – älter – am ältesten</i>.',
     ),
     card('c5', 'Irregolari', '<i>gut – besser – am besten; viel – mehr – am meisten; gern – lieber – am liebsten</i>.'),
-    card('c6', 'hoch → hoher', '<i>ein hoher Berg</i> [HO:-ha]: la c cade davanti alla desinenza.'),
+    card('c6', 'hoch → hoher', '<i>ein hoher Berg</i> [HO:-a]: la c cade davanti alla desinenza.'),
     card(
       'c7',
       'Aggettivo nominalizzato',

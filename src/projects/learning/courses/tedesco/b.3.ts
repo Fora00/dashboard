@@ -70,7 +70,7 @@ ${tbl(
 <h3>Giornalismo e alternative</h3>
 <ul>
 <li><b>Verbi di riporto:</b> <i>sagen, behaupten, berichten, erklären, mitteilen, betonen, meinen, vermuten, bestätigen, bestreiten, zugeben</i>. Es.: <i>behaupten</i> [bë-HAUP-tën] (sostenere), <i>bestreiten</i> [bë-SHTRAI-tën] (negare).</li>
-<li>«Laut Polizei <b>sei</b> der Täter geflüchtet.» [laut po-li-TSAI zai de:r TE:-ta gë-FLÜÇ-tët]: la stampa omette il verbo di riporto e usa solo il Konjunktiv I.</li>
+<li>«Laut Polizei <b>sei</b> der Täter geflüchtet.» [laut po-li-TSAI zai de:r TÈ:-ta gë-FLÜÇ-tët]: la stampa omette il verbo di riporto e usa solo il Konjunktiv I.</li>
 <li><b>soll / will + infinito:</b> «Er <b>soll</b> reich sein.» (si dice che sia ricco); «Er <b>will</b> nichts gesehen haben.» (sostiene di non aver visto nulla).</li>
 <li>Con <i>dass</i> o senza: «Er sagt, dass er krank sei» oppure «Er sagt, er sei krank.» (seconda posizione del verbo).</li>
 </ul>
@@ -128,7 +128,7 @@ ${tbl(
     q(
       'q7',
       'Come si pronuncia «sei» (Konjunktiv I di sein)?',
-      ['[ZAI]', '[SAI]', '[ZE:I]', '[SEI]'],
+      ['[ZAI]', '[SAI]', '[ZÉ:I]', '[SEI]'],
       0,
       "La s davanti a vocale è sonora (z di «rosa») e ei si legge come «ai» italiano. Una s sorda sarebbe tipica di chi legge all'italiana.",
     ),
@@ -221,29 +221,29 @@ export const deKonnektoren: CourseModule = mod(
 ${PRON_SHORT}
 <h3>Coppie di connettori</h3>
 ${vsec('Doppelkonnektoren', [
-  ['zwar … aber', 'TSVAR … A:-ba', 'sì … ma'],
+  ['zwar … aber', 'TSVA:R … A:-ba', 'sì … ma'],
   ['nicht nur … sondern auch', 'niçt NU:R … ZON-dërn AUCH', 'non solo … ma anche'],
   ['entweder … oder', 'ENT-ve:-da … O:-da', 'o … o'],
-  ['weder … noch', 'VE:-da … NOCH', 'né … né'],
+  ['weder … noch', 'VÉ:-da … NOCH', 'né … né'],
   ['sowohl … als auch', 'zo-VO:L … als AUCH', 'sia … sia'],
-  ['je … desto / umso', 'JE: … DES-to / UM-zo', 'più … più'],
+  ['je … desto / umso', 'JÉ: … DES-to / UM-zo', 'più … più'],
   ['einerseits … andererseits', 'AI-na-zaits … AN-dë-ra-zaits', "da un lato … dall'altro"],
 ])}
 ${vsec('Esempi', [
   [
     'Das Hotel ist zwar teuer, aber sehr gut.',
-    'das ho-TEL ist tsvar TOI-a, A:-ba ze:r GU:T',
+    'das ho-TEL ist tsvar TOI-a, A:-ba ZÉ:R GU:T',
     "L'hotel è caro, ma molto buono.",
   ],
   [
     'Sie spricht nicht nur Deutsch, sondern auch Französisch.',
-    'zi: SHPRIÇT niçt nu:r DOITSH, ZON-dërn auch fran-TSÖ:-zish',
+    'zi: SHPRIÇT niçt NU:R DOITSH, ZON-dërn auch fran-TSÖ:-zish',
     'Parla non solo tedesco, ma anche francese.',
   ],
-  ['Er hat weder Zeit noch Lust.', 'e:r hat VE:-da TSAIT noch LUST', 'Non ha né tempo né voglia.'],
+  ['Er hat weder Zeit noch Lust.', 'e:r hat VÉ:-da TSAIT noch LUST', 'Non ha né tempo né voglia.'],
   [
     'Je mehr ich lerne, desto besser verstehe ich.',
-    'je: ME:R iç LER-në, DES-to BE-ssa fer-SHTE:-ë iç',
+    'je: MÉ:R iç LER-në, DES-to BE-ssa fer-SHTÉ:-ë iç',
     'Più studio, meglio capisco.',
   ],
   [
@@ -262,13 +262,13 @@ ${vsec('Connettori a inversione', [
   ['allerdings, jedoch', 'A-la-dings, je-DOCH', 'però, tuttavia'],
   ['folglich, somit', 'FOLK-liç, zo-MIT', 'di conseguenza'],
   ['sonst, andernfalls', 'ZONST, AN-dërn-fals', 'altrimenti'],
-  ['stattdessen, hingegen', 'SHTAT-de-ssën, hin-GE:-gën', 'invece, al contrario'],
+  ['stattdessen, hingegen', 'SHTAT-de-ssën, hin-GÉ:-gën', 'invece, al contrario'],
   ['inzwischen, anschließend', 'in-TSVI-shën, AN-shli:-ssënt', 'nel frattempo, in seguito'],
 ])}
-<p>«Es regnet. Trotzdem gehen wir spazieren.» [es RE:G-nët. TROTS-de:m GE:-ën vi:r shpa-TSI:-rën]; «Du musst lernen, sonst fällst du durch.» [du MUST LER-nën, ZONST felst du DURÇ].</p>
+<p>«Es regnet. Trotzdem gehen wir spazieren.» [es RÉ:G-nët. TROTS-de:m GÉ:-ën vi:r shpa-TSI:-rën]; «Du musst lernen, sonst fällst du durch.» [du MUST LER-nën, ZONST felst du DURÇ].</p>
 <h3>Subordinate utili al B2</h3>
 <ul>
-<li><b>indem</b> (facendo, mediante): «Er lernt Deutsch, indem er viel liest.» [in-DE:M].</li>
+<li><b>indem</b> (facendo, mediante): «Er lernt Deutsch, indem er viel liest.» [in-DÉ:M].</li>
 <li><b>ohne dass / (an)statt dass</b>: senza che / invece di (con soggetti diversi).</li>
 <li><b>sofern, soweit</b> (a condizione che / per quanto) [zo-FERN], <b>zumal</b> (tanto più che) [tsu-MA:L], <b>wobei</b> (mentre, nel fare) [vo-BAI], <b>wohingegen</b> (mentre invece), <b>da</b> (poiché) [DA:].</li>
 </ul>
@@ -285,15 +285,15 @@ ${vsec('Dal gruppo alla relativa', [
 <h3>Nominalstil e Funktionsverbgefüge</h3>
 <p>Lo stile nominale sostituisce verbi e subordinate con nomi: «<i>Wegen der Verspätung des Zuges</i>» invece di «<i>Weil der Zug Verspätung hatte</i>»; «<i>Nach bestandener Prüfung</i>» invece di «<i>Nachdem er die Prüfung bestanden hatte</i>». I <b>Funktionsverbgefüge</b> sono combinazioni fisse nome + verbo:</p>
 ${vsec('Funktionsverbgefüge', [
-  ['in Anspruch nehmen', 'in AN-shpruch NE:-mën', 'avvalersi di, usare'],
+  ['in Anspruch nehmen', 'in AN-shpruch NÉ:-mën', 'avvalersi di, usare'],
   ['zur Verfügung stellen', 'tsur fer-FÜ:-gung SHTE-lën', 'mettere a disposizione'],
   ['in Betracht ziehen', 'in bë-TRACHT TSI:-ën', 'prendere in considerazione'],
   ['eine Entscheidung treffen', 'AI-në ent-SHAI-dung TRE-fën', 'prendere una decisione'],
   ['Verantwortung übernehmen', 'fer-ANT-vor-tung Ü:-ba-ne:-mën', 'assumersi la responsabilità'],
   ['in Frage stellen', 'in FRA:-gë SHTE-lën', 'mettere in dubbio'],
-  ['zum Ausdruck bringen', 'tsum AUS-druk BRI-ngën', 'esprimere'],
-  ['in Kraft treten', 'in KRAFT TRE:-tën', 'entrare in vigore'],
-  ['Rücksicht nehmen auf', 'RÜK-ziçt NE:-mën auf', 'tener conto di'],
+  ['zum Ausdruck bringen', 'tsum AUS-druk BRING-ën', 'esprimere'],
+  ['in Kraft treten', 'in KRAFT TRÉ:-tën', 'entrare in vigore'],
+  ['Rücksicht nehmen auf', 'RÜK-ziçt NÉ:-mën auf', 'tener conto di'],
   ['unter Beweis stellen', 'UN-ta bë-VAIS SHTE-lën', 'dimostrare'],
   ['eine Rolle spielen', 'AI-në RO-lë SHPI:-lën', 'avere un ruolo'],
   ['Kritik üben an', 'kri-TI:K Ü:-bën an', 'criticare'],
@@ -405,7 +405,7 @@ ${vsec('Funktionsverbgefüge', [
       'Avverbi a inversione: il verbo segue subito (<i>Deshalb bleibt er</i>).',
     ),
     card('c6', 'Posizione 0', "<i>und, oder, aber, denn, sondern</i>: non influenzano l'ordine delle parole."),
-    card('c7', 'indem [in-DE:M]', 'facendo, mediante: <i>Er lernt, indem er viel liest.</i>'),
+    card('c7', 'indem [in-DÉ:M]', 'facendo, mediante: <i>Er lernt, indem er viel liest.</i>'),
     card(
       'c8',
       'Partizipialattribut',
@@ -458,9 +458,9 @@ ${PRON_SHORT}
 <h3>Lettera formale</h3>
 <p>Struttura: mittente, luogo e data (<i>Mailand, den 6. November 2026</i>), <b>Betreff</b> (oggetto), <b>Anrede</b>, testo, formula di chiusura e firma. Dopo la virgola dell'apertura il testo inizia con la <b>minuscola</b> (se non è un nome o Sie / Ihr).</p>
 ${vsec('Aperture e chiusure', [
-  ['Sehr geehrte Damen und Herren,', 'ZE:R gë-E:R-të DA-mën unt HE-rën', 'Gentili signore e signori,'],
-  ['Sehr geehrte Frau Meier,', 'ZE:R gë-E:R-të FRAU MAI-a', 'Gentile signora Meier,'],
-  ['Sehr geehrter Herr Dr. Schmidt,', 'ZE:R gë-E:R-ta HER DOK-tor SHMIT', 'Egregio dottor Schmidt,'],
+  ['Sehr geehrte Damen und Herren,', 'ZÉ:R gë-É:R-të DA-mën unt HE-rën', 'Gentili signore e signori,'],
+  ['Sehr geehrte Frau Meier,', 'ZÉ:R gë-É:R-të FRAU MAI-a', 'Gentile signora Meier,'],
+  ['Sehr geehrter Herr Dr. Schmidt,', 'ZÉ:R gë-É:R-ta HER DOK-tor SHMIT', 'Egregio dottor Schmidt,'],
   ['Mit freundlichen Grüßen', 'mit FROINT-li-çën GRÜ:-ssën', 'Cordiali saluti'],
   ['Liebe Anna, / Hallo Tom,', 'LI:-bë A-na / HA-lo TOM', 'Cara Anna, / Ciao Tom, (informale)'],
   [
@@ -478,12 +478,12 @@ ${vsec('Formule utili', [
   ],
   [
     'Anbei sende ich Ihnen meinen Lebenslauf.',
-    'AN-bai ZEN-dë iç I:-nën MAI-nën LE:-bëns-lauf',
+    'AN-bai ZEN-dë iç I:-nën MAI-nën LÉ:-bëns-lauf',
     'In allegato Le invio il mio CV.',
   ],
   [
     'Für Rückfragen stehe ich Ihnen gern zur Verfügung.',
-    'fü:r RÜK-fra:-gën SHTE:-ë iç I:-nën GERN tsur fer-FÜ:-gung',
+    'fü:r RÜK-fra:-gën SHTÉ:-ë iç I:-nën GERN tsur fer-FÜ:-gung',
     'Per domande sono a Sua disposizione.',
   ],
   ['Vielen Dank im Voraus.', 'FI:-lën DANK im fo-RAUS', 'Grazie in anticipo.'],
@@ -492,11 +492,11 @@ ${vsec('Formule utili', [
     'LAI-da MUS iç I:-nën MIT-tai-lën, das',
     'Purtroppo devo comunicarLe che …',
   ],
-  ['Ich möchte mich über … beschweren.', 'iç MÖÇ-të miç Ü:-ba … bë-SHVE:-rën', 'Vorrei lamentarmi di …'],
+  ['Ich möchte mich über … beschweren.', 'iç MÖÇ-të miç Ü:-ba … bë-SHVÉ:-rën', 'Vorrei lamentarmi di …'],
   ['Ich bitte um eine schnelle Antwort.', 'iç BI-të um AI-në SHNE-lë ANT-vort', 'Chiedo una risposta rapida.'],
 ])}
 <h3>Lebenslauf (CV) e reclamo</h3>
-<p>Il <b>tabellarischer Lebenslauf</b> [ta-be-LA:-ri-sha LE:-bëns-lauf] è un elenco in ordine cronologico inverso: <i>Persönliche Daten</i> (dati personali), <i>Berufserfahrung</i> (esperienza), <i>Ausbildung</i> (formazione), <i>Kenntnisse</i> e <i>Sprachen</i> (es. <i>Muttersprache: Italienisch; Deutsch: B2</i>), <i>Interessen</i>. Lo accompagna il <i>Anschreiben</i> (lettera di presentazione). Il <b>reclamo</b>: oggetto chiaro, fatti con data, richiesta precisa, scadenza («Ich bitte um Erstattung bis zum 20. November.»).</p>
+<p>Il <b>tabellarischer Lebenslauf</b> [ta-be-LA:-ri-sha LÉ:-bëns-lauf] è un elenco in ordine cronologico inverso: <i>Persönliche Daten</i> (dati personali), <i>Berufserfahrung</i> (esperienza), <i>Ausbildung</i> (formazione), <i>Kenntnisse</i> e <i>Sprachen</i> (es. <i>Muttersprache: Italienisch; Deutsch: B2</i>), <i>Interessen</i>. Lo accompagna il <i>Anschreiben</i> (lettera di presentazione). Il <b>reclamo</b>: oggetto chiaro, fatti con data, richiesta precisa, scadenza («Ich bitte um Erstattung bis zum 20. November.»).</p>
 <h3>Partikeln: le piccole parole del parlato</h3>
 <p>Di norma sono <b>atone</b>; non hanno una traduzione unica, esprimono l'atteggiamento di chi parla.</p>
 ${vsec('Partikeln', [
@@ -504,7 +504,7 @@ ${vsec('Partikeln', [
   ['Doch, das stimmt!', 'DOCH, das SHTIMT', 'Sì invece, è vero! (contraddice una negazione)'],
   ['Schau mal!', 'SHAU MA:L', "Guarda un po'!"],
   ['Das ist halt so.', 'das ist HALT zo:', 'È così e basta.'],
-  ['Dann bleiben wir eben zu Hause.', 'dan BLAI-bën vi:r E:-bën tsu HAU-zë', 'Allora restiamo a casa, pazienza.'],
+  ['Dann bleiben wir eben zu Hause.', 'dan BLAI-bën vi:r É:-bën tsu HAU-zë', 'Allora restiamo a casa, pazienza.'],
   ['Das ist ja toll!', 'das ist JA: TOL', 'Ma è fantastico!'],
   ['Er ist wohl krank.', 'e:r ist VO:L KRANK', 'Sarà malato.'],
   ['Das wird schon klappen.', 'das virt SHO:N KLA-pën', 'Andrà bene, vedrai.'],
@@ -514,12 +514,12 @@ ${vsec('Partikeln', [
 ])}
 <h3>Modi di dire e abbreviazioni</h3>
 ${vsec('Modi di dire', [
-  ['Ich verstehe nur Bahnhof.', 'iç fer-SHTE:-ë nu:r BA:N-ho:f', 'Non capisco niente.'],
+  ['Ich verstehe nur Bahnhof.', 'iç fer-SHTÉ:-ë NU:R BA:N-ho:f', 'Non capisco niente.'],
   ['Das ist mir Wurst.', 'das ist mi:r VURST', 'Non mi importa.'],
   ['Hals- und Beinbruch!', 'HALS unt BAIN-bruch', 'In bocca al lupo!'],
   ['Daumen drücken', 'DAU-mën DRÜ-kën', 'incrociare le dita'],
   ['Schwein haben', 'SHVAIN HA:-bën', 'avere fortuna'],
-  ['ins Fettnäpfchen treten', 'ins FET-nepf-çën TRE:-tën', 'fare una gaffe'],
+  ['ins Fettnäpfchen treten', 'ins FET-nepf-çën TRÉ:-tën', 'fare una gaffe'],
   ['die Nase voll haben', 'di: NA:-zë FOL HA:-bën', 'averne piene le tasche'],
 ])}
 ${vsec('Abbreviazioni', [
@@ -528,8 +528,8 @@ ${vsec('Abbreviazioni', [
   ['d. h. (das heißt)', 'das HAIST', 'cioè'],
   ['u. a. (unter anderem)', 'UN-ta AN-dë-rëm', "tra l'altro"],
   ['bzw. (beziehungsweise)', 'bë-TSI:-ungs-vai-zë', 'ovvero'],
-  ['ggf. (gegebenenfalls)', 'gë-GE:-bë-nën-fals', 'se del caso'],
-  ['MwSt. (Mehrwertsteuer)', 'ME:R-vert-shtoi-a', 'IVA'],
+  ['ggf. (gegebenenfalls)', 'gë-GÉ:-bë-nën-fals', 'se del caso'],
+  ['MwSt. (Mehrwertsteuer)', 'MÉ:R-vert-shtoi-a', 'IVA'],
   ['PLZ (Postleitzahl)', 'POST-lait-tsa:l', 'CAP'],
 ])}
 <h3>Trappole per chi parla italiano</h3>
@@ -599,7 +599,7 @@ ${vsec('Abbreviazioni', [
     q(
       'q8',
       'Come si pronuncia «Lebenslauf» (CV)?',
-      ['[LE:-bëns-lauf]', '[LE-ben-slaf]', '[LE:-bëns-lof]', '[le-BENS-lauf]'],
+      ['[LÉ:-bëns-lauf]', '[LE-ben-slaf]', '[LÉ:-bëns-lof]', '[le-BENS-lauf]'],
       0,
       "La e di Leben è lunga, l'accento è sulla prima sillaba e au vale «au» italiano. Le sillabe -en e -s sono deboli.",
     ),
@@ -632,7 +632,7 @@ ${vsec('Abbreviazioni', [
     card('c3', 'Liebe Anna, … Liebe Grüße', 'Apertura e chiusura informali.'),
     card(
       'c4',
-      'Lebenslauf [LE:-bëns-lauf]',
+      'Lebenslauf [LÉ:-bëns-lauf]',
       'CV: dati personali, esperienza, formazione, conoscenze, lingue, interessi.',
     ),
     card(

@@ -442,9 +442,9 @@ ${vsec('Indicazioni', [
   ['à gauche', 'a GOSH', 'a sinistra'],
   ['à droite', 'a DRUAT', 'a destra'],
   ['au coin', 'o KUẼ', "all'angolo"],
-  ['en face de', 'ã fas DË', 'di fronte a'],
-  ['près de', 'prè DË', 'vicino a'],
-  ['loin de', 'luẽ DË', 'lontano da'],
+  ['en face de', 'ã FAS dë', 'di fronte a'],
+  ['près de', 'PRÈ dë', 'vicino a'],
+  ['loin de', 'LUẼ dë', 'lontano da'],
   ['Pour aller à...?', 'pur a-lé A', 'Per andare a...?'],
 ])}
 ${vsec('Emergenze', [

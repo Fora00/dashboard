@@ -551,7 +551,7 @@ export const fconfronti = mod(
         "J'habite ici il y a trois ans.",
       ],
       0,
-      "Depuis + presente per un'azione ancora in corso. Pendant indica una durata finita, il y a vuol dire «fa» (momento nel passato).",
+      "Depuis + presente per un'azione ancora in corso (il passé composé con depuis resta possibile solo con la negazione: je ne l'ai pas vu depuis lundi). Pendant indica una durata finita, il y a vuol dire «fa» (momento nel passato).",
     ),
     q(
       'q3',

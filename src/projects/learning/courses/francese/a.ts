@@ -32,7 +32,7 @@ export const fpron = mod(
   `<p class="lead">Il francese si scrive in un modo e si dice in un altro. Tre regole: molte lettere finali sono mute, le parole si legano fra loro e non c'è accento sulla singola parola.</p>
 ${PRON_FULL}
 <h3>Ritmo: nessun accento di parola</h3>
-<p>In italiano una sillaba di ogni parola pesa di più (ORdine). In francese tutte le sillabe sono uguali e l'appoggio cade solo sull'ultima sillaba del <b>gruppo ritmico</b> (le parole che si dicono d'un fiato). Trappola: <i>ordinateur</i> [òr-di-na-TÖR], mai «ORdinatör»; <i>important</i> [ẽ-pòr-TÃ]; <i>Je ne sais pas</i> [zhë në sè PA], nel parlato [zhën sè PA].</p>
+<p>In italiano una sillaba di ogni parola pesa di più (ORdine). In francese tutte le sillabe sono uguali e l'appoggio cade solo sull'ultima sillaba del <b>gruppo ritmico</b> (le parole che si dicono d'un fiato). Trappola: <i>ordinateur</i> [òr-di-na-TÖR], mai «ORdinatör»; <i>important</i> [ẽ-pòr-TÃ]; <i>Je ne sais pas</i> [zhë në sè PA], nel parlato spesso [zhë sè PA] o [shè PA].</p>
 <p><b>La ë (e muta)</b>: è un suono brevissimo, a metà tra e e ö. In fondo alla parola è muta (<i>table</i> [TABL], <i>porte</i> [PÒRT]). Tra due vocali pronunciate cade (<i>samedi</i> [sam-DI]); si tiene per evitare tre consonanti di fila (<i>vendredi</i> [vã-drë-DI], <i>mercredi</i> [mèr-krë-DI]); all'inizio si dice (<i>le</i> [lë], <i>petit</i> [pë-TI]).</p>
 <h3>Le vocali</h3>
 <table><tr><th>Si scrive</th><th>Si dice</th><th>Esempi</th></tr>
@@ -47,7 +47,7 @@ ${PRON_FULL}
 <tr><td>o + consonante detta</td><td>ò aperta</td><td>porte [PÒRT], école [é-KÒL]</td></tr>
 <tr><td>oi, ui</td><td>ua / üi</td><td>moi [MUA], nuit [NÜI]</td></tr></table>
 <p><b>ü</b>: di' «i» e, senza muovere la lingua, arrotonda le labbra come per fischiare. Coppia da allenare: <i>tu</i> [TÜ] ≠ <i>tout</i> [TU]. <b>ö</b>: di' «é» chiusa e arrotonda le labbra come per «o»; è un po' più aperta davanti a r, l, f detti (<i>peur</i>, <i>fleur</i>, <i>œuf</i>), noi la scriviamo sempre ö. Eccezione: <i>eu</i> participio di avoir = ü (<i>j'ai eu</i> [zhé Ü]).</p>
-<p><b>La o aperta o chiusa</b>: ò aperta davanti a consonante detta (<i>porte</i> [PÒRT], <i>homme</i> [ÒM], <i>donner</i> [dò-NÉ], <i>octobre</i> [ok-TÒBR]); o chiusa in fondo alla parola (<i>vélo</i> [vé-LO], <i>trop</i> [TRO]), davanti a z (<i>rose</i> [ROZ], <i>chose</i> [SHOZ]) e quando si scrive ô, au, eau. Sono tendenze, non leggi: una o sbagliata non impedisce di farsi capire.</p>
+<p><b>La o aperta o chiusa</b>: ò aperta davanti a consonante detta (<i>porte</i> [PÒRT], <i>homme</i> [ÒM], <i>donner</i> [dò-NÉ], <i>octobre</i> [òk-TÒBR]); o chiusa in fondo alla parola (<i>vélo</i> [vé-LO], <i>trop</i> [TRO]), davanti a z (<i>rose</i> [ROZ], <i>chose</i> [SHOZ]) e quando si scrive ô, au, eau. Sono tendenze, non leggi: una o sbagliata non impedisce di farsi capire.</p>
 <h3>Le nasali: la n non si dice</h3>
 <table><tr><th>Grafia</th><th>Suono</th><th>Esempi</th></tr>
 <tr><td>an, am, en, em</td><td>ã</td><td>dans [DÃ], vent [VÃ], temps [TÃ]</td></tr>
@@ -73,7 +73,7 @@ ${PRON_FULL}
 <li><b>Doppie non raddoppiate</b>: <i>elle</i> [ÈL], <i>pomme</i> [PÒM], <i>personne</i> [pèr-SÒN]: la consonante doppia è breve. Dire «pòm-me» o «bèl-le» è un accento italiano.</li>
 <li><b>sc + e/i = s</b>, non sh: <i>scène</i> [SÈN], <i>science</i> [SYÃS], <i>descendre</i> [dé-SÃDR]. Con a/o/u resta sk: <i>escalier</i> [ès-ka-LYÉ].</li>
 <li><b>x</b>: gz in ex- + vocale (<i>examen</i> [èg-za-MẼ], <i>exemple</i> [èg-ZÃPL]); ks in <i>taxi</i> [tak-SI], <i>texte</i> [TÈKST]; s in <i>six</i> [SIS], <i>soixante</i> [sua-SÃT]; z in <i>deuxième</i> [dö-ZYÈM]; muta in <i>deux</i> [DÖ], <i>prix</i> [PRI].</li>
-<li><b>ti = si</b> in <i>-tion</i>, <i>patient</i> [pa-SYÃ], <i>démocratie</i> [dé-mo-kra-SI]; ma resta t dopo s e nei verbi: <i>question</i> [kès-TYÕ], <i>nous étions</i> [é-TYÕ].</li>
+<li><b>ti = si</b> in <i>-tion</i>, <i>patient</i> [pa-SYÃ], <i>démocratie</i> [dé-mò-kra-SI]; ma resta t dopo s e nei verbi: <i>question</i> [kès-TYÕ], <i>nous étions</i> [é-TYÕ].</li>
 <li><b>ch = k</b> in parole di origine greca: <i>chœur</i> [KÖR], <i>orchestre</i> [òr-KÈSTR]. <b>th = t</b> (<i>thé</i> [TÉ]); <b>ph = f</b> (<i>photo</i> [fo-TO]).</li>
 <li><b>Consonanti finali senza vocale</b>: <i>table</i> [TABL], <i>quatre</i> [KATR], <i>livre</i> [LIVR], <i>peuple</i> [PÖPL]. L'italiano tende ad aggiungere una «-e» o «-o»: chiudi la parola subito, senza vocale.</li>
 </ul>
@@ -86,7 +86,7 @@ ${PRON_FULL}
 <table><tr><th>Lettera</th><th>Suona</th><th>Esempi</th></tr>
 <tr><td>s, x, z</td><td>z</td><td>les amis [lé-za-MI], nous avons [nu-za-VÕ], deux ans [dö-ZÃ]</td></tr>
 <tr><td>t, d</td><td>t</td><td>petit ami [pë-ti-ta-MI], grand homme [grã-TÒM]</td></tr>
-<tr><td>n</td><td>n (la vocale resta nasale)</td><td>un ami [ẽ-na-MI], mon ami [mõ-na-MI], en avion [ã-na-vyÕ]</td></tr>
+<tr><td>n</td><td>n (la vocale resta nasale)</td><td>un ami [ẽ-na-MI], mon ami [mõ-na-MI], en avion [ã-na-VYÕ]</td></tr>
 <tr><td>f</td><td>v</td><td>neuf ans [nö-VÃ], neuf heures [nö-VÖR]</td></tr>
 <tr><td>g</td><td>k (raro)</td><td>un long hiver [ẽ lõ-ki-VÈR]</td></tr></table>
 <p><b>Obbligatoria</b>: articolo o aggettivo + nome (<i>un ami</i>, <i>mes amis</i>), pronome + verbo (<i>ils ont</i> [il-ZÕ], <i>vous avez</i> [vu-za-VÉ]), parole corte come <i>en, dans, chez, sans, très, plus, bien</i> (<i>dans un mois</i> [dã-zẽ-MUA], <i>très utile</i> [trè-zü-TIL]), i numeri (<i>trois ans</i> [trua-ZÃ]), <i>c'est</i> (<i>c'est un</i> [sè-tẽ]). <b>Vietata</b>: dopo <i>et</i>; davanti a h aspirata; tra nome soggetto e verbo (<i>les enfants arrivent</i> [lé-zã-fã a-RIV]); dopo un nome singolare (<i>un étudiant américain</i>); davanti a <i>onze</i> e <i>oui</i>. <b>Facoltativa</b>: dopo la maggior parte dei verbi e degli avverbi (<i>vous êtes ici</i>, <i>pas encore</i>): nel dubbio <b>non legare</b>, resti comprensibile e naturale; leghi solo dove è obbligatoria.</p>
@@ -103,10 +103,10 @@ ${PRON_FULL}
       'q1',
       'Come si pronuncia «tu» (tu)?',
       [
-        'tü: una i con le labbra tonde come per u',
-        'tu: come la u italiana di «lupo»',
-        'ti: come la i italiana di «tigre»',
-        'tö: una e con le labbra tonde come per o',
+        'tü: una i con le labbra tonde',
+        'tu: come la u italiana di «lupo», senza arrotondare altro',
+        'ti: come la i italiana di «tigre», a labbra distese',
+        'tö: una e con le labbra tonde come per «o»',
       ],
       0,
       'La u francese è una i detta con le labbra tonde. La u italiana corrisponde a «ou» (tout), quindi leggere tu come lupo confonde due parole diverse.',
@@ -115,10 +115,10 @@ ${PRON_FULL}
       'q2',
       'Qual è la differenza tra «bon» e «bonne»?',
       [
-        'bon è nasale senza n [BÕ]; bonne ha una n vera [BÒN]',
-        'bon e bonne suonano uguali, cambia solo la scrittura',
-        'bon ha la n finale pronunciata [BÒN]; bonne è nasale',
-        'bon è [BU] e bonne è [BÖN], con vocali diverse',
+        'bon è nasale [BÕ]; bonne ha una n vera [BÒN]',
+        'bon e bonne suonano uguali, cambia solo la scrittura del femminile',
+        'bon ha la n finale pronunciata [BÒN]; bonne è nasale [BÕ]',
+        'bon è [BU] e bonne è [BÖN], con due vocali diverse tra loro',
       ],
       0,
       'La nasale esiste solo se la n è finale o davanti a consonante. In bonne la n è raddoppiata e davanti alla e muta: si sente una n normale, quindi non è nasale.',
@@ -126,7 +126,7 @@ ${PRON_FULL}
     q(
       'q3',
       'In quale coppia la liaison è vietata?',
-      ['et ils [é-IL]', 'les amis [lé-za-MI]', 'nous avons [nu-za-VÕ]', 'un ami [Ẽ-na-MI]'],
+      ['et ils [é-IL]', 'les amis [lé-za-MI]', 'nous avons [nu-za-VÕ]', 'un ami [ẽ-na-MI]'],
       0,
       'Dopo «et» non si lega mai. Le altre tre coppie sono articolo+nome o pronome+verbo, dove la liaison è obbligatoria; per questo la tentazione è legarle tutte.',
     ),
@@ -184,10 +184,10 @@ ${PRON_FULL}
       'q9',
       'Come si pronuncia «ils parlent»?',
       [
-        'il PARL: la terminazione -ent è muta',
-        'il par-LÃ: -ent come in «vent»',
-        'ilz par-LÈNT: tutte le lettere dette',
-        "il par-LÉ: -ent come l'infinito",
+        'il PARL: -ent è muta',
+        'il par-LÃ: -ent nasale, come in «vent»',
+        'ilz par-LÈNT: tutte le lettere dette ad alta voce',
+        "il par-LÉ: -ent chiusa come nell'infinito",
       ],
       0,
       'Nelle forme verbali -ent finale è solo scrittura: parle, parles e parlent suonano uguali. In «vent» è invece un nome, dove -ent è nasale.',
@@ -202,7 +202,12 @@ ${PRON_FULL}
     q(
       'q11',
       'Come si legge «scène»?',
-      ['SÈN: sc davanti a e/i vale s', 'SHÈN: sc come in «scena»', 'SKÈN: sc vale sempre sk', 'STSÈN: sc vale ts'],
+      [
+        'SÈN: sc = s davanti a e/i',
+        'SHÈN: sc come in «scena» italiana',
+        'SKÈN: sc vale sempre sk, anche qui',
+        'STSÈN: sc vale ts, come in tedesco',
+      ],
       0,
       'Davanti a e e i il gruppo sc vale una s semplice, non la sc italiana di «scena». Con a, o, u resta invece sk, come in escalier e scolaire.',
     ),
@@ -210,10 +215,10 @@ ${PRON_FULL}
       'q12',
       'Come si legge «examen»?',
       [
-        'èg-za-MẼ: ex- davanti a vocale vale gz',
-        'èk-sa-MÃ: x vale ks e an è nasale',
-        'è-sa-MẼN: x vale s e la n si dice',
-        'èg-za-MEN: x vale gz e la n si dice',
+        'èg-za-MẼ: x = gz, en nasale',
+        'èk-sa-MÃ: x vale ks e -en vale ã, come in «vent»',
+        'è-sa-MẼN: x vale s e la n finale si dice',
+        'èg-za-MEN: x vale gz ma la n finale si dice',
       ],
       0,
       "In ex- davanti a vocale la x suona gz e la -en dopo é o i è nasale ẽ. Dire ks come in taxi, o pronunciare la n, tradisce subito l'accento italiano.",
@@ -221,12 +226,7 @@ ${PRON_FULL}
     q(
       'q13',
       'In quale parola la h è aspirata (blocca élision e liaison)?',
-      [
-        'haricot: le haricot, les haricots',
-        "homme: l'homme, les hommes",
-        "heure: l'heure, les heures",
-        "hôtel: l'hôtel, les hôtels",
-      ],
+      ['haricot: le haricot', "homme: l'homme, les hommes", "heure: l'heure, les heures", "hôtel: l'hôtel, les hôtels"],
       0,
       'Haricot ha la h aspirata, per questo si dice le haricot senza élision. Homme, heure e hôtel hanno la h muta: si elide e si lega, come se non ci fosse.',
     ),
@@ -234,10 +234,10 @@ ${PRON_FULL}
       'q14',
       'Che regola pratica vale per la liaison facoltativa?',
       [
-        'Nel dubbio non legare: lega solo dove è obbligatoria',
-        'Lega sempre: più leghi, più suoni francese',
+        'Nel dubbio non legare, solo dove è obbligatoria',
+        'Lega sempre, più leghi più suoni francese',
         'Lega dopo i verbi, mai dopo gli articoli',
-        'Lega solo davanti alle parole con la h',
+        'Lega solo davanti alle parole che iniziano con la h',
       ],
       0,
       'Dopo molti verbi e avverbi la liaison è facoltativa e nel parlato corrente spesso manca. Legare dove non serve suona affettato, mentre dove è obbligatoria è un errore saltarla.',
@@ -434,7 +434,7 @@ export const fsaluti = mod(
 <tr><td>1 000 000</td><td>un million (de) [ẽ mi-LYÕ]</td></tr></table>
 <p>Da 70 a 99 il francese conta in base 20: 70 = 60+10, 80 = 4×20, 90 = 4×20+10. In Belgio e Svizzera: <i>septante</i> [sèp-TÃT], <i>nonante</i> [nò-NÃT]. <b>-s</b>: <i>quatre-vingts</i> e <i>deux cents</i> hanno la s solo se non seguiti da un altro numero (<i>quatre-vingt-trois</i>, <i>deux cent un</i>); <i>mille</i> è invariabile (<i>trois mille</i>). Prima di una consonante six, huit, dix perdono la consonante: <i>six jours</i> [si ZHUR]; davanti a vocale si legano: <i>six heures</i> [si-ZÖR].</p>
 <h3>Giorni, mesi, data, ora</h3>
-<p>Giorni (minuscolo, maschili): <i>lundi</i> [lẽ-DI], <i>mardi</i> [mar-DI], <i>mercredi</i> [mèr-krë-DI], <i>jeudi</i> [zhö-DI], <i>vendredi</i> [vã-drë-DI], <i>samedi</i> [sam-DI], <i>dimanche</i> [di-MÃSH]. <i>Lundi</i> = questo lunedì; <i>le lundi</i> = ogni lunedì. Mesi: <i>janvier</i> [zhã-VYÉ], <i>février</i> [fév-RYÉ], <i>mars</i> [MARS], <i>avril</i> [a-VRIL], <i>mai</i> [MÈ], <i>juin</i> [ZHÜẼ], <i>juillet</i> [zhüi-YÈ], <i>août</i> [UT], <i>septembre</i> [sèp-TÃBR], <i>octobre</i> [ok-TÒBR], <i>novembre</i> [nò-VÃBR], <i>décembre</i> [dé-SÃBR].</p>
+<p>Giorni (minuscolo, maschili): <i>lundi</i> [lẽ-DI], <i>mardi</i> [mar-DI], <i>mercredi</i> [mèr-krë-DI], <i>jeudi</i> [zhö-DI], <i>vendredi</i> [vã-drë-DI], <i>samedi</i> [sam-DI], <i>dimanche</i> [di-MÃSH]. <i>Lundi</i> = questo lunedì; <i>le lundi</i> = ogni lunedì. Mesi: <i>janvier</i> [zhã-VYÉ], <i>février</i> [fév-RYÉ], <i>mars</i> [MARS], <i>avril</i> [a-VRIL], <i>mai</i> [MÈ], <i>juin</i> [ZHÜẼ], <i>juillet</i> [zhüi-YÈ], <i>août</i> [UT], <i>septembre</i> [sèp-TÃBR], <i>octobre</i> [òk-TÒBR], <i>novembre</i> [nò-VÃBR], <i>décembre</i> [dé-SÃBR].</p>
 <p>Data: <i>Nous sommes le six novembre.</i> [nu sòm lë si nò-VÃBR] Solo il primo è ordinale: <i>le premier mai</i> [lë prë-myé MÈ].</p>
 <p>Ora: <i>Quelle heure est-il ?</i> [kè-lö-rè-TIL] — <i>Il est trois heures</i> [i-lè trua-ZÖR], <i>une heure</i> [ü-NÖR], <i>midi</i> [mi-DI], <i>minuit</i> [mi-NÜI], <i>trois heures et quart</i>, <i>et demie</i> [é dë-MI], <i>moins le quart</i> [muẽ lë KAR], <i>moins cinq</i>. Trappola: «sono le tre» = <i>il est trois heures</i>, mai «ils sont».</p>
 <h3>Paesi e nazionalità</h3>
@@ -446,6 +446,31 @@ export const fsaluti = mod(
 <tr><td>la Suisse</td><td>[la SÜIS]</td><td>suisse / suisse</td></tr>
 <tr><td>les États-Unis</td><td>[lé-zé-ta-zü-NI]</td><td>américain / américaine</td></tr></table>
 <p>Preposizioni: <i>en</i> + femminile o vocale (<i>en France</i> [ã FRÃS], <i>en Italie</i>), <i>au</i> + maschile (<i>au Portugal</i>), <i>aux</i> + plurale (<i>aux États-Unis</i>); «da»: <i>je viens d'Italie</i> [zhë vyẽ di-ta-LI]. Le nazionalità come aggettivo sono minuscole.</p>
+<h3>Momenti della giornata</h3>
+<table><tr><th>Francese</th><th>Pronuncia</th><th>Italiano</th></tr>
+<tr><td>le matin</td><td>[lë ma-TẼ]</td><td>la mattina (in generale)</td></tr>
+<tr><td>l'après-midi</td><td>[la-prè-mi-DI]</td><td>il pomeriggio (maschile o femminile)</td></tr>
+<tr><td>le soir</td><td>[lë SUAR]</td><td>la sera</td></tr>
+<tr><td>la nuit</td><td>[la NÜI]</td><td>la notte</td></tr>
+<tr><td>midi / minuit</td><td>[mi-DI] / [mi-NÜI]</td><td>mezzogiorno / mezzanotte</td></tr>
+<tr><td>ce matin, ce soir</td><td>[së ma-TẼ] / [së SUAR]</td><td>stamattina, stasera</td></tr>
+<tr><td>cet après-midi</td><td>[sè-ta-prè-mi-DI]</td><td>questo pomeriggio</td></tr></table>
+<p>Con l'ora si dice <i>du matin</i>, <i>de l'après-midi</i>, <i>du soir</i>: <i>Il est huit heures du matin</i> [i-lè üi-TÖR dü ma-TẼ], <i>trois heures de l'après-midi</i> [trua-ZÖR dë la-prè-mi-DI], <i>dix heures du soir</i> [di-ZÖR dü SUAR]. «A mezzogiorno» = <i>à midi</i> [a mi-DI], «a mezzanotte» = <i>à minuit</i> [a mi-NÜI].</p>
+<h3>Parole del tempo e della frequenza</h3>
+<table><tr><th>Francese</th><th>Pronuncia</th><th>Italiano</th></tr>
+<tr><td>hier, aujourd'hui, demain</td><td>[YÈR] / [o-zhur-DÜI] / [dë-MẼ]</td><td>ieri, oggi, domani</td></tr>
+<tr><td>avant-hier, après-demain</td><td>[a-vã-TYÈR] / [a-prè-dë-MẼ]</td><td>l'altro ieri, dopodomani</td></tr>
+<tr><td>hier soir, demain matin</td><td>[yèr SUAR] / [dë-mẽ ma-TẼ]</td><td>ieri sera, domani mattina</td></tr>
+<tr><td>la semaine prochaine / dernière</td><td>[la së-mèn prò-SHÈN] / [la së-mèn dèr-NYÈR]</td><td>la settimana prossima / scorsa</td></tr>
+<tr><td>le mois prochain, l'année dernière</td><td>[lë mua prò-SHẼ] / [la-né dèr-NYÈR]</td><td>il mese prossimo, l'anno scorso</td></tr>
+<tr><td>il y a deux jours</td><td>[i-lya dö ZHUR]</td><td>due giorni fa</td></tr>
+<tr><td>depuis lundi</td><td>[dë-püi lẽ-DI]</td><td>da lunedì (e ancora oggi)</td></tr>
+<tr><td>tous les jours / chaque jour</td><td>[tu lé ZHUR] / [shak ZHUR]</td><td>ogni giorno</td></tr>
+<tr><td>toujours, souvent, parfois</td><td>[tu-ZHUR] / [su-VÃ] / [par-FUA]</td><td>sempre, spesso, a volte</td></tr>
+<tr><td>d'habitude, rarement</td><td>[da-bi-TÜD] / [rar-MÃ]</td><td>di solito, raramente</td></tr>
+<tr><td>ne ... jamais</td><td>[në ... zha-MÈ]</td><td>mai (con verbo negativo)</td></tr>
+<tr><td>deux fois par semaine</td><td>[dö fua par së-MÈN]</td><td>due volte a settimana</td></tr></table>
+<p><b>Dove vanno</b>: <i>demain</i>, <i>hier</i>, <i>ce soir</i> stanno all'inizio o alla fine della frase (<i>Demain, je pars.</i> / <i>Je pars demain.</i>). Gli avverbi di frequenza stanno dopo il verbo coniugato: <i>Je vais souvent au cinéma</i> [zhë vè su-vã o si-né-MA]; al passé composé tra ausiliare e participio: <i>J'ai souvent mangé ici.</i> <i>Tous les jours</i> si scrive con tous (la s non si dice in questa locuzione) e <i>jamais</i> vuole sempre <i>ne</i>: <i>Je ne fume jamais.</i> <i>Prochain</i> e <i>dernier</i> vanno dopo il nome con semaine, mois, année; <i>la semaine suivante</i> è invece «la settimana dopo» dentro un racconto al passato.</p>
 <div class="say"><b>Cosa dire.</b> «Bonjour, je m'appelle Anna [bõ-zhur zhë ma-pèl a-NA]. J'ai vingt-cinq ans [zhé vẽt-sẽ-KÃ] et j'habite à Rome.»</div>`,
   [
     q(
@@ -519,6 +544,37 @@ export const fsaluti = mod(
       0,
       "Bonne nuit è l'augurio prima di dormire. Per salutare arrivando di sera si dice bonsoir; bonne ha una n vera [bòn], non nasale.",
     ),
+    q(
+      'q9',
+      'Come si dice «sono le nove di sera»?',
+      [
+        'Il est neuf heures du soir.',
+        'Il est neuf heures le soir.',
+        'Il est neuf heures de soir.',
+        'Ils sont neuf heures du soir.',
+      ],
+      0,
+      "Con l'ora esatta si usa du matin / de l'après-midi / du soir; le soir da solo vuol dire «la sera» in generale. L'ora vuole sempre il est, mai ils sont.",
+    ),
+    q(
+      'q10',
+      'Quale frase è corretta per «vado spesso al cinema»?',
+      [
+        'Je vais souvent au cinéma.',
+        'Je souvent vais au cinéma.',
+        'Je vais au souvent cinéma.',
+        'Je vais souvent à le cinéma.',
+      ],
+      0,
+      'Gli avverbi di frequenza stanno dopo il verbo coniugato, non prima come a volte in italiano. Inoltre à + le diventa au, quindi à le cinéma è sempre sbagliato.',
+    ),
+    q(
+      'q11',
+      'Come si dice «la settimana prossima»?',
+      ['la semaine prochaine', 'la semaine suivante', 'le semaine prochain', 'la prochaine semaine mois'],
+      0,
+      'Prochain si mette dopo semaine, mois e année, e si accorda: la semaine prochaine. Suivante vale «la settimana dopo» in un racconto al passato, non il futuro rispetto a oggi.',
+    ),
   ],
   [
     card(
@@ -558,6 +614,21 @@ export const fsaluti = mod(
       'six, huit, dix',
       'Davanti a consonante perdono la consonante finale (six jours [si ZHUR]); davanti a vocale si legano (six heures [si-ZÖR]).',
     ),
+    card(
+      'c14',
+      'du matin / du soir',
+      "L'ora esatta: huit heures du matin, trois heures de l'après-midi, dix heures du soir. À midi, à minuit.",
+    ),
+    card(
+      'c15',
+      'souvent, toujours, jamais',
+      "Dopo il verbo: je vais souvent [su-VÃ]; ne ... jamais [zha-MÈ]; d'habitude [da-bi-TÜD]; tous les jours [tu lé ZHUR].",
+    ),
+    card(
+      'c16',
+      'hier, demain, prochain',
+      'hier [YÈR], demain [dë-MẼ], il y a deux jours (fa), la semaine prochaine / dernière, depuis lundi (da lunedì).',
+    ),
   ],
   [
     prac(
@@ -585,6 +656,11 @@ export const fsaluti = mod(
       'Scrivi la data di oggi in francese e dì in che paese vivi.',
       "Nous sommes le six novembre deux mille vingt-six. J'habite en Italie [zha-bit ã-ni-ta-LI]. Nota: en davanti a paese femminile o vocale, minuscolo per giorno e mese.",
     ),
+    prac(
+      'p6',
+      'Traduci: «Di solito mi alzo alle sette del mattino, ma domani resto a casa tutto il giorno.»',
+      "D'habitude, je me lève à sept heures du matin, mais demain je reste à la maison toute la journée. Nota: du matin con l'ora; demain a inizio o fine frase; d'habitude all'inizio.",
+    ),
   ],
 )
 
@@ -605,7 +681,7 @@ export const fetre = mod(
 <tr><td>ils / elles</td><td>sont [SÕ]</td><td>ont [Õ]</td></tr></table>
 <p>Liaison obbligatoria con avoir e être: <i>nous avons</i> [nu-za-VÕ], <i>vous avez</i> [vu-za-VÉ], <i>ils ont</i> [il-ZÕ], <i>vous êtes</i> [vu-ZÈT]. Con <i>elle est</i> [è-LÈ] non c'è liaison ma enchaînement: la l si sente già. <b>On</b> (= noi, nel parlato) vuole la terza singolare: <i>on est ensemble</i> [õ-nè ã-SÃBL] «siamo insieme». Negazione: <i>je ne suis pas</i> [zhë në süi PA], <i>je n'ai pas</i> [zhë né PA].</p>
 <h3>Il y a</h3>
-<p>«C'è / ci sono / fa» = <b>il y a</b> [i-lya]. È invariabile: <i>Il y a un livre</i> / <i>Il y a trois livres</i> [i-lya trua LIVR]. Negazione: <i>Il n'y a pas de</i> [il ni a pa dë] (<i>pas de</i> senza articolo). Domanda: <i>Est-ce qu'il y a... ?</i> o <i>Y a-t-il... ?</i>. Trappola: <i>il y a</i> non si mette mai al plurale, anche davanti a nomi plurali: «il y ont» non esiste.</p>
+<p>«C'è / ci sono / fa» = <b>il y a</b> [i-lya]. È invariabile: <i>Il y a un livre</i> / <i>Il y a trois livres</i> [i-lya trua LIVR]. Con un periodo di tempo vale «fa»: <i>Je suis arrivé il y a deux ans</i> [zhë süi-za-ri-vé i-lya dö-ZÃ] «sono arrivato due anni fa». Negazione: <i>Il n'y a pas de</i> [il ni a pa dë] (<i>pas de</i> senza articolo). Domanda: <i>Est-ce qu'il y a... ?</i> o <i>Y a-t-il... ?</i>. Trappola: <i>il y a</i> non si mette mai al plurale, anche davanti a nomi plurali: «il y ont» non esiste.</p>
 <h3>C'est o il est ?</h3>
 <table><tr><th>Si usa</th><th>Quando</th><th>Esempio</th></tr>
 <tr><td>c'est [sè] / ce sont [së SÕ]</td><td>+ articolo + nome, nome proprio, pronome tonico, avverbio</td><td>C'est un médecin. C'est Paul. C'est moi.</td></tr>
@@ -798,6 +874,21 @@ export const fnomi = mod(
 <tr><td>vostro</td><td>votre [VÒTR]</td><td>vos [VO]</td></tr>
 <tr><td>loro</td><td>leur [LÖR]</td><td>leurs [LÖR]</td></tr></table>
 <p>Il possessivo si accorda con la <b>cosa posseduta</b>: <i>son père</i> [sõ PÈR], <i>sa mère</i> = suo padre, sua madre (di lui o di lei). Niente articolo: <i>mon livre</i>, non «le mon livre». Davanti a vocale femminile si usa mon: <i>mon amie</i> [mõ-na-MI]. Dimostrativi: <i>ce</i> [së] m., <i>cet</i> [sèt] davanti a vocale (<i>cet homme</i> [sè-TÒM]), <i>cette</i> [sèt] f., <i>ces</i> [sé] pl.; <i>-ci</i> / <i>-là</i> per vicino/lontano.</p>
+<h3>I colori</h3>
+<table><tr><th>Maschile</th><th>Femminile</th><th>Italiano</th></tr>
+<tr><td>blanc [BLÃ]</td><td>blanche [BLÃSH]</td><td>bianco</td></tr>
+<tr><td>noir [NUAR]</td><td>noire [NUAR]</td><td>nero</td></tr>
+<tr><td>rouge [RUZH]</td><td>rouge</td><td>rosso</td></tr>
+<tr><td>bleu [BLÖ]</td><td>bleue [BLÖ]</td><td>blu, azzurro</td></tr>
+<tr><td>vert [VÈR]</td><td>verte [VÈRT]</td><td>verde</td></tr>
+<tr><td>jaune [ZHON]</td><td>jaune</td><td>giallo</td></tr>
+<tr><td>gris [GRI]</td><td>grise [GRIZ]</td><td>grigio</td></tr>
+<tr><td>violet [vyò-LÈ]</td><td>violette [vyò-LÈT]</td><td>viola</td></tr>
+<tr><td>brun [BRẼ]</td><td>brune [BRÜN]</td><td>marrone scuro (capelli, pelle)</td></tr>
+<tr><td>marron [ma-RÕ]</td><td>marron (invariabile)</td><td>marrone, castano</td></tr>
+<tr><td>orange [ò-RÃZH]</td><td>orange (invariabile)</td><td>arancione</td></tr>
+<tr><td>rose [ROZ]</td><td>rose (regolare)</td><td>rosa</td></tr></table>
+<p>I colori sono aggettivi: stanno <b>dopo il nome</b> e si accordano (<i>une voiture blanche</i> [ün vua-tür BLÃSH], <i>des chaussures noires</i>). Nomi usati come colore restano <b>invariabili</b>: <i>des yeux marron</i>, <i>des chaussures orange</i>, anche <i>citron, crème, or, argent</i>. Se due parole formano il colore, nessun accordo: <i>des robes bleu foncé</i> [bleu scuro], <i>une jupe vert clair</i> [vert chiaro]. Plurale regolare con -s (<i>des yeux bleus</i> [dé-zyö BLÖ], <i>des pulls gris</i>: gris resta uguale). Domanda: <i>De quelle couleur est ta voiture ?</i> [dë kèl ku-LÖR è ta vua-TÜR]. Attenzione: <i>rose</i> è regolare (<i>des fleurs roses</i>), orange e marron no.</p>
 <div class="say"><b>Cosa dire.</b> «J'aime la mer et les montagnes [zhèm la mèr é lé mõ-TAGN]. Mon amie italienne a une petite voiture rouge.»</div>`,
   [
     q(
@@ -883,6 +974,25 @@ export const fnomi = mod(
       0,
       "Prima del nome grand ha senso figurato (importante, grande), dopo ha senso fisico (alto). Lo scambio inverso è proprio l'errore di chi traduce a senso.",
     ),
+    q(
+      'q10',
+      'Come si dice «Ha delle scarpe arancioni»?',
+      [
+        'Elle a des chaussures orange.',
+        'Elle a des chaussures oranges.',
+        'Elle a des orange chaussures.',
+        'Elle a des chaussures orangées blanche.',
+      ],
+      0,
+      'Orange è un nome usato come colore, quindi resta invariabile e va dopo il nome. Oranges con la s sarebbe corretto solo se parlassimo dei frutti.',
+    ),
+    q(
+      'q11',
+      'Quale frase è corretta per «gli occhi marroni»?',
+      ['les yeux marrons', 'les yeux marron', 'les marron yeux', 'les yeux marronnes'],
+      1,
+      'Marron, come orange, è invariabile: les yeux marron. Per i capelli e la pelle si preferisce brun (cheveux bruns), che invece si accorda.',
+    ),
   ],
   [
     card(
@@ -912,6 +1022,11 @@ export const fnomi = mod(
       'ce livre [së LIVR], cet homme [sè-TÒM], cette femme [sèt FAM], ces enfants [sé-zã-FÃ].',
     ),
     card('c11', 'femminile udibile', 'grand [GRÃ] / grande [GRÃD]: il femminile fa risuonare la consonante.'),
+    card(
+      'c12',
+      'colori: accordo',
+      'blanc/blanche, vert/verte, gris/grise; invariabili: marron, orange (e foncé/clair: vert clair). Dopo il nome: une voiture rouge.',
+    ),
   ],
   [
     prac(
@@ -938,6 +1053,11 @@ export const fnomi = mod(
       'p5',
       'Scrivi 5 frasi brevi con un dimostrativo e un possessivo.',
       'Esempio: Ce livre est à mon frère. Cet étudiant est mon ami. Cette maison est notre maison. Ces enfants sont ses cousins. Nota: cet davanti a vocale, mon davanti a vocale anche se femminile (mon amie).',
+    ),
+    prac(
+      'p6',
+      'Descrivi in francese: «una gonna verde chiaro, scarpe arancioni e occhi castani».',
+      'Une jupe vert clair, des chaussures orange et les yeux marron. Nota: vert clair è invariabile perché composto, orange e marron sono nomi usati come colore.',
     ),
   ],
 )

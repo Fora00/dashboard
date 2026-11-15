@@ -11,7 +11,7 @@ export const deFuturo = mod(
   `${PRON_SHORT}
 <p class="lead">In tedesco il futuro si dice spesso <b>senza futuro</b>: presente più un avverbio di tempo. Il Futur I con <i>werden</i> si usa per promesse, previsioni e supposizioni. Per essere cortesi (<i>vorrei, potrebbe</i>) serve il Konjunktiv II.</p>
 <h3>Presente per il futuro</h3>
-<p>Se il contesto indica il futuro (<b>morgen, nächste Woche, bald, gleich, nächstes Jahr, übermorgen</b>), il presente basta: <i>Morgen fahre ich nach Berlin. Nächstes Jahr ziehen wir um. Der Film beginnt gleich.</i> Pronuncia: nächste [NÈ:ÇS-të], Woche [VO-chë], übermorgen [Ü:-ba-mor-gën], gleich [GLAIÇ], bald [BALT]. Trappola: l'italiano usa il futuro semplice («domani andrò»); in tedesco suona innaturale quasi sempre.</p>
+<p>Se il contesto indica il futuro (<b>morgen, nächste Woche, bald, gleich, nächstes Jahr, übermorgen</b>), il presente basta: <i>Morgen fahre ich nach Berlin. Nächstes Jahr ziehen wir um. Der Film beginnt gleich.</i> Pronuncia: nächste [NÈ:ÇS-të], Woche [VO-chë], übermorgen [Ü:-ba-mor-gën], gleich [GLAIÇ], bald [BALT]. Trappola: l'italiano usa il futuro semplice («domani andrò»); in tedesco per un piano già deciso il Futur I suona quasi sempre innaturale (si preferisce il presente con un avverbio); va bene invece per previsioni, promesse e avvertimenti.</p>
 <h3>Futur I: werden + infinito</h3>
 <p>Struttura: <b>werden</b> coniugato in seconda posizione, <b>infinito</b> in fondo: <i>Ich werde dich anrufen. Es wird morgen regnen. Wir werden sehen.</i></p>
 <table><tr><th>Persona</th><th>werden</th><th>Esempio</th></tr>
@@ -22,7 +22,7 @@ export const deFuturo = mod(
 <tr><td>ihr</td><td>werdet [VER-dët]</td><td>Ihr werdet gewinnen.</td></tr></table>
 <p>Quando si usa: <b>promessa</b> (<i>Ich werde pünktlich sein</i>), <b>previsione</b> (<i>Das Wetter wird besser</i>), <b>intenzione ferma</b>, <b>avvertimento</b> (<i>Du wirst es bereuen</i>). Nelle subordinate werden va dopo l'infinito: <i>Ich glaube, dass er kommen wird.</i> Un piano concreto resta al presente: <i>Ich fahre im Sommer nach Italien.</i></p>
 <h3>Werden per la probabilità</h3>
-<p>Il futuro italiano di supposizione («sarà a casa», «avrà vent'anni») diventa in tedesco <b>presente + wohl / wahrscheinlich / vermutlich</b>, oppure <b>werden + wohl</b>: <i>Er ist wohl zu Hause. Er wird wohl zu Hause sein. Sie wird etwa zwanzig sein.</i> Per il passato: <i>Er ist wohl schon gegangen.</i> Pronuncia: wohl [VO:L], wahrscheinlich [va:r-SHAIN-liç], vermutlich [fer-MU:T-liç].</p>
+<p>Il futuro italiano di supposizione («sarà a casa», «avrà vent'anni») diventa in tedesco <b>presente + wohl / wahrscheinlich / vermutlich</b>, oppure <b>werden + wohl</b>: <i>Er ist wohl zu Hause. Er wird wohl zu Hause sein. Sie wird etwa zwanzig sein.</i> Per il passato: <i>Er ist wohl schon gegangen.</i> Pronuncia: wohl [VO:L], wahrscheinlich [VA:R-shain-liç], vermutlich [fer-MU:T-liç].</p>
 <h3>Konjunktiv II di cortesia</h3>
 <p>Il Konjunktiv II serve per richieste e desideri cortesi, consigli, ipotesi. Le forme più usate sono quattro:</p>
 <table><tr><th>Persona</th><th>würde</th><th>hätte</th><th>wäre</th></tr>
@@ -31,7 +31,7 @@ export const deFuturo = mod(
 <tr><td>wir / sie</td><td>würden</td><td>hätten</td><td>wären [VÈ:-rën]</td></tr>
 <tr><td>ihr</td><td>würdet</td><td>hättet</td><td>wärt [VÈ:RT]</td></tr></table>
 <p>Altre forme utili: <b>könnte</b> [KÖN-të] (potrei), <b>müsste</b> [MÜS-të], <b>sollte</b> [ZOL-të] (dovresti), <b>dürfte</b>. Usi: <i>Ich hätte gern einen Kaffee.</i> (vorrei un caffè), <i>Könnten Sie mir helfen?</i> (potrebbe aiutarmi?), <i>Würden Sie bitte das Fenster schließen?</i> (chiuderebbe?), <i>Das wäre schön.</i> (sarebbe bello), <i>Du solltest mehr schlafen.</i> (dovresti dormire di più), <i>Ich würde gern nach Italien fahren.</i> (mi piacerebbe andare). Ipotesi: <i>Wenn ich Zeit hätte, würde ich kommen.</i></p>
-<p>Attenzione: con <b>haben, sein e i modali</b> si usa la forma propria (<i>ich hätte, ich wäre, ich könnte</i>), non <i>würde</i> + infinito: «ich würde haben» è sbagliato. Con gli altri verbi: <i>würde</i> + infinito (<i>Ich würde kommen</i>, non «ich käme»). <b>Pronuncia</b>: le forme con umlaut si distinguono da quelle del Präteritum: <i>hatte</i> [HA-të] / <i>hätte</i> [HE-të]; <i>war</i> [VA:R] / <i>wäre</i> [VÈ:-rë]; <i>konnte</i> [KON-të] / <i>könnte</i> [KÖN-të]; <i>wurde</i> [VUR-dë] / <i>würde</i> [VÜR-dë].</p>
+<p>Attenzione: con <b>haben, sein e i modali</b> si usa la forma propria (<i>ich hätte, ich wäre, ich könnte</i>), non <i>würde</i> + infinito: «ich würde haben» è sbagliato. Con gli altri verbi nel parlato si preferisce <i>würde</i> + infinito (<i>Ich würde kommen</i>). I deboli hanno il Konjunktiv II uguale al Präteritum (<i>ich machte</i> = ambiguo), perciò per loro würde + infinito è quasi obbligatorio; per i forti comuni esistono anche forme proprie, corrette e un po' più formali (<i>ich käme, ich ginge, ich bliebe, ich fände, ich wüsste, ich gäbe</i>). <b>Pronuncia</b>: le forme con umlaut si distinguono da quelle del Präteritum: <i>hatte</i> [HA-të] / <i>hätte</i> [HE-të]; <i>war</i> [VA:R] / <i>wäre</i> [VÈ:-rë]; <i>konnte</i> [KON-të] / <i>könnte</i> [KÖN-të]; <i>wurde</i> [VUR-dë] / <i>würde</i> [VÜR-dë].</p>
 <div class="say"><b>Cosa dire.</b> «Guten Tag, ich hätte gern einen Tisch für zwei. Könnten Sie mir bitte die Speisekarte bringen? Ich werde morgen wieder kommen.»</div>`,
   [
     q(
@@ -151,7 +151,7 @@ export const deFuturo = mod(
       `hatte / hätte`,
       `[HA-të] passato / [HE-të] cortese. Stessa coppia: war / wäre, konnte / könnte, wurde / würde.`,
     ),
-    card('c11', `wohl, wahrscheinlich`, `Forse, probabilmente. wohl [VO:L]; wahrscheinlich [va:r-SHAIN-liç].`),
+    card('c11', `wohl, wahrscheinlich`, `Forse, probabilmente. wohl [VO:L]; wahrscheinlich [VA:R-shain-liç].`),
     card('c12', `dass er kommen wird`, `Nelle subordinate werden va in fondo, dopo l'infinito.`),
   ],
   [
@@ -189,7 +189,7 @@ export const deImperativo = mod(
   'Du, ihr, Sie, verbi irregolari, separabili, riflessivi, richieste e istruzioni',
   'a2',
   `${PRON_SHORT}
-<p class="lead">L'imperativo tedesco ha tre forme principali: <b>du</b>, <b>ihr</b> e <b>Sie</b>. Si usa per ordini, istruzioni e richieste, ma tra adulti si aggiungono <i>bitte</i> e <i>mal</i> per attenuarlo. Differenza con l'italiano: la forma di cortesia usa l'infinito + <i>Sie</i>, non il congiuntivo.</p>
+<p class="lead">L'imperativo tedesco ha tre forme principali: <b>du</b>, <b>ihr</b> e <b>Sie</b>. Si usa per ordini, istruzioni e richieste, ma tra adulti si aggiungono <i>bitte</i> e <i>mal</i> per attenuarlo. Differenza con l'italiano: la forma di cortesia usa la terza persona plurale (uguale all'infinito, tranne sein: <i>Seien Sie</i>) + <i>Sie</i>, non il congiuntivo.</p>
 <h3>Le forme</h3>
 <table><tr><th>Verbo</th><th>du</th><th>ihr</th><th>Sie</th></tr>
 <tr><td>machen</td><td>Mach!</td><td>Macht!</td><td>Machen Sie!</td></tr>
@@ -199,7 +199,7 @@ export const deImperativo = mod(
 <tr><td>nehmen</td><td>Nimm! [NIM]</td><td>Nehmt!</td><td>Nehmen Sie!</td></tr>
 <tr><td>fahren</td><td>Fahr!</td><td>Fahrt!</td><td>Fahren Sie!</td></tr>
 <tr><td>sein</td><td>Sei! [ZAI]</td><td>Seid!</td><td>Seien Sie!</td></tr></table>
-<ul><li><b>du</b>: radice senza -st e senza pronome: <i>Komm! Geh! Mach!</i> Con radice in -t, -d, -chn, -ffn si aggiunge la <b>-e</b>: <i>Warte! Arbeite! Öffne!</i> Nel parlato la -e cade spesso nei verbi ordinari (<i>Komm</i>, non «Komme»).</li><li><b>Verbi con e > i / ie</b> mantengono il cambio: <i>Sprich! Nimm! Gib! Lies! Iss! Sieh! Hilf!</i> Verbi con a > ä <b>non</b> hanno l'umlaut: <i>Fahr! Schlaf! Lauf! Trag!</i></li><li><b>ihr</b>: stessa forma del presente senza ihr: <i>Kommt! Macht! Seid ruhig!</i></li><li><b>Sie</b>: infinito + Sie (il verbo viene prima): <i>Kommen Sie! Seien Sie so freundlich!</i></li><li><b>wir</b> (usiamo): <i>Gehen wir! Fangen wir an!</i> o <i>Lass uns gehen!</i></li></ul>
+<ul><li><b>du</b>: radice senza -st e senza pronome: <i>Komm! Geh! Mach!</i> Con radice in -t, -d, -chn, -ffn, -tm, -dn, -gn si aggiunge la <b>-e</b>: <i>Warte! Arbeite! Öffne! Atme! Ordne! Regne!</i> Nel parlato la -e cade spesso nei verbi ordinari (<i>Komm</i>, non «Komme»).</li><li><b>Verbi con e > i / ie</b> mantengono il cambio: <i>Sprich! Nimm! Gib! Lies! Iss! Sieh! Hilf!</i> Verbi con a > ä <b>non</b> hanno l'umlaut: <i>Fahr! Schlaf! Lauf! Trag!</i></li><li><b>ihr</b>: stessa forma del presente senza ihr: <i>Kommt! Macht! Seid ruhig!</i></li><li><b>Sie</b>: terza persona plurale (come l'infinito) + Sie, il verbo viene prima: <i>Kommen Sie! Seien Sie so freundlich!</i></li><li><b>wir</b> (usiamo): <i>Gehen wir! Fangen wir an!</i> o <i>Lass uns gehen!</i></li></ul>
 <h3>Separabili e riflessivi</h3>
 <p>Il prefisso separabile va in fondo: <i>Steh auf! Steht auf! Stehen Sie auf!</i>; <i>Ruf mich an! Mach die Tür zu! Komm mit! Schau mal!</i> I riflessivi mantengono il pronome: <i>Setz dich! Beeil dich! Setzt euch! Setzen Sie sich!</i> Pronuncia: Setz [ZETS], dich [DIÇ], euch [OIÇ], beeil [bë-AIL].</p>
 <h3>Come chiedere e istruire</h3>
@@ -233,14 +233,14 @@ export const deImperativo = mod(
       `Come dici «Entri, per favore!» con Sie?`,
       [`Kommen Sie bitte herein!`, `Kommt Sie bitte herein!`, `Komm Sie bitte herein!`, `Kommen bitte Sie herein!`],
       0,
-      `La forma di cortesia è infinito + Sie, con il prefisso herein alla fine. Kommt è la forma di ihr.`,
+      `La forma di cortesia è la terza persona plurale (come l'infinito) + Sie, con il prefisso herein alla fine. Kommt è la forma di ihr.`,
     ),
     q(
       'q5',
       `Come dici «Alzati!» (du)?`,
       [`Steh auf!`, `Aufsteh!`, `Stehe auf du!`, `Auf steh!`],
       0,
-      `Il prefisso separabile va in fondo alla frase. Aufsteh è la forma dell'infinito, come in italiano «alzati».`,
+      `Il prefisso separabile va in fondo alla frase. Aufsteh! lascia il prefisso unito al verbo, mentre in tedesco il prefisso separabile si stacca e va in fondo: Steh auf!`,
     ),
     q(
       'q6',
@@ -266,12 +266,12 @@ export const deImperativo = mod(
         `SHPRI:CH: i lunga e ch raschiata`,
       ],
       0,
-      `A inizio parola sp è shp e dopo i la ch è debole (ç). La i è breve perché c'è una consonante doppia dopo.`,
+      `A inizio parola sp è shp e dopo i la ch è debole (ç). La i è breve perché dopo ci sono due lettere consonantiche (ch).`,
     ),
     q(
       'q9',
       `Come si legge «Setz» (siediti, radice)?`,
-      [`ZETS: z sonora e tz = ts`, `SETS: s sorda iniziale`, `ZE:TS: e lunga`, `TSETS: z come ts`],
+      [`ZETS: z sonora e tz = ts`, `SETS: s sorda iniziale`, `ZÉ:TS: e lunga`, `TSETS: z come ts`],
       0,
       `La s iniziale prima di vocale è sonora e tz è ts. La e è breve perché dopo ci sono due consonanti.`,
     ),
@@ -344,14 +344,23 @@ export const deRiflessivi = mod(
 <h3>Comparativo e superlativo</h3>
 <table><tr><th>Base</th><th>Comparativo</th><th>Superlativo</th></tr>
 <tr><td>schnell [SHNEL]</td><td>schneller</td><td>am schnellsten</td></tr>
-<tr><td>groß [GRO:SS]</td><td>größer [GRÖ:-ssa]</td><td>am größten</td></tr>
+<tr><td>groß [GRO:S]</td><td>größer [GRÖ:-ssa]</td><td>am größten</td></tr>
 <tr><td>alt [ALT]</td><td>älter [EL-ta]</td><td>am ältesten</td></tr>
-<tr><td>jung [IUN]</td><td>jünger [IÜN-ga]</td><td>am jüngsten</td></tr>
+<tr><td>jung [JUNG]</td><td>jünger [JÜNG-a]</td><td>am jüngsten</td></tr>
 <tr><td>gut [GU:T]</td><td>besser [BE-ssa]</td><td>am besten</td></tr>
 <tr><td>viel [FI:L]</td><td>mehr [MÉ:R]</td><td>am meisten</td></tr>
 <tr><td>gern [GERN]</td><td>lieber [LI:-ba]</td><td>am liebsten</td></tr>
 <tr><td>hoch / nah</td><td>höher / näher</td><td>am höchsten / am nächsten</td></tr></table>
-<p>Comparativo: <b>-er</b> (spesso con umlaut nei monosillabi: alt → älter, jung → jünger, kalt → kälter, lang → länger). Superlativo: <b>am + -(e)sten</b> (con -esten dopo d, t, s, ß, z, sch: am ältesten, am kürzesten, am größten). Prima del nome: <i>der größte Berg, die beste Lösung</i>. Confronti: <b>als</b> (più... di) e <b>so ... wie</b> (come): <i>Er ist größer als ich. Ich bin so groß wie du.</i> Mai «größer wie» nello standard. Altre forme: <i>immer besser</i> (sempre meglio), <i>je früher, desto besser</i>. Avverbi: l'aggettivo si usa senza cambiamento: <i>Er singt schön</i> (non esiste -mente); frequenza: immer, oft, manchmal, selten, nie; gradi con <i>gern</i>: <i>Ich esse gern Pizza. Ich esse lieber Pasta. Am liebsten esse ich Eis.</i></p>
+<p>Comparativo: <b>-er</b> (spesso con umlaut nei monosillabi: alt → älter, jung → jünger, kalt → kälter, lang → länger). Superlativo: <b>am + -(e)sten</b> (con -esten dopo d, t, s, ß, z, sch: am ältesten, am kürzesten, am heißesten; eccezione: groß → am größten, senza e). Prima del nome: <i>der größte Berg, die beste Lösung</i>. Confronti: <b>als</b> (più... di) e <b>so ... wie</b> (come): <i>Er ist größer als ich. Ich bin so groß wie du.</i> Mai «größer wie» nello standard. Altre forme: <i>immer besser</i> (sempre meglio), <i>je früher, desto besser</i>. Avverbi: l'aggettivo si usa senza cambiamento: <i>Er singt schön</i> (non esiste -mente); frequenza: immer, oft, manchmal, selten, nie; gradi con <i>gern</i>: <i>Ich esse gern Pizza. Ich esse lieber Pasta. Am liebsten esse ich Eis.</i></p>
+<h3>Intensificatori: sehr, zu, ziemlich, ganz</h3>
+<table><tr><th>Tedesco</th><th>Significato</th><th>Esempio</th></tr>
+<tr><td>sehr [ZÉ:R]</td><td>molto</td><td>Das ist sehr gut. Danke sehr! [DAN-kë ZÉ:R]</td></tr>
+<tr><td>zu [TSU:]</td><td>troppo</td><td>Das ist zu teuer. Es ist zu spät.</td></tr>
+<tr><td>ziemlich [TSI:M-liç]</td><td>piuttosto</td><td>Es ist ziemlich kalt.</td></tr>
+<tr><td>ganz [GANTS]</td><td>abbastanza, del tutto</td><td>Das ist ganz gut. Das Auto ist ganz neu.</td></tr>
+<tr><td>ein bisschen [ain BIS-çën]</td><td>un po'</td><td>Ich bin ein bisschen müde.</td></tr>
+<tr><td>nicht so [niçt ZO:]</td><td>non così / non tanto</td><td>Es ist nicht so heiß.</td></tr></table>
+<p>Stanno davanti all'aggettivo o all'avverbio. Trappole: <b>zu</b> non è «molto» ma «troppo» (<i>zu teuer</i> = troppo caro, <i>sehr teuer</i> = molto caro); «molto buono» è <i>sehr gut</i>, mai «viel gut» (<i>viel</i> va con i nomi e con i comparativi: <i>viel Zeit, viel besser</i>); <i>ganz gut</i> è «abbastanza bene», non «benissimo».</p>
 <h3>Preposizioni di tempo</h3>
 <table><tr><th>Italiano</th><th>Tedesco</th><th>Esempio</th></tr>
 <tr><td>da (durata)</td><td>seit + Dat.</td><td>Ich lerne seit einem Jahr Deutsch.</td></tr>
@@ -361,6 +370,16 @@ export const deRiflessivi = mod(
 <tr><td>fino a / da ... a</td><td>bis / von ... bis</td><td>von Montag bis Freitag</td></tr>
 <tr><td>a partire da</td><td>ab + Dat.</td><td>ab nächster Woche</td></tr></table>
 <p>Con <b>seit</b> il tedesco usa il <b>presente</b> per un'azione che dura ancora: <i>Ich wohne seit zwei Jahren hier</i> (abito qui da due anni), non il Perfekt. Preposizioni fisse: <b>am</b> + giorno, parte del giorno (<i>am Montag, am Abend</i>), <b>im</b> + mese/stagione (<i>im Mai, im Sommer</i>), <b>um</b> + ora (<i>um acht Uhr</i>), <b>in der Nacht</b>, <b>gegen</b> Abend (verso sera), <b>für</b> + durata prevista (<i>für zwei Wochen</i>). Pronuncia: seit [ZAIT], vor [FO:R], nach [NA:CH].</p>
+<h3>Espressioni di tempo senza preposizione</h3>
+<table><tr><th>Italiano</th><th>Tedesco</th></tr>
+<tr><td>ogni giorno / ogni settimana / ogni anno</td><td>jeden Tag [JÉ:-dën TA:K] / jede Woche [JÉ:-dë VO-chë] / jedes Jahr [JÉ:-dës JA:R]</td></tr>
+<tr><td>la settimana prossima / il mese prossimo</td><td>nächste Woche [NÈ:ÇS-të VO-chë] / nächsten Monat [NÈ:ÇS-tën MO:-nat]</td></tr>
+<tr><td>l'anno scorso / lo scorso mese</td><td>letztes Jahr [LETS-tës JA:R] / letzten Monat [LETS-tën MO:-nat]</td></tr>
+<tr><td>due giorni fa / da due anni</td><td>vor zwei Tagen / seit zwei Jahren</td></tr>
+<tr><td>quanto spesso? / quanto tempo?</td><td>Wie oft? [VI: OFT] / Wie lange? [VI: LANG-ë]</td></tr>
+<tr><td>sempre, spesso, a volte, raramente, mai</td><td>immer [I-ma], oft [OFT], manchmal [MANÇ-ma:l], selten [ZEL-tën], nie [NI:]</td></tr>
+<tr><td>due volte alla settimana</td><td>zweimal pro Woche [TSVAI-ma:l pro: VO-chë]</td></tr></table>
+<p>«Ogni», «prossimo» e «scorso» indicano un momento e si mettono all'<b>accusativo senza preposizione</b>: <i>Ich arbeite jeden Tag. Nächste Woche fahre ich nach Wien. Letztes Jahr waren wir in Italien.</i> Anche la durata è un accusativo: <i>Ich habe zwei Stunden gewartet.</i> Con <b>seit</b> si usa il dativo e il presente (vedi sopra), con <b>vor</b> il dativo («fa»).</p>
 <div class="say"><b>Cosa dire.</b> «Ich lerne seit einem Jahr Deutsch. Ich interessiere mich für Geschichte und freue mich auf den Urlaub in zwei Wochen. Er ist größer als ich.»</div>`,
   [
     q(
@@ -433,12 +452,33 @@ export const deRiflessivi = mod(
       0,
       `La s iniziale prima di vocale è sonora e dopo i la ch è debole (ç). Sich e sish si distinguono per il suono finale.`,
     ),
+    q(
+      'q11',
+      `Cosa significa «Das ist zu teuer»?`,
+      [`È troppo caro.`, `È molto caro.`, `È abbastanza caro.`, `È carissimo, ma buono.`],
+      0,
+      `Zu davanti a un aggettivo significa «troppo». Per «molto caro» si dice sehr teuer; ziemlich e ganz sono più deboli.`,
+    ),
+    q(
+      'q12',
+      `Come dici «ogni giorno»?`,
+      [`jeden Tag`, `jeder Tag`, `jedes Tag`, `jede Tag`],
+      0,
+      `È un'espressione di tempo all'accusativo, senza preposizione: Tag è maschile, quindi jeden (come den).`,
+    ),
+    q(
+      'q13',
+      `Come dici «la settimana prossima»?`,
+      [`nächste Woche`, `nächsten Wochen`, `am nächste Woche`, `nach Woche`],
+      0,
+      `Woche è femminile e l'accusativo non cambia: nächste Woche, senza preposizione. Nach significherebbe «dopo».`,
+    ),
   ],
   [
     card(
       'c1',
       `Pronomi riflessivi`,
-      `mich, dich, sich, uns, euch, sich (Akk.); mir, dir, sich, uns, euch, sich (Dat.). Differiscono da ihn/ihm solo in sich.`,
+      `mich, dich, sich, uns, euch, sich (Akk.); mir, dir, sich, uns, euch, sich (Dat.). Sono uguali ai pronomi personali (mich, dich, uns, euch...), tranne la terza persona: sich.`,
     ),
     card(
       'c2',
@@ -452,7 +492,7 @@ export const deRiflessivi = mod(
     card(
       'c7',
       `Superlativo am ...-sten`,
-      `am schnellsten; am ältesten, am größten, am kürzesten (con e dopo d, t, s, ß, z, sch).`,
+      `am schnellsten; am ältesten, am kürzesten, am heißesten (con e dopo d, t, s, ß, z, sch); eccezione: groß → am größten.`,
     ),
     card(
       'c8',
@@ -463,6 +503,16 @@ export const deRiflessivi = mod(
     card('c10', `seit + Dativ + presente`, `Ich wohne seit zwei Jahren hier. Durata che dura ancora: presente.`),
     card('c11', `vor / in / nach`, `vor zwei Tagen (fa), in zwei Tagen (tra), nach dem Essen (dopo).`),
     card('c12', `sich [ZIÇ], größer [GRÖ:-ssa]`, `s iniziale sonora; ich debole; ß sorda; -er finale = a.`),
+    card(
+      'c13',
+      `sehr / zu / ziemlich / ganz [ZÉ:R / TSU: / TSI:M-liç / GANTS]`,
+      `molto / troppo / piuttosto / abbastanza. <i>zu teuer</i> = troppo caro, <i>sehr gut</i> = molto buono.`,
+    ),
+    card(
+      'c14',
+      `jeden Tag, nächste Woche, letztes Jahr [JÉ:-dën TA:K, NÈ:ÇS-të VO-chë, LETS-tës JA:R]`,
+      `ogni giorno, la settimana prossima, l'anno scorso: accusativo senza preposizione. Vor + dativo = fa.`,
+    ),
   ],
   [
     prac(
@@ -490,6 +540,16 @@ export const deRiflessivi = mod(
       `Scrivi tre frasi sulle tue preferenze con gern, lieber, am liebsten.`,
       `Ich esse gern Pizza. Ich esse lieber Pasta. Am liebsten esse ich Eis. Nota: gern segue il verbo; nell'ultima frase l'inversione per am liebsten in prima posizione.`,
     ),
+    prac(
+      'p6',
+      `Traduci: «Il caffè è troppo caldo, ma la torta è molto buona.»`,
+      `Der Kaffee ist zu heiß, aber der Kuchen ist sehr gut. Nota: zu = troppo, sehr = molto; nessuna desinenza dopo sein.`,
+    ),
+    prac(
+      'p7',
+      `Traduci: «Ogni anno andiamo al mare. L'anno scorso siamo stati due settimane in Italia.»`,
+      `Jedes Jahr fahren wir ans Meer. Letztes Jahr waren wir zwei Wochen in Italien. Nota: jedes Jahr e letztes Jahr senza preposizione; ans = an das.`,
+    ),
   ],
 )
 
@@ -501,18 +561,18 @@ export const deNebensaetze1 = mod(
   `${PRON_SHORT}
 <p class="lead">La regola più importante della sintassi tedesca: nelle <b>subordinate</b> il verbo coniugato va <b>in fondo</b>. Nelle coordinate l'ordine resta normale. Il tutto è separato da una <b>virgola</b>, a differenza dell'italiano.</p>
 <h3>Le coordinate: ordine invariato</h3>
-<p><b>und</b> [UNT] (e), <b>aber</b> [A:-ba] (ma), <b>oder</b> [O:-da] (o), <b>denn</b> [DEN] (perché), <b>sondern</b> [ZON-dern] (ma, bensì) non cambiano l'ordine: stanno «in posizione zero» e il verbo resta in seconda posizione dopo il soggetto.</p>
+<p><b>und</b> [UNT] (e), <b>aber</b> [A:-ba] (ma), <b>oder</b> [O:-da] (o), <b>denn</b> [DEN] (perché), <b>sondern</b> [ZON-dërn] (ma, bensì) non cambiano l'ordine: stanno «in posizione zero» e il verbo resta in seconda posizione dopo il soggetto.</p>
 <ul><li><i>Ich bleibe zu Hause, denn ich bin krank.</i></li><li><i>Ich möchte kommen, aber ich habe keine Zeit.</i></li><li><i>Willst du Tee oder trinkst du lieber Kaffee?</i></li><li><i>Ich trinke keinen Kaffee, sondern Tee.</i></li></ul>
-<p>Trappola: l'italiano «ma» copre due casi. <b>sondern</b> corregge una frase negativa («non X, ma Y»); <b>aber</b> contrappone senza negazione: <i>Er ist nicht dumm, sondern faul. Er ist klug, aber faul.</i> Mnemonico: <b>ADUSO</b> (aber, denn, und, sondern, oder). Anche gli avverbi <b>deshalb, darum, deswegen, trotzdem</b> (perciò, tuttavia) non sono congiunzioni: occupano la prima posizione e il verbo segue: <i>Ich bin krank, deshalb bleibe ich zu Hause.</i></p>
+<p>Trappola: l'italiano «ma» copre due casi. <b>sondern</b> corregge una frase negativa («non X, ma Y»); <b>aber</b> contrappone senza negazione: <i>Er ist nicht dumm, sondern faul. Er ist klug, aber faul.</i> Mnemonico: <b>ADUSO</b> (aber, denn, und, sondern, oder). Anche gli avverbi <b>deshalb, darum, deswegen, trotzdem</b> (perciò, tuttavia) non sono congiunzioni: occupano di solito la prima posizione con il verbo subito dopo (possono stare anche più avanti: <i>Ich bleibe deshalb zu Hause</i>): <i>Ich bin krank, deshalb bleibe ich zu Hause.</i></p>
 <h3>Le subordinate: verbo in fondo</h3>
 <table><tr><th>Congiunzione</th><th>Significato</th><th>Esempio</th></tr>
 <tr><td>weil [VAIL]</td><td>perché (causa)</td><td>Ich bleibe zu Hause, weil ich krank bin.</td></tr>
 <tr><td>dass [DAS]</td><td>che</td><td>Ich weiß, dass er morgen kommt.</td></tr>
-<tr><td>wenn [VEN]</td><td>se, quando (ogni volta)</td><td>Wenn es regnet, bleibe ich zu Hause.</td></tr>
+<tr><td>wenn [VEN]</td><td>se, quando (ogni volta, o un evento futuro)</td><td>Wenn es regnet, bleibe ich zu Hause.</td></tr>
 <tr><td>ob [OP]</td><td>se (indiretta sì/no)</td><td>Ich frage, ob er kommt.</td></tr></table>
 <p>Il <b>verbo coniugato</b> è l'ultimo elemento della subordinata. Con due verbi, il coniugato va per ultimo: <i>weil ich arbeiten muss</i> (modale), <i>weil er gegessen hat</i> (Perfekt), <i>dass er kommen wird</i> (Futur). Con un verbo separabile il prefisso si riunisce: <i>weil ich früh aufstehe</i>. La subordinata ha sempre una <b>virgola</b> prima: <i>Ich glaube, dass er krank ist.</i> (l'italiano non la mette). Se la subordinata sta all'inizio, è la prima posizione, e il verbo principale la segue subito: <i>Wenn es regnet, bleibe ich zu Hause. Weil ich krank bin, bleibe ich zu Hause.</i></p>
 <h3>Dass, wenn, ob</h3>
-<ul><li><b>dass</b> (con due s) è la congiunzione «che»; <b>das</b> è articolo o pronome. Si pronunciano uguali [DAS]. Prova: se si può sostituire con «questo/quello/il quale» è das. <i>Ich weiß, dass das Wetter schön ist.</i> Se si omette dass, la frase diventa V2: <i>Ich glaube, er ist krank.</i> (senza dass).</li><li><b>wenn</b> = se / ogni volta che / quando (ripetuto, presente o passato abituale): <i>Wenn ich müde bin, trinke ich Kaffee.</i> Per un evento singolo nel passato si usa <i>als</i>: <i>Als ich klein war, ...</i> (wann è solo interrogativo: <i>Wann kommst du?</i> / <i>Ich weiß nicht, wann er kommt.</i>)</li><li><b>ob</b> = se in una domanda indiretta sì/no: <i>Ich weiß nicht, ob er kommt.</i> Con una parola interrogativa: <i>Ich weiß nicht, wo er wohnt.</i></li></ul>
+<ul><li><b>dass</b> (con due s) è la congiunzione «che»; <b>das</b> è articolo o pronome. Si pronunciano uguali [DAS]. Prova: se si può sostituire con «questo/quello/il quale» è das. <i>Ich weiß, dass das Wetter schön ist.</i> Se si omette dass, la frase diventa V2: <i>Ich glaube, er ist krank.</i> (senza dass).</li><li><b>wenn</b> = se / ogni volta che / quando (ripetuto, presente o passato abituale; anche per un evento singolo FUTURO: <i>Wenn ich ankomme, rufe ich dich an</i>): <i>Wenn ich müde bin, trinke ich Kaffee.</i> Per un evento singolo nel passato si usa <i>als</i>: <i>Als ich klein war, ...</i> (wann è solo interrogativo: <i>Wann kommst du?</i> / <i>Ich weiß nicht, wann er kommt.</i>)</li><li><b>ob</b> = se in una domanda indiretta sì/no: <i>Ich weiß nicht, ob er kommt.</i> Con una parola interrogativa: <i>Ich weiß nicht, wo er wohnt.</i></li></ul>
 <h3>Weil o denn? E il parlato</h3>
 <p><b>denn</b> è più formale e lascia l'ordine normale; <b>weil</b> è l'uso comune e manda il verbo in fondo. Nel parlato si sente spesso «weil» con ordine normale (<i>Ich komme nicht, weil ich bin krank</i>), ma nello scritto è considerato scorretto. Le stesse regole valgono per tutte le altre congiunzioni subordinanti: <i>obwohl</i> (sebbene), <i>bevor</i>, <i>nachdem</i>, <i>während</i>, <i>damit</i>.</p>
 <div class="say"><b>Cosa dire.</b> «Ich lerne Deutsch, weil ich in Wien arbeiten möchte. Ich weiß, dass das schwierig ist, aber wenn ich jeden Tag übe, schaffe ich es.»</div>`,
@@ -622,7 +682,7 @@ export const deNebensaetze1 = mod(
       `«dass» e «das» si pronunciano:`,
       [`allo stesso modo, [DAS]`, `in modo diverso: DAS e DA:S`, `dass [DAS], das [DA:S]`, `dass con s sonora [DAZ]`],
       0,
-      `Le due parole sono omofone: solo la grafia le distingue. La s di dass è sorda perché doppia.`,
+      `Le due parole sono omofone: solo la grafia le distingue: entrambe finiscono in una s sorda, qualunque sia la grafia (anche das si legge [DAS]).`,
     ),
   ],
   [
@@ -657,7 +717,7 @@ export const deNebensaetze1 = mod(
     card(
       'c9',
       `wenn vs als`,
-      `wenn = ogni volta/se; als = quando (evento singolo passato); wann = quando? (interrogativo).`,
+      `wenn = ogni volta/se/quando futuro; als = quando (evento singolo passato); wann = quando? (interrogativo).`,
     ),
     card('c10', `ob`, `se (domanda indiretta sì/no): Ich weiß nicht, ob er kommt.`),
     card('c11', `Senza dass`, `Ich glaube, er ist krank. Senza dass l'ordine è V2.`),

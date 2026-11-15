@@ -19,12 +19,12 @@ ${dl('Gast', 'Nein, danke. Was macht das?', 'NAIN, DAN-kë. vas MACHT das', 'No,
 ${dl('Kellner', 'Sechs Euro fünfzig.', 'ZEKS OI-ro FÜNF-tsiç', 'Sei euro e cinquanta.')}
 ${dl('Gast', 'Stimmt so.', 'SHTIMT zo', 'Tenga il resto.')}
 <h3>2. In albergo</h3>
-${dl('Gast', 'Guten Abend, ich habe ein Zimmer auf den Namen Rossi reserviert.', 'GU:-tën A:-bënt, iç HA:-bë ain TSI-ma auf de:n NA:-mën RO-ssi re-zer-VI:rt', 'Buonasera, ho prenotato una camera a nome Rossi.')}
+${dl('Gast', 'Guten Abend, ich habe ein Zimmer auf den Namen Rossi reserviert.', 'GU:-tën A:-bënt, iç HA:-bë ain TSI-ma auf de:n NA:-mën RO-ssi re-zer-VI:RT', 'Buonasera, ho prenotato una camera a nome Rossi.')}
 ${dl('Rezeption', 'Ja, ein Doppelzimmer für zwei Nächte. Ihren Pass, bitte.', 'JA:, ain DO-pël-tsi-ma fü:r tsvai NEÇ-të. I:-rën PAS, BI-të', 'Sì, una doppia per due notti. Il passaporto, per favore.')}
-${dl('Gast', 'Bitte sehr. Ist das Frühstück inklusive?', 'BI-të ZE:R. ist das FRÜ:-shtük in-klu-ZI:-vë', 'Prego. La colazione è inclusa?')}
-${dl('Rezeption', 'Ja, von sieben bis zehn Uhr.', 'JA:, fon ZI:-bën bis TSE:N U:R', 'Sì, dalle sette alle dieci.')}
-${dl('Gast', 'Und gibt es WLAN?', 'unt GIPT es VE:-lan', "E c'è il wifi?")}
-${dl('Rezeption', 'Ja, das Passwort steht auf der Karte. Zimmer zwölf, zweiter Stock.', 'JA:, das PAS-vort SHTE:T auf de:r KAR-të. TSI-ma TSVÖLF, TSVAI-ta SHTOK', 'Sì, la password è sulla scheda. Camera dodici, secondo piano.')}
+${dl('Gast', 'Bitte sehr. Ist das Frühstück inklusive?', 'BI-të ZÉ:R. ist das FRÜ:-shtük in-klu-ZI:-vë', 'Prego. La colazione è inclusa?')}
+${dl('Rezeption', 'Ja, von sieben bis zehn Uhr.', 'JA:, fon ZI:-bën bis TSÉ:N U:R', 'Sì, dalle sette alle dieci.')}
+${dl('Gast', 'Und gibt es WLAN?', 'unt GIPT es VÉ:-lan', "E c'è il wifi?")}
+${dl('Rezeption', 'Ja, das Passwort steht auf der Karte. Zimmer zwölf, zweiter Stock.', 'JA:, das PAS-vort SHTÉ:T auf de:r KAR-të. TSI-ma TSVÖLF, TSVAI-ta SHTOK', 'Sì, la password è sulla scheda. Camera dodici, secondo piano.')}
 <h3>3. Al telefono (appuntamento)</h3>
 ${dl('Ich', 'Guten Tag, ich möchte einen Termin bei Dr. Müller vereinbaren.', 'GU:-tën TA:K, iç MÖÇ-të AI-nën ter-MI:N bai DOK-tor MÜ-la fer-AIN-ba:-rën', 'Buongiorno, vorrei fissare un appuntamento dal dottor Müller.')}
 ${dl('Praxis', 'Wie ist Ihr Name, bitte?', 'vi: ist i:r NA:-më, BI-të', 'Come si chiama, per favore?')}
@@ -32,39 +32,39 @@ ${dl('Ich', 'Rossi: R, O, S, S, I.', 'RO-ssi: ER, O:, ES, ES, I:', 'Rossi: R, O,
 ${dl('Praxis', 'Donnerstag um fünfzehn Uhr, passt das?', 'DO-nërs-ta:k um FÜNF-tse:n U:R, PAST das', 'Giovedì alle quindici, va bene?')}
 ${dl('Ich', 'Ja, das passt gut. Vielen Dank, auf Wiederhören!', 'JA:, das PAST GU:T. FI:-lën DANK, auf VI:-da-hö:-rën', 'Sì, va bene. Grazie mille, arrivederci! (al telefono)')}
 <h3>4. Dal medico</h3>
-${dl('Arzt', 'Guten Tag, was fehlt Ihnen?', 'GU:-tën TA:K, vas FE:LT I:-nën', 'Buongiorno, che cosa Le succede?')}
+${dl('Arzt', 'Guten Tag, was fehlt Ihnen?', 'GU:-tën TA:K, vas FÉ:LT I:-nën', 'Buongiorno, che cosa Le succede?')}
 ${dl('Patient', 'Ich habe seit gestern Halsschmerzen und Fieber.', 'iç HA:-bë zait GES-tërn HALS-shmer-tsën unt FI:-ba', 'Ho mal di gola e febbre da ieri.')}
 ${dl('Arzt', 'Machen Sie bitte den Mund auf. Ihr Hals ist rot.', 'MA-chën zi: BI-të de:n MUNT auf. i:r HALS ist RO:T', 'Apra la bocca, per favore. La gola è rossa.')}
-${dl('Arzt', 'Sie haben eine Erkältung. Ich gebe Ihnen ein Rezept.', 'zi: HA:-bën AI-në er-KEL-tung. iç GE:-bë I:-nën ain re-TSEPT', 'Ha un raffreddore. Le do una ricetta.')}
-${dl('Patient', 'Wie oft muss ich die Tabletten nehmen?', 'vi: OFT MUS iç di: ta-BLE-tën NE:-mën', 'Quante volte devo prendere le compresse?')}
-${dl('Arzt', 'Dreimal täglich, nach dem Essen.', 'DRAI-ma:l TE:G-liç, na:ch de:m E-ssën', 'Tre volte al giorno, dopo i pasti.')}
+${dl('Arzt', 'Sie haben eine Erkältung. Ich gebe Ihnen ein Rezept.', 'zi: HA:-bën AI-në er-KEL-tung. iç GÉ:-bë I:-nën ain re-TSEPT', 'Ha un raffreddore. Le do una ricetta.')}
+${dl('Patient', 'Wie oft muss ich die Tabletten nehmen?', 'vi: OFT MUS iç di: ta-BLE-tën NÉ:-mën', 'Quante volte devo prendere le compresse?')}
+${dl('Arzt', 'Dreimal täglich, nach dem Essen.', 'DRAI-ma:l TÈ:G-liç, na:ch de:m E-ssën', 'Tre volte al giorno, dopo i pasti.')}
 <h3>5. Colloquio di lavoro</h3>
-${dl('Chefin', 'Erzählen Sie mir von Ihrer Berufserfahrung.', 'er-TSE:-lën zi: mi:r fon I:-ra bë-RU:FS-er-fa:-rung', 'Mi parli della Sua esperienza professionale.')}
+${dl('Chefin', 'Erzählen Sie mir von Ihrer Berufserfahrung.', 'er-TSÈ:-lën zi: mi:r fon I:-ra bë-RU:FS-er-fa:-rung', 'Mi parli della Sua esperienza professionale.')}
 ${dl('Bewerber', 'Ich habe drei Jahre in einer Werbeagentur gearbeitet.', 'iç HA:-bë drai JA:-rë in AI-na VER-bë-a-gen-tu:r gë-AR-bai-tët', "Ho lavorato tre anni in un'agenzia pubblicitaria.")}
 ${dl('Chefin', 'Warum möchten Sie die Stelle wechseln?', 'va-RUM MÖÇ-tën zi: di: SHTE-lë VEK-sëln', 'Perché vuole cambiare lavoro?')}
-${dl('Bewerber', 'Ich suche mehr Verantwortung und neue Herausforderungen.', 'iç ZU:-chë ME:R fer-ANT-vor-tung unt NOI-ë he-RAUS-for-dë-run-gën', 'Cerco più responsabilità e nuove sfide.')}
-${dl('Chefin', 'Wann könnten Sie anfangen?', 'van KÖN-tën zi: AN-fa-ngën', 'Quando potrebbe cominciare?')}
+${dl('Bewerber', 'Ich suche mehr Verantwortung und neue Herausforderungen.', 'iç ZU:-chë MÉ:R fer-ANT-vor-tung unt NOI-ë he-RAUS-for-dë-rung-ën', 'Cerco più responsabilità e nuove sfide.')}
+${dl('Chefin', 'Wann könnten Sie anfangen?', 'van KÖN-tën zi: AN-fang-ën', 'Quando potrebbe cominciare?')}
 <h3>6. Con amici</h3>
-${dl('Lisa', "Hallo Tom! Wie geht's?", 'HA-lo TOM. vi: GE:TS', 'Ciao Tom! Come va?')}
-${dl('Tom', 'Gut, und dir? Wie war dein Wochenende?', 'GU:T, unt di:r. vi: va:r dain VO-chën-en-dë', "Bene, e a te? Com'è stato il tuo weekend?")}
-${dl('Lisa', 'Super! Wir sind am Samstag an den See gefahren.', 'ZU:-pa. vi:r zint am ZAMS-ta:k an de:n ZE: gë-FA:-rën', 'Benissimo! Sabato siamo andati al lago.')}
-${dl('Tom', 'Cool! Hast du Lust, morgen Abend ins Kino zu gehen?', 'KUL. hast du LUST, MOR-gën A:-bënt ins KI:-no tsu GE:-ën', 'Forte! Hai voglia di andare al cinema domani sera?')}
+${dl('Lisa', "Hallo Tom! Wie geht's?", 'HA-lo TOM. vi: GÉ:TS', 'Ciao Tom! Come va?')}
+${dl('Tom', 'Gut, und dir? Wie war dein Wochenende?', 'GU:T, unt di:r. vi: VA:R dain VO-chën-en-dë', "Bene, e a te? Com'è stato il tuo weekend?")}
+${dl('Lisa', 'Super! Wir sind am Samstag an den See gefahren.', 'ZU:-pa. vi:r zint am ZAMS-ta:k an de:n ZÉ: gë-FA:-rën', 'Benissimo! Sabato siamo andati al lago.')}
+${dl('Tom', 'Cool! Hast du Lust, morgen Abend ins Kino zu gehen?', 'KUL. hast du LUST, MOR-gën A:-bënt ins KI:-no tsu GÉ:-ën', 'Forte! Hai voglia di andare al cinema domani sera?')}
 ${dl('Lisa', 'Gern! Um wie viel Uhr?', 'GERN. um vi: FI:L U:R', 'Volentieri! A che ora?')}
 <h3>7. Un problema (in negozio)</h3>
 ${dl('Kunde', 'Entschuldigung, ich möchte diese Jacke umtauschen. Sie ist zu klein.', 'ent-SHUL-di-gung, iç MÖÇ-të DI:-zë JA-kë UM-tau-shën. zi: ist tsu KLAIN', 'Scusi, vorrei cambiare questa giacca. È troppo piccola.')}
 ${dl('Verkäuferin', 'Haben Sie den Kassenbon?', 'HA:-bën zi: de:n KA-ssën-bon', 'Ha lo scontrino?')}
 ${dl('Kunde', 'Ja, hier. Ich habe sie gestern gekauft.', 'JA:, HI:R. iç HA:-bë zi: GES-tërn gë-KAUFT', "Sì, ecco. L'ho comprata ieri.")}
-${dl('Verkäuferin', 'Kein Problem. Welche Größe brauchen Sie?', 'KAIN pro-BLE:M. VEL-çë GRÖ:-ssë BRAU-chën zi:', 'Nessun problema. Che taglia Le serve?')}
+${dl('Verkäuferin', 'Kein Problem. Welche Größe brauchen Sie?', 'KAIN pro-BLÉ:M. VEL-çë GRÖ:-ssë BRAU-chën zi:', 'Nessun problema. Che taglia Le serve?')}
 <h3>8. Viaggio (in stazione)</h3>
 ${dl('Reisender', 'Eine Fahrkarte nach Berlin, bitte.', 'AI-në FA:R-kar-të na:ch ber-LI:N, BI-të', 'Un biglietto per Berlino, per favore.')}
 ${dl('Schalter', 'Einfach oder hin und zurück?', 'AIN-fach O:-da HIN unt tsu-RÜK', 'Solo andata o andata e ritorno?')}
-${dl('Reisender', 'Hin und zurück. Wann fährt der nächste Zug?', 'HIN unt tsu-RÜK. van FE:RT de:r NE:ç-stë TSU:K', 'Andata e ritorno. Quando parte il prossimo treno?')}
-${dl('Schalter', 'Um zehn Uhr fünfzehn von Gleis vier.', 'um TSE:N U:R FÜNF-tse:n fon GLAIS FI:R', 'Alle dieci e quindici dal binario quattro.')}
-${dl('Reisender', 'Hat der Zug Verspätung?', 'HAT de:r TSU:K fer-SHPE:-tung', 'Il treno ha ritardo?')}
+${dl('Reisender', 'Hin und zurück. Wann fährt der nächste Zug?', 'HIN unt tsu-RÜK. van FÈ:RT de:r NÈ:ÇS-të TSU:K', 'Andata e ritorno. Quando parte il prossimo treno?')}
+${dl('Schalter', 'Um zehn Uhr fünfzehn von Gleis vier.', 'um TSÉ:N U:R FÜNF-tse:n fon GLAIS FI:R', 'Alle dieci e quindici dal binario quattro.')}
+${dl('Reisender', 'Hat der Zug Verspätung?', 'HAT de:r TSU:K fer-SHPÈ:-tung', 'Il treno ha ritardo?')}
 ${dl('Schalter', 'Nein, er ist pünktlich.', 'NAIN, e:r ist PÜNKT-liç', 'No, è puntuale.')}
 <h3>9. Al ristorante</h3>
-${dl('Kellner', 'Haben Sie schon gewählt?', 'HA:-bën zi: SHO:N gë-VE:LT', 'Ha già scelto?')}
-${dl('Gast', 'Ja, ich nehme das Schnitzel mit Kartoffelsalat.', 'JA:, iç NE:-më das SHNI-tsël mit kar-TO-fël-za-la:t', 'Sì, prendo la cotoletta con insalata di patate.')}
+${dl('Kellner', 'Haben Sie schon gewählt?', 'HA:-bën zi: SHO:N gë-VÈ:LT', 'Ha già scelto?')}
+${dl('Gast', 'Ja, ich nehme das Schnitzel mit Kartoffelsalat.', 'JA:, iç NÉ:-më das SHNI-tsël mit kar-TO-fël-za-la:t', 'Sì, prendo la cotoletta con insalata di patate.')}
 ${dl('Kellner', 'Und zu trinken?', 'unt tsu TRIN-kën', 'E da bere?')}
 ${dl('Gast', 'Ein Glas Weißwein und ein Wasser, bitte.', 'ain GLA:S VAIS-vain unt ain VA-ssa, BI-të', "Un bicchiere di vino bianco e un'acqua, per favore.")}
 ${dl('Gast', 'Die Rechnung, bitte.', 'di: REÇ-nung, BI-të', 'Il conto, per favore.')}
@@ -73,14 +73,14 @@ ${vsec('Frasi chiave da portare con te', [
   ['Entschuldigung, können Sie mir helfen?', 'ent-SHUL-di-gung, KÖ-nën zi: mi:r HEL-fën', 'Scusi, può aiutarmi?'],
   [
     'Ich verstehe das nicht. Können Sie das wiederholen?',
-    'iç fer-SHTE:-ë das niçt. KÖ-nën zi: das vi-da-HO:-lën',
+    'iç fer-SHTÉ:-ë das niçt. KÖ-nën zi: das vi-da-HO:-lën',
     'Non lo capisco. Può ripeterlo?',
   ],
   ['Sprechen Sie bitte langsamer.', 'SHPRE-çën zi: BI-të LANG-za-ma', 'Parli più lentamente, per favore.'],
   ['Wie viel kostet das?', 'vi: FI:L KO-stët das', 'Quanto costa?'],
   ['Ich hätte gern …', 'iç HE-të GERN', 'Vorrei …'],
   ['Wo ist die Toilette?', 'vo: ist di: to-a-LE-të', "Dov'è il bagno?"],
-  ['Ich spreche nur ein bisschen Deutsch.', 'iç SHPRE-çë nu:r ain BIS-çën DOITSH', "Parlo solo un po' di tedesco."],
+  ['Ich spreche nur ein bisschen Deutsch.', 'iç SHPRE-çë NU:R ain BIS-çën DOITSH', "Parlo solo un po' di tedesco."],
 ])}
 <h3>Trappole per chi parla italiano</h3>
 <ul>
@@ -167,10 +167,10 @@ ${tbl(
     card('c1', 'Ich hätte gern … [iç HE-të GERN]', 'Vorrei … (al bar, al ristorante, in negozio).'),
     card('c2', 'Stimmt so. [SHTIMT zo]', 'Tenga il resto.'),
     card('c3', 'Zusammen oder getrennt?', 'Insieme o separati? [tsu-ZA-mën O:-da gë-TRENT]'),
-    card('c4', 'Was fehlt Ihnen? [vas FE:LT I:-nën]', 'Che cosa Le succede? (dal medico)'),
+    card('c4', 'Was fehlt Ihnen? [vas FÉ:LT I:-nën]', 'Che cosa Le succede? (dal medico)'),
     card('c5', 'Wie bitte? [vi: BI-të]', 'Come, prego? Per far ripetere.'),
     card('c6', 'Einfach oder hin und zurück?', 'Solo andata o andata e ritorno? (biglietto)'),
-    card('c7', 'Hat der Zug Verspätung?', 'Il treno è in ritardo? [HAT de:r TSU:K fer-SHPE:-tung]'),
+    card('c7', 'Hat der Zug Verspätung?', 'Il treno è in ritardo? [HAT de:r TSU:K fer-SHPÉ:-tung]'),
     card('c8', 'auf Wiederhören! [auf VI:-da-hö:-rën]', 'Arrivederci (al telefono).'),
     card('c9', 'Können Sie mir helfen?', 'Può aiutarmi? [KÖ-nën zi: mi:r HEL-fën]'),
   ],
@@ -232,7 +232,7 @@ ${tbl(
 ${vsec('Pattern da trasformare', [
   [
     'Wenn ich Zeit habe, gehe ich ins Kino.',
-    'ven iç TSAIT HA:-bë, GE:-ë iç ins KI:-no',
+    'ven iç TSAIT HA:-bë, GÉ:-ë iç ins KI:-no',
     'Se ho tempo, vado al cinema.',
   ],
   [
@@ -251,7 +251,7 @@ ${vsec('Pattern da trasformare', [
     'È la donna che ho aiutato.',
   ],
   ['Das Haus wird gebaut.', 'das HAUS virt gë-BAUT', 'La casa viene costruita.'],
-  ['Wenn ich reich wäre, würde ich reisen.', 'ven iç RAIÇ VE:-rë, VÜR-dë iç RAI-zën', 'Se fossi ricco, viaggerei.'],
+  ['Wenn ich reich wäre, würde ich reisen.', 'ven iç RAIÇ VÈ:-rë, VÜR-dë iç RAI-zën', 'Se fossi ricco, viaggerei.'],
   ['Er sagte, er sei krank.', 'e:r ZA:K-të, e:r ZAI KRANK', 'Disse di essere malato.'],
 ])}
 <h3>Errori più comuni degli italiani</h3>
@@ -501,6 +501,30 @@ ${tbl(
   ],
 )}
 <p>Il modulo orale (<i>Sprechen</i>) dura circa 15 minuti a ogni livello, spesso in coppia. Quattro moduli (<i>Lesen</i> = lettura, <i>Hören</i> = ascolto, <i>Schreiben</i> = scrittura, <i>Sprechen</i> = orale), che si possono anche dare separatamente. Per superare un modulo servono circa il <b>60%</b> dei punti. L'ÖSD ha struttura molto simile, con le stesse quattro competenze.</p>
+<h3>Start Deutsch 1 (A1) e Goethe-Zertifikat A2</h3>
+<p><b>Start Deutsch 1</b> è l'esame di livello <b>A1</b> (oggi Goethe-Zertifikat A1: Start Deutsch 1); il <b>Goethe-Zertifikat A2</b> è il livello successivo. Anche qui quattro moduli, che si possono dare separatamente. Durate e numero di parti sono <b>indicativi, verifica sul sito ufficiale</b> del Goethe-Institut (o dell'ÖSD) prima di prenotare.</p>
+${tbl(
+  ['Modulo', 'Start Deutsch 1 (A1)', 'Goethe A2'],
+  [
+    ['Lesen', 'circa 25 min, 3 parti', 'circa 30 min, 4 parti'],
+    ['Hören', 'circa 20 min, 3 parti', 'circa 30 min, 4 parti'],
+    ['Schreiben', 'circa 20 min, 2 parti', 'circa 30 min, 2 parti'],
+    ['Sprechen', 'circa 15 min, in coppia, 3 parti', 'circa 15 min, in coppia, 3 parti'],
+  ],
+)}
+<ul>
+<li><b>Punti</b> (indicativi): ogni modulo vale 100 punti e si supera con circa il <b>60%</b> (60 punti); il certificato riporta i risultati per modulo.</li>
+<li><b>Schreiben A1</b>: un modulo da compilare (<i>Formular</i>) e un breve messaggio (circa 30 parole). <b>A2</b>: un SMS o messaggio breve e una email informale (circa 30 parole ciascuno).</li>
+<li><b>Sprechen A1</b>: presentarsi, fare e rispondere a domande con carte (parola + tema), formulare richieste. <b>A2</b>: domande con carte, parlare di sé su un tema, mettersi d'accordo su un programma.</li>
+<li>Si sceglie la sessione (<i>Prüfungstermin</i> [PRÜ:-fungs-ter-mi:n]) e l'iscrizione si fa presso il Goethe-Institut o un centro d'esame.</li>
+</ul>
+<h3>Scrittura A1/A2 con risposte modello</h3>
+<p>Tre regole: tocca <b>tutti i punti</b> della consegna, scrivi frasi semplici complete (soggetto + verbo, verbo in seconda posizione) e metti <b>Anrede</b> (apertura) e <b>Gruß</b> (chiusura). Formule: <i>Liebe Anna</i> [LI:-bë A-na] (a un amico), <i>Hallo Marco</i> [HA-lo: MAR-ko], <i>Sehr geehrter Herr Müller</i> [ZÉ:R gë-É:R-ta HER MÜ-la] (formale), chiusura <i>Viele Grüße</i> [FI:-lë GRÜ:-ssë] / <i>Liebe Grüße</i> / <i>Mit freundlichen Grüßen</i>.</p>
+<p><b>1. Modulo (A1)</b>: <i>Familienname: Rossi. Vorname: Marco. Geburtsdatum: 12.03.1995. Wohnort: Mailand. Straße, Nr.: Via Roma 5. Telefon: 0039 02 1234567. Nationalität: italienisch. Beruf: Student.</i> Parole del modulo: Wohnort [VO:N-ort], Vorname [FO:R-na:-më], Nationalität [na-tsio-na-li-TÈ:T]. Si scrive solo l'informazione richiesta, in stampatello.</p>
+<p><b>2. SMS a un amico (A1, circa 30 parole)</b>: <i>Hallo Anna, ich komme heute um 18 Uhr in Berlin an. Kannst du mich am Bahnhof abholen? Danke! Bis später, Marco.</i> [AP-ho:-lën]. Struttura: saluto, notizia, richiesta, chiusura.</p>
+<p><b>3. Email a un amico (A2, circa 30-40 parole)</b>: <i>Liebe Anna, vielen Dank für die Einladung zu deiner Party am Samstag. Leider kann ich nicht kommen, weil ich krank bin. Ich wünsche dir viel Spaß! Wollen wir uns nächste Woche treffen? Liebe Grüße, Marco.</i> [AIN-la:-dung]. Struttura: ringraziare, rifiutare con <i>weil</i>, proposta, chiusura.</p>
+<p><b>4. Messaggio per un appuntamento (A2, formale)</b>: <i>Sehr geehrter Herr Müller, ich habe am Montag um 10 Uhr einen Termin bei Ihnen. Leider kann ich nicht kommen. Können wir den Termin auf Dienstag verschieben? Mit freundlichen Grüßen, Marco Rossi.</i> [ter-MI:N, fer-SHI:-bën]. Struttura: motivo della scrittura, problema, domanda, chiusura formale.</p>
+<p>Trappola: nell'A1/A2 non servono frasi lunghe; il voto dipende dal completare i punti e dalla comprensibilità. Rileggi la maiuscola dei nomi e il verbo in seconda posizione.</p>
 <h3>Cosa si chiede nello scritto</h3>
 <ul>
 <li><b>A2</b>: due testi brevi (SMS o email, circa 30 parole ciascuno).</li>
@@ -559,7 +583,7 @@ ${vsec('Per prendere tempo, chiedere, concludere', [
   ['Wie meinen Sie das?', 'vi: MAI-nën zi: das', 'Cosa intende?'],
   ['Könnten Sie das bitte wiederholen?', 'KÖN-tën zi: das BI-të vi-da-HO:-lën', 'Potrebbe ripeterlo?'],
   ['Zum Schluss möchte ich sagen, dass …', 'tsum SHLUS MÖÇ-të iç ZA:-gën, das', 'In conclusione vorrei dire che …'],
-  ['Ich bin ganz Ihrer Meinung.', 'iç bin GANTS I:-rër MAI-nung', "Sono pienamente d'accordo con Lei."],
+  ['Ich bin ganz Ihrer Meinung.', 'iç bin GANTS I:-ra MAI-nung', "Sono pienamente d'accordo con Lei."],
 ])}
 <h3>Errori di pronuncia tipici degli italiani</h3>
 <ul>
@@ -865,6 +889,37 @@ ${vsec('Per prendere tempo, chiedere, concludere', [
       0,
       "La g a fine parola si indurisce in k e la a è lunga. [TAG] sarebbe una lettura all'italiana.",
     ),
+    q(
+      'q41',
+      'Che livello certifica «Start Deutsch 1»?',
+      ['A1', 'A2', 'B1', 'B2'],
+      0,
+      "Start Deutsch 1 è l'esame del Goethe-Institut per il livello A1. Il livello A2 è il Goethe-Zertifikat A2.",
+    ),
+    q(
+      'q42',
+      "Qual è l'apertura giusta per un SMS a un amico?",
+      [
+        'Liebe Anna, ...',
+        'Sehr geehrte Damen und Herren, ...',
+        'Sehr geehrter Herr Müller, ...',
+        'Mit freundlichen Grüßen, ...',
+      ],
+      0,
+      "Con un amico si usa Liebe / Lieber + nome o Hallo. Sehr geehrte... è per lettere formali; Mit freundlichen Grüßen è una chiusura, non un'apertura.",
+    ),
+    q(
+      'q43',
+      'In un messaggio di rifiuto A2, come si dà il motivo?',
+      [
+        'Leider kann ich nicht kommen, weil ich krank bin.',
+        'Leider kann ich nicht kommen, weil bin ich krank.',
+        'Leider ich kann nicht kommen, weil ich krank.',
+        'Leider nicht kommen, weil ich krank bin.',
+      ],
+      0,
+      'La subordinata con weil porta il verbo coniugato in fondo (ich krank bin) e la principale ha il verbo in seconda posizione (kann).',
+    ),
   ],
   [
     card(
@@ -875,7 +930,7 @@ ${vsec('Per prendere tempo, chiedere, concludere', [
     card(
       'c2',
       'Lesen / Hören / Schreiben / Sprechen',
-      'lettura / ascolto / scrittura / orale [LE:-zën / HÖ:-rën / SHRAI-bën / SHPRE-çën].',
+      'lettura / ascolto / scrittura / orale [LÉ:-zën / HÖ:-rën / SHRAI-bën / SHPRE-çën].',
     ),
     card('c3', 'Sehr geehrte Damen und Herren, … Mit freundlichen Grüßen', "Apertura e chiusura di un'email formale."),
     card('c4', 'Soglia di superamento', "Circa il 60% per modulo (Goethe). Verifica sul sito dell'ente."),
@@ -883,6 +938,16 @@ ${vsec('Per prendere tempo, chiedere, concludere', [
     card('c6', 'ÜBERsetzen / überSETZEN', 'traghettare / tradurre [Ü:-ba-ze-tsën / ü:-ba-ZE-tsën].'),
     card('c7', 'der AUgust / der auGUST', 'il nome proprio / il mese [AU-gust / au-GUST].'),
     card('c8', 'Formule orali', '<i>Das ist eine gute Frage. Ich würde sagen, dass … Wie meinen Sie das?</i>'),
+    card(
+      'c9',
+      'Start Deutsch 1 / Goethe A2',
+      'A1 e A2: quattro moduli, circa 15-30 min ciascuno (indicativo, verifica sul sito ufficiale). Soglia circa 60%.',
+    ),
+    card(
+      'c10',
+      'Liebe Anna, ... Viele Grüße [LI:-bë A-na ... FI:-lë GRÜ:-ssë]',
+      'Apertura e chiusura di un messaggio a un amico. Formale: Sehr geehrter Herr ... / Mit freundlichen Grüßen.',
+    ),
   ],
   [
     prac(
@@ -909,6 +974,16 @@ ${vsec('Per prendere tempo, chiedere, concludere', [
       'p5',
       'Elenca tre errori di pronuncia tipici degli italiani e come correggerli.',
       '<i>1. h iniziale muta → aspirala (Haus). 2. doppie allungate → breve (Mitte [MI-të]). 3. ü pronunciata u → labbra tonde, i detta (Küche [KÜ-çë]).</i>',
+    ),
+    prac(
+      'p6',
+      'A1: scrivi un SMS (circa 30 parole) per dire a un amico che arrivi stasera alle 20 e chiedere se può venirti a prendere.',
+      "<i>Hallo Peter, ich komme heute um 20 Uhr an. Kannst du mich vom Bahnhof abholen? Danke! Bis später, Marco.</i> Nota: saluto, notizia, richiesta con modale (verbo all'infinito in fondo), chiusura.",
+    ),
+    prac(
+      'p7',
+      "A2: scrivi una email a un amico (circa 30-40 parole): ringrazia per l'invito, rifiuta perché lavori, proponi un altro giorno.",
+      '<i>Liebe Anna, vielen Dank für die Einladung. Leider kann ich am Samstag nicht kommen, weil ich arbeiten muss. Wollen wir uns am Sonntag treffen? Viele Grüße, Marco.</i> Nota: weil con verbo in fondo, domanda con wollen.',
     ),
   ],
 )

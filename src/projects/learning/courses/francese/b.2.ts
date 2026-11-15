@@ -386,7 +386,7 @@ ${PRON_SHORT}
 </ul>
 <h3>Forme impersonali</h3>
 <ul>
-<li>il faut [il FO] (bisogna), il y a [i-lya] (c'è, ci sono), il pleut [il PLÖ], il s'agit de [il sa-zhi DË] (si tratta di), il manque, il reste, il vaut mieux que + subjonctif, il arrive que + subjonctif.</li>
+<li>il faut [il FO] (bisogna), il y a [i-lya] (c'è, ci sono), il pleut [il PLÖ], il s'agit de [il sa-ZHI dë] (si tratta di), il manque, il reste, il vaut mieux que + subjonctif, il arrive que + subjonctif.</li>
 <li>«Il est interdit de fumer.» «Il manque deux élèves.» «Il paraît que...» (Pare che...).</li>
 <li>Trappola: <b>il s'agit de</b> non ha soggetto reale: «Dans ce livre, il s'agit d'un détective.» Mai «ce livre s'agit de».</li>
 </ul>
@@ -537,7 +537,7 @@ ${PRON_SHORT}
 <h3>Regola d'oro: guarda la funzione</h3>
 <div class="tblw"><table><tr><th>Pronome</th><th>Funzione</th><th>Esempio</th></tr>
 <tr><td>qui [KI]</td><td>soggetto</td><td>L'homme qui parle</td></tr>
-<tr><td>que [KË]</td><td>oggetto diretto</td><td>L'homme que je vois</td></tr>
+<tr><td>que [kë]</td><td>oggetto diretto</td><td>L'homme que je vois</td></tr>
 <tr><td>où [U]</td><td>luogo, tempo</td><td>La ville où j'habite</td></tr>
 <tr><td>dont [DÕ]</td><td>di cui</td><td>Le livre dont j'ai besoin</td></tr>
 <tr><td>prép. + qui</td><td>persona</td><td>L'ami avec qui je sors</td></tr>

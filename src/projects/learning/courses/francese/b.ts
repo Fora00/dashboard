@@ -232,16 +232,16 @@ const fraSubj2: CourseModule = mod(
 ${PRON_SHORT}
 <h3>Congiunzioni + subjonctif</h3>
 <div class="tblw"><table><tr><th>Congiunzione</th><th>Pronuncia</th><th>Significato</th></tr>
-<tr><td>bien que / quoique</td><td>[byẽ-KË / kua-KË]</td><td>benché, sebbene</td></tr>
-<tr><td>pour que / afin que</td><td>[pur-KË / a-fẽ-KË]</td><td>affinché</td></tr>
-<tr><td>avant que</td><td>[a-vã-KË]</td><td>prima che</td></tr>
-<tr><td>jusqu'à ce que</td><td>[zhüs-ka-së-KË]</td><td>finché, fino a quando</td></tr>
-<tr><td>à condition que</td><td>[a kõ-di-syõ-KË]</td><td>a condizione che</td></tr>
-<tr><td>pourvu que</td><td>[pur-vü-KË]</td><td>purché</td></tr>
-<tr><td>à moins que</td><td>[a muẽ-KË]</td><td>a meno che</td></tr>
-<tr><td>sans que</td><td>[sã-KË]</td><td>senza che</td></tr>
-<tr><td>de peur que</td><td>[dë pör-KË]</td><td>per paura che</td></tr>
-<tr><td>en attendant que</td><td>[ã-na-tã-dã-KË]</td><td>nell'attesa che</td></tr>
+<tr><td>bien que / quoique</td><td>[BYẼ-kë / KUA-kë]</td><td>benché, sebbene</td></tr>
+<tr><td>pour que / afin que</td><td>[PUR-kë / a-FẼ-kë]</td><td>affinché</td></tr>
+<tr><td>avant que</td><td>[a-VÃ-kë]</td><td>prima che</td></tr>
+<tr><td>jusqu'à ce que</td><td>[zhüs-KA-së-kë]</td><td>finché, fino a quando</td></tr>
+<tr><td>à condition que</td><td>[a kõ-di-SYÕ-kë]</td><td>a condizione che</td></tr>
+<tr><td>pourvu que</td><td>[pur-VÜ-kë]</td><td>purché</td></tr>
+<tr><td>à moins que</td><td>[a MUẼ-kë]</td><td>a meno che</td></tr>
+<tr><td>sans que</td><td>[SÃ-kë]</td><td>senza che</td></tr>
+<tr><td>de peur que</td><td>[dë PÖR-kë]</td><td>per paura che</td></tr>
+<tr><td>en attendant que</td><td>[ã-na-tã-DÃ-kë]</td><td>nell'attesa che</td></tr>
 </table></div>
 <p>Esempi: «Bien qu'il soit fatigué, il continue.» (Benché sia stanco, continua.) «Je te le dis pour que tu comprennes.» «Reste jusqu'à ce que je revienne.» «Sors à moins qu'il (ne) pleuve.» Il <i>ne</i> dopo <i>à moins que</i>, <i>avant que</i>, <i>de peur que</i> è «esplicativo»: facoltativo e senza valore negativo.</p>
 <h3>Stesso soggetto: preposizione + infinito</h3>
@@ -255,7 +255,7 @@ ${PRON_SHORT}
 <h3>Congiunzioni + indicatif</h3>
 <p><b>parce que, puisque, pendant que, alors que, tandis que, dès que, aussitôt que, depuis que, si bien que</b> e soprattutto <b>après que</b> reggono l'indicativo: «Après qu'il est parti, j'ai pleuré.» (Nell'uso parlato si sente anche «après qu'il soit parti», ma la norma è l'indicativo.) <b>De sorte que / de façon que</b>: subjonctif se esprimono lo <i>scopo</i>, indicatif se esprimono la <i>conseguenza</i>.</p>
 <h3>Quoique o quoi que?</h3>
-<p><b>Quoique</b> (una parola, [kua-KË]) = benché, come bien que. <b>Quoi que</b> (due parole) = qualunque cosa: «Quoi que tu dises, je reste.» Si pronunciano uguali, si distinguono solo a scritto. <b>Malgré que</b> è criticato dai puristi: meglio <i>bien que</i>.</p>
+<p><b>Quoique</b> (una parola, [KUA-kë]) = benché, come bien que. <b>Quoi que</b> (due parole) = qualunque cosa: «Quoi que tu dises, je reste.» Si pronunciano uguali, si distinguono solo a scritto. <b>Malgré que</b> è criticato dai puristi: meglio <i>bien que</i>.</p>
 <h3>Subjonctif passé</h3>
 <p>Ausiliare al subjonctif présent + participio passato; si usa per un'azione <b>anteriore</b> a quella della principale: «Je suis content que tu aies réussi.» «Bien qu'il soit arrivé en retard...» «Je doute qu'elle se soit trompée.»</p>
 <div class="tblw"><table><tr><th>Forma</th><th>Pronuncia</th></tr>
@@ -354,7 +354,7 @@ ${PRON_SHORT}
     q(
       'q10',
       'Come si pronuncia «avant que»?',
-      ['[a-vã-KË]', '[a-vant-KE]', '[a-van-KUE]', '[a-vã-KI]'],
+      ['[a-VÃ-kë]', '[a-vant-KE]', '[a-van-KUE]', '[a-vã-KI]'],
       0,
       'La -nt di avant è una nasale: ã senza n pronunciata. Que finale si legge con la e debole [kë], non con una e italiana piena.',
     ),
@@ -363,7 +363,7 @@ ${PRON_SHORT}
     card('c1', 'bien que / quoique', "Benché: + subjonctif. «Bien qu'il soit tard...»"),
     card('c2', 'pour que / afin que', 'Affinché + subjonctif; stesso soggetto: pour / afin de + infinito.'),
     card('c3', 'avant que / avant de', 'Prima che + subjonctif; prima di + infinito.'),
-    card('c4', "jusqu'à ce que", 'Finché (non) + subjonctif [zhüs-ka-së-KË].'),
+    card('c4', "jusqu'à ce que", 'Finché (non) + subjonctif [zhüs-KA-së-kë].'),
     card('c5', 'à moins que (ne)', 'A meno che + subjonctif; il ne è esplicativo, facoltativo.'),
     card('c6', 'après que', "Dopo che + indicatif (norma): «Après qu'il est parti»."),
     card('c7', 'Subjonctif passé', "Ausiliare al subjonctif + participio: que j'aie fini, qu'il soit parti."),

@@ -69,7 +69,7 @@ export const courseMetas: CourseMeta[] = [
     title: 'Francese: da A1 a B2',
     emoji: '🇫🇷',
     summary: 'Pronuncia, grammatica, vocabolario, falsi amici, francofonia, dialoghi, esercizi e preparazione al DELF.',
-    moduleCount: 31,
+    moduleCount: 36,
     load: () => import('./francese').then((m) => m.francese),
   },
   {
@@ -80,6 +80,15 @@ export const courseMetas: CourseMeta[] = [
       'Pronuncia, casi, ordine delle parole, vocabolario, falsi amici, Austria e Svizzera, dialoghi, esercizi e preparazione al Goethe/ÖSD.',
     moduleCount: 30,
     load: () => import('./tedesco').then((m) => m.tedesco),
+  },
+  {
+    id: 'russo',
+    title: 'Russo: A1',
+    emoji: '🇷🇺',
+    summary:
+      'Alfabeto cirillico, pronuncia e accento, saluti, numeri e date, casi di base (strumentale in blocchi), presente e passato, aspetto, verbi di moto, imperativo, vocabolario, dialoghi e preparazione al TORFL A1.',
+    moduleCount: 15,
+    load: () => import('./russo').then((m) => m.russo),
   },
 ]
 

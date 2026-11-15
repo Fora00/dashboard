@@ -17,7 +17,7 @@ import { deDialoghi, deDrills, deEsame } from './b.6'
 // - de-relativ: "wegen dem" labelled colloquial; genitive "des Namens" for Name; Herr -> den Herrn; "wo" as relative for places labelled spoken.
 // - de-aggettivi: genitive masc/neut zero article "guten Weines/Brotes" (some grammars give "guten Weins"); "alles Gute" takes -e,
 //   "etwas/nichts/viel/wenig + -es" (rule simplified).
-// - de-plusquam: Kaffee [KA-fe] (DE) vs [ka-FE:] (AT) both given; "Futur II" for supposition labelled rare;
+// - de-plusquam: Kaffee [KA-fe] (DE) vs [ka-FÉ:] (AT) both given; "Futur II" for supposition labelled rare;
 //   "nachdem + Perfekt / Präsens" pairing presented as the standard spoken counterpart.
 // - de-konj2: "hättest/wärst" short forms (wärest/hättest variants not listed); "als wäre er" (V2) alternative; "dürfte".
 // - de-passiv: list of verb + preposition + case (e.g. "sich freuen auf+Akk/über+Akk", "fragen nach+Dat", "bitten um+Akk",

@@ -647,18 +647,19 @@ export const fraDrills: CourseModule = mod(
 
 export const fraEsame: CourseModule = mod(
   'fr-esame',
-  'Preparazione al DELF A2, B1, B2',
-  'Formato, strategie, modelli di scrittura, orale, 40 domande miste',
+  'Preparazione al DELF A1, A2, B1, B2',
+  'Formato, strategie, modelli di scrittura A1-B2, orale, 44 domande miste',
   'drill',
-  `<p class="lead">Il <b>DELF</b> (Diplôme d'études en langue française) è la certificazione ufficiale del Ministero dell'Istruzione francese, valida a vita. Ogni livello (A1, A2, B1, B2) è un esame separato. Qui ci concentriamo su <b>A2, B1 e B2</b>.</p>
+  `<p class="lead">Il <b>DELF</b> (Diplôme d'études en langue française) è la certificazione ufficiale del Ministero dell'Istruzione francese, valida a vita. Ogni livello (A1, A2, B1, B2) è un esame separato. Qui trovi il formato di <b>A1, A2, B1 e B2</b>, le strategie e i modelli di scrittura.</p>
 <h3>Struttura comune</h3>
 <ul>
 <li><b>Quattro prove</b>, ciascuna su 25 punti: <b>CO</b> compréhension de l'oral, <b>CE</b> compréhension des écrits, <b>PE</b> production écrite, <b>PO</b> production orale.</li>
 <li>Totale 100 punti. Per ottenere il diploma servono <b>50/100</b> e un minimo di <b>5/25 in ogni prova</b>.</li>
 <li>Le prove collettive (CO, CE, PE) si svolgono insieme; la PO è individuale con un esaminatore.</li>
 </ul>
-<h3>Durate e compiti (da verificare sul sito ufficiale)</h3>
+<h3>Durate e compiti (indicativi, verifica sul sito ufficiale)</h3>
 <div class="tblw"><table><tr><th>Livello</th><th>CO</th><th>CE</th><th>PE</th><th>PO</th></tr>
+<tr><td>A1</td><td>20 min</td><td>30 min</td><td>30 min</td><td>5-7 min</td></tr>
 <tr><td>A2</td><td>25 min</td><td>30 min</td><td>45 min</td><td>6-8 min</td></tr>
 <tr><td>B1</td><td>25 min</td><td>45 min</td><td>45 min</td><td>15 min</td></tr>
 <tr><td>B2</td><td>30 min</td><td>60 min</td><td>60 min</td><td>20 min</td></tr>
@@ -669,6 +670,14 @@ export const fraEsame: CourseModule = mod(
 <li><b>B2 PE</b>: un testo argomentativo di almeno 250 parole (lettera formale, articolo, saggio).</li>
 <li><b>PO B1</b>: colloquio guidato, esercizio di interazione, esposizione di un punto di vista. <b>PO B2</b>: presentazione di un'opinione da un testo e dibattito con l'esaminatore, con preparazione di circa 30 minuti.</li>
 </ul>
+<h3>DELF A1: il formato</h3>
+<p>Durate e punteggi sono <b>indicativi: verifica sul sito ufficiale</b> (France Éducation international) prima dell'iscrizione. A1: <b>CO</b> circa 20 minuti (brevi messaggi, annunci, dialoghi, ascoltati due volte), <b>CE</b> circa 30 minuti (annunci, indicazioni, messaggi, programmi), <b>PE</b> circa 30 minuti (due esercizi: compilare una scheda e scrivere un breve testo di circa 40 parole), <b>PO</b> 5-7 minuti in tre parti: <i>entretien dirigé</i> (parlare di sé: nome, età, famiglia, gusti), <i>échange d'informations</i> (fare e rispondere a domande semplici con parole o immagini-guida), <i>dialogue simulé</i> (ordinare, comprare, chiedere un servizio). Si usa il présent, il vocabolario di base, ma anche «je voudrais» e «s'il vous plaît» ([sil vu PLÈ]).</p>
+<h3>DELF A2: la prova orale in tre parti</h3>
+<p>Anche qui i tempi sono indicativi. La PO A2 dura circa 6-8 minuti più una preparazione di circa 10 minuti per le ultime due parti. <b>1. Entretien dirigé</b> (1-2 minuti): presentarti e rispondere a domande su famiglia, lavoro, tempo libero. <b>2. Monologue suivi</b> (circa 2 minuti): descrivere o raccontare un'esperienza o un progetto (<i>Parlez-moi de vos dernières vacances</i>). <b>3. Exercice en interaction</b> (3-4 minuti): un gioco di ruolo con l'esaminatore, per esempio prenotare, chiedere informazioni, organizzare un'uscita. Nella CO e nella CE A2 compaiono messaggi, annunci, e-mail, dialoghi e articoli brevi con domande a scelta multipla o a risposta breve. Per cavartela: passé composé e imparfait, futur proche, il faut, il y a, i pronomi COD/COI, depuis, pendant.</p>
+<h3>Scrittura A1 e A2: tre modelli</h3>
+<p><b>A1 · cartolina (circa 40 parole)</b>: «Chère Anna [shèr a-NA], / Je suis à Nice avec ma famille. Il fait beau et chaud. La plage est très belle et la mer est bleue. Nous mangeons des glaces tous les jours. Demain, nous visitons Monaco. / Grosses bises [gros BIZ], Luca». Elementi: formula iniziale, dove sei, tempo, due attività, progetto, formula finale.</p>
+<p><b>A1 · scheda d'iscrizione</b> (<i>fiche d'inscription</i> [fish dẽ-skrip-SYÕ]): <i>Nom: ROSSI. Prénom: Luca. Date de naissance: le 12 mai 1998. Nationalité: italienne. Adresse: 10, via Roma, Torino. Téléphone: 06 12 34 56 78. Profession: étudiant. Langues parlées: italien, français, anglais. Loisirs: le football, la lecture.</i> Cognome in maiuscolo, data con il giorno prima del mese, nazionalità in minuscolo e accordata, nessuna frase intera.</p>
+<p><b>A2 · e-mail a un amico (circa 60 parole)</b>: «Objet: Mon week-end à Lyon. / Salut Julie, Comment vas-tu ? Samedi dernier, je suis allé à Lyon avec des amis. Nous avons visité la vieille ville et nous avons mangé dans un bouchon. Il faisait beau. Dimanche, je suis rentré en train. Et toi, que fais-tu ce week-end ? Écris-moi vite ! / À bientôt [a byẽ-TO], Luca». Elementi: oggetto, saluto, domanda, racconto al passé composé con imparfait per lo sfondo, domanda finale, chiusura.</p>
 <h3>Strategie generali</h3>
 <ul>
 <li><b>CO</b>: leggi le domande prima dell'ascolto; la maggior parte dei documenti è ascoltata due volte, ma a B1 e B2 alcuni solo una volta: leggi le istruzioni; annota parole chiave, non frasi.</li>
@@ -999,6 +1008,39 @@ ${PRON_SHORT}
       0,
       'Fermer = chiudere. Fermare si traduce con arrêter: è uno dei falsi amici più comuni.',
     ),
+    q(
+      'q41',
+      'Quanto dura circa la PO del DELF A1 e in quante parti si divide?',
+      ['5-7 minuti, tre parti', '15 minuti, due parti', '20 minuti, quattro parti', '6-8 minuti, una sola parte'],
+      0,
+      "A1 prevede entretien dirigé, échange d'informations e dialogue simulé in circa 5-7 minuti. I tempi sono indicativi: verifica sempre il sito ufficiale.",
+    ),
+    q(
+      'q42',
+      "Quale delle tre parti della PO A2 chiede di raccontare un'esperienza?",
+      ['Il monologue suivi', "L'entretien dirigé", "L'exercice en interaction", 'Il débat sur un texte'],
+      0,
+      "Nel monologue suivi descrivi o racconti per circa due minuti. L'entretien dirigé è una conversazione di presentazione, l'exercice en interaction un gioco di ruolo con l'esaminatore.",
+    ),
+    q(
+      'q43',
+      "Quale chiusura è adatta a una cartolina A1 per un'amica?",
+      [
+        'Grosses bises, Luca',
+        'Veuillez agréer, Madame, mes salutations',
+        'Cordialement, Luca Rossi',
+        'Je vous prie de croire à mes sentiments',
+      ],
+      0,
+      "A un'amica si scrive in registro familiare: bises, à bientôt. Veuillez agréer e cordialement appartengono alle lettere formali, che servono dal B1 in avanti.",
+    ),
+    q(
+      'q44',
+      'Come si compila la riga «Date de naissance» di una scheda A1?',
+      ['le 12 mai 1998', '12 Mai 1998 (con la maiuscola)', 'Mai le douze 1998', 'née le 12/mai/1998 italiano'],
+      0,
+      'In francese il giorno precede il mese e il mese si scrive in minuscolo. In una scheda non servono frasi intere, basta il dato.',
+    ),
   ],
   [
     card('c1', 'DELF: punteggio', '4 prove da 25 punti; diploma con 50/100 e almeno 5/25 per prova.'),
@@ -1011,6 +1053,21 @@ ${PRON_SHORT}
     card('c8', 'Liaison vietata', 'Dopo et; davanti a h aspirata: les héros [lé é-RO].'),
     card('c9', 'Riformulare', "c'est-à-dire, autrement dit, en d'autres termes."),
     card('c10', 'vingt-deux', '[vẽt-DÖ]: la t si pronuncia da 21 a 29.'),
+    card(
+      'c11',
+      'DELF A1',
+      'Indicativo (verifica sul sito): CO ~20 min, CE ~30, PE ~30, PO 5-7. PE: scheda + testo di ~40 parole.',
+    ),
+    card(
+      'c12',
+      'PO A2 in 3 parti',
+      'Entretien dirigé; monologue suivi; exercice en interaction (preparazione ~10 min per le ultime due). Indicativo.',
+    ),
+    card(
+      'c13',
+      'Cartolina A1',
+      'Chère Anna [shèr a-NA], je suis à Nice... Il fait beau. Demain, nous visitons Monaco. Grosses bises [gros BIZ].',
+    ),
   ],
   [
     prac(
@@ -1037,6 +1094,16 @@ ${PRON_SHORT}
       'p5',
       'Scrivi tre connettori per aprire, opporre e concludere.',
       "D'abord / En premier lieu...; En revanche / Cependant...; Pour conclure / En somme... Nota: combinali per costruire il testo.",
+    ),
+    prac(
+      'p6',
+      'Scrivi una cartolina A1 (circa 40 parole) da una città italiana a un amico francese.',
+      'Cher Paul, je suis à Rome avec mon frère. Il fait très chaud. Nous visitons le Colisée et nous mangeons des pizzas. Demain, nous allons au musée. À bientôt, Luca. Nota: formula, luogo, tempo, attività, progetto, chiusura; présent e futur proche.',
+    ),
+    prac(
+      'p7',
+      'Compila una scheda A1 e scrivi un breve e-mail A2 su ieri sera, usando passé composé e imparfait.',
+      "Nom: BIANCHI; Prénom: Elena; Nationalité: italienne; Profession: infirmière. E-mail: Salut Marie, Hier soir, je suis allée au cinéma avec Paolo. Il pleuvait, mais nous avons vu un très bon film. Après, nous avons mangé une pizza. Et toi ? À bientôt, Elena. Nota: sfondo all'imparfait, fatti al passé composé, accordo del participio con être.",
     ),
   ],
 )

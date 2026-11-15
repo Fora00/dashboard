@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { Link, Route, Routes } from 'react-router-dom'
 import { Card } from '../../components/Card'
 import { EmptyState } from '../../components/EmptyState'
@@ -6,12 +6,17 @@ import { PageHeader } from '../../components/PageHeader'
 import { SyncCard } from '../../components/SyncCard'
 import { sync } from '../../lib/learningSync'
 import { courseMetas, loadCourse, loadedCourse, type CourseMeta } from './courses/registry'
+import { CourseLoading } from './CourseLoading'
 import { CoursePage } from './CoursePage'
 import { DiaryPage } from './DiaryPage'
 import { ModulePage } from './ModulePage'
 import { ProgressBar } from './ProgressBar'
 import { courseProgress } from './progress'
 import { useCourseState, useResume } from './store'
+import { loadAllThemes, loadedThemes, visibleThemes } from './vocab/index'
+
+// The vocabulary page is its own chunk (its words come in one more chunk per language, see vocab/index.ts).
+const VocabPage = lazy(() => import('./vocab/VocabPage'))
 
 // Course content is lazy (own chunk per course). The list shows the lightweight meta at once and
 // fills in the progress percentages as chunks arrive, one at a time while the browser is idle.
@@ -47,6 +52,37 @@ function CourseCard({ meta }: { meta: CourseMeta }) {
   )
 }
 
+function VocabCard() {
+  // Counts come from the words themselves (the four small words chunks, precached by the PWA).
+  const [themes, setThemes] = useState(loadedThemes)
+  useEffect(() => {
+    if (themes) return
+    let live = true
+    void loadAllThemes().then((t) => live && setThemes(t))
+    return () => {
+      live = false
+    }
+  }, [themes])
+  const shown = visibleThemes(themes)
+  const words = themes?.reduce((n, t) => n + t.words.length, 0)
+  return (
+    <Link to="vocabolario" className="block rounded-xl focus-visible:outline-none">
+      <Card className="flex flex-col gap-2 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800">
+        <h2 className="font-medium">
+          <span className="mr-2">🗂️</span>
+          Vocabolario
+        </h2>
+        <p className="text-sm text-slate-500 dark:text-slate-400">
+          Le stesse parole in spagnolo, francese, tedesco e russo: dizionario per temi e flashcard.
+        </p>
+        <p className="text-xs text-slate-500">
+          {shown.length} temi{words === undefined ? '' : ` · ${words} parole`}
+        </p>
+      </Card>
+    </Link>
+  )
+}
+
 function CourseList() {
   const [, setReady] = useState(0)
   useEffect(() => {
@@ -76,6 +112,7 @@ function CourseList() {
           {courseMetas.map((m) => (
             <CourseCard key={m.id} meta={m} />
           ))}
+          <VocabCard />
         </div>
       )}
     </div>
@@ -86,6 +123,15 @@ export function Learning() {
   return (
     <Routes>
       <Route index element={<CourseList />} />
+      {/* Static segment: ranks above :courseId. */}
+      <Route
+        path="vocabolario/*"
+        element={
+          <Suspense fallback={<CourseLoading />}>
+            <VocabPage />
+          </Suspense>
+        }
+      />
       <Route path=":courseId" element={<CoursePage />} />
       {/* Static segment: ranks above :moduleId, so no module can shadow it. */}
       <Route path=":courseId/diario" element={<DiaryPage />} />

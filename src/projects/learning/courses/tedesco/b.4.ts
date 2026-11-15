@@ -24,28 +24,28 @@ ${vsec('Cibo e cucina', [
   ['Quark – Topfen – Quark', 'KVARK – TO-pfën – KVARK', 'quark (formaggio fresco)'],
   ['Sahne – Obers – Rahm', 'ZA:-në – O:-bas – RA:M', 'panna'],
   ['Aprikose – Marille – Aprikose', 'a-pri-KO:-zë – ma-RI-lë – a-pri-KO:-zë', 'albicocca'],
-  ['Hähnchen – Hendl – Poulet', 'HEN-çën – HEN-dal – pu-LE', 'pollo'],
+  ['Hähnchen – Hendl – Poulet', 'HÈ:N-çën – HEN-dal – pu-LE', 'pollo'],
   ['Möhre – Karotte – Rüebli', 'MÖ:-rë – ka-RO-të – RÜ-ë-bli', 'carota'],
   ['Blumenkohl – Karfiol – Blumenkohl', 'BLU:-mën-ko:l – kar-fi-O:L – BLU:-mën-ko:l', 'cavolfiore'],
   ['Pfannkuchen – Palatschinken – Crêpe', 'PFAN-ku:-chën – pa-la-TSHIN-kën – KREP', 'frittata dolce, crêpe'],
   ['Hackfleisch – Faschiertes – Hackfleisch', 'HAK-flaish – fa-SHI:R-tës – HAK-flaish', 'carne macinata'],
-  ['Meerrettich – Kren – Meerrettich', 'ME:R-re-tiç – KREN – ME:R-re-tiç', 'rafano'],
+  ['Meerrettich – Kren – Meerrettich', 'MÉ:R-re-tiç – KREN – MÉ:R-re-tiç', 'rafano'],
   ['Eis – Eis – Glace', 'AIS – AIS – GLA-ssë', 'gelato'],
   ['Frühstück – Frühstück – Morgenessen', 'FRÜ:-shtük – FRÜ:-shtük – MOR-gën-e-ssën', 'colazione'],
 ])}
 ${vsec('Vita quotidiana', [
-  ['Fahrrad – Rad – Velo', 'FA:R-ra:t – RA:T – VE:-lo', 'bicicletta'],
-  ['Bürgersteig – Gehsteig – Trottoir', 'BÜR-ga-shtaik – GE:-shtaik – tro-TUAR', 'marciapiede'],
+  ['Fahrrad – Rad – Velo', 'FA:R-ra:t – RA:T – VÉ:-lo', 'bicicletta'],
+  ['Bürgersteig – Gehsteig – Trottoir', 'BÜR-ga-shtaik – GÉ:-shtaik – tro-TUAR', 'marciapiede'],
   ['Fahrkarte – Fahrkarte – Billett', 'FA:R-kar-të – FA:R-kar-të – bil-JET', 'biglietto'],
   ['Tüte – Sackerl – Säckli', 'TÜ:-të – ZA-kal – ZEK-li', 'sacchetto'],
   ['Handy – Handy – Natel', 'HEN-di – HEN-di – NA:-tel', 'cellulare'],
-  ['Januar – Jänner – Januar', 'JA-nu-ar – JE-na – JA-nu-ar', 'gennaio'],
+  ['Januar – Jänner – Januar', 'JA-nu-a:r – JE-na – JA-nu-a:r', 'gennaio'],
   ['parken – parken – parkieren', 'PAR-kën – PAR-kën – par-KI:-rën', 'parcheggiare'],
   ['Treppe – Stiege – Treppe', 'TRE-pë – SHTI:-gë – TRE-pë', 'scala'],
   ['Stuhl – Sessel – Stuhl', 'SHTU:L – ZE-ssël – SHTU:L', 'sedia'],
   ['Krankenhaus – Spital – Spital', 'KRAN-kën-haus – shpi-TA:L – shpi-TA:L', 'ospedale'],
   ['Arztpraxis – Ordination – Praxis', 'ARTST-pra-ksis – or-di-na-TSIO:N – PRA-ksis', 'studio medico'],
-  ['Metzger – Fleischhauer – Metzger', 'MET-tsga – FLAISH-hau-a – MET-tsga', 'macellaio'],
+  ['Metzger – Fleischhauer – Metzger', 'METS-ga – FLAISH-hau-a – METS-ga', 'macellaio'],
   ['Abitur – Matura – Matura', 'a-bi-TU:R – ma-TU:-ra – ma-TU:-ra', 'maturità'],
   ['Bahnsteig – Bahnsteig – Perron', 'BA:N-shtaik – BA:N-shtaik – pe-RON', 'binario (banchina)'],
   ['Hausmeister – Hausmeister – Abwart', 'HAUS-mai-sta – HAUS-mai-sta – AP-vart', 'portinaio, custode'],
@@ -76,7 +76,7 @@ ${vsec('Differenze di suono', [
   ['König (DE) – König (AT)', 'KÖ:-niç – KÖ:-nik', '-ig finale: [iç] al Nord, [ik] al Sud e in Austria'],
   ['Chemie (DE) – Chemie (AT / Sud)', 'çe-MI: – ke-MI:', 'ch + e/i iniziale: [ç] al Nord, [k] al Sud'],
   ['China (DE) – China (AT / Sud)', 'ÇI:-na – KI:-na', 'come sopra'],
-  ['Kaffee (DE) – Kaffee (AT)', 'KA-fe – ka-FE:', "accento sull'ultima sillaba in Austria"],
+  ['Kaffee (DE) – Kaffee (AT)', 'KA-fe – ka-FÉ:', "accento sull'ultima sillaba in Austria"],
   ['ich (DE) – ich (CH)', 'iç – ich', 'in Svizzera il ch è sempre il suono raschiato di «Bach»'],
 ])}
 <p>Austriaci e svizzeri pronunciano la <b>r</b> con la punta della lingua: la tua r italiana arrotata va benissimo là (e in Baviera); nel resto della Germania prevale la r gutturale.</p>
@@ -168,7 +168,7 @@ ${vsec('Differenze di suono', [
       'Svizzera: standard per lo scritto, dialetti alemanni per il parlato.',
     ),
     card('c2', 'Strasse, Gruss', 'Svizzera e Liechtenstein: niente ß, sempre ss.'),
-    card('c3', 'Velo [VE:-lo]', 'Bicicletta in Svizzera. Austria e Germania: Fahrrad.'),
+    card('c3', 'Velo [VÉ:-lo]', 'Bicicletta in Svizzera. Austria e Germania: Fahrrad.'),
     card(
       'c4',
       'Paradeiser [pa-ra-DAI-za]',
@@ -221,7 +221,7 @@ ${vsec('Falsi amici: nomi (1)', [
   ['der Mist', 'MIST', 'letame; sciocchezze (nebbia = Nebel)'],
   ['der Rat', 'RA:T', 'consiglio (topo = Ratte)'],
   ['der Chef', 'SHEF', 'capo (cuoco = Koch [KOCH])'],
-  ['das Gymnasium', 'gim-NA:-zi-um', 'liceo (palestra = Turnhalle)'],
+  ['das Gymnasium', 'güm-NA:-zi-um', 'liceo (palestra = Turnhalle)'],
   ['der Brief', 'BRI:F', 'lettera (breve = kurz)'],
   ['der Rock', 'ROK', 'gonna (musica rock = Rockmusik)'],
   ['das Bad', 'BA:T', 'bagno (la stanza = Badezimmer)'],
@@ -247,7 +247,7 @@ ${vsec('Falsi amici: nomi (2)', [
   ['die Tablette', 'ta-BLE-të', 'compressa (tavoletta = Tafel)'],
   ['die Kommode', 'ko-MO:-dë', 'cassettiera (comodo = bequem)'],
   ['der Sekt', 'ZEKT', 'spumante (setta = Sekte)'],
-  ['der See', 'ZE:', 'lago (mare = das Meer)'],
+  ['der See', 'ZÉ:', 'lago (mare = das Meer)'],
   ['die Lage', 'LA:-gë', 'situazione, posizione (lago = See)'],
 ])}
 ${vsec('Falsi amici: nomi (3)', [
@@ -262,8 +262,8 @@ ${vsec('Falsi amici: nomi (3)', [
   ['die Praxis', 'PRA-ksis', 'studio medico; pratica'],
   ['die Kur', 'KU:R', 'cura termale'],
   ['das Mal', 'MA:L', 'volta (male = schlecht, Übel)'],
-  ['das Mehl', 'ME:L', 'farina (miele = Honig)'],
-  ['die Lehre', 'LE:-rë', 'apprendistato; dottrina (lezione = Unterricht)'],
+  ['das Mehl', 'MÉ:L', 'farina (miele = Honig)'],
+  ['die Lehre', 'LÉ:-rë', 'apprendistato; dottrina (lezione = Unterricht)'],
   ['der Fall', 'FAL', 'caso; caduta (fallo = Fehler)'],
   ['das Zelt', 'TSELT', 'tenda (zelo = Eifer)'],
   ['der Zoll', 'TSOL', 'dogana; pollice (zolla = Scholle)'],
@@ -297,7 +297,7 @@ ${vsec('Stessa cosa, genere diverso', [
   ['das Fenster', 'FEN-sta', 'la finestra'],
   ['das Jahr', 'JA:R', "l'anno (m.)"],
   ['der Apfel', 'A-pfël', 'la mela'],
-  ['das Mädchen', 'ME:T-çën', 'la ragazza'],
+  ['das Mädchen', 'MÈ:T-çën', 'la ragazza'],
 ])}
 <h3>Interferenze: strutture da evitare</h3>
 ${vsec("Dall'italiano al tedesco", [
@@ -310,7 +310,7 @@ ${vsec("Dall'italiano al tedesco", [
   ['Mir ist warm / kalt.', 'mi:r ist VARM / KALT', 'Ho caldo / freddo. (dativo)'],
   ['Es gibt drei Bücher.', 'es GIPT drai BÜ:-ça', 'Ci sono tre libri.'],
   ['Das gefällt mir. / Ich mag das.', 'das gë-FELT mi:r / iç MA:K das', 'Mi piace.'],
-  ['Du fehlst mir.', 'du FE:LST mi:r', 'Mi manchi. (il soggetto è «tu»)'],
+  ['Du fehlst mir.', 'du FÉ:LST mi:r', 'Mi manchi. (il soggetto è «tu»)'],
   ['Ich bin einverstanden.', 'iç bin AIN-fer-shtan-dën', "Sono d'accordo."],
   ['Man braucht zwei Stunden.', 'man BRAUCHT tsvai SHTUN-dën', 'Ci vogliono due ore.'],
   ['Was machst du beruflich?', 'vas MACHST du bë-RU:F-liç', 'Che lavoro fai?'],
@@ -331,9 +331,9 @@ ${vsec('Composti frequenti', [
   ['der Zahnarzt', 'TSA:N-artst', 'dentista'],
   ['der Fernseher', 'FERN-ze:-a', 'televisore'],
   ['der Schreibtisch', 'SHRAIP-tish', 'scrivania'],
-  ['der Regenschirm', 'RE:-gën-shirm', 'ombrello'],
+  ['der Regenschirm', 'RÉ:-gën-shirm', 'ombrello'],
   ['der Geburtstag', 'gë-BURTS-ta:k', 'compleanno'],
-  ['die Krankenversicherung', 'KRAN-kën-fer-ZI-çë-rung', 'assicurazione sanitaria'],
+  ['die Krankenversicherung', 'kran-kën-fer-ZI-çë-rung', 'assicurazione sanitaria'],
 ])}
 <h3>Coppie minime di pronuncia e ortografia</h3>
 ${vsec('Attenzione a una lettera', [

@@ -18,7 +18,7 @@ export const deCasi = mod(
 <tr><td>plurale</td><td>die / –</td><td>die / –</td><td>den / – (+ n)</td></tr></table>
 <p>Anche <i>mein, dein, kein</i> seguono ein-: <i>meinem, meiner, meinen</i>. Al dativo plurale il nome prende <b>-n</b>: <i>mit den Kindern</i> (tranne i plurali in -n o -s). Esempi: <i>Ich gebe dem Kind einen Apfel. Ich schreibe der Lehrerin eine E-Mail.</i></p>
 <h3>Preposizioni fisse</h3>
-<ul><li><b>Accusativo</b>: <b>durch</b> [DURÇ] attraverso, <b>für</b> [FÜ:R] per, <b>gegen</b> [GÉ:-gën] contro, <b>ohne</b> [O:-në] senza, <b>um</b> [UM] intorno a (anche l'ora: um acht). Aiuto: <i>Ich kaufe das Buch für dich. Ohne den Hund gehe ich nicht.</i></li><li><b>Dativo</b>: <b>aus</b> [AUS] da (origine), <b>bei</b> [BAI] presso, <b>mit</b> [MIT] con, <b>nach</b> [NA:CH] dopo, verso (città, paesi), <b>seit</b> [ZAIT] da, <b>von</b> [FON] da, di, <b>zu</b> [TSU:] da, a (persone, luoghi). Aiuto: «aus-bei-mit-nach-seit-von-zu».</li></ul>
+<ul><li><b>Accusativo</b>: <b>durch</b> [DURÇ] attraverso, <b>für</b> [FÜ:R] per, <b>gegen</b> [GÉ:-gën] contro, <b>ohne</b> [O:-në] senza, <b>um</b> [UM] intorno a (anche l'ora: um acht); anche <b>bis</b> (fino a) e <b>entlang</b> (lungo). Aiuto: <i>Ich kaufe das Buch für dich. Ohne den Hund gehe ich nicht.</i></li><li><b>Dativo</b>: <b>aus</b> [AUS] da (origine), <b>bei</b> [BAI] presso, <b>mit</b> [MIT] con, <b>nach</b> [NA:CH] dopo, verso (città, paesi), <b>seit</b> [ZAIT] da, <b>von</b> [FON] da, di, <b>zu</b> [TSU:] da, a (persone, luoghi); anche <b>außer</b> (eccetto: außer mir), <b>gegenüber</b> (di fronte a: gegenüber dem Bahnhof), <b>ab</b> (a partire da: ab Montag). Aiuto: «aus-bei-mit-nach-seit-von-zu» (la lista classica è solo parziale).</li></ul>
 <p>Contrazioni: <i>im</i> (in dem), <i>am</i> (an dem), <i>zum</i> (zu dem), <i>zur</i> (zu der), <i>vom, beim, ins</i> (in das), <i>ans</i>. Scelta tra <b>nach, zu, in</b> per «a»: <i>nach Berlin / nach Italien / nach Hause</i> (città e paesi senza articolo); <i>zum Arzt / zu Peter / zur Schule</i> (persone, istituzioni); <i>in die Schweiz / in die Stadt</i> (paesi con articolo, luoghi chiusi). Residenza: <i>zu Hause</i> (a casa), <i>bei Peter</i> (da Peter), <i>in der Stadt</i>.</p>
 <h3>Wechselpräpositionen: wo o wohin?</h3>
 <p><b>an, auf, hinter, in, neben, über, unter, vor, zwischen</b> reggono il <b>dativo</b> per il luogo fermo (<i>Wo?</i>) e l'<b>accusativo</b> per il movimento verso il luogo (<i>Wohin?</i>).</p>
@@ -30,7 +30,7 @@ export const deCasi = mod(
 <tr><td>Das Bild hängt an der Wand.</td><td>Ich hänge das Bild an die Wand.</td></tr></table>
 <p>I verbi vanno in coppia: <b>stehen / stellen</b> (stare in piedi / mettere in piedi), <b>liegen / legen</b>, <b>sitzen / setzen</b>, <b>hängen / hängen</b> (intransitivo forte: hing; transitivo debole: hängte). Pronuncia: Stuhl [SHTU:L], Kühlschrank [KÜ:L-shrank], Wand [VANT].</p>
 <h3>Verbi con il dativo</h3>
-<p>Alcuni verbi vogliono solo il dativo: <b>helfen</b> (<i>Ich helfe dir</i>), <b>danken</b> (<i>Ich danke Ihnen</i>), <b>gehören</b> (<i>Das Buch gehört mir</i>), <b>gefallen</b> (<i>Der Film gefällt mir</i> = mi piace, come «piace a me»), <b>schmecken</b> (<i>Es schmeckt mir</i>), <b>passen</b>, <b>fehlen</b>, <b>antworten</b>, <b>zuhören</b>, <b>gratulieren</b>. Trappola: in italiano «aiutare, ringraziare, rispondere» sono transitivi; in tedesco helfen, danken, antworten → dativo. Al contrario <b>fragen, besuchen, kennen, anrufen</b> vogliono l'accusativo: <i>Ich frage dich. Ich rufe ihn an.</i> Con geben, zeigen, schenken, schicken, erklären c'è anche un accusativo: <i>Ich zeige dir die Stadt.</i></p>
+<p>Alcuni verbi vogliono solo il dativo: <b>helfen</b> (<i>Ich helfe dir</i>), <b>danken</b> (<i>Ich danke Ihnen</i>), <b>gehören</b> (<i>Das Buch gehört mir</i>), <b>gefallen</b> (<i>Der Film gefällt mir</i> = mi piace, come «piace a me»), <b>schmecken</b> (<i>Es schmeckt mir</i>), <b>passen</b>, <b>fehlen</b>, <b>antworten</b>, <b>zuhören</b>, <b>gratulieren</b>. Trappola: in italiano «aiutare, ringraziare» sono transitivi; in tedesco helfen, danken → dativo (e antworten: «rispondere a qualcuno» ha la preposizione a in italiano, in tedesco solo il dativo: Ich antworte dir). Al contrario <b>fragen, besuchen, kennen</b> vogliono l'accusativo (anche <b>anrufen</b>, mentre in italiano «telefonare a qualcuno» vuole a): <i>Ich frage dich. Ich rufe ihn an.</i> Con geben, zeigen, schenken, schicken, erklären c'è anche un accusativo: <i>Ich zeige dir die Stadt.</i></p>
 <h3>I pronomi personali nei tre casi</h3>
 <table><tr><th>Persona</th><th>Nom.</th><th>Akk.</th><th>Dat.</th></tr>
 <tr><td>io</td><td>ich</td><td>mich [MIÇ]</td><td>mir [MI:R]</td></tr>
@@ -42,6 +42,8 @@ export const deCasi = mod(
 <p>Dopo le preposizioni: <i>mit mir, für dich, ohne ihn, zu ihr, bei uns</i>.</p>
 <h3>L'ordine di accusativo e dativo</h3>
 <ul><li>due nomi: prima il dativo (persona), poi l'accusativo (cosa): <i>Ich gebe dem Mann das Buch.</i></li><li>un pronome e un nome: il pronome viene sempre prima: <i>Ich gebe ihm das Buch. Ich gebe es dem Mann.</i></li><li>due pronomi: prima l'accusativo, poi il dativo: <i>Ich gebe es ihm.</i> (diverso dall'italiano «glielo do»)</li></ul>
+<h3>Possesso: Annas Buch e das Buch von Anna</h3>
+<p>Per «il libro di Anna» il tedesco non ha una preposizione come l'italiano «di»: con i nomi propri si mette una <b>-s</b> senza apostrofo <b>prima</b> del nome: <i>Annas Buch</i> [A-nas BU:CH], <i>Peters Auto</i> [PÉ:-tas AU-to:], <i>Marcos Handy</i> [MAR-kos HEN-di]. Dopo s, ß, x, z si usa l'apostrofo: <i>Max' Auto, Hans' Haus</i>. Per le persone e le cose con articolo si usa <b>von + dativo</b>: <i>das Auto von meinem Bruder</i> [das AU-to: fon MAI-nëm BRU:-da], <i>das Buch von der Lehrerin</i>, <i>ein Freund von mir</i> [ain FROINT fon MI:R]. Il genitivo (<i>der Hund meiner Schwester</i>) è la forma scritta e più formale: si studia nel modulo sulle frasi relative e il Genitiv (B1). Trappola: mai «Anna's Buch» (apostrofo inglese) né «das Buch Anna».</p>
 <div class="say"><b>Cosa dire.</b> «Kannst du mir helfen? Ich gebe dir das Buch morgen. Es gehört meiner Schwester, sie wohnt bei mir.»</div>`,
   [
     q(
@@ -103,7 +105,7 @@ export const deCasi = mod(
       `Quale verbo vuole il dativo?`,
       [`helfen`, `fragen`, `besuchen`, `kennen`],
       0,
-      `Helfen, come danken e antworten, vuole il dativo. Fragen, besuchen e kennen vogliono l'accusativo come in italiano.`,
+      `Helfen, come danken e antworten, vuole il dativo. Fragen, besuchen e kennen vogliono l'accusativo come in italiano; anche anrufen (accusativo), mentre in italiano «telefonare a qualcuno» vuole la preposizione a.`,
     ),
     q(
       'q9',
@@ -119,6 +121,20 @@ export const deCasi = mod(
       0,
       `Eu si legge oi e dopo il dittongo la ch è debole (ç). L'italiano legge eu come e-u e ch come k.`,
     ),
+    q(
+      'q11',
+      `Come dici «il libro di Anna»?`,
+      [`Annas Buch`, `Anna's Buch`, `Anna Buch`, `Annas das Buch`],
+      0,
+      `Con un nome proprio si usa -s senza apostrofo davanti al nome: Annas Buch. L'apostrofo è un calco dall'inglese; Anna Buch non marca il possesso.`,
+    ),
+    q(
+      'q12',
+      `Come dici «l'auto di mio fratello» nel parlato?`,
+      [`das Auto von meinem Bruder`, `das Auto von mein Bruder`, `das Auto von meinen Bruder`, `das Auto mein Bruder`],
+      0,
+      `Von vuole sempre il dativo: Bruder è maschile, quindi meinem (come dem). Senza von il possesso non è espresso.`,
+    ),
   ],
   [
     card(
@@ -133,8 +149,8 @@ export const deCasi = mod(
     ),
     card(
       'c3',
-      `Dativo: aus, bei, mit, nach, seit, von, zu`,
-      `Preposizioni con il dativo. Mnemonico: aus-bei-mit-nach-seit-von-zu.`,
+      `Dativo: aus, bei, mit, nach, seit, von, zu (+ außer, gegenüber, ab)`,
+      `Preposizioni con il dativo. Mnemonico: aus-bei-mit-nach-seit-von-zu; poi anche außer, gegenüber, ab.`,
     ),
     card(
       'c4',
@@ -177,6 +193,11 @@ export const deCasi = mod(
       `Contrazioni`,
       `im = in dem, am = an dem, zum = zu dem, zur = zu der, beim = bei dem, vom = von dem, ins = in das.`,
     ),
+    card(
+      'c13',
+      `Annas Buch / das Buch von Anna [A-nas BU:CH / das BU:CH fon A-na]`,
+      `il libro di Anna. Nome proprio: -s senza apostrofo; con articolo: von + dativo (<i>das Auto von meinem Bruder</i>).`,
+    ),
   ],
   [
     prac(
@@ -204,6 +225,11 @@ export const deCasi = mod(
       `Completa con la preposizione e il caso: «Ich fahre ___ Bus ___ Arbeit. Wir gehen ___ Arzt.»`,
       `Ich fahre mit dem Bus zur Arbeit. Wir gehen zum Arzt. Nota: mit e zu vogliono il dativo; zur = zu der, zum = zu dem.`,
     ),
+    prac(
+      'p6',
+      `Traduci: «Il telefono di Marco è nuovo. Questa è la borsa di mia madre.»`,
+      `Marcos Handy ist neu. Das ist die Tasche von meiner Mutter. Nota: Marcos senza apostrofo; von + dativo femminile (meiner).`,
+    ),
   ],
 )
 
@@ -217,7 +243,7 @@ export const dePerfekt = mod(
 <h3>La struttura</h3>
 <p><i>Ich habe gestern Pizza gegessen. Wir sind nach Rom gefahren.</i> L'ausiliare è coniugato in seconda posizione; il participio va alla fine. Domanda: <i>Hast du schon gegessen?</i> Negazione: <i>Ich habe nicht gearbeitet. Ich habe keinen Film gesehen.</i></p>
 <h3>Il participio II</h3>
-<ul><li><b>Verbi deboli</b>: ge- + radice + -t: <i>machen → gemacht</i> [gë-MACHT], <i>kaufen → gekauft</i>, <i>spielen → gespielt</i>, <i>wohnen → gewohnt</i>, <i>lernen → gelernt</i>; con radice in t/d: <i>arbeiten → gearbeitet</i> [gë-AR-bai-tët].</li><li><b>Verbi forti</b>: ge- + radice (spesso con cambio di vocale) + -en: <i>gehen → gegangen</i> [gë-GAN-gën], <i>sehen → gesehen</i> [gë-ZÉ:-ën], <i>trinken → getrunken</i> [gë-TRUN-kën], <i>schreiben → geschrieben</i> [gë-SHRI:-bën].</li><li><b>Misti</b>: cambio di radice ma desinenza -t: <i>bringen → gebracht</i> [gë-BRACHT], <i>denken → gedacht</i>, <i>wissen → gewusst</i>, <i>kennen → gekannt</i>.</li></ul>
+<ul><li><b>Verbi deboli</b>: ge- + radice + -t: <i>machen → gemacht</i> [gë-MACHT], <i>kaufen → gekauft</i>, <i>spielen → gespielt</i>, <i>wohnen → gewohnt</i>, <i>lernen → gelernt</i>; con radice in t/d: <i>arbeiten → gearbeitet</i> [gë-AR-bai-tët].</li><li><b>Verbi forti</b>: ge- + radice (spesso con cambio di vocale) + -en: <i>gehen → gegangen</i> [gë-GANG-ën], <i>sehen → gesehen</i> [gë-ZÉ:-ën], <i>trinken → getrunken</i> [gë-TRUN-kën], <i>schreiben → geschrieben</i> [gë-SHRI:-bën].</li><li><b>Misti</b>: cambio di radice ma desinenza -t: <i>bringen → gebracht</i> [gë-BRACHT], <i>denken → gedacht</i>, <i>wissen → gewusst</i>, <i>kennen → gekannt</i>.</li></ul>
 <table><tr><th>Infinito</th><th>Partizip II</th><th>Ausiliare</th></tr>
 <tr><td>essen / trinken</td><td>gegessen [gë-GE-ssën] / getrunken</td><td>haben</td></tr>
 <tr><td>sprechen / nehmen</td><td>gesprochen [gë-SHPRO-chën] / genommen [gë-NO-mën]</td><td>haben</td></tr>
@@ -228,12 +254,12 @@ export const dePerfekt = mod(
 <h3>Senza ge- e verbi separabili</h3>
 <p><b>Nessun ge-</b> con i prefissi inseparabili (<i>be-, emp-, ent-, er-, ge-, ver-, zer-</i>) e con i verbi in <b>-ieren</b>: <i>besuchen → besucht, verstehen → verstanden, bekommen → bekommen, erklären → erklärt, vergessen → vergessen, studieren → studiert, telefonieren → telefoniert, passieren → passiert</i>. Nei <b>separabili</b> il ge- si inserisce tra prefisso e radice: <i>aufstehen → aufgestanden, einkaufen → eingekauft, anrufen → angerufen, mitkommen → mitgekommen, ankommen → angekommen, fernsehen → ferngesehen</i>. Frase: <i>Ich bin um sieben aufgestanden. Hast du ihn angerufen?</i></p>
 <h3>Haben o sein?</h3>
-<p>Con <b>sein</b>: verbi di <b>cambio di luogo</b> (gehen, kommen, fahren, fliegen, laufen, reisen, ankommen, abfahren, aufstehen) e di <b>cambio di stato</b> (einschlafen, aufwachen, werden, sterben), più <b>sein, bleiben, passieren</b>. Tutti gli altri con <b>haben</b>, compresi i transitivi di movimento con oggetto: <i>Ich bin nach Rom gefahren</i> ma <i>Ich habe das Auto gefahren</i>.</p>
+<p>Con <b>sein</b>: verbi di <b>cambio di luogo</b> (gehen, kommen, fahren, fliegen, laufen, reisen, ankommen, abfahren, aufstehen) e di <b>cambio di stato</b> (einschlafen, aufwachen, werden, sterben), più <b>sein, bleiben, passieren</b> e pochi altri senza movimento evidente: <b>geschehen, gelingen, misslingen, begegnen, folgen</b> (<i>Es ist gelungen</i>, <i>Ich bin ihm begegnet</i>, <i>Ich bin ihr gefolgt</i>). <b>Schwimmen, tanzen, segeln</b>: sein se c'è una meta o una direzione (<i>Ich bin ans Ufer geschwommen</i>), haben se è l'attività in sé (<i>Ich habe zwei Stunden geschwommen</i>). Tutti gli altri con <b>haben</b>, compresi i transitivi di movimento con oggetto: <i>Ich bin nach Rom gefahren</i> ma <i>Ich habe das Auto gefahren</i>.</p>
 <p>Differenze con l'italiano: «ho dormito» = <i>ich habe geschlafen</i>; «sono stato in Germania» = <i>ich bin in Deutschland gewesen</i> (o <i>war ...</i>); i riflessivi italiani con «essere» vogliono <b>haben</b> in tedesco: «mi sono lavato» = <i>ich habe mich gewaschen</i>. Nel sud (Baviera, Austria, Svizzera) stehen, sitzen, liegen vogliono <i>sein</i> (<i>ich bin gestanden</i>), nel nord <i>haben</i>.</p>
 <h3>Uso e parole del tempo</h3>
-<p>Il Perfekt si usa nel parlato e nei messaggi per ogni fatto passato, anche se italiano userebbe l'imperfetto. Nello scritto narrativo compare il Präteritum (modulo successivo). Segnali: <b>gestern</b> [GES-tern], <b>vorgestern</b> [FO:R-ges-tern], <b>letzte Woche</b> [LETS-të VO-chë], <b>am Wochenende</b>, <b>schon</b> [SHO:N] (già), <b>noch nicht</b> (non ancora), <b>gerade</b> (appena). <i>Ich habe schon gegessen. Er ist noch nicht gekommen.</i> L'ordine con un'altra espressione in prima posizione: <i>Gestern habe ich einen Film gesehen</i> (V2).</p>
+<p>Il Perfekt si usa nel parlato e nei messaggi per ogni fatto passato, anche se italiano userebbe l'imperfetto. Nello scritto narrativo compare il Präteritum (modulo successivo). Segnali: <b>gestern</b> [GES-tërn], <b>vorgestern</b> [FO:R-gës-tërn], <b>letzte Woche</b> [LETS-të VO-chë], <b>am Wochenende</b>, <b>schon</b> [SHO:N] (già), <b>noch nicht</b> (non ancora), <b>gerade</b> (appena). <i>Ich habe schon gegessen. Er ist noch nicht gekommen.</i> L'ordine con un'altra espressione in prima posizione: <i>Gestern habe ich einen Film gesehen</i> (V2).</p>
 <h3>Pronuncia</h3>
-<p>Il prefisso <b>ge-</b> non è accentato e si legge debole: <i>gemacht</i> [gë-MACHT]. Dopo a, la ch di <i>gemacht</i> è raschiata. Il participio <i>gearbeitet</i> ha due vocali debole-forte. L'accento cade sulla radice.</p>
+<p>Il prefisso <b>ge-</b> non è accentato e si legge debole: <i>gemacht</i> [gë-MACHT]. Dopo a, la ch di <i>gemacht</i> è raschiata. Nel participio <i>gearbeitet</i> [gë-AR-bai-tët] il ge- è debole e l'accento cade sulla radice AR-. L'accento cade sempre sulla radice.</p>
 <div class="say"><b>Cosa dire.</b> «Gestern bin ich um sieben aufgestanden. Ich habe Kaffee getrunken und bin zur Arbeit gefahren. Abends habe ich einen Film gesehen.»</div>`,
   [
     q(
@@ -400,30 +426,30 @@ export const dePraeteritum = mod(
 <tr><td>ihr</td><td>wart [VA:RT]</td><td>hattet [HA-tët]</td><td>konntet</td></tr></table>
 <p>Gli altri modali: <i>musste</i> [MUS-të], <i>wollte</i> [VOL-të], <i>durfte</i> [DURF-të], <i>sollte</i> [ZOL-të], <i>mochte</i> [MOCH-të]. Senza umlaut (diversamente dal presente plurale). Frasi: <i>Gestern war ich krank. Ich hatte Kopfschmerzen. Ich konnte nicht kommen. Wir mussten arbeiten.</i> Ich e er hanno la stessa forma, senza desinenza.</p>
 <h3>Verbi deboli e forti</h3>
-<p><b>Deboli</b>: radice + <b>-te</b> (con e di appoggio -ete): <i>machen → machte, machtest, machte, machten, machtet, machten</i>; <i>arbeiten → arbeitete</i>. <b>Forti</b>: la radice cambia vocale e ich/er non hanno desinenza: <i>gehen → ging</i>: ich ging, du gingst, er ging, wir gingen, ihr gingt, sie gingen. Dei forti, i <b>misti</b> (bringen, denken, wissen, kennen) prendono cambio di radice e -te. Un Präteritum non cambia la desinenza di ich = er.</p>
+<p><b>Deboli</b>: radice + <b>-te</b> (con e di appoggio -ete): <i>machen → machte, machtest, machte, machten, machtet, machten</i>; <i>arbeiten → arbeitete</i>. <b>Forti</b>: la radice cambia vocale e ich/er non hanno desinenza: <i>gehen → ging</i>: ich ging, du gingst, er ging, wir gingen, ihr gingt, sie gingen. I <b>misti</b> (bringen, denken, wissen, kennen) non sono né forti né deboli: cambiano la radice come i forti ma prendono -te come i deboli (brachte, dachte, wusste, kannte). Nei forti e nei misti ich e er hanno la stessa forma (ich ging, er ging).</p>
 <h3>I 40 verbi più comuni</h3>
 <table><tr><th>Infinito</th><th>Präteritum</th><th>Partizip II</th></tr>
 <tr><td>sein / haben / werden</td><td>war [VA:R] / hatte / wurde [VUR-dë]</td><td>gewesen / gehabt / geworden (s)</td></tr>
 <tr><td>gehen / kommen</td><td>ging [GING] / kam [KA:M]</td><td>gegangen (s) / gekommen (s)</td></tr>
 <tr><td>sehen / geben</td><td>sah [ZA:] / gab [GA:P]</td><td>gesehen / gegeben</td></tr>
-<tr><td>nehmen / essen</td><td>nahm [NA:M] / aß [A:SS]</td><td>genommen / gegessen</td></tr>
+<tr><td>nehmen / essen</td><td>nahm [NA:M] / aß [A:S]</td><td>genommen / gegessen</td></tr>
 <tr><td>trinken / sprechen</td><td>trank [TRANK] / sprach [SHPRA:CH]</td><td>getrunken / gesprochen</td></tr>
 <tr><td>schreiben / lesen</td><td>schrieb [SHRI:P] / las [LA:S]</td><td>geschrieben / gelesen</td></tr>
 <tr><td>finden / bleiben</td><td>fand [FANT] / blieb [BLI:P]</td><td>gefunden / geblieben (s)</td></tr>
 <tr><td>fahren / laufen</td><td>fuhr [FU:R] / lief [LI:F]</td><td>gefahren (s) / gelaufen (s)</td></tr>
 <tr><td>schlafen / stehen</td><td>schlief [SHLI:F] / stand [SHTANT]</td><td>geschlafen / gestanden</td></tr>
-<tr><td>sitzen / liegen</td><td>saß [ZA:SS] / lag [LA:K]</td><td>gesessen / gelegen</td></tr>
+<tr><td>sitzen / liegen</td><td>saß [ZA:S] / lag [LA:K]</td><td>gesessen / gelegen</td></tr>
 <tr><td>helfen / treffen</td><td>half [HALF] / traf [TRA:F]</td><td>geholfen / getroffen</td></tr>
 <tr><td>bringen / denken</td><td>brachte [BRACH-të] / dachte [DACH-të]</td><td>gebracht / gedacht</td></tr>
 <tr><td>wissen / kennen</td><td>wusste [VUS-të] / kannte [KAN-të]</td><td>gewusst / gekannt</td></tr>
-<tr><td>heißen / rufen</td><td>hieß [HI:SS] / rief [RI:F]</td><td>geheißen / gerufen</td></tr>
+<tr><td>heißen / rufen</td><td>hieß [HI:S] / rief [RI:F]</td><td>geheißen / gerufen</td></tr>
 <tr><td>anfangen / beginnen</td><td>fing an [FING AN] / begann [bë-GAN]</td><td>angefangen / begonnen</td></tr>
-<tr><td>verstehen / vergessen</td><td>verstand / vergaß [fer-GA:SS]</td><td>verstanden / vergessen</td></tr>
+<tr><td>verstehen / vergessen</td><td>verstand / vergaß [fer-GA:S]</td><td>verstanden / vergessen</td></tr>
 <tr><td>bekommen / tun</td><td>bekam [bë-KA:M] / tat [TA:T]</td><td>bekommen / getan</td></tr>
-<tr><td>schwimmen / fliegen</td><td>schwamm [SHVAM] / flog [FLO:K]</td><td>geschwommen / geflogen (s)</td></tr>
-<tr><td>ziehen / gewinnen</td><td>zog [TSO:K] / gewann [gë-VAN]</td><td>gezogen / gewonnen</td></tr>
+<tr><td>schwimmen / fliegen</td><td>schwamm [SHVAM] / flog [FLO:K]</td><td>geschwommen (s/h) / geflogen (s)</td></tr>
+<tr><td>ziehen / gewinnen</td><td>zog [TSO:K] / gewann [gë-VAN]</td><td>gezogen (s se «traslocare») / gewonnen</td></tr>
 <tr><td>verlieren</td><td>verlor [fer-LO:R]</td><td>verloren</td></tr></table>
-<p>(s) = ausiliare sein nel Perfekt. Pronuncia: sah, gab, nahm sono vocale lunga; saß con ß dopo vocale lunga. Dall'italiano: «ero» e «ho avuto» tradotti da war e hatte; «potevo» da konnte (non könnte, che è ipotetico).</p>
+<p>(s) = ausiliare sein nel Perfekt; (s/h) = sein con una meta o un cambio di luogo, haben per l'attività in sé; ziehen vuole sein nel senso di «traslocare». Pronuncia: sah, gab, nahm sono vocale lunga; saß con ß dopo vocale lunga. Dall'italiano: «ero» e «ho avuto» tradotti da war e hatte; «potevo» da konnte (non könnte, che è ipotetico).</p>
 <h3>Scritto o parlato?</h3>
 <p>Il Präteritum narrativo (<i>Er ging nach Hause, nahm ein Buch und las bis spät</i>) è tipico di romanzi, giornali, fiabe. Nel <b>parlato</b> si preferisce il Perfekt, ma si dice sempre <i>ich war, ich hatte, ich musste, ich konnte</i>. Nel nord Germania il Präteritum parlato è più frequente; in Svizzera e al sud è raro fuori da sein, haben e modali. Un solo tempo tedesco corrisponde sia a «andò» sia a «andava»: <i>Als ich klein war, spielte ich oft Fußball</i> (imperfetto); <i>Dann ging er</i> (passato remoto).</p>
 <div class="say"><b>Cosa dire.</b> «Gestern war ich krank und konnte nicht arbeiten. Ich blieb im Bett und las ein Buch.»</div>`,
@@ -534,7 +560,7 @@ export const dePraeteritum = mod(
       `bringen: brachte, gebracht; denken: dachte, gedacht; wissen: wusste, gewusst; kennen: kannte, gekannt.`,
     ),
     card('c6', `gehen – ging – gegangen`, `sein-verbo. Ich ging nach Hause. Ich bin nach Hause gegangen.`),
-    card('c7', `essen – aß – gegessen`, `ß dopo vocale lunga: aß [A:SS]. Part. II gegessen.`),
+    card('c7', `essen – aß – gegessen`, `ß dopo vocale lunga: aß [A:S]. Part. II gegessen.`),
     card('c8', `fahren – fuhr – gefahren`, `Con sein per il movimento: Ich bin gefahren. Fuhr [FU:R].`),
     card('c9', `sprechen – sprach – gesprochen`, `Sprach [SHPRA:CH] con ch raschiata.`),
     card(

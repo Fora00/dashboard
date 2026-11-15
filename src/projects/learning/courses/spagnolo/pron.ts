@@ -1,3 +1,5 @@
+import { vtable } from '../vocabTable'
+
 // Legend of the Italian-based pronunciation notation used by ALL the spagnolo.* modules (A and B halves).
 // The reference is the es-pron lesson in spagnolo.a.ts: keep the two in sync.
 // Full version (vocabulary, dialogues, variants) and a one-line version (grammar modules).
@@ -12,8 +14,6 @@ export const PRON_FULL = `<p><b>Come leggere le trascrizioni [ ]</b> (niente IPA
 
 export const PRON_SHORT = `<p><i>Trascrizioni [ ]: sillaba accentata in MAIUSCOLO; th = «think» (America: s); h = jota raschiata (mai muta); ss = s sorda (anche tra vocali); dh = d morbida («this»); gn = ñ; gh = g dura; c = ch spagnola («cena»); y = ll/y come «ieri»; rr = r vibrata.</i></p>`
 
-/** Vocabulary section: a heading plus a narrow 2-column table (Spanish word + [pronunciation], Italian). */
-export const vsec = (heading: string, rows: [string, string, string][]): string =>
-  `<h3>${heading}</h3><div class="tblw"><table><tr><th>Spagnolo</th><th>Italiano</th></tr>${rows
-    .map(([es, pr, it]) => `<tr><td>${es} [${pr}]</td><td>${it}</td></tr>`)
-    .join('')}</table></div>`
+/** Vocabulary section: a heading plus a narrow 2-column table (Spagnolo word + [pronunciation], Italian). Rows from
+ * words.ts: vsecW in ./vsecw.ts (same HTML). */
+export const vsec = (heading: string, rows: [string, string, string][]): string => vtable('Spagnolo', heading, rows)

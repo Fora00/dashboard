@@ -1,6 +1,7 @@
 import type { Course } from '../../types'
 import { franceseA } from './a'
 import { franceseB } from './b'
+import { franceseC } from './c'
 
 // French course for an Italian speaker, A1 -> B2, text only, readable offline (2026-11-06).
 export const francese: Course = {
@@ -18,7 +19,7 @@ export const francese: Course = {
     { id: 'voc', label: 'Vocabolario per temi' },
     { id: 'drill', label: 'Allenamento ed esame' },
   ],
-  modules: [...franceseA, ...franceseB],
+  modules: [...franceseA, ...franceseB, ...franceseC],
   notes: [
     'Standard di riferimento: francese di Francia, con le varianti francofone segnalate. Nessun audio: la pronuncia è spiegata con approssimazioni italiane.',
   ],
