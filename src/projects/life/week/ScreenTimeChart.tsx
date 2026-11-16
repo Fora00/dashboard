@@ -8,13 +8,26 @@ const H = 120
 const PAD_L = 34
 const PAD_T = 8
 const MAX_WEEKS = 12
-const COLORS = [
-  { stroke: 'stroke-sky-400', fill: 'fill-sky-400', text: 'text-sky-500' },
-  { stroke: 'stroke-violet-400', fill: 'fill-violet-400', text: 'text-violet-500' },
-  { stroke: 'stroke-amber-400', fill: 'fill-amber-400', text: 'text-amber-500' },
-  { stroke: 'stroke-emerald-400', fill: 'fill-emerald-400', text: 'text-emerald-500' },
-  { stroke: 'stroke-rose-400', fill: 'fill-rose-400', text: 'text-rose-500' },
-]
+type Color = { stroke: string; fill: string; text: string }
+// One fixed colour per question id, so a category keeps its colour whatever else was filled in.
+const COLORS: Record<string, Color> = {
+  'screen-total': { stroke: 'stroke-sky-400', fill: 'fill-sky-400', text: 'text-sky-500' },
+  'screen-avg': { stroke: 'stroke-violet-400', fill: 'fill-violet-400', text: 'text-violet-500' },
+  'screen-social': { stroke: 'stroke-amber-400', fill: 'fill-amber-400', text: 'text-amber-500' },
+  'screen-entertainment': { stroke: 'stroke-red-400', fill: 'fill-red-400', text: 'text-red-500' },
+  'screen-productivity': { stroke: 'stroke-blue-500', fill: 'fill-blue-500', text: 'text-blue-600' },
+  'screen-creativity': { stroke: 'stroke-fuchsia-400', fill: 'fill-fuchsia-400', text: 'text-fuchsia-500' },
+  'screen-games': { stroke: 'stroke-orange-400', fill: 'fill-orange-400', text: 'text-orange-500' },
+  'screen-info': { stroke: 'stroke-rose-400', fill: 'fill-rose-400', text: 'text-rose-500' },
+  'screen-education': { stroke: 'stroke-indigo-400', fill: 'fill-indigo-400', text: 'text-indigo-500' },
+  'screen-health': { stroke: 'stroke-lime-500', fill: 'fill-lime-500', text: 'text-lime-600' },
+  'screen-utilities': { stroke: 'stroke-slate-400', fill: 'fill-slate-400', text: 'text-slate-500' },
+  'screen-travel': { stroke: 'stroke-cyan-400', fill: 'fill-cyan-400', text: 'text-cyan-500' },
+  'screen-shopping': { stroke: 'stroke-pink-400', fill: 'fill-pink-400', text: 'text-pink-500' },
+  'screen-other': { stroke: 'stroke-emerald-400', fill: 'fill-emerald-400', text: 'text-emerald-500' },
+}
+const FALLBACK: Color = { stroke: 'stroke-slate-300', fill: 'fill-slate-300', text: 'text-slate-400' }
+const colorOf = (id: string): Color => COLORS[id] ?? FALLBACK
 
 /** Phone screen time from the Sunday check: daily-average duration questions as lines per label, plus the latest top-apps list. Plain SVG; renders nothing without data. */
 export function ScreenTimeChart({
@@ -44,9 +57,9 @@ export function ScreenTimeChart({
       {data.series.length > 0 && (
         <>
           <p className="flex flex-wrap gap-x-3 text-xs text-slate-600 dark:text-slate-300">
-            {data.series.map((s, k) => (
+            {data.series.map((s) => (
               <span key={s.label}>
-                <span className={COLORS[k % COLORS.length]!.text}>●</span> {s.label}
+                <span className={colorOf(s.id).text}>●</span> {s.label}
               </span>
             ))}
           </p>
@@ -71,8 +84,8 @@ export function ScreenTimeChart({
                 </text>
               </g>
             ))}
-            {data.series.map((s, k) => {
-              const c = COLORS[k % COLORS.length]!
+            {data.series.map((s) => {
+              const c = colorOf(s.id)
               const pts = s.values.map((v, i) => ({ v, i })).filter((p) => p.v !== null)
               return (
                 <g key={s.label}>

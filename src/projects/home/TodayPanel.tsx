@@ -9,6 +9,7 @@ import { useAuth } from '../../lib/useAuth'
 import { useOwner } from '../../lib/useOwner'
 import { parseDayKey, weekKey } from '../life/model'
 import { useToday } from '../life/useToday'
+import { useHabitWeekRows } from '../life/week/useHabitWeekRows'
 import { ProjectIcon } from '../../components/ProjectIcon'
 import { FOCUS_RING_INSET } from '../../components/focus'
 
@@ -63,7 +64,9 @@ function LifeCard({ project, today }: { project: ProjectMeta | undefined; today:
     const entries = await db.lifeEntries.where('week').equals(week).toArray()
     return lifeToday(row.plan, entries, today)
   }, [week, today])
-  if (!data || (data.focusTotal === 0 && data.trackers.length === 0)) return null
+  // Weekly habits come from the Habits project (the plan's own trackers are retired).
+  const habits = (useHabitWeekRows([week])?.get(week) ?? []).filter((h) => !h.avoid)
+  if (!data || (data.focusTotal === 0 && habits.length === 0)) return null
   return (
     <TodayCard project={project} title="Life" to="/life" wide>
       {data.focusTotal > 0 && (
@@ -77,12 +80,9 @@ function LifeCard({ project, today }: { project: ProjectMeta | undefined; today:
           )}
         </span>
       )}
-      {data.trackers.length > 0 && (
+      {habits.length > 0 && (
         <span className="mt-1 block truncate text-xs text-slate-600 dark:text-slate-300">
-          {data.trackers
-            .slice(0, 3)
-            .map((t) => `${t.emoji} ${t.total}/${t.target}`)
-            .join('  ')}
+          {habits.map((h) => `${h.emoji} ${h.done}/${h.target}`).join('  ')}
         </span>
       )}
     </TodayCard>

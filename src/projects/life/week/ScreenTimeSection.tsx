@@ -6,8 +6,9 @@ import { SCREEN_QUESTIONS, validateAnswer, type WeekSummary } from '../model'
 import { CollapsibleSection } from './CollapsibleSection'
 import { AppsInput, DurationInput } from './SundayQuestion'
 
-/** Phone screen time for the week (from iOS Screen Time): the daily average,
- *  the three categories and the most-used apps. Always available — the
+/** Phone screen time for the week (from iOS Screen Time): total, daily
+ *  average, the iPhone's categories (fill only the ones it shows) and the
+ *  most-used apps. Always available — the
  *  questions are fixed (SCREEN_QUESTIONS), not part of the imported plan. */
 export function ScreenTimeSection({
   week,
@@ -33,7 +34,7 @@ export function ScreenTimeSection({
   return (
     <CollapsibleSection
       title="📱 Screen time"
-      summary={`${answered}/${SCREEN_QUESTIONS.length}`}
+      summary={answered === 0 ? 'empty' : `${answered} filled`}
       open={open}
       onToggle={onToggle}
       readOnly={readOnly}

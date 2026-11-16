@@ -43,7 +43,7 @@ describe('buildScreenTime', () => {
     ]
     const d = buildScreenTime(weeks, entries, '2026-10-12', 12)
     expect(d.weeks).toEqual(['2026-10-05', '2026-10-12'])
-    expect(d.series).toEqual([{ label: 'Social', values: [90, 120] }])
+    expect(d.series).toEqual([{ id: 'screen-social', label: 'Social', values: [90, 120] }])
     expect(d.apps?.week).toBe('2026-10-12')
     expect(d.apps?.rows[0]?.app).toBe('Safari')
     expect(d.apps?.previous.get('instagram')).toBe(60)

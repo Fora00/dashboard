@@ -7,6 +7,7 @@ import { Card } from '../../../components/Card'
 import { CollapsibleSection } from './CollapsibleSection'
 import { AutoAnswer, SundayQuestion } from './SundayQuestion'
 import { SpockWhy } from './SpockWhy'
+import { useHabitWeekRows } from './useHabitWeekRows'
 import { useStreakList } from './useStreakList'
 import { WeekRecap } from './WeekRecap'
 
@@ -33,6 +34,7 @@ export function SundaySection({
   editable?: boolean
 }) {
   const [sundayEditing, setSundayEditing] = useState(false)
+  const habits = useHabitWeekRows([week])?.get(week) ?? []
   // Questions linked to a habit answer themselves; only the rest need typing.
   const manualQuestions = plan.sundayCheck.filter((q) => !summary.autoAnswered.has(q.id)).length
   const manualAnswered = [...summary.answers.keys()].filter((id) => !summary.autoAnswered.has(id)).length
@@ -56,7 +58,7 @@ export function SundaySection({
     >
       <WeekRecap
         focus={[summary.focusDone.size, summary.focusTotal]}
-        trackers={summary.trackers}
+        habits={habits}
         checkins={[summary.checkins.filter((c) => c.done).length, summary.checkins.length]}
         tasks={[tasksSent, plan.tasks.length]}
       />

@@ -57,11 +57,9 @@ export interface LifeToday {
   focusDone: number
   /** First focus items not yet done, for the card's lines. */
   focusOpen: string[]
-  /** Trackers that have a weekly target: logged / target. */
-  trackers: { label: string; emoji: string; total: number; target: number }[]
 }
 
-/** Life focus + tracker progress of the plan's week (entries are that week's). */
+/** Life focus progress of the plan's week (entries are that week's). */
 export function lifeToday(plan: LifePlan, entries: readonly LifeEntry[], today: string): LifeToday {
   const s = summarizeWeek(plan, entries, today)
   const open = plan.focus.filter((f) => !s.focusDone.has(f.id) && !s.focusCancelled.has(f.id))
@@ -69,13 +67,5 @@ export function lifeToday(plan: LifePlan, entries: readonly LifeEntry[], today: 
     focusTotal: s.focusTotal,
     focusDone: s.focusDone.size,
     focusOpen: open.slice(0, 2).map((f) => f.title),
-    trackers: s.trackers
-      .filter((t) => t.tracker.target !== null)
-      .map((t) => ({
-        label: t.tracker.label,
-        emoji: t.tracker.emoji,
-        total: t.total,
-        target: t.tracker.target ?? 0,
-      })),
   }
 }

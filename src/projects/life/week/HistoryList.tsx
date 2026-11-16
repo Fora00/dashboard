@@ -8,6 +8,8 @@ import { SkeletonList } from '../../../components/Skeleton'
 import { summarizeWeek } from '../model'
 import { ProgressChart } from './ProgressChart'
 import { ScreenTimeChart } from './ScreenTimeChart'
+import type { HabitWeekRow } from './liveHabitRatios'
+import { useHabitWeekRows } from './useHabitWeekRows'
 import { WeekRecap } from './WeekRecap'
 
 export function HistoryList({
@@ -22,6 +24,7 @@ export function HistoryList({
   onOpen: (week: string) => void
 }) {
   const entries = useLiveQuery(() => db.lifeEntries.toArray())
+  const habitRows = useHabitWeekRows(weeks?.map((w) => w.week) ?? [])
   return (
     <div>
       <PageHeader emoji="🧭" title="History" subtitle="This week and past weeks, newest first.">
@@ -52,7 +55,7 @@ export function HistoryList({
                     ›
                   </span>
                 </button>
-                {entries && <WeekRecapRow week={w} entries={entries} />}
+                {entries && <WeekRecapRow week={w} entries={entries} habits={habitRows?.get(w.week) ?? []} />}
               </li>
             ))}
           </ul>
@@ -62,14 +65,14 @@ export function HistoryList({
   )
 }
 
-function WeekRecapRow({ week, entries }: { week: LifeWeek; entries: LifeEntry[] }) {
+function WeekRecapRow({ week, entries, habits }: { week: LifeWeek; entries: LifeEntry[]; habits: HabitWeekRow[] }) {
   const { plan } = week
   const summary = summarizeWeek(plan, entries)
   return (
     <WeekRecap
       title=""
       focus={[summary.focusDone.size, summary.focusTotal]}
-      trackers={summary.trackers}
+      habits={habits}
       checkins={[summary.checkins.filter((c) => c.done).length, summary.checkins.length]}
       tasks={[plan.tasks.filter((t) => summary.sentTaskIds.has(t.id)).length, plan.tasks.length]}
     />

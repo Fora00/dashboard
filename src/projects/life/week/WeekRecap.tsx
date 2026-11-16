@@ -1,16 +1,17 @@
-import type { TrackerSummary } from '../model'
+import type { HabitWeekRow } from './liveHabitRatios'
 
 /** What the week actually held, shown above the Sunday questions so the
  * answers can lean on it. Empty parts of the plan are left out. */
 export function WeekRecap({
   focus,
-  trackers,
+  habits,
   checkins,
   tasks,
   title = 'This week',
 }: {
   focus: [number, number]
-  trackers: TrackerSummary[]
+  /** The Habits-page habits that week (liveHabitRatios.habitWeekRows). */
+  habits: HabitWeekRow[]
   checkins: [number, number]
   tasks: [number, number]
   title?: string
@@ -20,7 +21,7 @@ export function WeekRecap({
   if (checkins[1] > 0)
     parts.push({ label: 'Check-ins', value: `${checkins[0]}/${checkins[1]}`, full: checkins[0] >= checkins[1] })
   if (tasks[1] > 0) parts.push({ label: 'Things sent', value: `${tasks[0]}/${tasks[1]}`, full: tasks[0] >= tasks[1] })
-  if (parts.length === 0 && trackers.length === 0) return null
+  if (parts.length === 0 && habits.length === 0) return null
 
   return (
     <div className="mb-3 space-y-2 rounded-xl bg-slate-100 px-4 py-3 text-sm dark:bg-slate-800/60">
@@ -39,28 +40,30 @@ export function WeekRecap({
           ))}
         </div>
       )}
-      {trackers.length > 0 && (
+      {habits.length > 0 && (
         <ul className="space-y-0.5">
-          {trackers.map(({ tracker, total, reachedTarget, atMax }) => {
+          {habits.map((h) => {
+            const met = h.avoid ? h.hit === true : h.done >= h.target
+            const missed = h.avoid && h.slips > 0
             return (
-              <li key={tracker.id} className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
-                <span aria-hidden>{tracker.emoji}</span>
-                <span className="min-w-0 flex-1 truncate">{tracker.label}</span>
+              <li key={h.id} className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
+                <span aria-hidden>{h.emoji}</span>
+                <span className="min-w-0 flex-1 truncate">{h.name}</span>
                 <span
-                  className={`shrink-0 font-medium ${
-                    atMax
+                  className={`shrink-0 font-medium tabular-nums ${
+                    missed
                       ? 'text-amber-600 dark:text-amber-400'
-                      : reachedTarget
+                      : met
                         ? 'text-emerald-700 dark:text-emerald-300'
                         : 'text-slate-800 dark:text-slate-100'
                   }`}
                 >
-                  {tracker.target !== null
-                    ? `${total}/${tracker.target}`
-                    : tracker.max !== null
-                      ? `${total} · max ${tracker.max}`
-                      : total}
-                  {reachedTarget && ' ✓'}
+                  {h.avoid
+                    ? h.slips > 0
+                      ? `${h.slips} slip${h.slips === 1 ? '' : 's'}`
+                      : ''
+                    : `${h.done}/${h.target}`}
+                  {met && (h.avoid ? '✓' : ' ✓')}
                 </span>
               </li>
             )

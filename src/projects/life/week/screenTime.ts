@@ -2,6 +2,8 @@ import type { LifeAnswer, LifeEntry, LifeWeek } from '../../../lib/db'
 import { parseApps, SCREEN_QUESTIONS, summarizeWeek, type AppUsage } from '../model'
 
 export interface DurationSeries {
+  /** The fixed question id (stable: picks the series colour). */
+  id: string
   /** The fixed question label. */
   label: string
   /** Minutes per week, aligned with `weeks`; null when not answered. */
@@ -44,6 +46,7 @@ export function buildScreenTime(
     .map((w) => w.week)
   const series = durations
     .map((q) => ({
+      id: q.id,
       label: q.label,
       values: used.map((wk) => {
         const v = byWeek.get(wk)?.get(q.id)

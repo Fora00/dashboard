@@ -125,11 +125,10 @@ describe('lifeToday', () => {
       value: {},
     },
   ]
-  it('summarises focus and targeted trackers', () => {
+  it('summarises focus', () => {
     const r = lifeToday(plan, entries, '2026-10-08')
     expect(r.focusDone).toBe(1)
     expect(r.focusTotal).toBe(2)
     expect(r.focusOpen).toEqual(['Two'])
-    expect(r.trackers).toEqual([{ label: 'Climb', emoji: '🧗', total: 1, target: 3 }])
   })
 })
