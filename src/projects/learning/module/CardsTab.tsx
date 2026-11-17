@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { Button } from '../../../components/Button'
 import { FOCUS_RING } from '../../../components/focus'
 import { HtmlText } from '../engine/HtmlText'
@@ -24,7 +25,13 @@ export function CardsTab({ courseId, mod, state }: Props) {
     return (
       <div className="flex flex-col items-start gap-3 rounded-xl border border-slate-200 p-5 dark:border-slate-800">
         <p className="font-medium">Mazzo completato</p>
-        <p className="text-sm text-slate-600 dark:text-slate-400">Le conosci tutte. Ripassale tra qualche giorno.</p>
+        <p className="text-sm text-slate-600 dark:text-slate-400">
+          Le conosci tutte: da qui in poi te le ripropone{' '}
+          <Link to="/learning/ripasso" className="font-medium underline underline-offset-2">
+            🔁 Ripasso
+          </Link>{' '}
+          quando è il momento.
+        </p>
         <Button
           onClick={() => {
             void resetCards(courseId, mod.id)
@@ -45,7 +52,10 @@ export function CardsTab({ courseId, mod, state }: Props) {
   return (
     <div className="flex flex-col gap-3">
       <p className="text-sm text-slate-600 tabular-nums dark:text-slate-400">
-        Carta {pos + 1} di {deck.length} da ripassare
+        Carta {pos + 1} di {deck.length} da imparare · quelle che segni «Lo so» tornano in{' '}
+        <Link to="/learning/ripasso" className="underline underline-offset-2">
+          Ripasso
+        </Link>
       </p>
       <button
         type="button"

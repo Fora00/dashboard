@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { FOCUS_RING_INSET } from '../../../components/focus'
 import { setPosition } from '../../../lib/learningSync'
@@ -92,6 +92,23 @@ function ModuleNav({ course, mod }: { course: Course; mod: CourseModule }) {
   )
 }
 
+/** Px below the sticky phone header (2 on wide screens: the accent line), so the tabs can stick under it. */
+function useStickyTop(): number {
+  const [top, setTop] = useState(0)
+  useLayoutEffect(() => {
+    const measure = () => {
+      const h = document.querySelector('header')
+      const r = h?.getBoundingClientRect()
+      // No phone header (wide screens): stay under the 2px accent line.
+      setTop(r && r.height > 0 && getComputedStyle(h!).position === 'sticky' ? Math.round(r.height) : 2)
+    }
+    measure()
+    window.addEventListener('resize', measure)
+    return () => window.removeEventListener('resize', measure)
+  }, [])
+  return top
+}
+
 function ModuleView({ course, mod }: { course: Course; mod: CourseModule }) {
   const [params] = useSearchParams()
   const wanted = params.get('tab')
@@ -118,6 +135,7 @@ function ModuleView({ course, mod }: { course: Course; mod: CourseModule }) {
   const state = loaded ?? EMPTY_STATE
   const p = moduleProgress(course.id, mod, state)
   const tabs = tabsFor(mod)
+  const stickyTop = useStickyTop()
   return (
     <div className="flex flex-col gap-4">
       <div>
@@ -149,27 +167,33 @@ function ModuleView({ course, mod }: { course: Course; mod: CourseModule }) {
         </p>
       )}
 
+      {/* Sticky: long lessons keep the tabs at hand (under the phone header, at the top on wide screens). */}
       <div
-        role="tablist"
-        aria-label="Sezioni del modulo"
-        className="flex gap-1 overflow-x-auto rounded-xl bg-slate-100 p-1 dark:bg-slate-800"
+        className="sticky z-[5] -mx-1 bg-slate-50/95 px-1 py-1 backdrop-blur dark:bg-slate-900/95"
+        style={{ top: stickyTop }}
       >
-        {tabs.map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            role="tab"
-            aria-selected={tab === t.id}
-            onClick={() => setTab(t.id)}
-            className={`min-h-10 shrink-0 flex-1 rounded-lg px-3 text-sm font-medium whitespace-nowrap ${FOCUS_RING_INSET} ${
-              tab === t.id
-                ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-slate-100'
-                : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'
-            }`}
-          >
-            {t.label}
-          </button>
-        ))}
+        <div
+          role="tablist"
+          aria-label="Sezioni del modulo"
+          className="flex gap-1 overflow-x-auto rounded-xl bg-slate-100 p-1 dark:bg-slate-800"
+        >
+          {tabs.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              role="tab"
+              aria-selected={tab === t.id}
+              onClick={() => setTab(t.id)}
+              className={`min-h-10 shrink-0 flex-1 rounded-lg px-3 text-sm font-medium whitespace-nowrap ${FOCUS_RING_INSET} ${
+                tab === t.id
+                  ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-slate-100'
+                  : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div role="tabpanel">

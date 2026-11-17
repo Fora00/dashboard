@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { Button } from '../../../components/Button'
 import { FOCUS_RING } from '../../../components/focus'
 import { HtmlText } from '../engine/HtmlText'
@@ -36,6 +37,16 @@ export function QuizTab({ courseId, mod, state }: Props) {
           </Button>
         </div>
       </div>
+
+      {wrong > 0 && (
+        <p className="text-sm text-slate-600 dark:text-slate-400">
+          Le domande sbagliate tornano anche in{' '}
+          <Link to="/learning/ripasso" className="font-medium underline underline-offset-2">
+            🔁 Ripasso
+          </Link>
+          , finché non le indovini.
+        </p>
+      )}
 
       {mod.quiz.map((q, i) => {
         const a = answers.get(q.id)

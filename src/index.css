@@ -67,8 +67,8 @@ body {
 }
 .learning-html h3 {
   @apply mt-6 text-base font-semibold text-slate-900 outline-none dark:text-slate-100;
-  /* Jump-list targets land below the sticky phone header. */
-  scroll-margin-top: calc(4.5rem + env(safe-area-inset-top));
+  /* Jump-list targets land below the sticky phone header and the sticky module tabs. */
+  scroll-margin-top: calc(8rem + env(safe-area-inset-top));
 }
 .learning-html h4 {
   @apply mt-4 font-semibold text-slate-900 dark:text-slate-100;

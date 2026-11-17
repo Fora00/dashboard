@@ -10,7 +10,7 @@ import { useCourseState } from '../engine/store'
 import { loadAllThemes, loadedThemes, visibleThemes } from '../vocab/index'
 
 /** "Spagnolo: da A1 a B2" -> name "Spagnolo", detail "da A1 a B2". */
-export function splitTitle(title: string): { name: string; detail: string } {
+function splitTitle(title: string): { name: string; detail: string } {
   const i = title.indexOf(':')
   return i < 0 ? { name: title, detail: '' } : { name: title.slice(0, i).trim(), detail: title.slice(i + 1).trim() }
 }
