@@ -5,9 +5,9 @@ import type { Course } from '../engine/types'
 // A course = meta here + `load` doing a dynamic import (own chunk, precached by the PWA).
 // Sections of the Learning home. Add a group here, then tag courses with its id.
 export const courseGroups = [
+  { id: 'lingue', emoji: '🌍', title: 'Lingue' },
   { id: 'sviluppo', emoji: '💻', title: 'Sviluppo' },
   { id: 'creativita', emoji: '🎨', title: 'Creatività' },
-  { id: 'lingue', emoji: '🌍', title: 'Lingue' },
 ] as const satisfies readonly { id: string; emoji: string; title: string }[]
 
 export type CourseGroupId = (typeof courseGroups)[number]['id']

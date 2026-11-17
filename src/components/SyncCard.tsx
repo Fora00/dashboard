@@ -246,7 +246,6 @@ export function SyncCard({ sync }: SyncCardProps) {
             placeholder="you@example.com"
             aria-label="Email"
             autoComplete="email"
-            autoFocus
             required
             className="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-(color:--accent-ring) focus:outline-none dark:border-slate-700 dark:bg-slate-800"
           />

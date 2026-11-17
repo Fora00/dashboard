@@ -409,6 +409,16 @@ parser (`html.ts` + `HtmlText.tsx`), never `dangerouslySetInnerHTML`.
       Known content gaps: es -mente adverbs beyond nomi, dequeísmo, idioms; fr proverbs, ordinals in their own
       module; de see a).
 
+### Learning tidy-up (owner, 2026-11-17: "un po' esplosa"; all three asked)
+- [x] T1 Code layout: engine/ ui/ figures/ home/ course/ module/ review/, `Learning.tsx` routes only,
+      `docs/COURSES.md` (commit `725021f`).
+- [x] T2 Home: "Oggi" block (Continua = last module across courses and devices + Ripasso count), search,
+      groups as compact rows (name, detail, %), Lingue first, sync box moved to the bottom (as in Life),
+      Italian copy. SyncCard lost its email `autoFocus` (it scrolled the page to the bottom when signed out).
+      Checked at 390px, light and dark.
+- [ ] T3 Module page: sticky tabs, "Lo so -> Ripasso" hint on Flashcard, Ripasso link after a wrong quiz.
+- Left as is: shared app chrome in English ("All projects", SyncCard texts) is used by every project.
+
 ### Learning refactor (proposal 2026-11-05; R3 done 2026-11-06, the rest not built)
 
 Why: the engine was written for one course; there are now five, with different needs (quiz
