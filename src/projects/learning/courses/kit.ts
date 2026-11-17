@@ -1,6 +1,6 @@
 import type { CourseModule, Flashcard, PracticeItem, QuizQuestion } from '../types'
 
-// Compact builders for the hand-written Python path. Lesson text is light HTML
+// Compact builders shared by every course. Lesson text is light HTML
 // (see ../html.ts allowlist). Code goes in <pre><code>; write < > & as entities.
 // Quiz options are permuted with a PRNG seeded by the question text, so the
 // correct answer is not always in the same slot (or the longest) and the order

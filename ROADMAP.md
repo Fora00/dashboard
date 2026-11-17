@@ -425,10 +425,15 @@ Order: R1, R2 first (cheap, safe), then R5a/c/d (quick wins), R3, R5b, R6, R7, R
       "Riprendi da…" on the course page and list. Migration `20261107120000_learning_checks_position`
       (pushed). The photo diary stays local on purpose. To check on a device [owner]: tick on one
       device, see it on another.
-- [ ] R1 **Neutral course kit** [sonnet, XS]: move `q`/`card`/`prac`/`mod` and the seeded shuffle from
+- [x] R1 **Neutral course kit** [sonnet, XS] (DONE 2026-11-17: `kit.test.ts`, shuffle deterministic + answer remapped): move `q`/`card`/`prac`/`mod` and the seeded shuffle from
       `courses/python-path.helpers.ts` to `courses/kit.ts` (file move done 2026-11-07, shuffle test still open); keep the exports, update imports; unit
       test that the shuffle is deterministic and remaps `answer`.
-- [ ] R2 **One lint suite for all courses** [sonnet, S]: fold `python-path.test.ts` and
+- [x] R2 **One lint suite for all courses** [sonnet, S] (DONE 2026-11-17: `courses.test.ts` = universal
+      invariants + a PROFILES table per course; `languages`, `new-courses`, `python-path` tests folded in and
+      removed; a new course fails until it gets a profile. FINDING: the right quiz option is the longest in
+      71-92% of the tech/disegno questions (guessable by length; languages 25-47%); ratchets set at today's
+      values; follow-up: rework those distractors, one course per task, then tighten `maxLongest` to 0.6).
+      Original brief: fold `python-path.test.ts` and
       `new-courses.test.ts` into `courses.test.ts` as invariants over every course: ids contain no
       `:` and fit the SQL checks (`course_id` ≤ 60, `courseId:moduleId:itemId` ≤ 200, see
       `learning_*` migration), HTML scan of every field (no dropped tag, no unescaped `<` in `<pre>`),
@@ -463,7 +468,7 @@ Order: R1, R2 first (cheap, safe), then R5a/c/d (quick wins), R3, R5b, R6, R7, R
         (last module per course, guarded localStorage);
       - d [sonnet, S] in-lesson jump list built from the `<h3>`s;
       - e [sonnet, M] search across module titles, lessons and cards.
-- [ ] R6 **Authoring in Markdown** [opus, L, optional]: `scripts/learning/md2course.mjs` turns
+- [ ] R6 **Authoring in Markdown** [opus, L, optional] (owner, 2026-11-17: skipped for now; content is AI-written): `scripts/learning/md2course.mjs` turns
       `content/<course>/<module>.md` (front matter + sections for lesson, quiz, cards, practice) into
       the TS data using the same allowlist, so no escaping and diffs are readable; the existing TS
       courses stay valid. Do only if more courses are planned.
