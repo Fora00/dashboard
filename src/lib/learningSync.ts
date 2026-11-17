@@ -5,10 +5,12 @@ import {
   type LearningPosition,
   type LearningPractice,
   type LearningQuizAnswer,
+  type LearningReview,
 } from './db'
 import { createCloudSync, type TableSync } from './cloudSync'
 import { useSyncStatus } from './useSyncStatus'
 import { itemKey } from '../projects/learning/progress'
+import { MAX_STEP, schedule, type Grade, type ReviewSource } from '../projects/learning/review'
 
 // Local-first sync for the Learning project (owner-only: it is the owner's
 // personal progress), built on the generic engine in cloudSync.ts. Content is
@@ -46,6 +48,20 @@ interface PositionRow {
 }
 
 const TABS: readonly string[] = ['lesson', 'quiz', 'cards', 'practice']
+
+interface ReviewRow {
+  id: string
+  kind: LearningReview['kind']
+  course_id: string
+  module_id: string
+  item_id: string
+  step: number
+  due: string
+  reviewed_on: string | null
+  updated_at: number
+}
+
+const DAY = /^\d{4}-\d{2}-\d{2}$/
 
 interface QuizRow {
   id: string
@@ -192,9 +208,43 @@ const positionTable: TableSync<LearningPosition, PositionRow> = {
   },
 }
 
+const reviewsTable: TableSync<LearningReview, ReviewRow> = {
+  remote: 'learning_reviews',
+  table: () => db.learningReviews,
+  columns: 'id, kind, course_id, module_id, item_id, step, due, reviewed_on, updated_at',
+  realtime: true,
+  updatedAt: (r) => r.updatedAt,
+  toRow: (r) => ({
+    id: r.id,
+    kind: r.kind,
+    course_id: r.courseId,
+    module_id: r.moduleId,
+    item_id: r.itemId,
+    step: r.step,
+    due: r.due,
+    reviewed_on: r.reviewedOn || null,
+    updated_at: r.updatedAt,
+  }),
+  fromRow: (r) => {
+    if ((r.kind !== 'card' && r.kind !== 'quiz') || !DAY.test(String(r.due)))
+      throw new Error('learning_reviews: bad row')
+    return {
+      id: r.id,
+      kind: r.kind,
+      courseId: r.course_id,
+      moduleId: r.module_id,
+      itemId: r.item_id,
+      step: Math.min(Math.max(Number(r.step) || 0, 0), MAX_STEP),
+      due: String(r.due),
+      reviewedOn: r.reviewed_on && DAY.test(String(r.reviewed_on)) ? String(r.reviewed_on) : '',
+      updatedAt: Number(r.updated_at),
+    }
+  },
+}
+
 const engine = createCloudSync({
   projectId: 'learning',
-  tables: [quizTable, cardsTable, practiceTable, checksTable, positionTable],
+  tables: [quizTable, cardsTable, practiceTable, checksTable, positionTable, reviewsTable],
 })
 
 // --- Local mutations (used by the UI; safe with or without sync) -----------
@@ -334,19 +384,72 @@ export async function setPosition(courseId: string, moduleId: string, tab: Learn
   await engine.upsert('learning_position', { id: courseId, courseId, moduleId, tab, updatedAt: Date.now() })
 }
 
-/** Reset everything the learner did in one course (quiz, cards, practice incl. notes, ticks, position). */
+/** Reset everything the learner did in one course (quiz, cards, practice incl. notes, ticks, position, Ripasso). */
 export async function resetCourse(courseId: string): Promise<void> {
   await db.transaction(
     'rw',
-    [db.learningQuiz, db.learningCards, db.learningPractice, db.learningChecks, db.learningPosition, db.outbox],
+    [
+      db.learningQuiz,
+      db.learningCards,
+      db.learningPractice,
+      db.learningChecks,
+      db.learningPosition,
+      db.learningReviews,
+      db.outbox,
+    ],
     async () => {
       await engine.removeMany('learning_quiz', await idsOf('learningQuiz', courseId))
       await engine.removeMany('learning_cards', await idsOf('learningCards', courseId))
       await engine.removeMany('learning_practice', await idsOf('learningPractice', courseId))
       await resetChecks(courseId)
       await engine.remove('learning_position', courseId)
+      const reviews = await db.learningReviews.where('courseId').equals(courseId).primaryKeys()
+      await engine.removeMany('learning_reviews', reviews as string[])
     },
   )
+}
+
+// --- Ripasso (synced) ----------------------------------------------------------
+
+/** Grade a flashcard in Ripasso: stores its next step and due day (review.ts `schedule`). */
+export async function gradeReview(item: ReviewSource & { step: number }, grade: Grade, today: string): Promise<void> {
+  const next = schedule(item.step, grade, today)
+  await engine.upsert('learning_reviews', {
+    id: item.id,
+    kind: item.kind,
+    courseId: item.courseId,
+    moduleId: item.moduleId,
+    itemId: item.itemId,
+    ...next,
+    reviewedOn: today,
+    updatedAt: Date.now(),
+  })
+}
+
+/**
+ * Answer a wrong-quiz item in Ripasso. Right: the module's quiz answer becomes the right one (progress goes up and
+ * the item leaves Ripasso). Wrong: it comes back tomorrow. Either way it counts toward today's limit.
+ */
+export async function answerReviewQuiz(
+  item: ReviewSource & { step: number },
+  selected: number,
+  answer: number,
+  today: string,
+): Promise<void> {
+  const right = selected === answer
+  await db.transaction('rw', db.learningQuiz, db.learningReviews, db.outbox, async () => {
+    if (right)
+      await engine.upsert('learning_quiz', {
+        id: itemKey(item.courseId, item.moduleId, item.itemId),
+        courseId: item.courseId,
+        moduleId: item.moduleId,
+        itemId: item.itemId,
+        selected,
+        correct: 1,
+        updatedAt: Date.now(),
+      })
+    await gradeReview(item, right ? 'easy' : 'again', today)
+  })
 }
 
 // --- Sync engine ------------------------------------------------------------

@@ -5,6 +5,8 @@ import { courseById } from '../projects/learning/courses'
 import { courseProgress } from '../projects/learning/progress'
 import {
   answerQuiz,
+  answerReviewQuiz,
+  gradeReview,
   MAX_NOTES_LENGTH,
   resetCards,
   resetCourse,
@@ -121,5 +123,43 @@ describe('checklist ticks and position (synced)', () => {
     expect(await db.learningPosition.count()).toBe(1)
     expect(await db.learningPosition.get(C)).toMatchObject({ moduleId: 'api', tab: 'cards' })
     expect((await ops('learning_position')).length).toBe(2)
+  })
+})
+
+describe('ripasso (synced)', () => {
+  const item = (kind: 'card' | 'quiz', itemId: string, step = 0) => ({
+    id: `${kind}:${C}:http:${itemId}`,
+    kind,
+    courseId: C,
+    moduleId: 'http',
+    itemId,
+    updatedAt: 1,
+    step,
+  })
+
+  it('grading a card stores step, due day and today, and queues one upsert', async () => {
+    await gradeReview(item('card', 'c1', 1), 'easy', '2026-11-20')
+    expect(await db.learningReviews.get(`card:${C}:http:c1`)).toMatchObject({
+      step: 2,
+      due: '2026-11-27',
+      reviewedOn: '2026-11-20',
+    })
+    expect(await ops('learning_reviews')).toHaveLength(1)
+  })
+
+  it('a wrong quiz answered right in Ripasso becomes right in the module; wrong again comes back tomorrow', async () => {
+    await answerQuiz(C, 'http', 'q1', 0, 2)
+    await answerReviewQuiz(item('quiz', 'q1'), 1, 2, '2026-11-20')
+    expect(await db.learningQuiz.get(`${C}:http:q1`)).toMatchObject({ correct: 0 })
+    expect(await db.learningReviews.get(`quiz:${C}:http:q1`)).toMatchObject({ step: 0, due: '2026-11-21' })
+    await answerReviewQuiz(item('quiz', 'q1'), 2, 2, '2026-11-21')
+    expect(await db.learningQuiz.get(`${C}:http:q1`)).toMatchObject({ correct: 1, selected: 2 })
+    expect(await db.learningReviews.get(`quiz:${C}:http:q1`)).toMatchObject({ reviewedOn: '2026-11-21' })
+  })
+
+  it('resetCourse also clears the Ripasso rows of that course', async () => {
+    await gradeReview(item('card', 'c1'), 'hard', '2026-11-20')
+    await resetCourse(C)
+    expect(await db.learningReviews.count()).toBe(0)
   })
 })

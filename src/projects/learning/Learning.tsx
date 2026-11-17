@@ -16,6 +16,7 @@ import {
   type CourseMeta,
 } from './courses/registry'
 import { CourseLoading } from './CourseLoading'
+import ReviewPage, { ReviewHomeCard } from './ReviewPage'
 import { countCourseHits, searchCourses, type CourseHit } from './courseSearch'
 import { CoursePage } from './CoursePage'
 import { DiaryPage } from './DiaryPage'
@@ -229,6 +230,7 @@ function CourseList() {
         <EmptyState emoji="🎓" title="No courses yet" />
       ) : (
         <div className="flex flex-col gap-4">
+          <ReviewHomeCard />
           <input
             type="search"
             value={query}
@@ -257,6 +259,7 @@ export function Learning() {
           </Suspense>
         }
       />
+      <Route path="ripasso" element={<ReviewPage />} />
       <Route path=":courseId" element={<CoursePage />} />
       {/* Static segment: ranks above :moduleId, so no module can shadow it. */}
       <Route path=":courseId/diario" element={<DiaryPage />} />

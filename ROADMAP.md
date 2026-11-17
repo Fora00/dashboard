@@ -461,7 +461,15 @@ Order: R1, R2 first (cheap, safe), then R5a/c/d (quick wins), R3, R5b, R6, R7, R
       (scroll to top on open), "In questa lezione" jump list from the `<h3>`s (`headingsOf`, anchors via
       `HtmlText anchorPrefix`, buttons not #hash because of HashRouter), checked at 390px:
       - a [sonnet, S] "Rifai" resets only the wrong answers (keep correct ones);
-      - b [opus, M] **review queue** ("Ripasso") across courses: intervals 1/3/7/21 days with
+      - b DONE 2026-11-17 **Ripasso** (owner choices: course cards + Vocabolario words + wrong quiz answers;
+        3 grades Di nuovo/Difficile/Facile = tomorrow / same interval / next step of 1-3-7-21-60-120 days;
+        existing known items spread over 18-24 Nov; 15 a day). `review.ts` (pure, tested), `ReviewPage.tsx`
+        (`/learning/ripasso` + home card), table `learning_reviews` (migration `20261117120000`, PUSHED, types
+        regenerated, Dexie v25). Rows are written only on grading; ungraded items get a computed due date, so a
+        fresh device never overwrites another device's schedule. A wrong quiz answered right in Ripasso becomes
+        right in the module. Checked at 390px with a faked clock (course cards + quiz); Vocabolario words in
+        Ripasso not yet seen in a browser [owner: check on the phone].
+        Original brief: [opus, M] **review queue** ("Ripasso") across courses: intervals 1/3/7/21 days with
         again/good grades per card; needs a `dueAt` + `ease` column on `learning_cards` (migration,
         Dexie version, sync) and a Today-style entry on the Learning home;
       - c [sonnet, S] "Modulo successivo" link at the end of a lesson and "continua da dove eri"

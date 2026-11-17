@@ -547,6 +547,42 @@ export type Database = {
         }
         Relationships: []
       }
+      learning_reviews: {
+        Row: {
+          course_id: string
+          due: string
+          id: string
+          item_id: string
+          kind: string
+          module_id: string
+          reviewed_on: string | null
+          step: number
+          updated_at: number
+        }
+        Insert: {
+          course_id: string
+          due: string
+          id: string
+          item_id: string
+          kind: string
+          module_id: string
+          reviewed_on?: string | null
+          step: number
+          updated_at: number
+        }
+        Update: {
+          course_id?: string
+          due?: string
+          id?: string
+          item_id?: string
+          kind?: string
+          module_id?: string
+          reviewed_on?: string | null
+          step?: number
+          updated_at?: number
+        }
+        Relationships: []
+      }
       life_day_focus: {
         Row: {
           cancelled: boolean

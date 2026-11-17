@@ -461,6 +461,26 @@ export interface LearningPosition {
   updatedAt: number
 }
 
+/**
+ * Ripasso schedule of one item (src/projects/learning/review.ts), synced owner-only. Written only when the
+ * learner grades the item; items never graded get a computed due date. id = `${kind}:${courseId}:${moduleId}:${itemId}`.
+ */
+export interface LearningReview {
+  id: string
+  /** 'card' = known flashcard or Vocabolario word (courseId `vocabolario`); 'quiz' = question answered wrong. */
+  kind: 'card' | 'quiz'
+  courseId: string
+  moduleId: string
+  itemId: string
+  /** Index into review.ts INTERVALS. */
+  step: number
+  /** 'YYYY-MM-DD' (local day) the item is due again. */
+  due: string
+  /** 'YYYY-MM-DD' of the last grading ('' = never): counts toward the daily limit. */
+  reviewedOn: string
+  updatedAt: number
+}
+
 // Learning photo diary, LOCAL ONLY (src/lib/learningLocal.ts): never synced,
 // never in the outbox, not in the JSON backup (Blobs).
 export interface LearningSketch {
@@ -667,6 +687,7 @@ export interface OutboxMap {
   learning_practice: LearningPractice
   learning_checks: LearningCheck
   learning_position: LearningPosition
+  learning_reviews: LearningReview
   meal_entries: MealEntry
   trip_ideas: TripIdea
   trip_companions: TripCompanion
@@ -798,6 +819,7 @@ export const db = new Dexie('dashboard') as Dexie & {
   learningPractice: EntityTable<LearningPractice, 'id'>
   learningChecks: EntityTable<LearningCheck, 'id'>
   learningPosition: EntityTable<LearningPosition, 'id'>
+  learningReviews: EntityTable<LearningReview, 'id'>
   learningSketches: EntityTable<LearningSketch, 'id'>
   eventsCache: EntityTable<EventsCacheRow, 'id'>
   eventMarks: EntityTable<EventMark, 'id'>
@@ -1459,6 +1481,45 @@ db.version(24)
         checks.map((c): OutboxEntry => ({ table: 'learning_checks', op: 'upsert', rowId: c.id, payload: c, ts })),
       )
   })
+
+// v25: learningReviews, the Ripasso schedule (synced owner-only by learningSync.ts). Brand-new and empty: rows are
+// written only on grading, so there is nothing to queue.
+db.version(25).stores({
+  files: 'id, name, createdAt, synced',
+  shopItems: 'id, done, createdAt, areaId',
+  shopAreas: 'id, createdAt',
+  outbox: '++seq, rowId',
+  climbSessions: 'id, date',
+  climbs: 'id, sessionId, date',
+  habits: 'id, createdAt',
+  habitChecks: 'id, habitId, day, [habitId+day]',
+  todos: 'id, done, createdAt',
+  bookIdeas: 'id, createdAt',
+  boardgameIdeas: 'id, createdAt',
+  links: 'id, read, createdAt, *tags',
+  projectStats: 'id, opens',
+  lifeWeeks: 'id, importedAt',
+  lifeEntries: 'id, week, [week+kind]',
+  eventsCache: 'id',
+  eventMarks: 'id, state, updatedAt',
+  eventPrefs: 'id',
+  tripIdeas: 'id, done, createdAt, *companionIds',
+  tripCompanions: 'id, createdAt',
+  customEvents: 'id, start, updatedAt',
+  meals: 'id, day, createdAt',
+  projectPrefs: 'id',
+  eventInterest: 'id, value',
+  eventInterestProfile: 'id',
+  lifeDayFocus: 'id, day',
+  learningQuiz: 'id, courseId, [courseId+moduleId]',
+  learningCards: 'id, courseId, [courseId+moduleId]',
+  learningPractice: 'id, courseId, [courseId+moduleId]',
+  lifeEngines: 'id, month',
+  learningChecks: 'id, courseId, [courseId+moduleId]',
+  learningSketches: 'id, courseId, [courseId+moduleId+itemId], createdAt',
+  learningPosition: 'id',
+  learningReviews: 'id, courseId',
+})
 
 // Ask the browser not to evict our data under storage pressure (important on iOS).
 export async function requestPersistentStorage(): Promise<boolean> {
