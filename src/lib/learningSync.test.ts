@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { db, resetDb } from '../test/fakeDb'
 import { drain } from '../test/drain'
 import { courseById } from '../projects/learning/courses'
-import { courseProgress } from '../projects/learning/progress'
+import { courseProgress } from '../projects/learning/engine/progress'
 import {
   answerQuiz,
   answerReviewQuiz,

@@ -1,4 +1,4 @@
-import type { Course } from '../../types'
+import type { Course } from '../../engine/types'
 import { basics, collections, errors, functions, jsmap, setup } from './base'
 import { drills, concurrency, database, testing, tooling, web } from './backend'
 import { datamodel, idioms, internals, memory, modern } from './master1'

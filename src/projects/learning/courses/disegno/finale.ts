@@ -1,4 +1,4 @@
-import type { CourseModule } from '../../types'
+import type { CourseModule } from '../../engine/types'
 
 // Modules of the 'finale' batch of the drawing course (order matters).
 const naturaMorta: CourseModule = {

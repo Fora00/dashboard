@@ -1,4 +1,4 @@
-import type { CourseModule } from '../../types'
+import type { CourseModule } from '../../engine/types'
 import { card, mod, prac, q } from '../kit'
 
 // Spanish course, A1: connected speech (syllables, linking, rhythm, intonation, minimal pairs).

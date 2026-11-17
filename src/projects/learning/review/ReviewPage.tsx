@@ -1,71 +1,18 @@
 // Ripasso page (/learning/ripasso) and its Learning-home card. Queue logic: ./review.ts; writes: learningSync.ts.
-import { useLiveQuery } from 'dexie-react-hooks'
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Button } from '../../components/Button'
-import { Card } from '../../components/Card'
-import { FOCUS_RING } from '../../components/focus'
-import { dayKey } from '../../lib/dates'
-import { db } from '../../lib/db'
-import { answerReviewQuiz, gradeReview } from '../../lib/learningSync'
-import { courseMetaById, loadCourse, loadedCourse } from './courses/registry'
-import { CourseLoading } from './CourseLoading'
-import { HtmlText } from './HtmlText'
-import { buildQueue, gradeDays, sourcesOf, type Grade, type Queue, type QueueItem } from './review'
-import { loadAllThemes, loadedThemes } from './vocab/index'
-import { VOCAB_COURSE_ID } from './vocab/progress'
-import { LANG_FLAG, LANG_LABEL, LANGS, type Lang } from './vocab/types'
-
-/** Live queue for `today`; `undefined` while Dexie loads. `keep` drops items whose content no longer exists. */
-function useQueue(today: string, keep?: (i: QueueItem) => boolean): Queue | undefined {
-  const rows = useLiveQuery(async () => {
-    const [cards, quiz, reviews] = await Promise.all([
-      db.learningCards.toArray(),
-      db.learningQuiz.toArray(),
-      db.learningReviews.toArray(),
-    ])
-    return { cards, quiz, reviews }
-  }, [])
-  return useMemo(() => {
-    if (!rows) return undefined
-    const sources = sourcesOf(rows.cards, rows.quiz).filter((s) => !keep || keep({ ...s, step: 0, due: '' }))
-    return buildQueue(sources, rows.reviews, today)
-  }, [rows, today, keep])
-}
-
-const today = () => dayKey(new Date())
-
-export function ReviewHomeCard() {
-  const [day] = useState(today)
-  const q = useQueue(day)
-  const n = q?.items.length ?? 0
-  return (
-    <Link to="ripasso" className="block rounded-xl focus-visible:outline-none">
-      <Card className="flex items-center gap-3 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800">
-        <span className="text-2xl" aria-hidden>
-          🔁
-        </span>
-        <div className="min-w-0 flex-1">
-          <h2 className="font-medium">Ripasso</h2>
-          <p className="text-sm text-slate-500 dark:text-slate-400">
-            {!q
-              ? '…'
-              : n > 0
-                ? `${n} da ripassare oggi`
-                : q.doneToday > 0
-                  ? `Fatto per oggi (${q.doneToday})`
-                  : 'Niente da ripassare oggi'}
-          </p>
-        </div>
-        {n > 0 && (
-          <span className="rounded-full bg-(color:--accent) px-2.5 py-0.5 text-sm font-semibold text-(color:--accent-fg) tabular-nums">
-            {n}
-          </span>
-        )}
-      </Card>
-    </Link>
-  )
-}
+import { Button } from '../../../components/Button'
+import { Card } from '../../../components/Card'
+import { FOCUS_RING } from '../../../components/focus'
+import { answerReviewQuiz, gradeReview } from '../../../lib/learningSync'
+import { courseMetaById, loadCourse, loadedCourse } from '../courses/registry'
+import { CourseLoading } from '../ui/CourseLoading'
+import { HtmlText } from '../engine/HtmlText'
+import { gradeDays, type Grade, type QueueItem } from '../engine/review'
+import { today, useQueue } from './useQueue'
+import { loadAllThemes, loadedThemes } from '../vocab/index'
+import { VOCAB_COURSE_ID } from '../vocab/progress'
+import { LANG_FLAG, LANG_LABEL, LANGS, type Lang } from '../vocab/types'
 
 // --- Content lookup -------------------------------------------------------------------------
 

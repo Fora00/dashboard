@@ -6,8 +6,8 @@
 // A learningReviews row exists only once the item has been graded; until then (or when the source row is newer,
 // e.g. a card marked known again) the due date is computed: the day after the source, and for items that were
 // already there when Ripasso arrived, spread over the following week so day one is not a wall.
-import type { LearningCard, LearningQuizAnswer, LearningReview } from '../../lib/db'
-import { dayKey } from '../../lib/dates'
+import type { LearningCard, LearningQuizAnswer, LearningReview } from '../../../lib/db'
+import { dayKey } from '../../../lib/dates'
 
 /** Days until the next review, by step. MAX_STEP MUST match the check on learning_reviews.step. */
 export const INTERVALS = [1, 3, 7, 21, 60, 120] as const

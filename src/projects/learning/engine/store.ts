@@ -2,8 +2,8 @@
 // through src/lib/learningSync.ts (which also queues the cloud sync), or
 // src/lib/learningLocal.ts for the local-only checklist ticks and photo diary.
 import { useLiveQuery } from 'dexie-react-hooks'
-import { db } from '../../lib/db'
-import type { LearningPosition } from '../../lib/db'
+import { db } from '../../../lib/db'
+import type { LearningPosition } from '../../../lib/db'
 import type { CourseState } from './progress'
 
 /** Live state of one course; `undefined` while the first read is loading. */

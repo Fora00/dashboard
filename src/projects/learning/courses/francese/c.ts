@@ -1,4 +1,4 @@
-import type { CourseModule } from '../../types'
+import type { CourseModule } from '../../engine/types'
 import { fDeterminants, fGeoReggenze } from './c.1'
 import { fGenrePronom, fIrreguliers, fNegation2 } from './c.2'
 

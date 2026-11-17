@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { searchCourses } from './courseSearch'
-import { card, mod, prac, q } from './courses/kit'
+import { card, mod, prac, q } from '../courses/kit'
 import type { Course } from './types'
 
 const lesson =

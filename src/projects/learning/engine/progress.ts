@@ -1,4 +1,4 @@
-import type { LearningCard, LearningCheck, LearningPractice, LearningQuizAnswer } from '../../lib/db'
+import type { LearningCard, LearningCheck, LearningPractice, LearningQuizAnswer } from '../../../lib/db'
 import type { Course, CourseModule, PracticeItem } from './types'
 
 /** Row id for one item of a module (quiz question, card or practice item). */

@@ -1,4 +1,4 @@
-import type { Course } from '../../types'
+import type { Course } from '../../engine/types'
 import { dbIntro, design, explain, indexes, sqlAdv, sqlBase, sqlWrite } from './a'
 import { cachecdc, dbsecurity, dbtest, workloads } from './extra'
 import { dbDrills, dbInterview, locks, migrations, nosql, orm, pgops, scaling, transactions } from './b'

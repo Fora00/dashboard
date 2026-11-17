@@ -1,4 +1,4 @@
-import type { CourseModule, Flashcard, PracticeItem, QuizQuestion } from '../types'
+import type { CourseModule, Flashcard, PracticeItem, QuizQuestion } from '../engine/types'
 
 // Compact builders shared by every course. Lesson text is light HTML
 // (see ../html.ts allowlist). Code goes in <pre><code>; write < > & as entities.

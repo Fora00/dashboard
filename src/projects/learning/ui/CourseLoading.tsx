@@ -1,4 +1,4 @@
-import { Skeleton, SkeletonList } from '../../components/Skeleton'
+import { Skeleton, SkeletonList } from '../../../components/Skeleton'
 
 // Placeholder while a course chunk loads (first open of a course on this device).
 export function CourseLoading() {

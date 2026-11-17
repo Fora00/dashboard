@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { LearningCard, LearningPractice, LearningQuizAnswer } from '../../../lib/db'
-import type { Course } from '../../learning/types'
+import type { Course } from '../../learning/engine/types'
 import { buildExportMarkdown, describeLearningActivity, summarizeLearningWeek } from './index'
 
 const WEEK = '2026-10-19' // a Monday

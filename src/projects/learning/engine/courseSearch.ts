@@ -3,7 +3,7 @@
 // they fall in, numbered like headingsOf / HtmlText anchors, so the module page can scroll there.
 import { htmlToText } from './html'
 import type { Course, CourseModule } from './types'
-import { normalize } from './vocab/search'
+import { normalize } from '../vocab/search'
 
 export type HitKind = 'module' | 'section' | 'lesson' | 'quiz' | 'card' | 'practice'
 

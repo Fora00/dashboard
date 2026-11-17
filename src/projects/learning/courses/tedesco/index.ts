@@ -1,4 +1,4 @@
-import type { Course } from '../../types'
+import type { Course } from '../../engine/types'
 import { tedescoA } from './a'
 import { tedescoB } from './b'
 

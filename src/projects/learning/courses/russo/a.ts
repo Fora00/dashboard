@@ -1,4 +1,4 @@
-import type { CourseModule } from '../../types'
+import type { CourseModule } from '../../engine/types'
 import { card, mod, prac, q } from '../kit'
 import { PRON_FULL, PRON_SHORT } from './pron'
 import { ruNomi, ruAggettivi, ruPresente, ruCasi1 } from './a.2'

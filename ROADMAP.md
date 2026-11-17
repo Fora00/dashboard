@@ -486,7 +486,7 @@ Order: R1, R2 first (cheap, safe), then R5a/c/d (quick wins), R3, R5b, R6, R7, R
 - [ ] R7 **Vault links as data** [sonnet, S]: replace the free-text `vault` HTML by `notes: string[]`
       (vault-relative paths, shown as plain text) and add `npm run courses:vault-check` that verifies
       the notes exist; runs on the owner's Mac only, never in CI (the vault never leaves the Mac).
-- [ ] R8 **Docs** [sonnet, S]: `docs/COURSES.md` (how to write a course, authoring rules, the review
+- [x] R8 **Docs** [sonnet, S] (DONE 2026-11-17: `docs/COURSES.md`, with the new folder map: engine/ ui/ figures/ course/ module/ review/ home/; `Learning.tsx` = routes only): `docs/COURSES.md` (how to write a course, authoring rules, the review
       checklist used by the council) and a Learning section in `docs/ARCHITECTURE.md`.
 
 ## Home grid — stars, usage ordering, sort selector

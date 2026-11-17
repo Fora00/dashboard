@@ -1,4 +1,4 @@
-import type { Bar } from './progress'
+import type { Bar } from '../engine/progress'
 
 export function ProgressBar({ percent, label }: { percent: number; label: string }) {
   return (

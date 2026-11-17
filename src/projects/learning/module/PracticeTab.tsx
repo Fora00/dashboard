@@ -1,13 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
-import { Button } from '../../components/Button'
-import { FOCUS_RING_FIELD } from '../../components/focus'
-import { HtmlText } from './HtmlText'
-import { figures } from './figures'
-import type { CourseState } from './progress'
-import { toggleCheck } from '../../lib/learningLocal'
-import { MAX_NOTES_LENGTH, setPracticeDone, setPracticeNotes } from '../../lib/learningSync'
+import { Button } from '../../../components/Button'
+import { FOCUS_RING_FIELD } from '../../../components/focus'
+import { HtmlText } from '../engine/HtmlText'
+import { figures } from '../figures/figures'
+import type { CourseState } from '../engine/progress'
+import { toggleCheck } from '../../../lib/learningLocal'
+import { MAX_NOTES_LENGTH, setPracticeDone, setPracticeNotes } from '../../../lib/learningSync'
 import { ItemSketches } from './Sketches'
-import type { CourseModule, PracticeItem } from './types'
+import type { CourseModule, PracticeItem } from '../engine/types'
 
 interface Props {
   courseId: string

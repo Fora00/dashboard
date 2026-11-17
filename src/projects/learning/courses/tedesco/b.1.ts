@@ -1,4 +1,4 @@
-import type { CourseModule } from '../../types'
+import type { CourseModule } from '../../engine/types'
 import { card, mod, prac, q } from '../kit'
 import { PRON_SHORT, vsec } from './pron'
 import { vsecW } from './vsecw'

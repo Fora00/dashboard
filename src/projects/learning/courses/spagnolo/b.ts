@@ -1,4 +1,4 @@
-import type { CourseModule } from '../../types'
+import type { CourseModule } from '../../engine/types'
 import { esCond, esConnettori, esPassiva } from './b.2'
 import { esFalsiamici, esLatam, esRegistri } from './b.3'
 import { esVocLavoro, esVocViaggi, esVocVita } from './b.4'

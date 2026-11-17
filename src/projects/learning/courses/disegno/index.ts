@@ -1,4 +1,4 @@
-import type { Course, CourseModule } from '../../types'
+import type { Course, CourseModule } from '../../engine/types'
 import { finale } from './finale'
 import { osserva } from './osserva'
 import { spazio } from './spazio'

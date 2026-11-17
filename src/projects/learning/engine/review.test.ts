@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { LearningCard, LearningQuizAnswer, LearningReview } from '../../lib/db'
+import type { LearningCard, LearningQuizAnswer, LearningReview } from '../../../lib/db'
 import { addDays, buildQueue, computedDue, DAILY_LIMIT, gradeDays, schedule, sourcesOf } from './review'
 
 const at = (day: string) => new Date(`${day}T10:00:00`).getTime()

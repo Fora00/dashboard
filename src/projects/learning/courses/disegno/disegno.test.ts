@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { figures } from '../../figures'
+import { figures } from '../../figures/figures'
 import { disegno } from './index'
 
 describe('disegno course', () => {

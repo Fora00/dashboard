@@ -3,10 +3,10 @@
 // leave the device. Works offline and signed out.
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { Button } from '../../components/Button'
-import { FOCUS_RING, FOCUS_RING_FIELD } from '../../components/focus'
-import { Sheet } from '../../components/Sheet'
-import type { LearningSketch } from '../../lib/db'
+import { Button } from '../../../components/Button'
+import { FOCUS_RING, FOCUS_RING_FIELD } from '../../../components/focus'
+import { Sheet } from '../../../components/Sheet'
+import type { LearningSketch } from '../../../lib/db'
 import {
   addSketch,
   deleteSketch,
@@ -14,7 +14,7 @@ import {
   setSketchNote,
   setSketchScore,
   sketchesOf,
-} from '../../lib/learningLocal'
+} from '../../../lib/learningLocal'
 import { resizePhoto } from './photo'
 
 const dateFmt = new Intl.DateTimeFormat('it-IT', { day: 'numeric', month: 'short', year: 'numeric' })

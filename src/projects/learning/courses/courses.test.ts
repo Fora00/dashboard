@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { parseHtml } from '../html'
-import type { Course, CourseModule } from '../types'
+import { parseHtml } from '../engine/html'
+import type { Course, CourseModule } from '../engine/types'
 import { courses } from './index'
 
 const IDS = [

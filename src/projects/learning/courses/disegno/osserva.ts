@@ -1,4 +1,4 @@
-import type { CourseModule } from '../../types'
+import type { CourseModule } from '../../engine/types'
 
 // Modules of the 'osserva' batch of the drawing course (order matters).
 // Learning to look: observe first, outline before details, no eraser.

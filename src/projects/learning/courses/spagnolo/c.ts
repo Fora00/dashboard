@@ -1,4 +1,4 @@
-import type { CourseModule } from '../../types'
+import type { CourseModule } from '../../engine/types'
 import { esIndefiniti } from './c.1'
 import { esCambi, esNumeri2 } from './c.2'
 import { esFunciones, esRelativi } from './c.3'

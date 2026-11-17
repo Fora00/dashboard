@@ -1,4 +1,4 @@
-import type { CourseModule } from '../../types'
+import type { CourseModule } from '../../engine/types'
 import { deNebensaetze2, deRelativ, deAggettivi } from './b.1'
 import { dePlusquam, deKonj2, dePassiv } from './b.2'
 import { deKonj1, deKonnektoren, deRegistri } from './b.3'

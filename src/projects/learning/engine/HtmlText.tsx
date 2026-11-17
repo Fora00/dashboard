@@ -1,6 +1,6 @@
 import { createElement, type ReactNode } from 'react'
 import { parseHtml, type HtmlNode } from './html'
-import { figures } from './figures'
+import { figures } from '../figures/figures'
 
 // `anchors` numbers the <h3>s (same order as headingsOf) so the jump list can scroll to them.
 function render(nodes: HtmlNode[], anchors?: { prefix: string; n: number }): ReactNode[] {

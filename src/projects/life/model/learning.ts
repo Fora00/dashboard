@@ -1,5 +1,5 @@
-import { courseProgress, moduleProgress, type CourseState } from '../../learning/progress.ts'
-import type { Course } from '../../learning/types.ts'
+import { courseProgress, moduleProgress, type CourseState } from '../../learning/engine/progress.ts'
+import type { Course } from '../../learning/engine/types.ts'
 import { dayKey, weekDays } from './dates.ts'
 
 // What the Learning project did this week, for the Life week screen and the

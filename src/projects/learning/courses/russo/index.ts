@@ -1,4 +1,4 @@
-import type { Course } from '../../types'
+import type { Course } from '../../engine/types'
 import { russoA } from './a'
 import { russoB } from './b'
 import { russoC } from './c'

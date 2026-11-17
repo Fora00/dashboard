@@ -1,4 +1,4 @@
-import type { Course } from '../types'
+import type { Course } from '../engine/types'
 import { backendInterviewLab } from './backend-interview-lab'
 import { pythonPath } from './python-path'
 import { databasesPath } from './databases-path'

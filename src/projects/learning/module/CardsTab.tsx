@@ -1,10 +1,10 @@
 import { useState } from 'react'
-import { Button } from '../../components/Button'
-import { FOCUS_RING } from '../../components/focus'
-import { HtmlText } from './HtmlText'
-import { deckOrder, nextInDeck, type CourseState } from './progress'
-import { resetCards, setCardKnown } from '../../lib/learningSync'
-import type { CourseModule } from './types'
+import { Button } from '../../../components/Button'
+import { FOCUS_RING } from '../../../components/focus'
+import { HtmlText } from '../engine/HtmlText'
+import { deckOrder, nextInDeck, type CourseState } from '../engine/progress'
+import { resetCards, setCardKnown } from '../../../lib/learningSync'
+import type { CourseModule } from '../engine/types'
 
 interface Props {
   courseId: string

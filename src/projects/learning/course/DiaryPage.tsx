@@ -1,14 +1,14 @@
 import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Link, useParams } from 'react-router-dom'
-import { EmptyState } from '../../components/EmptyState'
-import { courseSketches } from '../../lib/learningLocal'
-import { CourseLoading } from './CourseLoading'
-import { NotFound } from './NotFound'
-import { useCourse } from './useCourse'
-import { courseHasChecklist } from './progress'
-import { SketchThumb, SketchViewer } from './Sketches'
-import type { Course } from './types'
+import { EmptyState } from '../../../components/EmptyState'
+import { courseSketches } from '../../../lib/learningLocal'
+import { CourseLoading } from '../ui/CourseLoading'
+import { NotFound } from '../ui/NotFound'
+import { useCourse } from '../engine/useCourse'
+import { courseHasChecklist } from '../engine/progress'
+import { SketchThumb, SketchViewer } from '../module/Sketches'
+import type { Course } from '../engine/types'
 
 /** Every photo of a course's sheets, oldest first: watch the hand improve. Local-only. */
 function DiaryView({ course }: { course: Course }) {

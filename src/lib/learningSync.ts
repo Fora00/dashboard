@@ -9,8 +9,8 @@ import {
 } from './db'
 import { createCloudSync, type TableSync } from './cloudSync'
 import { useSyncStatus } from './useSyncStatus'
-import { itemKey } from '../projects/learning/progress'
-import { MAX_STEP, schedule, type Grade, type ReviewSource } from '../projects/learning/review'
+import { itemKey } from '../projects/learning/engine/progress'
+import { MAX_STEP, schedule, type Grade, type ReviewSource } from '../projects/learning/engine/review'
 
 // Local-first sync for the Learning project (owner-only: it is the owner's
 // personal progress), built on the generic engine in cloudSync.ts. Content is

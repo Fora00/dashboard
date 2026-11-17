@@ -1,10 +1,10 @@
-import { Button } from '../../components/Button'
-import { FOCUS_RING } from '../../components/focus'
-import { HtmlText } from './HtmlText'
-import { figures } from './figures'
-import { moduleProgress, type CourseState } from './progress'
-import { answerQuiz, resetQuiz, resetWrongQuiz } from '../../lib/learningSync'
-import type { CourseModule } from './types'
+import { Button } from '../../../components/Button'
+import { FOCUS_RING } from '../../../components/focus'
+import { HtmlText } from '../engine/HtmlText'
+import { figures } from '../figures/figures'
+import { moduleProgress, type CourseState } from '../engine/progress'
+import { answerQuiz, resetQuiz, resetWrongQuiz } from '../../../lib/learningSync'
+import type { CourseModule } from '../engine/types'
 
 interface Props {
   courseId: string

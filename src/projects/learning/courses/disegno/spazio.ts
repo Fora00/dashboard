@@ -1,4 +1,4 @@
-import type { CourseModule } from '../../types'
+import type { CourseModule } from '../../engine/types'
 
 // Modules of the 'spazio' batch of the drawing course (order matters).
 // Figures live in ../figures.spazio.tsx.

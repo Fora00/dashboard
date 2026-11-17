@@ -1,4 +1,4 @@
-import type { Course } from '../types'
+import type { Course } from '../engine/types'
 
 // Lightweight course list + lazy content. The UI imports ONLY this file; the full
 // `courses` array in ./index.ts is for tests (it pulls every course into one chunk).

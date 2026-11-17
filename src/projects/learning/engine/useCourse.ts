@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { courseMetaById, loadCourse, loadedCourse } from './courses/registry'
+import { courseMetaById, loadCourse, loadedCourse } from '../courses/registry'
 import type { Course } from './types'
 
 export type CourseStatus = 'loading' | 'ready' | 'missing'

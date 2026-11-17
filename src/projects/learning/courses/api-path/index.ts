@@ -1,4 +1,4 @@
-import type { Course } from '../../types'
+import type { Course } from '../../engine/types'
 import { apiobs, apisec, asyncapi, runner } from './extra'
 import { bruno, curl, formats, http, httpfiles, postman, rest } from './a'
 import { apiDrills, apiInterview, apiTesting, authModule, debug, graphql, openapi, realtime, resilient } from './b'

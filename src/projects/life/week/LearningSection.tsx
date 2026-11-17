@@ -1,5 +1,5 @@
 import { ProjectLink } from '../../../components/ProjectLink'
-import { ProgressBar } from '../../learning/ProgressBar'
+import { ProgressBar } from '../../learning/ui/ProgressBar'
 import { describeLearningActivity, type LearningWeek } from '../model'
 import { CollapsibleSection } from './CollapsibleSection'
 

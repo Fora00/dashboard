@@ -1,4 +1,4 @@
-import type { Course } from '../../types'
+import type { Course } from '../../engine/types'
 import { gaps, langs } from './extra'
 import { modules } from './modules'
 

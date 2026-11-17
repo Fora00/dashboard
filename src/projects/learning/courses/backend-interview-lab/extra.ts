@@ -1,6 +1,6 @@
 // Hand-written modules added after the prototype extraction, from what Farina
 // said in chat on 2026-10-22 (the generated .modules.ts file stays untouched).
-import type { CourseModule } from '../../types'
+import type { CourseModule } from '../../engine/types'
 
 export const langs: CourseModule = {
   id: 'langs',
