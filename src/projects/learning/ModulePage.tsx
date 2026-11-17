@@ -99,7 +99,17 @@ function ModuleView({ course, mod }: { course: Course; mod: CourseModule }) {
     tabsFor(mod).some((t) => t.id === wanted) ? (wanted as TabId) : 'lesson',
   )
   // A module opened from the prev/next links starts at the top (the window scrolls, not a container).
-  useEffect(() => window.scrollTo(0, 0), [])
+  // …unless it came from a search hit inside a lesson section (?sec=n): then scroll there.
+  const sec = tab === 'lesson' ? params.get('sec') : null
+  useEffect(() => {
+    const el = sec === null ? null : document.getElementById(`${ANCHOR}${sec}`)
+    if (el) {
+      el.scrollIntoView({ block: 'start' })
+      el.focus({ preventScroll: true })
+    } else window.scrollTo(0, 0)
+    // Once per open: switching tabs later must not jump back.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
   // Remember where I am, so any device can offer "Riprendi da…".
   useEffect(() => {
     void setPosition(course.id, mod.id, tab)

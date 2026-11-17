@@ -467,7 +467,10 @@ Order: R1, R2 first (cheap, safe), then R5a/c/d (quick wins), R3, R5b, R6, R7, R
       - c [sonnet, S] "Modulo successivo" link at the end of a lesson and "continua da dove eri"
         (last module per course, guarded localStorage);
       - d [sonnet, S] in-lesson jump list built from the `<h3>`s;
-      - e [sonnet, M] search across module titles, lessons and cards.
+      - e [sonnet, M] search across module titles, lessons and cards. DONE 2026-11-17: `courseSearch.ts` (+ test),
+        box on the Learning home (loads every course at once while searching), accent-insensitive, ranked title >
+        section heading > lesson text > quiz/cards/practice, 60 shown with a highlighted snippet; lesson hits open
+        `?tab=lesson&sec=n` and scroll to that `<h3>`. Checked at 390px.
 - [ ] R6 **Authoring in Markdown** [opus, L, optional] (owner, 2026-11-17: skipped for now; content is AI-written): `scripts/learning/md2course.mjs` turns
       `content/<course>/<module>.md` (front matter + sections for lesson, quiz, cards, practice) into
       the TS data using the same allowlist, so no escaping and diffs are readable; the existing TS
