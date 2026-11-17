@@ -450,7 +450,11 @@ Order: R1, R2 first (cheap, safe), then R5a/c/d (quick wins), R3, R5b, R6, R7, R
       discriminated union of item kinds and a per-course `progressModel` (single bar vs "Sapere/Saper
       fare") so `progress.ts`, `CoursePage` and `ModulePage` stop special-casing. Needs a Dexie
       read-compat check: row keys `courseId:moduleId:itemId` must not change.
-- [ ] R5 **Engine features**:
+- [ ] R5 **Engine features** (owner, 2026-11-17: do R5 a/c/d, then R1+R2 (+R6 asked when reached),
+      then R5e search, then R5b Ripasso; one at a time). a/c/d DONE 2026-11-17 (not committed):
+      `resetWrongQuiz` ("Rifai le sbagliate (n)" + "Rifai tutto"), prev/next module nav under every tab
+      (scroll to top on open), "In questa lezione" jump list from the `<h3>`s (`headingsOf`, anchors via
+      `HtmlText anchorPrefix`, buttons not #hash because of HashRouter), checked at 390px:
       - a [sonnet, S] "Rifai" resets only the wrong answers (keep correct ones);
       - b [opus, M] **review queue** ("Ripasso") across courses: intervals 1/3/7/21 days with
         again/good grades per card; needs a `dueAt` + `ease` column on `learning_cards` (migration,

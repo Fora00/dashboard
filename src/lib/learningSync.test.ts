@@ -9,6 +9,7 @@ import {
   resetCards,
   resetCourse,
   resetQuiz,
+  resetWrongQuiz,
   setCardKnown,
   setPracticeDone,
   setPosition,
@@ -45,6 +46,16 @@ describe('quiz', () => {
     expect((await ops('learning_quiz')).some((o) => o.op === 'delete' && o.rowId === `${C}:http:q1`)).toBe(true)
     await answerQuiz(C, 'http', 'q1', 2, 2)
     expect(await db.learningQuiz.count()).toBe(2)
+  })
+
+  it('retry of the wrong ones keeps the right answers of that module and other modules', async () => {
+    await answerQuiz(C, 'http', 'q1', 2, 2) // right
+    await answerQuiz(C, 'http', 'q2', 0, 1) // wrong
+    await answerQuiz(C, 'api', 'q1', 0, 1) // wrong, other module
+    await resetWrongQuiz(C, 'http')
+    expect((await db.learningQuiz.toArray()).map((r) => r.id).sort()).toEqual([`${C}:api:q1`, `${C}:http:q1`])
+    const dels = (await ops('learning_quiz')).filter((o) => o.op === 'delete').map((o) => o.rowId)
+    expect(dels).toEqual([`${C}:http:q2`])
   })
 })
 

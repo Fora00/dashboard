@@ -102,3 +102,18 @@ export function htmlToText(html: string): string {
   const walk = (nodes: HtmlNode[]): string => nodes.map((n) => (typeof n === 'string' ? n : walk(n.children))).join('')
   return walk(parseHtml(html))
 }
+
+/** Text of every <h3> in document order: the lesson's jump list (HtmlText numbers them the same way). */
+export function headingsOf(html: string): string[] {
+  const out: string[] = []
+  const text = (nodes: HtmlNode[]): string => nodes.map((n) => (typeof n === 'string' ? n : text(n.children))).join('')
+  const walk = (nodes: HtmlNode[]) => {
+    for (const n of nodes) {
+      if (typeof n === 'string') continue
+      if (n.tag === 'h3') out.push(text(n.children).trim())
+      else walk(n.children)
+    }
+  }
+  walk(parseHtml(html))
+  return out
+}

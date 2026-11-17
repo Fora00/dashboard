@@ -3,7 +3,7 @@ import { FOCUS_RING } from '../../components/focus'
 import { HtmlText } from './HtmlText'
 import { figures } from './figures'
 import { moduleProgress, type CourseState } from './progress'
-import { answerQuiz, resetQuiz } from '../../lib/learningSync'
+import { answerQuiz, resetQuiz, resetWrongQuiz } from '../../lib/learningSync'
 import type { CourseModule } from './types'
 
 interface Props {
@@ -17,15 +17,24 @@ export function QuizTab({ courseId, mod, state }: Props) {
     state.quiz.filter((a) => a.courseId === courseId && a.moduleId === mod.id).map((a) => [a.itemId, a]),
   )
   const right = moduleProgress(courseId, mod, state).quiz.done
+  const ids = new Set(mod.quiz.map((q) => q.id))
+  const wrong = [...answers.values()].filter((a) => a.correct !== 1 && ids.has(a.itemId)).length
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <span aria-live="polite" className="text-sm text-slate-600 tabular-nums dark:text-slate-400">
           {right} / {mod.quiz.length} corrette
         </span>
-        <Button variant="ghost" onClick={() => void resetQuiz(courseId, mod.id)} disabled={answers.size === 0}>
-          Rifai il quiz
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          {wrong > 0 && (
+            <Button variant="ghost" onClick={() => void resetWrongQuiz(courseId, mod.id)}>
+              Rifai le sbagliate ({wrong})
+            </Button>
+          )}
+          <Button variant="ghost" onClick={() => void resetQuiz(courseId, mod.id)} disabled={answers.size === 0}>
+            Rifai tutto
+          </Button>
+        </div>
       </div>
 
       {mod.quiz.map((q, i) => {

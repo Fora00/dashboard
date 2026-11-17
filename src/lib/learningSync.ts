@@ -236,6 +236,15 @@ export async function resetQuiz(courseId: string, moduleId: string): Promise<voi
   await engine.removeMany('learning_quiz', await idsOf('learningQuiz', courseId, moduleId))
 }
 
+/** "Rifai le sbagliate": clears only the wrong answers of one module, keeping the right ones. */
+export async function resetWrongQuiz(courseId: string, moduleId: string): Promise<void> {
+  const rows = await db.learningQuiz.where('[courseId+moduleId]').equals([courseId, moduleId]).toArray()
+  await engine.removeMany(
+    'learning_quiz',
+    rows.filter((r) => r.correct !== 1).map((r) => r.id),
+  )
+}
+
 export async function setCardKnown(courseId: string, moduleId: string, itemId: string, known: boolean): Promise<void> {
   const id = itemKey(courseId, moduleId, itemId)
   if (known) await engine.upsert('learning_cards', { id, courseId, moduleId, itemId, updatedAt: Date.now() })

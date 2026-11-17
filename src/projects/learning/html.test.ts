@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { decodeEntities, htmlToText, parseHtml } from './html'
+import { decodeEntities, headingsOf, htmlToText, parseHtml } from './html'
 
 describe('parseHtml', () => {
   it('keeps allowlisted tags and the three known classes', () => {
@@ -35,5 +35,12 @@ describe('parseHtml', () => {
 describe('decodeEntities', () => {
   it('decodes named and numeric entities, leaves unknown ones', () => {
     expect(decodeEntities('a &amp; b &lt;c&gt; &#39;d&#39; &#x41; &bogus;')).toBe("a & b <c> 'd' A &bogus;")
+  })
+})
+
+describe('headingsOf', () => {
+  it('lists the h3 texts in order, nested ones included, h4 ignored', () => {
+    const html = '<h3>Uno <b>bis</b></h3><p>x</p><div><h3>Due</h3></div><h4>no</h4><h3> Tre </h3>'
+    expect(headingsOf(html)).toEqual(['Uno bis', 'Due', 'Tre'])
   })
 })

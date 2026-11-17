@@ -4,6 +4,7 @@ import { FOCUS_RING_INSET } from '../../components/focus'
 import { setPosition } from '../../lib/learningSync'
 import { CourseLoading } from './CourseLoading'
 import { CardsTab } from './CardsTab'
+import { headingsOf } from './html'
 import { HtmlText } from './HtmlText'
 import { NotFound } from './NotFound'
 import { PracticeTab } from './PracticeTab'
@@ -25,12 +26,80 @@ function tabsFor(m: CourseModule): { id: TabId; label: string }[] {
   ]
 }
 
+const ANCHOR = 'lez-'
+
+/** "In questa lezione": jump list from the lesson's <h3>s (buttons, not #hash links: HashRouter owns the hash). */
+function JumpList({ html }: { html: string }) {
+  const heads = headingsOf(html)
+  if (heads.length < 3) return null
+  const go = (i: number) => {
+    const el = document.getElementById(`${ANCHOR}${i}`)
+    if (!el) return
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    el.focus({ preventScroll: true })
+  }
+  return (
+    <details className="mb-4 rounded-xl border border-slate-200 dark:border-slate-800">
+      <summary className={`flex min-h-10 cursor-pointer items-center px-3 text-sm font-medium ${FOCUS_RING_INSET}`}>
+        In questa lezione ({heads.length})
+      </summary>
+      <ol className="flex flex-col pb-2">
+        {heads.map((h, i) => (
+          <li key={i}>
+            <button
+              type="button"
+              onClick={() => go(i)}
+              className={`flex min-h-10 w-full items-center px-3 text-left text-sm text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100 ${FOCUS_RING_INSET}`}
+            >
+              {h}
+            </button>
+          </li>
+        ))}
+      </ol>
+    </details>
+  )
+}
+
+/** Previous / next module in course order, shown under every tab. */
+function ModuleNav({ course, mod }: { course: Course; mod: CourseModule }) {
+  const i = course.modules.findIndex((m) => m.id === mod.id)
+  const prev = course.modules[i - 1]
+  const next = course.modules[i + 1]
+  const cls = `flex min-h-12 flex-1 flex-col justify-center rounded-xl border border-slate-200 px-3 py-2 text-sm hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800 ${FOCUS_RING_INSET}`
+  return (
+    <nav
+      aria-label="Moduli"
+      className="mt-2 flex flex-col gap-2 border-t border-slate-200 pt-4 sm:flex-row dark:border-slate-800"
+    >
+      {prev && (
+        <Link to={`/learning/${course.id}/${prev.id}`} className={cls}>
+          <span className="text-xs text-slate-500">← Modulo precedente</span>
+          <span className="font-medium">{prev.title}</span>
+        </Link>
+      )}
+      {next ? (
+        <Link to={`/learning/${course.id}/${next.id}`} className={`${cls} sm:text-right`}>
+          <span className="text-xs text-slate-500">Modulo successivo →</span>
+          <span className="font-medium">{next.title}</span>
+        </Link>
+      ) : (
+        <Link to={`/learning/${course.id}`} className={`${cls} sm:text-right`}>
+          <span className="text-xs text-slate-500">Ultimo modulo</span>
+          <span className="font-medium">Torna al corso</span>
+        </Link>
+      )}
+    </nav>
+  )
+}
+
 function ModuleView({ course, mod }: { course: Course; mod: CourseModule }) {
   const [params] = useSearchParams()
   const wanted = params.get('tab')
   const [tab, setTab] = useState<TabId>(() =>
     tabsFor(mod).some((t) => t.id === wanted) ? (wanted as TabId) : 'lesson',
   )
+  // A module opened from the prev/next links starts at the top (the window scrolls, not a container).
+  useEffect(() => window.scrollTo(0, 0), [])
   // Remember where I am, so any device can offer "Riprendi da…".
   useEffect(() => {
     void setPosition(course.id, mod.id, tab)
@@ -96,7 +165,8 @@ function ModuleView({ course, mod }: { course: Course; mod: CourseModule }) {
       <div role="tabpanel">
         {tab === 'lesson' && (
           <div>
-            <HtmlText html={mod.lesson} block />
+            <JumpList html={mod.lesson} />
+            <HtmlText html={mod.lesson} block anchorPrefix={ANCHOR} />
             {mod.vault && (
               <p className="mt-6 rounded-lg bg-slate-100 px-3 py-2 text-sm text-slate-600 dark:bg-slate-800 dark:text-slate-400">
                 <strong>Dal tuo vault.</strong> <HtmlText html={mod.vault} />
@@ -109,6 +179,8 @@ function ModuleView({ course, mod }: { course: Course; mod: CourseModule }) {
         {tab === 'cards' && loaded && <CardsTab courseId={course.id} mod={mod} state={loaded} />}
         {tab === 'practice' && loaded && <PracticeTab courseId={course.id} mod={mod} state={loaded} />}
       </div>
+
+      <ModuleNav course={course} mod={mod} />
     </div>
   )
 }
