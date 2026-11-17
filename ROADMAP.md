@@ -418,6 +418,11 @@ parser (`html.ts` + `HtmlText.tsx`), never `dangerouslySetInnerHTML`.
       Checked at 390px, light and dark.
 - [x] T3 Module page: sticky tabs (under the phone header, measured; 2px on wide screens), "Lo so -> Ripasso"
       hint on Flashcard and on the finished deck, Ripasso link when the quiz has wrong answers. Checked 390px + 1280px.
+- [x] T4 Two taps (owner, 2026-11-17): the home lists the AREAS (Lingue, Sviluppo, Creatività), each opens
+      `/learning/<groupId>` with its courses (`home/GroupPage.tsx`); course page and Vocabolario go back to their
+      area. Collapsible groups removed. Test: course ids never equal an area id, `ripasso` or `vocabolario`.
+      Bug caught on the way: relative links from the area page (`/learning/lingue/tedesco`); all home links
+      are absolute now.
 - Left as is: shared app chrome in English ("All projects", SyncCard texts) is used by every project.
 
 ### Learning refactor (proposal 2026-11-05; R3 done 2026-11-06, the rest not built)

@@ -4,6 +4,7 @@ import { Button } from '../../../components/Button'
 import { Card } from '../../../components/Card'
 import { CourseLoading } from '../ui/CourseLoading'
 import { NotFound } from '../ui/NotFound'
+import { courseGroups, courseMetaById } from '../courses/registry'
 import { useCourse } from '../engine/useCourse'
 import { ProgressBar, ProgressBars } from '../ui/ProgressBar'
 import { courseProgress, EMPTY_STATE } from '../engine/progress'
@@ -41,14 +42,16 @@ function CourseView({ course }: { course: Course }) {
   const progress = courseProgress(course, state)
   const resume = useResume(course.id)
   const resumeModule = resume && course.modules.find((m) => m.id === resume.moduleId)
+  // Back to the course's area (Lingue, Sviluppo...).
+  const back = courseGroups.find((g) => g.id === courseMetaById(course.id)?.group)
   return (
     <div className="flex flex-col gap-6">
       <div>
         <Link
-          to="/learning"
+          to={`/learning/${back?.id ?? ''}`}
           className="mb-3 inline-block text-sm text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
         >
-          ← Learning
+          ← {back?.title ?? 'Learning'}
         </Link>
         <h1 className="text-2xl font-semibold tracking-tight">
           <span className="mr-2">{course.emoji}</span>

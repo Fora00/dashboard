@@ -14,7 +14,7 @@ const KIND_LABEL: Record<CourseHit['kind'], string> = {
 }
 
 const hitLink = (h: CourseHit) =>
-  `${h.course.id}/${h.module.id}?tab=${h.tab}${h.section === undefined ? '' : `&sec=${h.section}`}`
+  `/learning/${h.course.id}/${h.module.id}?tab=${h.tab}${h.section === undefined ? '' : `&sec=${h.section}`}`
 
 export function SearchResults({ query, ready }: { query: string; ready: number }) {
   // Courses already loaded (all of them once `ready` reaches the total).

@@ -8,7 +8,7 @@ Read this before touching `src/projects/learning/`. Status and queues live in `R
 ```
 src/projects/learning/
   Learning.tsx        routes only
-  home/               the Learning home (Oggi block, search, course groups)
+  home/               the Learning home (Oggi, search, areas) and the area pages (/learning/<groupId>)
   course/             course page, photo diary
   module/             module page and its tabs (lesson, quiz, cards, practice, sketches)
   review/             Ripasso page, its queue hook, the home card
@@ -35,7 +35,8 @@ Rule of thumb: pages read through `engine/store.ts` (or `review/useQueue.ts`) an
    `prac(id, question, answer)`. `q()` shuffles the options with a seed, so write the right answer
    anywhere and never rely on its slot.
 3. Add it to `courses/index.ts` (eager list, tests only) AND to `courses/registry.ts` (meta + `load()` +
-   `group`: `sviluppo`, `creativita`, `lingue`, or a new entry in `courseGroups`). The `lazy registry`
+   `group`: `sviluppo`, `creativita`, `lingue`, or a new entry in `courseGroups`, which also gets its own
+   page at `/learning/<groupId>`; course ids must differ from area ids, `ripasso` and `vocabolario`). The `lazy registry`
    test fails until title/emoji/summary/moduleCount match the content.
 4. Add a profile to `PROFILES` in `courses/courses.test.ts` (module count, minimums, ratchets).
 5. `npm run check` and `npm run build`.

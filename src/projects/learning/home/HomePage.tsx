@@ -1,43 +1,23 @@
-// The Learning home: Oggi (continue + Ripasso), search across courses, course groups; sync status at the bottom.
-import { useEffect, useState } from 'react'
+// The Learning home: Oggi (continue + Ripasso), search across courses, the areas; sync status at the bottom.
+// Two taps to a course: area (/learning/<groupId>) then course; Continua covers the usual case in one.
+import { useState } from 'react'
 import { EmptyState } from '../../../components/EmptyState'
 import { FOCUS_RING_FIELD } from '../../../components/focus'
 import { PageHeader } from '../../../components/PageHeader'
 import { SyncCard } from '../../../components/SyncCard'
 import { sync } from '../../../lib/learningSync'
-import { courseMetas, loadCourse } from '../courses/registry'
-import { CourseGroups } from './CourseRows'
+import { courseMetas } from '../courses/registry'
+import { GroupTiles } from './CourseRows'
 import { SearchResults } from './SearchResults'
 import { TodayBlock } from './TodayBlock'
+import { useLoadCourses } from './useLoadCourses'
 
-// Course content is lazy (own chunk per course). The list shows the lightweight meta at once and
-// fills in the progress percentages as chunks arrive, one at a time while the browser is idle
-// (all at once while searching).
-const idle = () =>
-  new Promise<void>((resolve) => {
-    if (typeof requestIdleCallback === 'function') requestIdleCallback(() => resolve())
-    else setTimeout(resolve, 200)
-  })
+const ALL_IDS = courseMetas.map((m) => m.id)
 
 export function HomePage() {
   const [query, setQuery] = useState('')
   const searching = query.trim() !== ''
-  const [ready, setReady] = useState(0)
-  useEffect(() => {
-    let live = true
-    void (async () => {
-      for (let i = 0; i < courseMetas.length && live; i++) {
-        if (!searching) await idle()
-        if (!live) return
-        await loadCourse(courseMetas[i]!.id).catch(() => undefined)
-        if (live) setReady(i + 1)
-      }
-    })()
-    return () => {
-      live = false
-    }
-    // Restarts (without the idle waits) once a search begins; loaded chunks resolve at once.
-  }, [searching])
+  const ready = useLoadCourses(ALL_IDS, searching)
   return (
     <div>
       <PageHeader emoji="🎓" title="Learning" subtitle="Lezioni, quiz, flashcard e ripasso, anche offline." />
@@ -54,7 +34,7 @@ export function HomePage() {
             aria-label="Cerca in tutti i corsi"
             className={`min-h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-base dark:border-slate-700 dark:bg-slate-800 ${FOCUS_RING_FIELD}`}
           />
-          {searching ? <SearchResults query={query} ready={ready} /> : <CourseGroups />}
+          {searching ? <SearchResults query={query} ready={ready} /> : <GroupTiles />}
         </div>
       )}
       <div className="mt-8">

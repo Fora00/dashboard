@@ -81,14 +81,14 @@ export function TodayBlock() {
       <Card className="divide-y divide-slate-200 overflow-hidden p-0! dark:divide-slate-800">
         {last && meta && (
           <Row
-            to={`${last.courseId}/${last.moduleId}?tab=${last.tab}`}
+            to={`/learning/${last.courseId}/${last.moduleId}?tab=${last.tab}`}
             icon="▶️"
             title={`Continua: ${mod?.title ?? '…'}`}
             sub={`${meta.emoji} ${meta.title.split(':')[0]} · ${TAB_LABEL[last.tab]}`}
           />
         )}
         <Row
-          to="ripasso"
+          to="/learning/ripasso"
           icon="🔁"
           title="Ripasso"
           sub={

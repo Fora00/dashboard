@@ -308,6 +308,12 @@ describe('lazy registry', () => {
     expect(await loadCourse('nope')).toBeUndefined()
   })
 
+  it('keeps course ids distinct from the static Learning routes (areas, ripasso, vocabolario)', async () => {
+    const { courseMetas, courseGroups } = await import('./registry')
+    const reserved = new Set<string>([...courseGroups.map((g) => g.id), 'ripasso', 'vocabolario'])
+    for (const m of courseMetas) expect(reserved.has(m.id), m.id).toBe(false)
+  })
+
   it('puts every course in a known group and leaves no group empty', async () => {
     const { courseMetas, courseGroups } = await import('./registry')
     const ids = courseGroups.map((g) => g.id as string)

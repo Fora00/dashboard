@@ -96,8 +96,8 @@ function ThemeList() {
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <Link to="/learning" className={backLink}>
-          ← Learning
+        <Link to="/learning/lingue" className={backLink}>
+          ← Lingue
         </Link>
         <h1 className="text-2xl font-semibold tracking-tight">
           <span className="mr-2">🗂️</span>Vocabolario
