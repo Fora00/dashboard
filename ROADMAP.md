@@ -365,7 +365,10 @@ parser (`html.ts` + `HtmlText.tsx`), never `dangerouslySetInnerHTML`.
         Cheaper: a "Lingue" group on the Learning home (4 languages + Vocabolario), optionally a home tile
         deep-linking to it. Revisit when languages get their own features (audio, conjugation tables, one
         review schedule across vocabulary), after moving the engine to `src/lib` (Learning refactor).
-        Pending owner answer: add the "Lingue" grouping task after the de moves?
+        DONE 2026-11-17 (not committed), generalised for all of Learning: `courseGroups` + `group` per
+        meta in `courses/registry.ts` (Sviluppo, Creatività, Lingue; Vocabolario is a group extra in
+        `Learning.tsx`), collapsible sections remembered per device, test: every course in a known
+        group, no empty group. Home tile deep-linking to Lingue: not done (optional).
       - Lost in WS0: the comments inside the two old theme files (untracked, deleted after conversion);
         data verified identical against the morning build.
       do in this order, one language at a time, reviewers write their report incrementally:

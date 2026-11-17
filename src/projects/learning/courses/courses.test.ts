@@ -117,4 +117,15 @@ describe('lazy registry', () => {
     }
     expect(await loadCourse('nope')).toBeUndefined()
   })
+
+  it('puts every course in a known group and leaves no group empty', async () => {
+    const { courseMetas, courseGroups } = await import('./registry')
+    const ids = courseGroups.map((g) => g.id as string)
+    for (const m of courseMetas) expect(ids, m.id).toContain(m.group)
+    for (const g of courseGroups)
+      expect(
+        courseMetas.some((m) => m.group === g.id),
+        g.id,
+      ).toBe(true)
+  })
 })

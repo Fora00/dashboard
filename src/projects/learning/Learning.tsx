@@ -1,11 +1,19 @@
-import { lazy, Suspense, useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react'
 import { Link, Route, Routes } from 'react-router-dom'
 import { Card } from '../../components/Card'
 import { EmptyState } from '../../components/EmptyState'
 import { PageHeader } from '../../components/PageHeader'
 import { SyncCard } from '../../components/SyncCard'
 import { sync } from '../../lib/learningSync'
-import { courseMetas, loadCourse, loadedCourse, type CourseMeta } from './courses/registry'
+import { usePersistedState } from '../../lib/safeStorage'
+import {
+  courseGroups,
+  courseMetas,
+  loadCourse,
+  loadedCourse,
+  type CourseGroupId,
+  type CourseMeta,
+} from './courses/registry'
 import { CourseLoading } from './CourseLoading'
 import { CoursePage } from './CoursePage'
 import { DiaryPage } from './DiaryPage'
@@ -36,10 +44,10 @@ function CourseCard({ meta }: { meta: CourseMeta }) {
     <Link to={meta.id} className="block rounded-xl focus-visible:outline-none">
       <Card className="flex flex-col gap-2 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800">
         <div className="flex items-start justify-between gap-3">
-          <h2 className="font-medium">
+          <h3 className="font-medium">
             <span className="mr-2">{meta.emoji}</span>
             {meta.title}
-          </h2>
+          </h3>
           <span className="text-sm text-slate-500 tabular-nums">{p?.percent ?? 0}%</span>
         </div>
         <p className="text-sm text-slate-500 dark:text-slate-400">{meta.summary}</p>
@@ -68,10 +76,10 @@ function VocabCard() {
   return (
     <Link to="vocabolario" className="block rounded-xl focus-visible:outline-none">
       <Card className="flex flex-col gap-2 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800">
-        <h2 className="font-medium">
+        <h3 className="font-medium">
           <span className="mr-2">🗂️</span>
           Vocabolario
-        </h2>
+        </h3>
         <p className="text-sm text-slate-500 dark:text-slate-400">
           Le stesse parole in spagnolo, francese, tedesco e russo: dizionario per temi e flashcard.
         </p>
@@ -80,6 +88,61 @@ function VocabCard() {
         </p>
       </Card>
     </Link>
+  )
+}
+
+// Extra cards shown at the end of a group (not courses).
+const groupExtras: Partial<Record<CourseGroupId, ReactNode>> = { lingue: <VocabCard /> }
+
+const COLLAPSED_KEY = 'learning.collapsedGroups'
+const asIdList = (raw: unknown): string[] =>
+  Array.isArray(raw) ? raw.filter((x): x is string => typeof x === 'string') : []
+
+function CourseGroups() {
+  // Per-device convenience: which sections are folded (all open by default).
+  const [collapsed, setCollapsed] = usePersistedState<string[]>(COLLAPSED_KEY, [], asIdList)
+  const toggle = (id: string) =>
+    setCollapsed(collapsed.includes(id) ? collapsed.filter((x) => x !== id) : [...collapsed, id])
+  return (
+    <div className="flex flex-col gap-5">
+      {courseGroups.map((g) => {
+        const metas = courseMetas.filter((m) => m.group === g.id)
+        const extra = groupExtras[g.id]
+        if (metas.length === 0 && !extra) return null
+        const open = !collapsed.includes(g.id)
+        const panelId = `learning-group-${g.id}`
+        return (
+          <section key={g.id} aria-labelledby={`${panelId}-h`}>
+            <h2 id={`${panelId}-h`}>
+              <button
+                type="button"
+                aria-expanded={open}
+                aria-controls={panelId}
+                onClick={() => toggle(g.id)}
+                className="flex min-h-10 w-full items-center gap-2 rounded-lg px-1 text-left text-sm font-semibold tracking-wide text-slate-600 uppercase hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+              >
+                <span aria-hidden>{g.emoji}</span>
+                <span className="flex-1">{g.title}</span>
+                <span className="text-xs font-normal text-slate-500 normal-case tabular-nums">
+                  {metas.length + (extra ? 1 : 0)}
+                </span>
+                <span aria-hidden className={`text-slate-400 transition-transform ${open ? 'rotate-90' : ''}`}>
+                  ›
+                </span>
+              </button>
+            </h2>
+            {open && (
+              <div id={panelId} className="mt-2 flex flex-col gap-3">
+                {metas.map((m) => (
+                  <CourseCard key={m.id} meta={m} />
+                ))}
+                {extra}
+              </div>
+            )}
+          </section>
+        )
+      })}
+    </div>
   )
 }
 
@@ -105,16 +168,7 @@ function CourseList() {
       <div className="mb-4">
         <SyncCard sync={sync} />
       </div>
-      {courseMetas.length === 0 ? (
-        <EmptyState emoji="🎓" title="No courses yet" />
-      ) : (
-        <div className="flex flex-col gap-3">
-          {courseMetas.map((m) => (
-            <CourseCard key={m.id} meta={m} />
-          ))}
-          <VocabCard />
-        </div>
-      )}
+      {courseMetas.length === 0 ? <EmptyState emoji="🎓" title="No courses yet" /> : <CourseGroups />}
     </div>
   )
 }

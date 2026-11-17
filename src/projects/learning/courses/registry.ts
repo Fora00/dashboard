@@ -3,8 +3,18 @@ import type { Course } from '../types'
 // Lightweight course list + lazy content. The UI imports ONLY this file; the full
 // `courses` array in ./index.ts is for tests (it pulls every course into one chunk).
 // A course = meta here + `load` doing a dynamic import (own chunk, precached by the PWA).
+// Sections of the Learning home. Add a group here, then tag courses with its id.
+export const courseGroups = [
+  { id: 'sviluppo', emoji: '💻', title: 'Sviluppo' },
+  { id: 'creativita', emoji: '🎨', title: 'Creatività' },
+  { id: 'lingue', emoji: '🌍', title: 'Lingue' },
+] as const satisfies readonly { id: string; emoji: string; title: string }[]
+
+export type CourseGroupId = (typeof courseGroups)[number]['id']
+
 export interface CourseMeta {
   id: string
+  group: CourseGroupId
   title: string
   emoji: string
   summary: string
@@ -15,6 +25,7 @@ export interface CourseMeta {
 export const courseMetas: CourseMeta[] = [
   {
     id: 'backend-interview-lab',
+    group: 'sviluppo',
     title: 'Full Stack Interview Lab',
     emoji: '🧪',
     summary: 'Preparazione al colloquio full stack da Open Move: backend, frontend, mobile e live coding.',
@@ -23,6 +34,7 @@ export const courseMetas: CourseMeta[] = [
   },
   {
     id: 'python-path',
+    group: 'sviluppo',
     title: 'Python: percorso completo',
     emoji: '🐍',
     summary: 'Da JS/TS a Python per il backend: base, oggetti, stile pythonic, API, test e deploy. Tutto offline.',
@@ -31,6 +43,7 @@ export const courseMetas: CourseMeta[] = [
   },
   {
     id: 'databases-path',
+    group: 'sviluppo',
     title: 'Database: dal SQL a Postgres in produzione',
     emoji: '🗄️',
     summary:
@@ -40,6 +53,7 @@ export const courseMetas: CourseMeta[] = [
   },
   {
     id: 'api-path',
+    group: 'sviluppo',
     title: 'API: capirle, interrogarle e testarle',
     emoji: '🔌',
     summary:
@@ -49,6 +63,7 @@ export const courseMetas: CourseMeta[] = [
   },
   {
     id: 'disegno',
+    group: 'creativita',
     title: 'Disegno da zero',
     emoji: '✏️',
     summary: 'Dal segno ai solidi e alla luce, con figure disegnate. Esercizi su carta.',
@@ -57,6 +72,7 @@ export const courseMetas: CourseMeta[] = [
   },
   {
     id: 'spagnolo',
+    group: 'lingue',
     title: 'Spagnolo: da A1 a B2',
     emoji: '🇪🇸',
     summary:
@@ -66,6 +82,7 @@ export const courseMetas: CourseMeta[] = [
   },
   {
     id: 'francese',
+    group: 'lingue',
     title: 'Francese: da A1 a B2',
     emoji: '🇫🇷',
     summary: 'Pronuncia, grammatica, vocabolario, falsi amici, francofonia, dialoghi, esercizi e preparazione al DELF.',
@@ -74,6 +91,7 @@ export const courseMetas: CourseMeta[] = [
   },
   {
     id: 'tedesco',
+    group: 'lingue',
     title: 'Tedesco: da A1 a B2',
     emoji: '🇩🇪',
     summary:
@@ -83,6 +101,7 @@ export const courseMetas: CourseMeta[] = [
   },
   {
     id: 'russo',
+    group: 'lingue',
     title: 'Russo: A1',
     emoji: '🇷🇺',
     summary:
