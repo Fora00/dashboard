@@ -3,10 +3,11 @@ import { Link, Route, Routes, useParams } from 'react-router-dom'
 import { Button } from '../../../components/Button'
 import { Card } from '../../../components/Card'
 import { Chip } from '../../../components/Chip'
-import { FOCUS_RING, FOCUS_RING_FIELD, FOCUS_RING_INSET } from '../../../components/focus'
+import { FOCUS_RING_FIELD, FOCUS_RING_INSET } from '../../../components/focus'
 import type { LearningCard } from '../../../lib/db'
 import { useLazyChunk } from '../../../lib/useLazyChunk'
 import { CourseLoading } from '../ui/CourseLoading'
+import { FlipActions, FlipCard } from '../ui/FlipCard'
 import { HtmlText } from '../engine/HtmlText'
 import { NotFound } from '../ui/NotFound'
 import { ProgressBar } from '../ui/ProgressBar'
@@ -404,15 +405,11 @@ function Flashcards({ theme, langs, known }: { theme: VocabTheme; langs: Lang[];
       <p className="text-sm text-slate-600 tabular-nums dark:text-slate-400">
         Parola {pos + 1} di {deck.length} da ripassare
       </p>
-      <button
-        type="button"
-        onClick={() => setFlipped((f) => !f)}
-        aria-label={flipped ? 'Mostra la parola italiana' : 'Mostra la traduzione'}
-        className={`flex min-h-48 w-full flex-col justify-center gap-3 rounded-xl border border-slate-200 bg-white p-6 text-left dark:border-slate-700 dark:bg-slate-800/50 ${FOCUS_RING}`}
+      <FlipCard
+        onFlip={() => setFlipped((f) => !f)}
+        label={flipped ? 'Mostra la parola italiana' : 'Mostra la traduzione'}
+        tag={flipped ? 'Traduzione' : 'Italiano'}
       >
-        <span className="text-xs font-semibold tracking-wide text-(color:--accent-border) uppercase">
-          {flipped ? 'Traduzione' : 'Italiano'}
-        </span>
         <span className="text-xl leading-snug font-medium">{word.it}</span>
         {flipped && (
           <span className="flex flex-col gap-2 text-base">
@@ -421,30 +418,19 @@ function Flashcards({ theme, langs, known }: { theme: VocabTheme; langs: Lang[];
             ))}
           </span>
         )}
-      </button>
-      {flipped ? (
-        <div className="flex flex-wrap gap-2">
-          <Button
-            onClick={() => {
-              void setWordKnown(word.id, wordLangs(word, langs), true)
-              setFlipped(false)
-            }}
-          >
-            Lo so
-          </Button>
-          <Button
-            variant="ghost"
-            onClick={() => {
-              setPosition(nextInDeck(pos, deck.length))
-              setFlipped(false)
-            }}
-          >
-            Da ripassare
-          </Button>
-        </div>
-      ) : (
-        <p className="text-sm text-slate-500">Dilla a voce nelle lingue scelte, poi tocca la carta.</p>
-      )}
+      </FlipCard>
+      <FlipActions
+        flipped={flipped}
+        hint="Dilla a voce nelle lingue scelte, poi tocca la carta."
+        onKnown={() => {
+          void setWordKnown(word.id, wordLangs(word, langs), true)
+          setFlipped(false)
+        }}
+        onLater={() => {
+          setPosition(nextInDeck(pos, deck.length))
+          setFlipped(false)
+        }}
+      />
     </div>
   )
 }

@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useLongPress } from '../../lib/useLongPress'
 import type { Habit, HabitDayState } from '../../lib/db'
 import {
   NEG_OVERSHOOT_ICON,
@@ -24,7 +24,6 @@ const CELL_STROKE: Record<WeekCell, string> = {
   before: 'stroke-slate-100 dark:stroke-slate-800',
   after: 'stroke-slate-100 dark:stroke-slate-800',
 }
-const LONG_PRESS_MS = 500
 const STATE_LABEL: Record<HabitDayState | 'open', string> = {
   done: 'done today',
   floor: 'floor done today',
@@ -79,8 +78,6 @@ export function HabitTile({
   weekCells,
   todayIndex = -1,
 }: Props) {
-  const timer = useRef<number | undefined>(undefined)
-  const fired = useRef(false)
   const { week } = stats
   // Two-day rule: after an empty or missed day the tile quietly offers the floor.
   const avoid = habit.direction === 'avoid'
@@ -90,14 +87,7 @@ export function HabitTile({
   const restNote = state === 'skip' && stats.restRun >= 3
   const progress = week.expected === 0 ? 1 : Math.min(1, week.done / week.expected)
 
-  const start = () => {
-    fired.current = false
-    timer.current = window.setTimeout(() => {
-      fired.current = true
-      onMore()
-    }, LONG_PRESS_MS)
-  }
-  const cancel = () => window.clearTimeout(timer.current)
+  const { bind, consumeLongPress } = useLongPress(onMore)
 
   const tone =
     state === 'done'
@@ -118,13 +108,9 @@ export function HabitTile({
     <li className="relative">
       <button
         type="button"
-        onPointerDown={start}
-        onPointerUp={cancel}
-        onPointerLeave={cancel}
-        onPointerCancel={cancel}
-        onContextMenu={(e) => e.preventDefault()}
+        {...bind}
         onClick={() => {
-          if (fired.current) return
+          if (consumeLongPress()) return
           onToggle()
         }}
         aria-pressed={state === 'done' || state === 'floor'}

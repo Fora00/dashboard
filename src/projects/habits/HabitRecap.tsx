@@ -1,5 +1,7 @@
 import { useRef, useState } from 'react'
+import { Stat } from '../../components/Stat'
 import { Button } from '../../components/Button'
+import { useLongPress } from '../../lib/useLongPress'
 import type { Habit, HabitDayState } from '../../lib/db'
 import { buildRecap, recapPeriod, shiftPeriod, tallyReasons, type RecapKind } from './habitRecapData'
 import { habitStats } from './habitStats'
@@ -42,7 +44,6 @@ interface Props {
 }
 
 const WEEKDAY = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
-const LONG_PRESS_MS = 500
 
 const PICK: readonly (readonly [HabitDayState | null, string])[] = [
   ['done', '✓ Done'],
@@ -78,8 +79,8 @@ export function HabitRecap({
   // The day being picked; after Rest or Missed, `reasonFor` shows the one-tap reasons.
   const [picked, setPicked] = useState<{ id: string; day: string; reasonFor?: 'skip' | 'fail' } | null>(null)
   // Long press on today's button opens today's choices (floor, rest, missed, clear).
-  const pressTimer = useRef<number | undefined>(undefined)
-  const longPressed = useRef(false)
+  const pressed = useRef('')
+  const { bind, consumeLongPress } = useLongPress(() => setPicked({ id: pressed.current, day: today }), !!onSetDay)
   let period = recapPeriod(kind, anchor ?? today)
   if (offset !== 0) for (let i = 0; i < Math.abs(offset); i++) period = shiftPeriod(period, Math.sign(offset))
   const rows = buildRecap(habits, states, notes, period, today, counts, slips)
@@ -202,20 +203,13 @@ export function HabitRecap({
                   return (
                     <button
                       type="button"
+                      {...bind}
                       onPointerDown={() => {
-                        if (!onSetDay) return
-                        longPressed.current = false
-                        pressTimer.current = window.setTimeout(() => {
-                          longPressed.current = true
-                          setPicked({ id: r.habit.id, day: today })
-                        }, LONG_PRESS_MS)
+                        pressed.current = r.habit.id
+                        bind.onPointerDown()
                       }}
-                      onPointerUp={() => window.clearTimeout(pressTimer.current)}
-                      onPointerLeave={() => window.clearTimeout(pressTimer.current)}
-                      onPointerCancel={() => window.clearTimeout(pressTimer.current)}
-                      onContextMenu={(e) => onSetDay && e.preventDefault()}
                       onClick={() => {
-                        if (longPressed.current) return
+                        if (consumeLongPress()) return
                         if (avoid) setPicked({ id: r.habit.id, day: today })
                         else onTapToday(r.habit)
                       }}
@@ -466,16 +460,6 @@ export function HabitRecap({
           </ul>
         </section>
       )}
-    </div>
-  )
-}
-
-function Stat({ label, value, sub }: { label: string; value: string; sub?: string | undefined }) {
-  return (
-    <div className="rounded-xl bg-slate-100 p-2 dark:bg-slate-800">
-      <div className="text-xl font-semibold">{value}</div>
-      <div className="text-xs text-slate-500 dark:text-slate-400">{label}</div>
-      {sub && <div className="text-[10px] text-slate-500">{sub}</div>}
     </div>
   )
 }

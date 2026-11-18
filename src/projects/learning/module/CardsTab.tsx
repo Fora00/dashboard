@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Button } from '../../../components/Button'
-import { FOCUS_RING } from '../../../components/focus'
+import { FlipActions, FlipCard } from '../ui/FlipCard'
 import { HtmlText } from '../engine/HtmlText'
 import { deckOrder, nextInDeck, type CourseState } from '../engine/progress'
 import { resetCards, setCardKnown } from '../../../lib/learningSync'
@@ -57,42 +57,27 @@ export function CardsTab({ courseId, mod, state }: Props) {
           Ripasso
         </Link>
       </p>
-      <button
-        type="button"
-        onClick={() => setFlipped((f) => !f)}
-        aria-label={flipped ? 'Mostra la domanda' : 'Mostra la risposta'}
-        className={`flex min-h-48 w-full flex-col justify-center gap-2 rounded-xl border border-slate-200 bg-white p-6 text-left dark:border-slate-700 dark:bg-slate-800/50 ${FOCUS_RING}`}
+      <FlipCard
+        onFlip={() => setFlipped((f) => !f)}
+        label={flipped ? 'Mostra la domanda' : 'Mostra la risposta'}
+        tag={flipped ? 'Risposta' : 'Domanda'}
       >
-        <span className="text-xs font-semibold tracking-wide text-(color:--accent-border) uppercase">
-          {flipped ? 'Risposta' : 'Domanda'}
-        </span>
         <span className={flipped ? 'text-base leading-relaxed' : 'text-xl leading-snug font-medium'}>
           <HtmlText html={flipped ? card.back : card.front} />
         </span>
-      </button>
-      {flipped ? (
-        <div className="flex flex-wrap gap-2">
-          <Button
-            onClick={() => {
-              void setCardKnown(courseId, mod.id, card.id, true)
-              setFlipped(false)
-            }}
-          >
-            Lo so
-          </Button>
-          <Button
-            variant="ghost"
-            onClick={() => {
-              setPosition(nextInDeck(pos, deck.length))
-              setFlipped(false)
-            }}
-          >
-            Da ripassare
-          </Button>
-        </div>
-      ) : (
-        <p className="text-sm text-slate-500">Rispondi a voce, poi tocca la carta.</p>
-      )}
+      </FlipCard>
+      <FlipActions
+        flipped={flipped}
+        hint="Rispondi a voce, poi tocca la carta."
+        onKnown={() => {
+          void setCardKnown(courseId, mod.id, card.id, true)
+          setFlipped(false)
+        }}
+        onLater={() => {
+          setPosition(nextInDeck(pos, deck.length))
+          setFlipped(false)
+        }}
+      />
     </div>
   )
 }

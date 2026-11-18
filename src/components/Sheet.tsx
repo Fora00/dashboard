@@ -1,4 +1,5 @@
-import { useEffect, useRef, type ReactNode } from 'react'
+import { useRef, type ReactNode } from 'react'
+import { useModalDialog } from '../lib/useModalDialog'
 
 interface Props {
   open: boolean
@@ -17,21 +18,7 @@ interface Props {
 export function Sheet({ open, onClose, title, children, footer }: Props) {
   const ref = useRef<HTMLDialogElement>(null)
 
-  useEffect(() => {
-    const d = ref.current
-    if (!d) return
-    if (open && !d.open) d.showModal()
-    else if (!open && d.open) d.close()
-  }, [open])
-
-  useEffect(() => {
-    if (!open) return
-    const prev = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => {
-      document.body.style.overflow = prev
-    }
-  }, [open])
+  useModalDialog(ref, open)
 
   return (
     <dialog

@@ -2,6 +2,7 @@ import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { areas } from '../lib/areas'
 import { rankItems } from '../lib/fuzzy'
+import { useModalDialog } from '../lib/useModalDialog'
 import { shortcutFor } from '../lib/shortcuts'
 import { toggleSidebarCollapsed } from '../lib/useSidebarCollapsed'
 import { comboLabel } from '../lib/useHotkey'
@@ -41,24 +42,12 @@ export function CommandPalette({ open, onClose, onShowShortcuts }: Props) {
   const [active, setActive] = useState(0)
   const listId = useId()
 
+  useModalDialog(ref, open, () => {
+    setQuery('')
+    setActive(0)
+  })
   useEffect(() => {
-    const d = ref.current
-    if (!d) return
-    if (open && !d.open) {
-      setQuery('')
-      setActive(0)
-      d.showModal()
-      inputRef.current?.focus()
-    } else if (!open && d.open) d.close()
-  }, [open])
-
-  useEffect(() => {
-    if (!open) return
-    const prev = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => {
-      document.body.style.overflow = prev
-    }
+    if (open) inputRef.current?.focus()
   }, [open])
 
   const entries = useMemo<Entry[]>(() => {
