@@ -7,23 +7,17 @@ import type {
   LifeQuestionType,
   LifePlaybook,
   LifeRecapItem,
-  LifeStreakValue,
   LifeTask,
   LifeTracker,
 } from '../../../lib/db'
 import { assignCheckinIds } from './checkinIds.ts'
 import { AUTO_QUESTION_TYPES, LIFE_CAPS, QUESTION_TYPES, THINGS_WHEN_KEYWORDS } from './constants.ts'
 import { isDateKey, isMondayKey } from './dates.ts'
-import { streakRef } from './streaks.ts'
+import { choreRef } from './chores.ts'
 
 // --- Validation --------------------------------------------------------------
 
-/**
- * `streaks` is the optional Streaks-app snapshot riding along with the week
- * (not part of the plan: it's stored as life_entries, see importWeek).
- * Undefined when the JSON has no `streaks` field (existing rows untouched).
- */
-export type ParseResult = { ok: true; plan: LifePlan; streaks?: LifeStreakValue[] } | { ok: false; errors: string[] }
+export type ParseResult = { ok: true; plan: LifePlan } | { ok: false; errors: string[] }
 
 /** Raw pasted text beyond this is rejected before JSON.parse. */
 const MAX_INPUT_CHARS = 200_000
@@ -78,7 +72,7 @@ export function validatePlan(value: unknown): ParseResult {
     'checkins',
     'recap',
     'playbook',
-    'streaks',
+    'streaks', // retired (2026-11-18): an old week JSON may still carry it; ignored
   ]
   unknownKeys(value, allowed, '', err)
 
@@ -231,8 +225,6 @@ export function validatePlan(value: unknown): ParseResult {
     playbook = { section, practice, ...(how ? { plan: how } : {}) }
   }
 
-  const streaks = value.streaks === undefined || value.streaks === null ? undefined : streaksField(value, err)
-
   if (errors.length > 0) return { ok: false, errors }
 
   const plan: LifePlan = {
@@ -255,26 +247,7 @@ export function validatePlan(value: unknown): ParseResult {
       errors: [`The week is too large (${bytes} bytes, max ${LIFE_CAPS.planBytes})`],
     }
   }
-  return { ok: true, plan, ...(streaks ? { streaks } : {}) }
-}
-
-/**
- * A bare Streaks snapshot (the `/streaks` link): a JSON array of the same
- * items as the week JSON's `streaks`, validated by the same rules.
- */
-export function parseStreaksJson(
-  text: string,
-): { ok: true; streaks: LifeStreakValue[] } | { ok: false; errors: string[] } {
-  let raw: unknown
-  try {
-    raw = JSON.parse(text)
-  } catch {
-    return { ok: false, errors: ['Not valid JSON'] }
-  }
-  const errors: string[] = []
-  const streaks = streaksField({ streaks: raw }, (m) => errors.push(m))
-  if (errors.length > 0) return { ok: false, errors }
-  return { ok: true, streaks }
+  return { ok: true, plan }
 }
 
 /** A bare chores snapshot (inside the /oggi link): a JSON array of chores. */
@@ -325,7 +298,7 @@ export function choresField(value: Obj, err: (m: string) => void): LifeChoreValu
   const seen = new Map<string, string>()
   for (const c of items) {
     if (!c.name) continue
-    const ref = streakRef(c.name)
+    const ref = choreRef(c.name)
     const other = seen.get(ref)
     if (other !== undefined) err(`chores: "${other}" and "${c.name}" are the same chore (rename one in Things)`)
     else seen.set(ref, c.name)
@@ -334,47 +307,6 @@ export function choresField(value: Obj, err: (m: string) => void): LifeChoreValu
 }
 
 const CHORE_WK_RE = new RegExp(`^[01]{${LIFE_CAPS.choreWeeks}}$`)
-
-const STREAK_DAYS_RE = new RegExp(`^[dm-]{${LIFE_CAPS.streakDays}}$`)
-
-/** The optional `streaks` snapshot: habits from the Streaks app, read-only here. */
-export function streaksField(value: Obj, err: (m: string) => void): LifeStreakValue[] {
-  if (!Array.isArray(value.streaks)) {
-    err('streaks must be an array')
-    return []
-  }
-  const items = arrayField(value, 'streaks', LIFE_CAPS.streaks, err).map((raw, i): LifeStreakValue => {
-    const p = `streaks[${i}]`
-    const o = itemObj(raw, p, ['name', 'emoji', 'days', 'streak', 'best', 'asOf'], err)
-    const name = textField(o, 'name', p, LIFE_CAPS.streakName, true, err)
-    const emoji = textField(o, 'emoji', p, LIFE_CAPS.emoji, false, err)
-    const days = o.days
-    if (typeof days !== 'string' || !STREAK_DAYS_RE.test(days))
-      err(`${p}.days must be ${LIFE_CAPS.streakDays} characters, each "d" (done), "m" (missed) or "-"`)
-    if (!intIn(o.streak, 0, LIFE_CAPS.streakMax)) err(`${p}.streak must be an integer 0–${LIFE_CAPS.streakMax}`)
-    if (o.best !== undefined && o.best !== null && !intIn(o.best, 0, LIFE_CAPS.streakMax))
-      err(`${p}.best must be an integer 0–${LIFE_CAPS.streakMax}`)
-    if (!isDateKey(o.asOf)) err(`${p}.asOf must be a date written YYYY-MM-DD`)
-    return {
-      name,
-      ...(emoji ? { emoji } : {}),
-      days: typeof days === 'string' ? days : '',
-      streak: typeof o.streak === 'number' ? o.streak : 0,
-      ...(typeof o.best === 'number' ? { best: o.best } : {}),
-      asOf: typeof o.asOf === 'string' ? o.asOf : '',
-    }
-  })
-  // The ref is a slug of the name: two names that slug alike would overwrite each other.
-  const seen = new Map<string, string>()
-  for (const s of items) {
-    if (!s.name) continue
-    const ref = streakRef(s.name)
-    const other = seen.get(ref)
-    if (other !== undefined) err(`streaks: "${other}" and "${s.name}" are the same habit (rename one in Streaks)`)
-    else seen.set(ref, s.name)
-  }
-  return items
-}
 
 function intIn(v: unknown, min: number, max: number): v is number {
   return typeof v === 'number' && Number.isInteger(v) && v >= min && v <= max

@@ -1,12 +1,9 @@
-import type { LifeEntry, LifePlan, LifeStreakEntry } from '../../../lib/db'
-import { addDays, parseDayKey, weekKey } from './dates.ts'
+import type { LifeEntry, LifePlan } from '../../../lib/db'
 import { summarizeWeek } from './summary.ts'
-import { isStreak } from './streaks.ts'
 
 // --- Month check (read-only) ---------------------------------------------------
 // What a month said about each habit, from data the app already holds: the
-// Streaks 28-day strips (calendar days) and the trackers of the plans whose
-// Monday falls in the month. Pure; the Month view only renders it.
+// trackers of the plans whose Monday falls in the month. Pure; the Month view only renders it.
 
 /** 'YYYY-MM' of a day key. */
 export function monthOf(day: string): string {
@@ -42,23 +39,6 @@ export interface MonthWeekBar {
   of: number
 }
 
-export interface MonthStreak {
-  name: string
-  emoji?: string
-  done: number
-  missed: number
-  /** done / (done + missed); null with no verdict in the month. */
-  share: number | null
-  reading: Reading | null
-  weeks: MonthWeekBar[]
-  /** A done right after a missed day, in the month. */
-  returns: number
-  /** First day of the month the strip covers (later than day 1 when the strip is 28 days). */
-  from: string
-  streak: number
-  best?: number
-}
-
 export interface MonthTrackerWeek {
   week: string
   total: number
@@ -85,9 +65,8 @@ export interface MonthReport {
   /** Last day the numbers cover: the month's end, or today in the current month. */
   upTo: string
   partial: boolean
-  streaks: MonthStreak[]
   trackers: MonthTracker[]
-  /** Habits (Streaks and trackers) by reading. */
+  /** Trackers by reading. */
   counts: Record<Reading, number>
 }
 
@@ -111,51 +90,6 @@ export interface MonthHabit {
   extra: number
   /** Reason label -> times, over rest days and misses. */
   reasons: Record<string, number>
-}
-
-function streakOfMonth(e: LifeStreakEntry, first: string, upTo: string): MonthStreak {
-  const { days, asOf } = e.value
-  const n = days.length
-  const perWeek = new Map<string, { d: number; m: number }>()
-  let done = 0
-  let missed = 0
-  let returns = 0
-  let prev = ''
-  for (let i = 0; i < n; i++) {
-    const day = addDays(asOf, i - (n - 1))
-    if (day < first || day > upTo) continue
-    const c = days[i]
-    if (c !== 'd' && c !== 'm') continue
-    if (c === 'd') {
-      done++
-      if (prev === 'm') returns++
-    } else missed++
-    prev = c
-    const wk = weekKey(parseDayKey(day))
-    const cur = perWeek.get(wk) ?? { d: 0, m: 0 }
-    cur[c]++
-    perWeek.set(wk, cur)
-  }
-  const share = done + missed > 0 ? done / (done + missed) : null
-  return {
-    name: e.value.name,
-    ...(e.value.emoji ? { emoji: e.value.emoji } : {}),
-    done,
-    missed,
-    share,
-    reading: share === null ? null : readShare(share),
-    weeks: [...perWeek].sort(([a], [b]) => (a < b ? -1 : 1)).map(([week, { d, m }]) => ({ week, done: d, of: d + m })),
-    returns,
-    from: coveredFrom(asOf, n, first),
-    streak: e.value.streak,
-    ...(e.value.best !== undefined ? { best: e.value.best } : {}),
-  }
-}
-
-/** First day of the month the strip covers: day 1, or the strip's first day when it starts later. */
-function coveredFrom(asOf: string, n: number, first: string): string {
-  const start = addDays(asOf, -(n - 1))
-  return start > first ? start : first
 }
 
 /** Plans whose Monday falls in the month, with their entries, summarised per tracker label. */
@@ -203,17 +137,12 @@ export function buildMonthReport(
   entries: readonly LifeEntry[],
   today: string,
 ): MonthReport {
-  const { first, last } = monthRange(month)
+  const { last } = monthRange(month)
   const upTo = today < last ? today : last
-  const streaks = entries
-    .filter(isStreak)
-    .map((e) => streakOfMonth(e, first, upTo))
-    .filter((s) => s.done + s.missed > 0)
-    .sort((a, b) => (a.share ?? 0) - (b.share ?? 0))
   const trackers = trackersOfMonth(month, plans, entries, today)
   const counts: Record<Reading, number> = { kept: 0, half: 0, few: 0 }
-  for (const r of [...streaks, ...trackers]) if (r.reading) counts[r.reading]++
-  return { month, upTo, partial: upTo < last, streaks, trackers, counts }
+  for (const r of trackers) if (r.reading) counts[r.reading]++
+  return { month, upTo, partial: upTo < last, trackers, counts }
 }
 
 const pct = (n: number | null) => (n === null ? 'n/a' : `${n}%`)
@@ -221,7 +150,7 @@ const pct = (n: number | null) => (n === null ? 'n/a' : `${n}%`)
 /**
  * The month as Markdown for the `/month` analysis (read back with pbpaste, like
  * the week export): the progress lines against the previous month, every
- * Streaks habit and tracker with its weeks, and the Spock reasons. Numbers and
+ * tracker with its weeks, and the Spock reasons. Numbers and
  * the owner's own reasons only.
  */
 export function buildMonthMarkdown(
@@ -232,7 +161,7 @@ export function buildMonthMarkdown(
   const out = [
     `# Life month ${report.month}`,
     '',
-    `Covers ${report.month}-01 to ${report.upTo}${report.partial ? ' (month not over)' : ''}. Streaks: days with a verdict, rest days skipped. Trackers: weeks starting in the month.`,
+    `Covers ${report.month}-01 to ${report.upTo}${report.partial ? ' (month not over)' : ''}. Trackers: weeks starting in the month.`,
     '',
     '## Progress lines (mean over the weeks, vs the previous month)',
     ...lines.map((l) => `- ${l.label}: ${pct(l.now)} (before: ${pct(l.before)})`),
@@ -249,14 +178,6 @@ export function buildMonthMarkdown(
     )
   }
   if (habits.length === 0) out.push('- none')
-  out.push('', '## Streaks habits (old import)')
-  for (const s of report.streaks) {
-    const weeks = s.weeks.map((w) => `${w.week} ${w.done}/${w.of}`).join(', ')
-    out.push(
-      `- ${s.name}: ${s.done} of ${s.done + s.missed} days (${s.reading ?? 'n/a'}), returns ${s.returns}, streak ${s.streak}${s.best !== undefined ? ` (best ${s.best})` : ''}, counted from ${s.from}; weeks: ${weeks}`,
-    )
-  }
-  if (report.streaks.length === 0) out.push('- none')
   out.push('', '## Trackers')
   for (const t of report.trackers) {
     const weeks = t.weeks.map((w) => `${w.week} ${w.total}${w.target ? `/${w.target}` : ''}`).join(', ')

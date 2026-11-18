@@ -56,7 +56,7 @@ export function SundaySection({
         checkins={[summary.checkins.filter((c) => c.done).length, summary.checkins.length]}
         tasks={[tasksSent, plan.tasks.length]}
       />
-      <SpockWhy week={week} trackers={summary.trackers} streaks={[]} whys={summary.whys} editable={editable} />
+      <SpockWhy week={week} trackers={summary.trackers} whys={summary.whys} editable={editable} />
       {!editable ? (
         <Card className="space-y-2 text-sm">
           {plan.sundayCheck.map((q) => (

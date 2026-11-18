@@ -17,12 +17,11 @@ export {
   readShare,
   type MonthReport,
   type MonthHabit,
-  type MonthStreak,
   type MonthTracker,
   type Reading,
 } from './month.ts'
 export { dayKey, isDateKey, parseDayKey, isMondayKey, addDays, weekKey, weekDays, daysBetween } from './dates.ts'
-export { parseWeekJson, parseStreaksJson, parseChoresJson, validatePlan, type ParseResult } from './validate.ts'
+export { parseWeekJson, parseChoresJson, validatePlan, type ParseResult } from './validate.ts'
 export { SCREEN_IDS, SCREEN_QUESTIONS } from './screenTime.ts'
 export { MAX_APPS, parseApps, serializeApps, type AppUsage } from './apps.ts'
 export { derivedCheckinId, withCheckinIds } from './checkinIds.ts'
@@ -60,23 +59,6 @@ export {
   URGENT_FIRST_SLOT,
 } from './dayFocus.ts'
 export { summarizeUpgrades, upgradesForExport, isUpgrade, type UpgradeSummary } from './upgrades.ts'
-export {
-  STREAK_STALE_DAYS,
-  doneLast7,
-  isStaleStreak,
-  isMissedStreak,
-  isStreak,
-  last7,
-  planStreakImport,
-  sortStreaks,
-  streakRatiosByWeek,
-  streakAge,
-  streakEntryId,
-  streakRef,
-  streaksForExport,
-  type StreakDay,
-  type StreakImportPlan,
-} from './streaks.ts'
 export {
   choreEntryId,
   choreRef,

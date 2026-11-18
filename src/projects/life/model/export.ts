@@ -8,7 +8,6 @@ import { describeLearningActivity, type LearningWeek } from './learning.ts'
 import { summarizeMealsWeek } from './meals.ts'
 import { SCREEN_QUESTIONS } from './screenTime.ts'
 import { summarizeWeek } from './summary.ts'
-import { doneLast7, sortStreaks, streaksForExport } from './streaks.ts'
 import { summarizeUpgrades, upgradesForExport } from './upgrades.ts'
 
 // --- Export ---------------------------------------------------------------------
@@ -158,24 +157,6 @@ export function buildExportMarkdown(
     out.push('')
   }
 
-  // The Streaks app's habits (read-only snapshot from the Mac), not this week's trackers.
-  const streaks = sortStreaks(entries)
-  if (streaks.length) {
-    out.push('## Streaks', '')
-    for (const { value: v, ref } of streaks) {
-      const best = v.best !== undefined ? ` (best ${v.best})` : ''
-      out.push(
-        `- ${v.emoji ? `${v.emoji} ` : ''}${oneLine(v.name)}: streak ${v.streak}${best} · ${doneLast7(v.days)}/7 done in the last 7 days · as of ${v.asOf}`,
-      )
-      const why = s.whys.get(ref)
-      if (why) out.push(`  - why not: ${oneLine(why)}`)
-      const ideas = ideasByHabit.get(ref)
-      if (ideas?.length)
-        out.push(`  - ideas: ${ideas.map((i) => `${oneLine(i.value.text)} [${i.value.status}]`).join('; ')}`)
-    }
-    out.push('')
-  }
-
   if (s.screen.size) {
     out.push('## Screen time', '')
     for (const q of SCREEN_QUESTIONS) {
@@ -302,8 +283,6 @@ export function buildExportMarkdown(
     ...(upgrades.openCount || upgrades.doneThisWeek.length || upgrades.droppedThisWeek.length
       ? { upgrades: upgradesForExport(upgrades) }
       : {}),
-    // Present only when there are Streaks habits; same shape the import's `streaks` takes.
-    ...(streaks.length ? { streaks: streaksForExport(streaks) } : {}),
     // Present only when there are saved events next week.
     ...(saved.events.length
       ? {

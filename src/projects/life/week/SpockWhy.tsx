@@ -1,8 +1,7 @@
 import { setWhy } from '../../../lib/lifeSync'
 import { runSafe } from '../../../lib/runSafe'
 import { Card } from '../../../components/Card'
-import type { LifeStreakEntry } from '../../../lib/db'
-import { doneLast7, isMissedStreak, LIFE_CAPS, type TrackerSummary } from '../model'
+import { LIFE_CAPS, type TrackerSummary } from '../model'
 import { HabitHistoryButton } from './HabitHistory'
 
 // Spock test, inside the Sunday check: every habit that is under its weekly
@@ -12,14 +11,11 @@ import { HabitHistoryButton } from './HabitHistory'
 export function SpockWhy({
   week,
   trackers,
-  streaks = [],
   whys,
   editable,
 }: {
   week: string
   trackers: TrackerSummary[]
-  /** Streaks-app habits (read-only snapshot): they ask the same question when under 4 of the last 7 days. */
-  streaks?: LifeStreakEntry[]
   whys: ReadonlyMap<string, string>
   editable: boolean
 }) {
@@ -32,12 +28,6 @@ export function SpockWhy({
         label: tracker.label,
         count: `${total}/${tracker.target}`,
       })),
-    ...streaks.filter(isMissedStreak).map((e) => ({
-      id: e.ref,
-      emoji: e.value.emoji,
-      label: e.value.name,
-      count: `${doneLast7(e.value.days)}/7 · Streaks`,
-    })),
   ]
   if (rows.length === 0) return null
   return (

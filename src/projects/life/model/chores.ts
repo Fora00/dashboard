@@ -1,19 +1,42 @@
 import type { LifeChoreEntry, LifeChoreValue, LifeEntry } from '../../../lib/db'
-import { streakRef } from './streaks.ts'
 
 // --- Household chores (Things project "Casa catia") ----------------------------
 // A Mac script reads the project (and the completion history of its recurring
 // to-dos) and puts a snapshot in the /oggi link. The dashboard shows it under
 // "Casa", where a chore can also be ticked: that flips `done` and, for a
-// recurring chore, bumps `count`. Like Streaks they live across weeks and never
+// recurring chore, bumps `count`. They live across weeks and never
 // count in a week summary. Pure.
 
 export function isChore(e: LifeEntry): e is LifeChoreEntry {
   return e.kind === 'chore'
 }
 
-/** Stable ref of a chore: the same slug as a Streaks habit name. */
-export const choreRef = streakRef
+/** 32-bit FNV-1a, hex: a stable fallback ref for names with no letters/digits. */
+function fnv1a(s: string): string {
+  let h = 0x811c9dc5
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i)
+    h = Math.imul(h, 0x01000193)
+  }
+  return (h >>> 0).toString(16).padStart(8, '0')
+}
+
+/**
+ * Stable ref of a chore, from its name: lowercase ASCII slug, accents folded,
+ * <= 40 chars (the ref pattern). A name with no letter or digit gets
+ * `h-<hash>`.
+ */
+export function choreRef(name: string): string {
+  const slug = name
+    .normalize('NFKD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 40)
+    .replace(/-+$/, '')
+  return slug || `h-${fnv1a(name.trim())}`
+}
 
 export function choreEntryId(ref: string): string {
   return `chore:${ref}`

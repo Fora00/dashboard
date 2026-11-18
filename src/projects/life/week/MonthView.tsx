@@ -13,11 +13,10 @@ import {
   buildMonthMarkdown,
   buildMonthReport,
   monthOf,
-  monthRange,
   weekKey,
   parseDayKey,
 } from '../model'
-import type { MonthHabit, MonthStreak, MonthTracker, Reading } from '../model'
+import type { MonthHabit, MonthTracker, Reading } from '../model'
 import { buildChartPoints } from './chartPoints'
 import { liveHabitRatiosByWeek } from './liveHabitRatios'
 import { recapMonths } from './monthRecap'
@@ -124,28 +123,6 @@ function HabitRow({
 
 const weekLabel = (w: string) => shortDay(w)
 
-function StreakRow({ s, first }: { s: MonthStreak; first: string }) {
-  const days = s.done + s.missed
-  const notes = [
-    s.returns > 0 ? `↩ ${s.returns} return${s.returns === 1 ? '' : 's'} after a miss` : '',
-    s.from > first ? `counted from ${shortDay(s.from)}` : '',
-  ].filter(Boolean)
-  return (
-    <HabitRow
-      name={`${s.emoji ? `${s.emoji} ` : ''}${s.name}`}
-      reading={s.reading}
-      figure={`${s.done} of ${days} days`}
-      bars={s.weeks.map((w) => ({
-        key: w.week,
-        label: weekLabel(w.week),
-        value: w.of ? w.done / w.of : 0,
-        shown: `${w.done}/${w.of}`,
-      }))}
-      note={notes.join(' · ')}
-    />
-  )
-}
-
 function TrackerRow({ t }: { t: MonthTracker }) {
   return (
     <HabitRow
@@ -166,7 +143,7 @@ function TrackerRow({ t }: { t: MonthTracker }) {
 
 /** The live Habits project for the picked month, read-only: the same month
  *  recap as on the Habits page; Open shows the habit's detail in place.
- *  Streaks entries are no longer imported. */
+ */
 function HabitsMonthCard({ month, today, data }: { month: string; today: string; data: HabitDaysData | undefined }) {
   const [sheet, dispatch] = useHabitSheets()
   if (!data || data.active.length === 0) return null
@@ -188,7 +165,7 @@ function HabitsMonthCard({ month, today, data }: { month: string; today: string;
   )
 }
 
-/** Month check: what the month said per habit (Streaks + trackers), the
+/** Month check: what the month said per habit (trackers), the
  * progress lines against last month, the Life Engines audit and the monthly
  * question. Read-only except the Engines (scores, lead, iceberg: lifeEngines);
  * the go up / stay / go down decision is not stored here (it lives in ~/life
@@ -245,7 +222,7 @@ export function MonthView({
   const prev = addMonths(month, -1)
   const recap = loading ? undefined : recapMonths(weeks).find((m) => m.month === month)
   const criteria = (recap?.items ?? []).filter((i) => i.criterion && !i.closed)
-  const hasHabits = !!report && report.streaks.length + report.trackers.length > 0
+  const hasHabits = !!report && report.trackers.length > 0
   const hasLines = LINES.some((l) => lineMean(points, month, l.key) !== null)
 
   async function exportMonth() {
@@ -350,14 +327,9 @@ export function MonthView({
           {hasHabits ? (
             <Card className="space-y-4">
               <p className="text-sm text-slate-600 dark:text-slate-300">
-                <span className="font-medium text-slate-800 dark:text-slate-100">
-                  {report.streaks.length > 0 ? 'Streaks (old import) and trackers' : 'Trackers'}
-                </span>{' '}
-                · {report.counts.kept} kept · {report.counts.half} half · {report.counts.few} few
+                <span className="font-medium text-slate-800 dark:text-slate-100">Trackers</span> · {report.counts.kept}{' '}
+                kept · {report.counts.half} half · {report.counts.few} few
               </p>
-              {report.streaks.map((s) => (
-                <StreakRow key={s.name} s={s} first={monthRange(month).first} />
-              ))}
               {report.trackers.map((t) => (
                 <TrackerRow key={`${t.emoji}${t.label}`} t={t} />
               ))}

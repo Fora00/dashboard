@@ -1790,7 +1790,7 @@ re-implementing, then per-project refactors. Do ONE at a time; owner picks.
 
 ### E. Owner decisions (asked one at a time when reached)
 - [x] E1 Streaks app import → **owner 2026-11-18: retire it.** Task E1a below.
-- [x] E1a **Retire the Streaks import** [sonnet, S, after HB2]: drop streaks from the `/oggi` link **DONE 2026-11-18** (route, skill, `/oggi` part, "Old habits" removed; parser kept for `/settimana` import + History; Sunday "why" no longer counts Streaks misses). Open: drop Streaks from the weekly `/settimana` import too?
+- [x] E1a **Retire the Streaks import** [sonnet, S, after HB2]: drop streaks from the `/oggi` link **DONE 2026-11-18** (route, skill, `/oggi` part, "Old habits" removed; parser kept for `/settimana` import + History; Sunday "why" no longer counts Streaks misses). Then (owner, same day) removed from `/settimana` round trip, Month view and `/month` too; old week JSON with `streaks` still imports (field ignored); stored rows kept, no longer rendered (History chart fallback dropped).
       (`scripts/life-oggi-link.ts`, `LifeToday.tsx`), the `/streaks` skill and route, "Old habits"
       on the live week (`WeekBody.tsx` ~189-213: TrackerRow live branch, StreakRow,
       useStreakList); History keeps its read-only branch; update HANDOFF-life + docs.

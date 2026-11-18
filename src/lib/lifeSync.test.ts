@@ -70,36 +70,21 @@ describe('importWeek', () => {
   })
 })
 
-describe('importWeek: Streaks snapshot', () => {
-  const s = (name: string, streak = 1, asOf = '2026-10-01') => ({ name, days: 'd'.repeat(28), streak, asOf })
-  const streakRows = async () =>
-    (await db.lifeEntries.toArray()).filter((e) => e.kind === 'streak').sort((a, b) => a.ref.localeCompare(b.ref))
-
-  it('upserts by ref keeping the id, deletes missing habits, absent leaves them alone', async () => {
-    await importWeek(plan(), [s('Read'), s('Walk')])
-    const first = await streakRows()
-    expect(first.map((e) => [e.id, e.week])).toEqual([
-      ['streak:read', WEEK],
-      ['streak:walk', WEEK],
-    ])
-    // No `streaks` in the JSON: untouched.
-    await importWeek(plan({ week: '2026-10-05' }))
-    expect(await streakRows()).toEqual(first)
-    // Walk archived in Streaks, Read moved on: replaced in place, same id and week.
-    await importWeek(plan({ week: '2026-10-05' }), [s('Read', 4, '2026-10-06')])
-    const after = await streakRows()
-    expect(after).toHaveLength(1)
-    expect(after[0]).toMatchObject({ id: 'streak:read', week: WEEK, value: { streak: 4, asOf: '2026-10-06' } })
-    expect((await entryOps()).filter((o) => o.op === 'delete')).toHaveLength(1)
-  })
-
-  it('an unchanged snapshot queues nothing; an invalid one writes nothing at all', async () => {
-    await importWeek(plan(), [s('Read')])
-    const before = (await entryOps()).length
-    await importWeek(plan(), [s('Read')])
-    expect((await entryOps()).length).toBe(before)
-    await expect(importWeek(plan(), [{ ...s('Walk'), days: 'd' }])).rejects.toThrow(/days/)
-    expect((await streakRows()).map((e) => e.ref)).toEqual(['read'])
+describe('importWeek: retired Streaks rows', () => {
+  it('leaves existing streak rows alone', async () => {
+    const row = {
+      id: 'streak:read',
+      week: WEEK,
+      kind: 'streak' as const,
+      ref: 'read',
+      day: '2026-10-01',
+      value: { name: 'Read', days: 'd'.repeat(28), streak: 1, asOf: '2026-10-01' },
+      createdAt: 1,
+      updatedAt: 1,
+    }
+    await db.lifeEntries.put(row)
+    await importWeek(plan())
+    expect(await db.lifeEntries.get('streak:read')).toEqual(row)
   })
 })
 

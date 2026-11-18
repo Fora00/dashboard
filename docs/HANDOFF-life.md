@@ -124,11 +124,7 @@ the installed PWA. The phone gets the week through sync.
     "section": "Section A",            // playbook section (max 100)
     "practice": "Example practice",    // the line chosen (max 300)
     "plan": "Once in the morning"      // optional: when/how (max 300)
-  },
-  "streaks": [                         // optional: Streaks-app snapshot (see "Streaks")
-    { "name": "Habit A", "emoji": "📚", "days": "---------------------dddmd-d",
-      "streak": 2, "best": 9, "asOf": "2026-01-03" }
-  ]
+  }
 }
 ```
 
@@ -223,52 +219,21 @@ handle". Items are `life_entries` rows of kind `upgrade`, no new table:
 ### Streaks (iOS app, read-only)
 
 **Retired 2026-11-18.** The owner no longer uses the Streaks app. Removed: the
-`/streaks` command, the `#/life/streaks` route (`LifeStreaks.tsx`),
-`scripts/life-streaks-link.ts`, the streaks part of the `/oggi` link (an old
-link that still carries `streaks` is accepted and the field ignored) and the
-"Old habits" box and `StreakRow` on the live week. Existing `streak` entries
-stay in Dexie/Supabase untouched (no migration); the weekly import/export and
-the History/Month views still read them. The text below is the historical
-description.
-
-Added 2026-10-26. Some habits live in the owner's iPhone **Streaks** app,
-which the dashboard can't write to. A Mac script outside the repo reads the
-app's iCloud backup (it can be ~2 days old) and `/settimana` puts the
-snapshot in the week JSON as the optional top-level `streaks` array. The
-dashboard only receives it and shows each habit read-only at the bottom of
-the **Habits** block on the live week (`week/StreakRow.tsx`): emoji + name, a
-"Streaks" badge, a 7-day strip (last 7 chars of `days`: green done, rose
-missed, grey otherwise), "🔥 N" and "as of <date>" (amber italic once older
-than 3 days). No checkbox, no history button: log it in the Streaks app.
-- Item: `{ name, emoji?, days, streak, best?, asOf }`. `name` one line, max 60;
-  `emoji` max 16; `days` exactly 28 chars oldest → newest, each `d` (done),
-  `m` (missed/failed) or `-` (not scheduled / no entry); `streak` current
-  consecutive done days (unscheduled days don't break it) and `best`, integers
-  0-100000; `asOf` the backup's date `YYYY-MM-DD`. Max 40 habits; unknown keys
-  and two names with the same ref are import errors.
-- Stored as `life_entries` of kind `streak`, no new table: id
-  `streak:<ref>`, `ref` = slug of the name (lowercase ASCII, accents folded, max
-  40; `h-<hash>` for a name with no letter/digit; renaming the habit makes a
-  new row and drops the old), `week` = the week first imported in (like
-  `upgrade`, not tied to a week: never in a summary or "(removed from plan)").
-- Import: `streaks` present → upsert each habit by ref (value replaced, id
-  kept; an unchanged habit writes nothing) and delete the habits missing from
-  it (archived in Streaks), `[]` deletes all. `streaks` absent → existing rows
-  untouched (the hand editor never touches them). Never backwards: a habit
-  whose stored `asOf` is newer keeps its value, and a snapshot older than the
-  newest stored one deletes nothing. Code: `planStreakImport` in
-  `model/streaks.ts`, `importWeek(plan, streaks)` / `importStreaks` in
-  `lifeSync.ts`; `scripts/life-link.ts` keeps `streaks` in the link.
-- Export: a `## Streaks` section (name, streak, best, done in the last 7 days,
-  as of) and a `streaks` array in the JSON in the import's shape (both only
-  when there are any); not repeated in `entries`.
-- Refresh without a week: `/streaks` (also run by `/oggi`) reads the backup with
-  `streaks-sync.py` and opens `#/life/streaks?d=…` (`LifeStreaks.tsx`,
-  `scripts/life-streaks-link.ts`): same import rules, owner taps Save. The
-  script prints nothing when the backup is no newer than the last link made.
-- Never put a habit in both Streaks and the plan's `trackers`.
-- Migration `20261026170000_life_streaks.sql` only widens the kind check and
-  caps the value.
+`/streaks` command, the `#/life/streaks` route, `scripts/life-streaks-link.ts`,
+the streaks part of the `/oggi` link, the "Old habits" box and `StreakRow` on
+the live week, and (second pass, same day) the whole weekly round trip: the
+`streaks` field of the week JSON is no longer read into Dexie, exported
+(`## Streaks`, `streaks` array) or added by `scripts/life-link.ts` and
+`/settimana`; `importStreaks`, `planStreakImport`, `model/streaks.ts`, the
+Spock "why not?" rows for Streaks habits, the Month view / `/month` export
+Streaks rows and the Streaks ratios in the History progress chart are gone.
+An old week JSON or link that still carries `streaks` is accepted: the field is
+validated as a known key and dropped (`validate.ts`). Existing `streak`
+`life_entries` stay in Dexie and Supabase untouched (no migration; the SQL kind
+check from `20261026170000_life_streaks.sql` and the `LifeStreakEntry` type
+in `db.ts` stay so those rows keep syncing and pulling); nothing renders them
+any more and they never enter a summary or export. The slug helper that lived
+in `model/streaks.ts` is now `choreRef` in `model/chores.ts`.
 
 ### Playbook of the week (optional)
 
@@ -355,8 +320,7 @@ Title — Venue, City`, no time if all-day) plus a `Favourite categories:` line,
 and the JSON block gets a `savedEvents` array (only when non-empty).
 `/settimana` proposes placing them in the new plan. When the Upgrade list has
 open items, or items done or dropped this week, a `## Upgrade list` section and
-an `upgrades` array in the JSON carry them (see "Upgrade list"). Streaks-app
-habits come out as `## Streaks` and a `streaks` array (see "Streaks"). When the plan has a
+an `upgrades` array in the JSON carry them (see "Upgrade list"). When the plan has a
 `playbook`, a `## Playbook` section lists `Section`, `Practice`, `Plan`, `Uses`
 (count and days) and one indented line per use that has a note
 (`  - 2026-01-06: note`); the uses are also in the JSON `entries` as

@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react'
+import { useState } from 'react'
 import type { LifeIdeaEntry, LifeIdeaStatus } from '../../../lib/db'
 import { addIdea, removeIdea, updateIdea } from '../../../lib/lifeSync'
 import { runSafe } from '../../../lib/runSafe'
@@ -68,7 +68,7 @@ function IdeaRow({ idea }: { idea: LifeIdeaEntry }) {
   )
 }
 
-function HabitHistoryBody({ trackerId, week, summary }: { trackerId: string; week: string; summary?: ReactNode }) {
+function HabitHistoryBody({ trackerId, week }: { trackerId: string; week: string }) {
   const history = useHabitHistory(trackerId)
   const [draft, setDraft] = useState('')
   if (!history) return <p className="text-sm text-slate-500">Loading…</p>
@@ -83,7 +83,7 @@ function HabitHistoryBody({ trackerId, week, summary }: { trackerId: string; wee
       <section>
         <h3 className="mb-1 text-sm font-semibold">Weeks</h3>
         {history.weeks.length === 0 ? (
-          <p className="text-sm text-slate-500 dark:text-slate-400">{summary ?? 'No weeks yet.'}</p>
+          <p className="text-sm text-slate-500 dark:text-slate-400">No weeks yet.</p>
         ) : (
           <ul className="divide-y divide-slate-200 dark:divide-slate-800">
             {history.weeks.map((w) => (
@@ -147,14 +147,11 @@ export function HabitHistoryButton({
   trackerId,
   label,
   week,
-  summary,
 }: {
   trackerId: string
   label: string
   /** Week new ideas are written in (the one on screen). */
   week: string
-  /** Shown instead of "No weeks yet" for a habit that has no weekly plan (Streaks habits). */
-  summary?: ReactNode
 }) {
   const [open, setOpen] = useState(false)
   return (
@@ -168,7 +165,7 @@ export function HabitHistoryButton({
         📈
       </button>
       <Sheet open={open} onClose={() => setOpen(false)} title={label}>
-        {open && <HabitHistoryBody trackerId={trackerId} week={week} summary={summary} />}
+        {open && <HabitHistoryBody trackerId={trackerId} week={week} />}
       </Sheet>
     </>
   )

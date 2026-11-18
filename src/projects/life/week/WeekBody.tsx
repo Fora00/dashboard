@@ -97,9 +97,9 @@ export function WeekBody({ week, plan, entries, readOnly, lateEdit = false, dayF
   // Saved events + favourite categories (Events project, local Dexie) ride along in the export.
   const eventMarks = useLiveQuery(() => db.eventMarks.where('state').equals('saved').toArray(), [])
   const eventPrefs = useLiveQuery(() => db.eventPrefs.get('prefs'), [])
-  // Habit ideas, the Upgrade list and Streaks habits live across weeks; they ride along in the export for /settimana.
+  // Habit ideas and the Upgrade list live across weeks; they ride along in the export for /settimana.
   const ideas = useLiveQuery(
-    () => db.lifeEntries.filter((e) => e.kind === 'idea' || e.kind === 'upgrade' || e.kind === 'streak').toArray(),
+    () => db.lifeEntries.filter((e) => e.kind === 'idea' || e.kind === 'upgrade').toArray(),
     [],
   )
   const exportEntries = useMemo(() => [...entries, ...(ideas ?? [])], [entries, ideas])

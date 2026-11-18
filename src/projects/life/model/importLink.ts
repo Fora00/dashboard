@@ -1,4 +1,4 @@
-import type { LifePlan, LifeStreakValue } from '../../../lib/db'
+import type { LifePlan } from '../../../lib/db'
 import { decodeLinkParam, toBase64Url } from '../../../lib/base64url.ts'
 
 // --- Import link -----------------------------------------------------------------
@@ -9,13 +9,9 @@ import { decodeLinkParam, toBase64Url } from '../../../lib/base64url.ts'
 export const LIFE_IMPORT_BASE = 'https://fora00.github.io/dashboard/'
 
 /**
- * `${base}#/life/import?d=<base64url(UTF-8 JSON)>` for a plan (plus the
- * optional Streaks snapshot, which rides at the top level like in the JSON).
+ * `${base}#/life/import?d=<base64url(UTF-8 JSON)>` for a plan.
  */
-export function encodeImportLink(
-  plan: LifePlan & { streaks?: readonly LifeStreakValue[] },
-  base: string = LIFE_IMPORT_BASE,
-): string {
+export function encodeImportLink(plan: LifePlan, base: string = LIFE_IMPORT_BASE): string {
   const d = toBase64Url(new TextEncoder().encode(JSON.stringify(plan)))
   return `${base}#/life/import?d=${d}`
 }

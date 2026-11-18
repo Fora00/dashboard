@@ -408,12 +408,9 @@ describe('import link', () => {
     expect(parseWeekJson(decoded.text)).toEqual({ ok: true, plan })
   })
 
-  it('carries the optional Streaks snapshot', () => {
+  it('an old week JSON that still carries streaks parses, the field dropped', () => {
     const streaks = [{ name: 'Leggere', emoji: '📚', days: 'd'.repeat(28), streak: 3, asOf: '2026-10-24' }]
-    const d = encodeImportLink({ ...plan, streaks }).split('?d=')[1] ?? ''
-    const decoded = decodeImportParam(d)
-    if (!decoded.ok) throw new Error('not decoded')
-    expect(parseWeekJson(decoded.text)).toEqual({ ok: true, plan, streaks })
+    expect(parseWeekJson(JSON.stringify({ ...plan, streaks }))).toEqual({ ok: true, plan })
   })
 
   it('the payload is URL-safe base64 (no + / = or padding)', () => {
