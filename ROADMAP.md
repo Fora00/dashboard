@@ -1746,22 +1746,22 @@ re-implementing, then per-project refactors. Do ONE at a time; owner picks.
       twice per tile (Habits.tsx:184,188). Meal diary: `new Date()` in render (MealDiary.tsx:28).
 
 ### C. Shared foundations (each removes N copies)
-- [ ] C1 **`src/lib/dates.ts` is the one date module** [sonnet, S–M]: move `life/model/dates.ts`
+- [x] C1 **`src/lib/dates.ts` is the one date module** [sonnet, S–M]: move `life/model/dates.ts` **DONE 2026-11-18** (`adb8bf5`; relativeTime x2 kept: different wording; backup filename keeps UTC date).
       in (re-export), add `monthKey`, keep events' Rome/UTC variants as named exports; replace
       addDays x7, weekStart x4, daysBetween x3, inline YYYY-MM-DD x5 (incl. `habitSync.ts` daysInRange),
       the two `formatDate` (rename `format.ts` one to `formatDateTime`), relativeTime x2. Move
       `useToday` to `src/lib`. Reference: `life/model/dates.ts` + its tests.
-- [ ] C2 **UI kit** [sonnet, S each]: `SegmentedTabs` (roving focus; 7 copies: Habits, ModulePage,
+- [x] C2 **UI kit** [sonnet, S each]: `SegmentedTabs` (roving focus; 7 copies: Habits, ModulePage, **DONE 2026-11-18** (`35c1575`, `e07d8a7`, last commit: SegmentedTabs on 5 of 7 (Home and WeighedToggle are not single-choice), CollapsibleSection, BackLink, field.ts, SectionTitle, Switch, Stat, useLongPress, useModalDialog, Learning FlipCard (not Ripasso); events FilterPanel keeps its own Section; inputs now 16px on phones).
       VocabPage, Events, PeoplePicker, MealParts, Home), `CollapsibleSection` (Life + events
       FilterPanel), `field.ts` input/select/date classes (10 constants, 48 inline), `SectionTitle`
       (18), `Switch` (4), `Stat` (2), `useLongPress` (2), `FlipDeck` (3, learning), `PageHeader`
       `back` prop (6 learning pages), `useModalDialog` (Sheet + CommandPalette).
-- [ ] C3 **`useConfirm()` dialog** [sonnet, M]: replaces 13 `window.confirm` + 3 two-tap buttons;
+- [x] C3 **`useConfirm()` dialog** [sonnet, M]: replaces 13 `window.confirm` + 3 two-tap buttons; **DONE 2026-11-18** (`289c667`, `confirm()` + ConfirmHost).
       duplicated confirm texts move to `privateData.ts` / `syncHealth.ts`.
 - [ ] C4 **One engine registry `lib/engines.ts`** [opus, M]: App.tsx start list, `syncHealth`
       watchedEngines, `privateData` local/remote lists derive from it; test vs registry `ownerOnly`;
       NEW_PROJECT gains the step. Trim the unused `flush`/`useStatus` exports of the 16 wrappers.
-- [ ] C5 Text helpers [sonnet, XS]: accent fold (10 copies → `fuzzy.normalize`), FNV hash (3),
+- [x] C5 Text helpers [sonnet, XS]: accent fold (10 copies → `fuzzy.normalize`), FNV hash (3), **DONE 2026-11-18** (`4102c60`).
       `useLazyChunk`, image downscale (learning `photo.ts` = events `image.ts`), Things URL (2),
       `useLinkImport` for the 4 "?d= link → preview → Save" screens (caps differ).
 - [ ] C6 Shared auth/owner store [opus, M]: 26 `useAuth` subscriptions; `useOwner` refires the
