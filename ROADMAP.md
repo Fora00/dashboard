@@ -1834,6 +1834,18 @@ re-implementing, then per-project refactors. Do ONE at a time; owner picks.
       Decide with the owner before building anything.
       Analysis written 2026-10-29 in `docs/SHARING_REVIEW.md`; awaiting the
       owner's decision on which proposal to build.
+- [ ] **🕸️ People graph: who brings whom, who to invite** [opus] (noted
+      2026-11-18, parked: decide at the owner's monthly review, 2026-12-06 or
+      later; no code before that). A view, not a new place to type: nodes =
+      people, groups by origin (school, places, work, family), edges = "met
+      through" + "seen together" counted from the owner's meetings log,
+      plus who organised (🙋‍♂️ / 📩) and "not seen for 3+ weeks" in red.
+      Purpose: pick who to invite together and spot bridges/isolated people.
+      Open question first (owner): what actually brings new people in; the
+      "places with a regular slot" reading was rejected. **Personal data:
+      owner-only Supabase rows, never in this public repo** (no names in
+      code, seeds, tests or docs). Try first as a private page generated from
+      the log; build here only if it gets used.
 
 Candidate new subprojects (brainstormed 2026-07-04; regrouped with the owner 2026-11-18 after the
 audit, see "Audit 2026-11-18" D1). Dropped ideas are archived in `docs/ROADMAP_ARCHIVE.md`.
