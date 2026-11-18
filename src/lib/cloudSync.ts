@@ -225,6 +225,11 @@ function detached(fn: () => void): void {
   Dexie.ignoreTransaction(fn)
 }
 
+/** Outbox shield key: a row is shielded per (remote table, id), never by id alone. */
+function shieldKey(table: OutboxTable, rowId: string): string {
+  return `${table}\u0000${rowId}`
+}
+
 export function createCloudSync(config: SyncConfig): CloudSync {
   const byRemote = new Map<OutboxTable, AnyTableSync>(config.tables.map((t) => [t.remote as OutboxTable, t]))
   const remotes = new Set<OutboxTable>(byRemote.keys())
@@ -469,8 +474,13 @@ export function createCloudSync(config: SyncConfig): CloudSync {
       const dexieTables = config.tables.map((t) => t.table())
       await db.transaction('rw', [...dexieTables, db.outbox], async () => {
         // Rows with any pending or dead-lettered outbox entry are "ours":
-        // remote must not overwrite or delete them.
-        const pending = new Set((await db.outbox.toArray()).filter((e) => remotes.has(e.table)).map((e) => e.rowId))
+        // remote must not overwrite or delete them. Keyed by (table, rowId):
+        // ids repeat across tables (event_marks/event_interest share the
+        // event id, learning tables share course:module:item ids), and a
+        // queued row of one table must not freeze its twin in another.
+        const pending = new Set(
+          (await db.outbox.toArray()).filter((e) => remotes.has(e.table)).map((e) => shieldKey(e.table, e.rowId)),
+        )
         for (let i = 0; i < config.tables.length; i++) {
           const tc = config.tables[i]
           const result = results[i]
@@ -487,8 +497,9 @@ export function createCloudSync(config: SyncConfig): CloudSync {
             else skipped++
           }
           const localIds = (await tc.table().toCollection().primaryKeys()) as string[]
-          await tc.table().bulkPut(rows.filter((r) => !pending.has(r.id)))
-          await tc.table().bulkDelete(localIds.filter((id) => !remoteIds.has(id) && !pending.has(id)))
+          const shielded = (id: string) => pending.has(shieldKey(tc.remote, id))
+          await tc.table().bulkPut(rows.filter((r) => !shielded(r.id)))
+          await tc.table().bulkDelete(localIds.filter((id) => !remoteIds.has(id) && !shielded(id)))
         }
       })
       if (skipped > 0) {
@@ -532,8 +543,11 @@ export function createCloudSync(config: SyncConfig): CloudSync {
     if (typeof id !== 'string') return
     // A row we still have queued (or dead-lettered) is ours — ignore realtime
     // until it flushes, so an in-flight edit isn't clobbered and a locally
-    // deleted-then-requeued row isn't resurrected.
-    if ((await db.outbox.where('rowId').equals(id).count()) > 0) return
+    // deleted-then-requeued row isn't resurrected. Only an entry for THIS
+    // table counts: the same id may be queued for another table (see pull).
+    // The rowId index narrows to a handful of entries; table is checked in memory.
+    const queued = db.outbox.where('rowId').equals(id)
+    if ((await queued.filter((e) => e.table === tc.remote).count()) > 0) return
 
     if (payload.eventType === 'DELETE') {
       if (tc.realtimeDeletes === false) return

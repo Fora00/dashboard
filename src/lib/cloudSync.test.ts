@@ -7,7 +7,8 @@ import { db, resetDb } from '../test/fakeDb'
 import { drain, until } from '../test/drain'
 import type { FakeSupabase } from '../test/fakeSupabase'
 import { createCloudSync, type CloudSync, type TableSync } from './cloudSync'
-import type { Todo } from './db'
+import type { EventInterest, Todo } from './db'
+import type { InterestFeatures } from '../projects/events/types'
 
 const fake = await vi.hoisted(async () => {
   const { createFakeSupabase } = await import('../test/fakeSupabase')
@@ -51,6 +52,36 @@ const todosTable: TableSync<Todo, TodoRow> = {
     }
   },
 }
+
+// A second table whose ids collide with todos' on purpose: in the app,
+// event_marks/event_interest share the event id and the learning tables share
+// `course:module:item` ids. The outbox shield must be per (table, id).
+interface InterestRow {
+  id: string
+  value: number
+  features: unknown
+  updated_at: number
+}
+const interestTable: TableSync<EventInterest, InterestRow> = {
+  remote: 'event_interest',
+  table: () => db.eventInterest,
+  columns: 'id, value, features, updated_at',
+  realtime: true,
+  updatedAt: (r) => r.updatedAt,
+  toRow: (r) => ({ id: r.id, value: r.value, features: r.features, updated_at: r.updatedAt }),
+  fromRow: (r) => ({
+    id: r.id,
+    value: r.value === -1 ? -1 : 1,
+    features: r.features as InterestFeatures,
+    updatedAt: Number(r.updated_at),
+  }),
+}
+const interest = (id: string, value: 1 | -1 = 1, updatedAt = 1): EventInterest => ({
+  id,
+  value,
+  features: {} as InterestFeatures,
+  updatedAt,
+})
 
 const todo = (id: string, text = id, updatedAt = 1): Todo => ({
   id,
@@ -347,6 +378,26 @@ describe('pull shield and remote rows', () => {
     expect((await db.todos.get('mine'))?.text).toBe('local only')
   })
 
+  it('the shield is per table: a dead todo does not freeze the same id in another table', async () => {
+    eng = createCloudSync({ projectId: 'todo', tables: [todosTable, interestTable] })
+    fake.rejectWith((t) => (t === 'todos' ? { code: '42501', message: 'rls', status: 403 } : null))
+    await eng.upsert('todos', todo('x', 'mine'))
+    await eng.upsert('todos', todo('y', 'mine'))
+    await settle()
+    expect((await db.outbox.toArray()).every((e) => e.table === 'todos' && e.dead === 1)).toBe(true)
+    fake.rejectWith(null)
+    // Same ids in event_interest: 'x' changed on the server, 'y' deleted there.
+    await db.eventInterest.bulkPut([interest('x', 1), interest('y', 1)])
+    fake.remote.event_interest = [interestTable.toRow(interest('x', -1, 5))]
+    await eng.syncNow()
+    await settle()
+    expect((await db.eventInterest.get('x'))?.value).toBe(-1)
+    expect(await db.eventInterest.get('y')).toBeUndefined()
+    // The todos themselves stay shielded (the server has none of them).
+    expect((await db.todos.get('x'))?.text).toBe('mine')
+    expect((await db.todos.get('y'))?.text).toBe('mine')
+  })
+
   it('a pull removes local rows the server no longer has (when not shielded)', async () => {
     await db.todos.put(todo('gone'))
     fake.remote.todos = [row(todo('kept'))]
@@ -549,6 +600,17 @@ describe('realtime (last-writer-wins)', () => {
     event('DELETE', null, { id: 'r' })
     await realtimeSettle()
     expect((await db.todos.get('r'))?.text).toBe('mine')
+  })
+
+  it('a queued entry for the same id in ANOTHER table does not block the event', async () => {
+    // e.g. a dead-lettered 👎 (event_interest) must not freeze the event's mark.
+    await db.outbox.add({ table: 'event_interest', op: 'upsert', rowId: 'r', payload: interest('r'), ts: 1, dead: 1 })
+    event('UPDATE', todo('r', 'newer', 20))
+    await realtimeSettle()
+    expect((await db.todos.get('r'))?.text).toBe('newer')
+    event('DELETE', null, { id: 'r' })
+    await realtimeSettle()
+    expect(await db.todos.get('r')).toBeUndefined()
   })
 
   it('an event arriving during a pull is applied after it, not overwritten by its stale snapshot', async () => {
