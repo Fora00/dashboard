@@ -14,7 +14,7 @@ import { Card } from '../../components/Card'
 import { PageHeader } from '../../components/PageHeader'
 import { SyncCard } from '../../components/SyncCard'
 import { runSafe } from '../../lib/runSafe'
-import { buildBackup, parseBackup, restoreBackup } from '../../lib/backup'
+import { buildBackup, parseBackup, restoreBackup, type RestoreResult } from '../../lib/backup'
 import { DataView } from './DataView'
 import { clearPrivateData, privateDataSummary } from '../../lib/privateData'
 
@@ -123,7 +123,7 @@ export function Settings() {
   const [estimate, setEstimate] = useState<StorageEstimate | null>(null)
   const [persisted, setPersisted] = useState<boolean | null>(null)
   const [confirmWipe, setConfirmWipe] = useState(false)
-  const [imported, setImported] = useState<number | null>(null)
+  const [imported, setImported] = useState<RestoreResult | null>(null)
 
   useEffect(() => {
     void navigator.storage?.estimate?.().then(setEstimate)
@@ -144,8 +144,7 @@ export function Settings() {
   }
 
   async function importData(file: File) {
-    const rows = await restoreBackup(parseBackup(await file.text()))
-    setImported(rows)
+    setImported(await restoreBackup(parseBackup(await file.text())))
   }
 
   async function wipeLocal() {
@@ -211,8 +210,15 @@ export function Settings() {
           <Card className="space-y-3 text-sm">
             <p className="text-slate-500 dark:text-slate-400">
               Save everything on this device to one file, or merge a saved file back in. Importing never deletes current
-              data.
+              data, and where this device has a newer copy of a row, the newer one stays.
             </p>
+            {syncEnabled && (
+              <p className="text-slate-500 dark:text-slate-400">
+                {session
+                  ? 'Signed in: imported rows of synced projects are uploaded too. Rows the server refuses (projects you are not part of) stay on this device and show up as rejected changes.'
+                  : 'Signed out: imported rows stay on this device and upload the next time you sign in.'}
+              </p>
+            )}
             <div className="flex flex-wrap items-center gap-2">
               <Button variant="ghost" onClick={() => void runSafe(exportData, 'Could not export data')()}>
                 Export backup
@@ -231,7 +237,10 @@ export function Settings() {
                 />
               </label>
               {imported !== null && (
-                <span className="text-emerald-700 dark:text-emerald-300">Restored {imported} rows ✅</span>
+                <span className="text-emerald-700 dark:text-emerald-300">
+                  Restored {imported.restored} rows
+                  {imported.kept > 0 && <> ({imported.kept} already up to date here)</>} ✅
+                </span>
               )}
             </div>
           </Card>

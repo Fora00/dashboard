@@ -38,7 +38,7 @@ export interface ShopArea {
 // server migration uses the same id so local and remote merge cleanly.
 export const DEFAULT_AREA_ID = '00000000-0000-0000-0000-000000000001'
 
-// A climbing session at a gym or crag. Local-only for now (no cloud sync).
+// A climbing session at a gym or crag. Synced via climbSync.ts.
 export type Discipline = 'boulder' | 'lead'
 
 export interface ClimbSession {
@@ -833,6 +833,36 @@ export const db = new Dexie('dashboard') as Dexie & {
   eventInterestProfile: EntityTable<EventInterestProfile, 'id'>
 }
 
+/** Pure, in-place row-shape upgrades keyed by Dexie table name: the backfills
+ *  the version upgrades below apply to rows written before a shape change.
+ *  Each only fills a field that is missing, so it is idempotent. Shared with
+ *  backup restore (backup.ts): a file exported before a change is brought to
+ *  the current shape before it is merged, like the rows on a device would be. */
+type RowShapeUpgrade = (row: Record<string, unknown>) => void
+export const rowShapeUpgrades = {
+  // v3: shop items gain an area; pre-area items go to the default one.
+  shopItems: (r) => {
+    if (r.areaId === undefined) r.areaId = DEFAULT_AREA_ID
+  },
+  // v5: todos gain updatedAt (last-writer-wins), backfilled from createdAt.
+  todos: (r) => {
+    if (r.updatedAt === undefined) r.updatedAt = typeof r.createdAt === 'number' ? r.createdAt : Date.now()
+  },
+  // v9: links gain tags (multiEntry index; undefined would break it).
+  links: (r) => {
+    if (r.tags === undefined) r.tags = []
+  },
+  // v15: the event prefs row gains updatedAt; 0 = "predates sync" (server merges).
+  eventPrefs: (r) => {
+    if (r.updatedAt === undefined) r.updatedAt = 0
+  },
+} satisfies Record<string, RowShapeUpgrade>
+
+/** Brings one row of `table` to the current shape (in place). No-op for tables without a shape upgrade. */
+export function upgradeRowShape(table: string, row: Record<string, unknown>): void {
+  if (Object.hasOwn(rowShapeUpgrades, table)) rowShapeUpgrades[table as keyof typeof rowShapeUpgrades](row)
+}
+
 db.version(1).stores({
   files: 'id, name, createdAt, synced',
   shopItems: 'id, done, createdAt',
@@ -857,7 +887,7 @@ db.version(3)
       name: 'Groceries',
       createdAt: Date.now(),
     })
-    await tx.table('shopItems').toCollection().modify({ areaId: DEFAULT_AREA_ID })
+    await tx.table('shopItems').toCollection().modify(rowShapeUpgrades.shopItems)
   })
 
 db.version(4).stores({
@@ -889,12 +919,7 @@ db.version(5)
     todos: 'id, done, createdAt',
   })
   .upgrade(async (tx) => {
-    await tx
-      .table('todos')
-      .toCollection()
-      .modify((t: Todo) => {
-        if (t.updatedAt === undefined) t.updatedAt = t.createdAt ?? Date.now()
-      })
+    await tx.table('todos').toCollection().modify(rowShapeUpgrades.todos)
   })
 
 // v6: adds bookIdeas — a brand-new empty table, so no backfill upgrade needed.
@@ -964,12 +989,7 @@ db.version(9)
     links: 'id, read, createdAt, *tags',
   })
   .upgrade(async (tx) => {
-    await tx
-      .table('links')
-      .toCollection()
-      .modify((l: LinkItem) => {
-        if (l.tags === undefined) l.tags = []
-      })
+    await tx.table('links').toCollection().modify(rowShapeUpgrades.links)
   })
 
 // v10: adds projectStats — a brand-new empty table, so no backfill upgrade
@@ -1128,7 +1148,8 @@ db.version(15)
     }))
     const prefs = (await tx.table('eventPrefs').get('prefs')) as EventPrefs | undefined
     if (prefs) {
-      const row: EventPrefs = { ...prefs, updatedAt: prefs.updatedAt ?? 0 }
+      const row: EventPrefs = { ...prefs }
+      rowShapeUpgrades.eventPrefs(row as unknown as Record<string, unknown>)
       await tx.table('eventPrefs').put(row)
       entries.push({
         table: 'event_prefs',

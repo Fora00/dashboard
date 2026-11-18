@@ -1718,7 +1718,7 @@ re-implementing, then per-project refactors. Do ONE at a time; owner picks.
 - [x] A3 **Outbox shield not scoped to the table** [opus, S]: `cloudSync.ts:536` (and pull shield **DONE 2026-11-18** (`shieldKey(table,rowId)` in pull + realtime; 2 regression tests).
       :473) match `rowId` across tables; `event_marks`/`event_interest` share the event id, learning
       ids repeat across 4 tables. Key by `table\0rowId`.
-- [ ] A4 **Backup restore bypasses the outbox** [opus, M]: `backup.ts:78-85` bulkPuts without
+- [x] A4 **Backup restore bypasses the outbox** [opus, M]: `backup.ts:78-85` bulkPuts without **DONE 2026-11-18** (restore through each engine's `upsertMany` in one transaction; `rowShapeUpgrades` shared with db.ts upgrades; newer local row wins; guests queued too — dead-letter keeps the row, a local-only restore would be wiped by the pull; `files` Blobs left out of backups like sketches).
       queueing → signed in, the next pull deletes restored rows; old backups skip shape upgrades
       (db.ts v3/v5/v9/v15). Route synced tables through `upsertMany`, normalise old shapes.
 - [x] A5 **Home habit counts wrong** [sonnet, S]: `homeToday.ts:16-23`, `Home.tsx:188-195` count **DONE 2026-11-18** (`habitProgress` on `deriveHabitDays`, one helper for Home badge + TodayPanel; 12 tests).
@@ -1739,7 +1739,7 @@ re-implementing, then per-project refactors. Do ONE at a time; owner picks.
       private-data texts omit Learning (Settings.tsx:91,103, SyncCard.tsx:138); Sharing chips
       without aria-pressed/✓; downloads revoke the URL right after click (Safari) →
       `downloadBlob()`; Home dead `planned` branch + hard-coded indigo.
-- [ ] B4 Lists: shop items deletable only by swipe (`ShopList.tsx:97`); climbing delete without
+- [x] B4 Lists: shop items deletable only by swipe (`ShopList.tsx:97`); climbing delete without **DONE 2026-11-18** (shop ✕ button, climbing Undo + `restoreSession`, hotkeys, idea titles editable via `updateText`, subtitles).
       Undo / with confirm (`SessionCard.tsx:56,134`); hotkeys missing on IdeaList/Trips/Climbing;
       idea titles not editable (`IdeaList.tsx:111`); "Saved on this device" copy on synced pages.
 - [ ] B5 Habits: experiments past `cycleEnd` but not archived still count misses; `habitStats`

@@ -124,6 +124,16 @@ export type CascadeChild = {
   [C in OutboxTable]: { remote: C; key: keyof OutboxMap[C] & string }
 }[OutboxTable]
 
+/** One local table an engine syncs, as seen from outside (backup restore). */
+export interface SyncedLocalTable {
+  /** Dexie table name (db.<name>). */
+  name: string
+  /** Its remote table / outbox discriminator. */
+  remote: OutboxTable
+  /** Its updated_at (ms) for last-writer-wins, when the table has one. */
+  updatedAt?: ((row: never) => number) | undefined
+}
+
 export interface CloudSync {
   /** Push this project's queued mutations. No-op when signed out/offline. */
   flush: () => Promise<void>
@@ -150,6 +160,9 @@ export interface CloudSync {
    *  the rows lose their shield, so the next pull replaces them with the
    *  server's version (or removes them if the server has none). */
   discardDead: () => Promise<void>
+  /** The local tables this engine syncs, in config order (parents before
+   *  children, so queueing them in this order respects foreign keys). */
+  localTables: () => SyncedLocalTable[]
   /** Current status snapshot (stable identity until it changes). */
   getStatus: () => SyncStatus
   /** Subscribe to status changes. Returns an unsubscribe function.
@@ -725,6 +738,14 @@ export function createCloudSync(config: SyncConfig): CloudSync {
   // Seed the initial counts (fire-and-forget; UI updates when it resolves).
   void refreshCounts()
 
+  function localTables(): SyncedLocalTable[] {
+    return config.tables.map((tc) => ({
+      name: tc.table().name,
+      remote: tc.remote as OutboxTable,
+      updatedAt: tc.updatedAt as SyncedLocalTable['updatedAt'],
+    }))
+  }
+
   return {
     flush,
     syncNow,
@@ -736,6 +757,7 @@ export function createCloudSync(config: SyncConfig): CloudSync {
     removeCascade,
     retryDead,
     discardDead,
+    localTables,
     getStatus,
     subscribe,
   }
