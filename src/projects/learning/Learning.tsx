@@ -8,12 +8,15 @@ import { HomePage } from './home/HomePage'
 import { ModulePage } from './module/ModulePage'
 import ReviewPage from './review/ReviewPage'
 import { CourseLoading } from './ui/CourseLoading'
+import { useVocabKeyMigration } from './vocab/store'
 
 // Routes only; see docs/COURSES.md for the folder map.
 // The vocabulary page is its own chunk (its words come in one more chunk per language, see vocab/index.ts).
 const VocabPage = lazy(() => import('./vocab/VocabPage'))
 
 export function Learning() {
+  // Rewrites theme-keyed Vocabolario rows to word-keyed ones whenever any are present (vocab/progress.ts).
+  useVocabKeyMigration()
   return (
     <Routes>
       <Route index element={<HomePage />} />

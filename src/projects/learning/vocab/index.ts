@@ -1,5 +1,5 @@
 import { groupThemes, mergeWords, type WordLists } from './merge'
-import { LANGS, type Lang, type VocabTheme, type VocabThemeInfo, type WordEntry } from './types'
+import { LANGS, type Lang, type VocabTheme, type VocabThemeInfo, type VocabWord, type WordEntry } from './types'
 
 // Theme list (metadata only) + lazy content. The words live in ONE file per language, `courses/<lang>/words.ts`,
 // each its own chunk loaded on demand and merged by id (./merge.ts); a word belongs to the theme its entries name.
@@ -39,6 +39,15 @@ export const themeMetaById = (id: string): VocabThemeMeta | undefined => themeMe
 export const loadedThemes = (): VocabTheme[] | undefined => loaded
 
 export const loadedTheme = (id: string): VocabTheme | undefined => loaded?.find((t) => t.id === id)
+
+/** A word and the theme it is in NOW (progress is keyed by word id, not theme); undefined if gone or not loaded. */
+export function loadedWord(id: string): { word: VocabWord; theme: VocabTheme } | undefined {
+  for (const theme of loaded ?? []) {
+    const word = theme.words.find((w) => w.id === id)
+    if (word) return { word, theme }
+  }
+  return undefined
+}
 
 /** Loads the four words chunks once and merges them; a language that fails to load is left out (its rows show "—"). */
 export async function loadAllThemes(): Promise<VocabTheme[]> {

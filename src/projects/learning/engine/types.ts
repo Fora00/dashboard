@@ -10,6 +10,11 @@ export interface QuizQuestion {
   options: string[]
   /** Index into `options`. */
   answer: number
+  /**
+   * order[j] = author-order index (position as written) of the option shown at j; set by
+   * kit.ts q(), absent = options are in author order. Stored answers use it (quizAnswer.ts).
+   */
+  order?: number[]
   explanation: string
   /** Optional figure id (figures.tsx) shown above the options. */
   fig?: string

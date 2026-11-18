@@ -33,7 +33,9 @@ Rule of thumb: pages read through `engine/store.ts` (or `review/useQueue.ts`) an
 2. Build modules with the kit (`courses/kit.ts`): `mod(id, title, subtitle, group, lesson, quiz, cards,
    practice, vault?)`, `q(id, text, options, answerIndex, explanation)`, `card(id, front, back)`,
    `prac(id, question, answer)`. `q()` shuffles the options with a seed, so write the right answer
-   anywhere and never rely on its slot.
+   anywhere and never rely on its slot. Saved answers store the option's position as written (author
+   order, `engine/quizAnswer.ts`), so rewording a question or its options is safe; reordering, inserting
+   or removing options of a live question is not (max 10 options per question).
 3. Add it to `courses/index.ts` (eager list, tests only) AND to `courses/registry.ts` (meta + `load()` +
    `group`: `sviluppo`, `creativita`, `lingue`, or a new entry in `courseGroups`, which also gets its own
    page at `/learning/<groupId>`; course ids must differ from area ids, `ripasso` and `vocabolario`). The `lazy registry`
@@ -70,7 +72,7 @@ Rule of thumb: pages read through `engine/store.ts` (or `review/useQueue.ts`) an
 | Dexie | Supabase | What |
 |---|---|---|
 | `learningQuiz` | `learning_quiz` | first answer per question (locked until "Rifai") |
-| `learningCards` | `learning_cards` | a row = card/word known (Vocabolario: courseId `vocabolario`) |
+| `learningCards` | `learning_cards` | a row = card/word known (Vocabolario: courseId `vocabolario`, moduleId `_words`, itemId `<wordId>.<lang>`: keyed by word, so a word may move between themes) |
 | `learningPractice` | `learning_practice` | done + notes |
 | `learningChecks` | `learning_checks` | checklist ticks |
 | `learningPosition` | `learning_position` | last module/tab per course |

@@ -9,9 +9,22 @@ import { vsec as ruVsec } from '../courses/russo/pron'
 import { vsecW as deVsecW } from '../courses/tedesco/vsecw'
 import { vsecW as ruVsecW } from '../courses/russo/vsecw'
 import { tableRow, vsecWFor } from '../courses/vocabTable'
-import { FALLBACK_THEME, loadAllThemes, themeMetas, visibleThemes, wordLoaders } from './index'
+import { FALLBACK_THEME, loadAllThemes, loadedWord, themeMetas, visibleThemes, wordLoaders } from './index'
 import { groupThemes, mergeWords, wordLangs } from './merge'
-import { knownIn, themeCount, vocabDeck, vocabItemId, VOCAB_COURSE_ID, wordKnown } from './progress'
+import {
+  isOldVocabRow,
+  knownIn,
+  themeCount,
+  vocabCardId,
+  vocabDeck,
+  vocabItemId,
+  VOCAB_COURSE_ID,
+  VOCAB_MODULE_ID,
+  vocabRekeyPlan,
+  wordKnown,
+} from './progress'
+import { buildQueue, sourcesOf } from '../engine/review'
+import type { LearningCard, LearningReview } from '../../../lib/db'
 import { LANGS, type Lang, type VocabWord, type WordEntry } from './types'
 import { normalize, posMatches, searchThemes, wordMatches } from './search'
 import { expected as esExpected } from '../courses/spagnolo/respell'
@@ -406,21 +419,27 @@ describe('german respelling', () => {
 })
 
 describe('vocabulary progress', () => {
-  const rows = (ids: string[], themeId = 'cibo-bevande') =>
+  const rows = (ids: string[], moduleId = VOCAB_MODULE_ID, updatedAt = 1): LearningCard[] =>
     ids.map((itemId) => ({
-      id: `${VOCAB_COURSE_ID}:${themeId}:${itemId}`,
+      id: `${VOCAB_COURSE_ID}:${moduleId}:${itemId}`,
       courseId: VOCAB_COURSE_ID,
-      moduleId: themeId,
+      moduleId,
       itemId,
-      updatedAt: 1,
+      updatedAt,
     }))
-  it('reads known marks per theme only', () => {
-    const k = knownIn([...rows(['pane.es']), ...rows(['padre.es'], 'persone-famiglia')], 'cibo-bevande')
-    expect([...k]).toEqual(['pane.es'])
+  it('reads known marks by word, whatever the theme of the row; course cards are ignored', () => {
+    const course = { id: 'x:m:pane.es', courseId: 'x', moduleId: 'm', itemId: 'pane.es', updatedAt: 1 }
+    const k = knownIn([...rows(['pane.es']), ...rows(['padre.es'], 'persone-famiglia'), course])
+    expect([...k].sort()).toEqual(['padre.es', 'pane.es'])
+  })
+  it('the fixed moduleId can never be a theme id', () => {
+    expect(VOCAB_MODULE_ID).not.toMatch(/^[a-z0-9]+(-[a-z0-9]+)*$/)
+    expect(themeMetas.some((m) => m.id === VOCAB_MODULE_ID)).toBe(false)
+    expect(vocabCardId('pane.es')).toBe(`${VOCAB_COURSE_ID}:${VOCAB_MODULE_ID}:pane.es`)
   })
   const word0 = cibo.words[0]!
   it('a word is known only in every chosen language; the deck skips known words', () => {
-    const k = knownIn(rows(['cibo.es', 'cibo.fr', 'bevanda.es']), 'cibo-bevande')
+    const k = knownIn(rows(['cibo.es', 'cibo.fr', 'bevanda.es']))
     expect(word0.id).toBe('cibo')
     expect(wordKnown(k, word0, ['es', 'fr'])).toBe(true)
     expect(wordKnown(k, word0, ['es', 'de'])).toBe(false)
@@ -430,20 +449,93 @@ describe('vocabulary progress', () => {
     expect(deck.length).toBe(cibo.words.length - 1)
     expect(vocabDeck(cibo.words, k, [])).toEqual([])
   })
-  it('counts known pairs over words × languages, ignoring stale rows', () => {
-    const k = knownIn(rows(['cibo.es', 'cibo.fr', 'gone.es']), 'cibo-bevande')
+  it('counts known pairs over the theme words × languages, ignoring other themes and stale rows', () => {
+    const k = knownIn(rows(['cibo.es', 'cibo.fr', 'gone.es', 'padre.es']))
     expect(themeCount(cibo.words, k, ['es', 'de'])).toEqual({ done: 1, total: cibo.words.length * 2 })
   })
   it('skips the languages a word is missing in (count, known, deck)', () => {
     const { de: _de, ...partial } = word0
     void _de
     const ws: VocabWord[] = [partial, cibo.words[1]!]
-    const k = knownIn(rows(['cibo.es']), 'cibo-bevande')
+    const k = knownIn(rows(['cibo.es']))
     expect(themeCount(ws, k, ['es', 'de'])).toEqual({ done: 1, total: 3 })
     expect(wordKnown(k, partial, ['es', 'de'])).toBe(true)
     expect(vocabDeck(ws, k, ['es', 'de'])).toEqual([1])
     expect(vocabDeck(ws, k, ['de'])).toEqual([1])
     expect(wordMatches(partial, 'das essen', ['de'])).toBe(false)
+  })
+  it('a known word moved to another theme stays known there and Ripasso still finds it', async () => {
+    // `pane` marked known while it lived in "saluti" (an old theme-keyed row), then moved to cibo-bevande.
+    const old = rows(['pane.es'], 'saluti')
+    const pane = cibo.words.find((w) => w.id === 'pane')!
+    const plan = vocabRekeyPlan(old, [])
+    const now = plan.upsertCards
+    expect(now.map((c) => c.id)).toEqual([vocabCardId('pane.es')])
+    for (const cards of [old, now]) {
+      const k = knownIn(cards)
+      expect(wordKnown(k, pane, ['es'])).toBe(true)
+      expect(themeCount(cibo.words, k, ['es']).done).toBe(1)
+      expect(themeCount(theme('saluti').words, k, ['es']).done).toBe(0)
+    }
+    // Ripasso: the queue item carries only the word id; the content lookup finds the word in its current theme.
+    const q = buildQueue(sourcesOf(now, []), [], '2026-12-31')
+    expect(q.items.map((i) => [i.moduleId, i.itemId])).toEqual([[VOCAB_MODULE_ID, 'pane.es']])
+    await loadAllThemes()
+    expect(loadedWord('pane')?.theme.id).toBe('cibo-bevande')
+    expect(loadedWord('gone-word')).toBeUndefined()
+  })
+})
+
+describe('vocabulary rekey (theme-keyed rows -> word-keyed)', () => {
+  const card = (moduleId: string, itemId: string, updatedAt: number): LearningCard => ({
+    id: `${VOCAB_COURSE_ID}:${moduleId}:${itemId}`,
+    courseId: VOCAB_COURSE_ID,
+    moduleId,
+    itemId,
+    updatedAt,
+  })
+  const review = (moduleId: string, itemId: string, updatedAt: number, step = 2): LearningReview => ({
+    id: `card:${VOCAB_COURSE_ID}:${moduleId}:${itemId}`,
+    kind: 'card',
+    courseId: VOCAB_COURSE_ID,
+    moduleId,
+    itemId,
+    step,
+    due: '2026-12-01',
+    reviewedOn: '2026-11-20',
+    updatedAt,
+  })
+  it('moves cards and their Ripasso rows to the fixed key, keeping updatedAt (schedule stays live)', () => {
+    const cards = [card('cibo-bevande', 'pane.es', 5), { ...card('m', 'c1', 1), courseId: 'other', id: 'other:m:c1' }]
+    const reviews = [review('cibo-bevande', 'pane.es', 7)]
+    const p = vocabRekeyPlan(cards, reviews)
+    expect(p.upsertCards).toEqual([card(VOCAB_MODULE_ID, 'pane.es', 5)])
+    expect(p.removeCards).toEqual(['vocabolario:cibo-bevande:pane.es'])
+    expect(p.upsertReviews).toEqual([review(VOCAB_MODULE_ID, 'pane.es', 7)])
+    expect(p.removeReviews).toEqual(['card:vocabolario:cibo-bevande:pane.es'])
+    // The schedule still applies after the rewrite: review (7) newer than the card (5) -> due 2026-12-01, not tomorrow.
+    const q = buildQueue(sourcesOf(p.upsertCards, []), p.upsertReviews, '2026-11-25')
+    expect(q.items).toEqual([])
+  })
+  it('merges a word known in two themes into the newest row; an existing newer word-keyed row wins', () => {
+    const p = vocabRekeyPlan([card('saluti', 'pane.es', 3), card('cibo-bevande', 'pane.es', 9)], [])
+    expect(p.upsertCards).toEqual([card(VOCAB_MODULE_ID, 'pane.es', 9)])
+    expect(p.removeCards.sort()).toEqual(['vocabolario:cibo-bevande:pane.es', 'vocabolario:saluti:pane.es'])
+    const q = vocabRekeyPlan([card(VOCAB_MODULE_ID, 'pane.es', 20), card('saluti', 'pane.es', 3)], [])
+    expect(q.upsertCards).toEqual([])
+    expect(q.removeCards).toEqual(['vocabolario:saluti:pane.es'])
+  })
+  it('is idempotent: the rewritten rows plan nothing', () => {
+    const cards = [card('saluti', 'pane.es', 3), card('numeri', 'uno.ru', 4)]
+    const reviews = [review('numeri', 'uno.ru', 6)]
+    const p = vocabRekeyPlan(cards, reviews)
+    expect([...p.upsertCards, ...p.upsertReviews].some(isOldVocabRow)).toBe(false)
+    expect(vocabRekeyPlan(p.upsertCards, p.upsertReviews)).toEqual({
+      upsertCards: [],
+      removeCards: [],
+      upsertReviews: [],
+      removeReviews: [],
+    })
   })
 })
 

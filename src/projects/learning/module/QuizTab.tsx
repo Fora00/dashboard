@@ -4,6 +4,7 @@ import { FOCUS_RING } from '../../../components/focus'
 import { HtmlText } from '../engine/HtmlText'
 import { figures } from '../figures/figures'
 import { moduleProgress, type CourseState } from '../engine/progress'
+import { pickedShown } from '../engine/quizAnswer'
 import { answerQuiz, resetQuiz, resetWrongQuiz } from '../../../lib/learningSync'
 import type { CourseModule } from '../engine/types'
 
@@ -50,6 +51,8 @@ export function QuizTab({ courseId, mod, state }: Props) {
 
       {mod.quiz.map((q, i) => {
         const a = answers.get(q.id)
+        // Shown slot of the stored pick (null = a legacy wrong answer whose option can't be known any more).
+        const picked = a ? pickedShown(q, a) : null
         return (
           <fieldset key={q.id} className="rounded-xl border border-slate-200 p-4 dark:border-slate-800">
             <legend className="sr-only">Domanda {i + 1}</legend>
@@ -64,7 +67,7 @@ export function QuizTab({ courseId, mod, state }: Props) {
             >
               {q.options.map((o, j) => {
                 const isRight = j === q.answer
-                const isPicked = a?.selected === j
+                const isPicked = picked === j
                 const tone = !a
                   ? 'border-slate-200 bg-white hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800/50 dark:hover:bg-slate-800'
                   : isRight
@@ -78,7 +81,7 @@ export function QuizTab({ courseId, mod, state }: Props) {
                     type="button"
                     disabled={!!a}
                     aria-pressed={isPicked}
-                    onClick={() => void answerQuiz(courseId, mod.id, q.id, j, q.answer)}
+                    onClick={() => void answerQuiz(courseId, mod.id, q.id, j, q)}
                     className={`flex min-h-10 w-full ${q.optionFigs ? 'flex-col' : ''} items-center justify-between gap-2 rounded-lg border-2 px-3 py-2 text-left text-sm disabled:cursor-default ${FOCUS_RING} ${tone}`}
                   >
                     {q.optionFigs?.[j] && figures[q.optionFigs[j]] && (

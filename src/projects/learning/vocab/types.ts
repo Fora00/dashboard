@@ -85,7 +85,7 @@ export interface VocabWord {
 }
 
 export interface VocabThemeInfo {
-  /** Stable kebab-case id (moduleId of the progress rows: never rename). */
+  /** Stable kebab-case id (route segment; progress is keyed by word, so words may move between themes). */
   id: string
   title: string
   emoji: string

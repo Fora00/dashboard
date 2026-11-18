@@ -4,7 +4,9 @@ import type { CourseModule, Flashcard, PracticeItem, QuizQuestion } from '../eng
 // (see ../html.ts allowlist). Code goes in <pre><code>; write < > & as entities.
 // Quiz options are permuted with a PRNG seeded by the question text, so the
 // correct answer is not always in the same slot (or the longest) and the order
-// is stable across builds (progress rows store the selected index).
+// is stable across builds. Rewording a question reshuffles it, so stored answers
+// keep the AUTHOR-order index (see ../engine/quizAnswer.ts), never the shown one:
+// reword freely, but never reorder, insert or remove options of a live question.
 function seeded(text: string): () => number {
   let h = 2166136261
   for (let i = 0; i < text.length; i++) h = Math.imul(h ^ text.charCodeAt(i), 16777619)
@@ -30,6 +32,7 @@ export const q = (id: string, text: string, options: string[], answer: number, e
     q: text,
     options: order.map((i) => options[i]!),
     answer: order.indexOf(answer),
+    order,
     explanation,
   }
 }

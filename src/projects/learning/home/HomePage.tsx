@@ -8,6 +8,7 @@ import { SyncCard } from '../../../components/SyncCard'
 import { sync } from '../../../lib/learningSync'
 import { courseMetas } from '../courses/registry'
 import { GroupTiles } from './CourseRows'
+import { OfflineDownload } from './OfflineDownload'
 import { SearchResults } from './SearchResults'
 import { TodayBlock } from './TodayBlock'
 import { useLoadCourses } from './useLoadCourses'
@@ -37,7 +38,8 @@ export function HomePage() {
           {searching ? <SearchResults query={query} ready={ready} /> : <GroupTiles />}
         </div>
       )}
-      <div className="mt-8">
+      <div className="mt-8 flex flex-col gap-4">
+        <OfflineDownload />
         <SyncCard sync={sync} />
       </div>
     </div>

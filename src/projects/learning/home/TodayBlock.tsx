@@ -6,9 +6,15 @@ import { Card } from '../../../components/Card'
 import { FOCUS_RING_INSET } from '../../../components/focus'
 import { db } from '../../../lib/db'
 import { courseMetaById, loadCourse, loadedCourse } from '../courses/registry'
-import { today, useQueue } from '../review/useQueue'
+import { useReviewQueue } from '../review/content'
+import { useToday } from '../../life/useToday'
 
-const TAB_LABEL = { lesson: 'lezione', quiz: 'quiz', cards: 'flashcard', practice: 'pratica' } as const
+const TAB_LABEL = {
+  lesson: 'lezione',
+  quiz: 'quiz',
+  cards: 'flashcard',
+  practice: 'pratica',
+} as const
 
 function Row({
   to,
@@ -64,8 +70,7 @@ function useLastPosition() {
 }
 
 export function TodayBlock() {
-  const [day] = useState(today)
-  const q = useQueue(day)
+  const { q } = useReviewQueue(useToday())
   const last = useLastPosition()
   const n = q?.items.length ?? 0
   const meta = last ? courseMetaById(last.courseId) : undefined

@@ -207,6 +207,8 @@ describe('every course: universal invariants', () => {
         for (const q of m.quiz) {
           expect(q.options[q.answer], `${c.id}/${m.id}/${q.id}`).toBeDefined()
           expect(new Set(q.options).size, `${c.id}/${m.id}/${q.id} dup`).toBe(q.options.length)
+          // Stored answers are AUTHOR_BASE (10) + author index, inside the column check 0..20.
+          expect(q.options.length, `${c.id}/${m.id}/${q.id} too many options`).toBeLessThanOrEqual(10)
         }
   })
 

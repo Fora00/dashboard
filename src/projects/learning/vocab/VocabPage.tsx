@@ -79,6 +79,7 @@ const backLink = 'mb-3 inline-block text-sm text-slate-500 hover:text-slate-800 
 function ThemeList() {
   const [langs, toggle] = useLangs()
   const cards = useVocabCards() ?? []
+  const known = knownIn(cards)
   const [themes, setThemes] = useState<VocabTheme[] | undefined>(loadedThemes)
   const [query, setQuery] = useState('')
   const [pos, setPos] = useState<PosFilter>('all')
@@ -129,7 +130,7 @@ function ThemeList() {
         <ul className="grid gap-2 sm:grid-cols-2">
           {visibleThemes(themes).map((m) => {
             const t = loadedTheme(m.id)
-            const c = t ? themeCount(t.words, knownIn(cards, m.id), langs) : { done: 0, total: 0 }
+            const c = t ? themeCount(t.words, known, langs) : { done: 0, total: 0 }
             const p = percent(c.done, c.total)
             const info = [m.level, t && `${t.words.length} parole`].filter(Boolean).join(' · ')
             return (
@@ -181,10 +182,11 @@ function SearchResults({
 }) {
   if (loading) return <p className="text-sm text-slate-500">Caricamento…</p>
   if (hits.length === 0) return <p className="text-sm text-slate-500">Nessuna parola trovata.</p>
+  const known = knownIn(cards)
   return (
     <ul className="flex flex-col gap-2" aria-label="Risultati">
       {hits.map((h) => (
-        <WordRow key={h.word.id} word={h.word} langs={langs} known={knownIn(cards, h.theme.id)} theme={h.theme} />
+        <WordRow key={h.word.id} word={h.word} langs={langs} known={known} theme={h.theme} />
       ))}
     </ul>
   )
@@ -374,11 +376,15 @@ function Flashcards({ theme, langs, known }: { theme: VocabTheme; langs: Lang[];
       <div className="flex flex-col items-start gap-3 rounded-xl border border-slate-200 p-5 dark:border-slate-800">
         <p className="font-medium">Mazzo completato</p>
         <p className="text-sm text-slate-600 dark:text-slate-400">
-          Conosci tutte le parole nelle lingue scelte. Ripassale tra qualche giorno.
+          Conosci tutte le parole nelle lingue scelte: da qui in poi te le ripropone{' '}
+          <Link to="/learning/ripasso" className="font-medium underline underline-offset-2">
+            🔁 Ripasso
+          </Link>{' '}
+          quando è il momento.
         </p>
         <Button
           onClick={() => {
-            void resetThemeLangs(theme.id, known, langs)
+            void resetThemeLangs(theme.words, known, langs)
             setPosition(0)
             setFlipped(false)
           }}
@@ -419,7 +425,7 @@ function Flashcards({ theme, langs, known }: { theme: VocabTheme; langs: Lang[];
         <div className="flex flex-wrap gap-2">
           <Button
             onClick={() => {
-              void setWordKnown(theme.id, word.id, wordLangs(word, langs), true)
+              void setWordKnown(word.id, wordLangs(word, langs), true)
               setFlipped(false)
             }}
           >
@@ -449,7 +455,7 @@ function ThemeView({ theme }: { theme: VocabTheme }) {
   const [tab, setTab] = useState<TabId>('dict')
   const [pos, setPos] = useState<PosFilter>('all')
   const cards = useVocabCards()
-  const known = knownIn(cards ?? [], theme.id)
+  const known = knownIn(cards ?? [])
   const c = themeCount(theme.words, known, langs)
   const p = percent(c.done, c.total)
   const tabs: { id: TabId; label: string }[] = [

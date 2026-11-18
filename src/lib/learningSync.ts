@@ -10,7 +10,13 @@ import {
 import { createCloudSync, type TableSync } from './cloudSync'
 import { useSyncStatus } from './useSyncStatus'
 import { itemKey } from '../projects/learning/engine/progress'
-import { MAX_STEP, schedule, type Grade, type ReviewSource } from '../projects/learning/engine/review'
+import { MAX_STEP, reviewId, schedule, type Grade, type ReviewSource } from '../projects/learning/engine/review'
+import { encodeSelected } from '../projects/learning/engine/quizAnswer'
+import { isOldVocabRow, VOCAB_COURSE_ID, vocabRekeyPlan } from '../projects/learning/vocab/progress'
+import type { QuizQuestion } from '../projects/learning/engine/types'
+
+/** What answerQuiz / answerReviewQuiz need of a question: the right shown slot and the shuffle. */
+type QuizKey = Pick<QuizQuestion, 'answer' | 'order'>
 
 // Local-first sync for the Learning project (owner-only: it is the owner's
 // personal progress), built on the generic engine in cloudSync.ts. Content is
@@ -201,10 +207,22 @@ const positionTable: TableSync<LearningPosition, PositionRow> = {
   columns: 'id, course_id, module_id, tab, updated_at',
   realtime: true,
   updatedAt: (r) => r.updatedAt,
-  toRow: (r) => ({ id: r.id, course_id: r.courseId, module_id: r.moduleId, tab: r.tab, updated_at: r.updatedAt }),
+  toRow: (r) => ({
+    id: r.id,
+    course_id: r.courseId,
+    module_id: r.moduleId,
+    tab: r.tab,
+    updated_at: r.updatedAt,
+  }),
   fromRow: (r) => {
     if (!TABS.includes(r.tab)) throw new Error('learning_position: bad row')
-    return { id: r.id, courseId: r.course_id, moduleId: r.module_id, tab: r.tab, updatedAt: Number(r.updated_at) }
+    return {
+      id: r.id,
+      courseId: r.course_id,
+      moduleId: r.module_id,
+      tab: r.tab,
+      updatedAt: Number(r.updated_at),
+    }
   },
 }
 
@@ -253,8 +271,8 @@ export async function answerQuiz(
   courseId: string,
   moduleId: string,
   itemId: string,
-  selected: number,
-  answer: number,
+  shown: number,
+  quiz: QuizKey,
 ): Promise<void> {
   const id = itemKey(courseId, moduleId, itemId)
   // The answer is locked: the first pick stays until the quiz is reset.
@@ -264,8 +282,9 @@ export async function answerQuiz(
     courseId,
     moduleId,
     itemId,
-    selected,
-    correct: selected === answer ? 1 : 0,
+    // Author-order index, so a later rewording of the question cannot move it (quizAnswer.ts).
+    selected: encodeSelected(quiz, shown),
+    correct: shown === quiz.answer ? 1 : 0,
     updatedAt: Date.now(),
   })
 }
@@ -282,8 +301,26 @@ async function idsOf(
   return rows.map((r) => r.id)
 }
 
+/** Ripasso rows of one kind in a module (its whole quiz / deck went away). */
+async function moduleReviewIds(kind: 'quiz' | 'card', courseId: string, moduleId: string): Promise<string[]> {
+  const rows = await db.learningReviews.where('courseId').equals(courseId).toArray()
+  return rows.filter((r) => r.kind === kind && r.moduleId === moduleId).map((r) => r.id)
+}
+
+/** The Ripasso rows that exist for these cards (so no delete is queued for a card never reviewed). */
+async function cardReviewIds(courseId: string, moduleId: string, itemIds: readonly string[]): Promise<string[]> {
+  const ids = itemIds.map((itemId) => reviewId('card', courseId, moduleId, itemId))
+  const rows = await db.learningReviews.bulkGet(ids)
+  return ids.filter((_, i) => rows[i])
+}
+
+const REMOVE_TABLES = () => [db.learningQuiz, db.learningCards, db.learningReviews, db.outbox]
+
 export async function resetQuiz(courseId: string, moduleId: string): Promise<void> {
-  await engine.removeMany('learning_quiz', await idsOf('learningQuiz', courseId, moduleId))
+  await db.transaction('rw', REMOVE_TABLES(), async () => {
+    await engine.removeMany('learning_quiz', await idsOf('learningQuiz', courseId, moduleId))
+    await engine.removeMany('learning_reviews', await moduleReviewIds('quiz', courseId, moduleId))
+  })
 }
 
 /** "Rifai le sbagliate": clears only the wrong answers of one module, keeping the right ones. */
@@ -297,12 +334,54 @@ export async function resetWrongQuiz(courseId: string, moduleId: string): Promis
 
 export async function setCardKnown(courseId: string, moduleId: string, itemId: string, known: boolean): Promise<void> {
   const id = itemKey(courseId, moduleId, itemId)
-  if (known) await engine.upsert('learning_cards', { id, courseId, moduleId, itemId, updatedAt: Date.now() })
-  else await engine.remove('learning_cards', id)
+  if (known)
+    await engine.upsert('learning_cards', {
+      id,
+      courseId,
+      moduleId,
+      itemId,
+      updatedAt: Date.now(),
+    })
+  else await setCardsKnown(courseId, moduleId, [itemId], false)
+}
+
+/** Marks several cards of one module known/unknown in one transaction (one outbox batch). */
+export async function setCardsKnown(
+  courseId: string,
+  moduleId: string,
+  itemIds: readonly string[],
+  known: boolean,
+): Promise<void> {
+  const ids = [...new Set(itemIds)]
+  if (known) {
+    const updatedAt = Date.now()
+    await engine.upsertMany(
+      'learning_cards',
+      ids.map((itemId) => ({
+        id: itemKey(courseId, moduleId, itemId),
+        courseId,
+        moduleId,
+        itemId,
+        updatedAt,
+      })),
+    )
+  } else {
+    // Un-knowing also leaves Ripasso: the card's schedule row goes in the same batch.
+    await db.transaction('rw', REMOVE_TABLES(), async () => {
+      await engine.removeMany(
+        'learning_cards',
+        ids.map((itemId) => itemKey(courseId, moduleId, itemId)),
+      )
+      await engine.removeMany('learning_reviews', await cardReviewIds(courseId, moduleId, ids))
+    })
+  }
 }
 
 export async function resetCards(courseId: string, moduleId: string): Promise<void> {
-  await engine.removeMany('learning_cards', await idsOf('learningCards', courseId, moduleId))
+  await db.transaction('rw', REMOVE_TABLES(), async () => {
+    await engine.removeMany('learning_cards', await idsOf('learningCards', courseId, moduleId))
+    await engine.removeMany('learning_reviews', await moduleReviewIds('card', courseId, moduleId))
+  })
 }
 
 async function updatePractice(
@@ -329,7 +408,9 @@ export const setPracticeDone = (courseId: string, moduleId: string, itemId: stri
   updatePractice(courseId, moduleId, itemId, { done: done ? 1 : 0 })
 
 export const setPracticeNotes = (courseId: string, moduleId: string, itemId: string, notes: string) =>
-  updatePractice(courseId, moduleId, itemId, { notes: notes.slice(0, MAX_NOTES_LENGTH) })
+  updatePractice(courseId, moduleId, itemId, {
+    notes: notes.slice(0, MAX_NOTES_LENGTH),
+  })
 
 // --- Checklist ticks (synced) -----------------------------------------------
 
@@ -381,7 +462,13 @@ export async function resetChecks(courseId: string): Promise<void> {
 export async function setPosition(courseId: string, moduleId: string, tab: LearningPosition['tab']): Promise<void> {
   const prev = await db.learningPosition.get(courseId)
   if (prev && prev.moduleId === moduleId && prev.tab === tab) return
-  await engine.upsert('learning_position', { id: courseId, courseId, moduleId, tab, updatedAt: Date.now() })
+  await engine.upsert('learning_position', {
+    id: courseId,
+    courseId,
+    moduleId,
+    tab,
+    updatedAt: Date.now(),
+  })
 }
 
 /** Reset everything the learner did in one course (quiz, cards, practice incl. notes, ticks, position, Ripasso). */
@@ -432,11 +519,11 @@ export async function gradeReview(item: ReviewSource & { step: number }, grade: 
  */
 export async function answerReviewQuiz(
   item: ReviewSource & { step: number },
-  selected: number,
-  answer: number,
+  shown: number,
+  quiz: QuizKey,
   today: string,
 ): Promise<void> {
-  const right = selected === answer
+  const right = shown === quiz.answer
   await db.transaction('rw', db.learningQuiz, db.learningReviews, db.outbox, async () => {
     if (right)
       await engine.upsert('learning_quiz', {
@@ -444,12 +531,42 @@ export async function answerReviewQuiz(
         courseId: item.courseId,
         moduleId: item.moduleId,
         itemId: item.itemId,
-        selected,
+        selected: encodeSelected(quiz, shown),
         correct: 1,
         updatedAt: Date.now(),
       })
     await gradeReview(item, right ? 'easy' : 'again', today)
   })
+}
+
+// --- Vocabolario: theme-keyed rows -> word-keyed (A2, 2026-11-18) -------------
+
+let rekeying: Promise<void> | undefined
+
+/**
+ * Rewrites the old theme-keyed Vocabolario rows (known marks + their Ripasso rows) to the fixed moduleId, through
+ * the engine so the change syncs to every device: one transaction, upserts of the new ids and deletes of the old
+ * ones. Idempotent and cheap when there is nothing to do (it is driven by detecting old rows, not by a flag, so rows
+ * an older app version writes later are rewritten too); two devices running it write the same deterministic ids.
+ */
+export function migrateVocabKeys(): Promise<void> {
+  rekeying ??= db
+    .transaction('rw', db.learningCards, db.learningReviews, db.outbox, async () => {
+      const [cards, reviews] = await Promise.all([
+        db.learningCards.where('courseId').equals(VOCAB_COURSE_ID).toArray(),
+        db.learningReviews.where('courseId').equals(VOCAB_COURSE_ID).toArray(),
+      ])
+      if (!cards.some(isOldVocabRow) && !reviews.some(isOldVocabRow)) return
+      const plan = vocabRekeyPlan(cards, reviews)
+      await engine.upsertMany('learning_cards', plan.upsertCards)
+      await engine.removeMany('learning_cards', plan.removeCards)
+      await engine.upsertMany('learning_reviews', plan.upsertReviews)
+      await engine.removeMany('learning_reviews', plan.removeReviews)
+    })
+    .finally(() => {
+      rekeying = undefined
+    })
+  return rekeying
 }
 
 // --- Sync engine ------------------------------------------------------------

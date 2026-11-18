@@ -1,98 +1,24 @@
 // Ripasso page (/learning/ripasso) and its Learning-home card. Queue logic: ./review.ts; writes: learningSync.ts.
-import { useEffect, useMemo, useState } from 'react'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Button } from '../../../components/Button'
 import { Card } from '../../../components/Card'
 import { FOCUS_RING } from '../../../components/focus'
 import { answerReviewQuiz, gradeReview } from '../../../lib/learningSync'
-import { courseMetaById, loadCourse, loadedCourse } from '../courses/registry'
+import { useToday } from '../../life/useToday'
 import { CourseLoading } from '../ui/CourseLoading'
 import { HtmlText } from '../engine/HtmlText'
 import { gradeDays, type Grade, type QueueItem } from '../engine/review'
-import { today, useQueue } from './useQueue'
-import { loadAllThemes, loadedThemes } from '../vocab/index'
-import { VOCAB_COURSE_ID } from '../vocab/progress'
-import { LANG_FLAG, LANG_LABEL, LANGS, type Lang } from '../vocab/types'
-
-// --- Content lookup -------------------------------------------------------------------------
-
-interface Shown {
-  context: string
-  front: React.ReactNode
-  back?: React.ReactNode
-  quiz?: { q: string; options: string[]; answer: number; explanation: string }
-}
-
-function vocabParts(i: QueueItem): { wordId: string; lang: Lang } | null {
-  const dot = i.itemId.lastIndexOf('.')
-  const lang = i.itemId.slice(dot + 1) as Lang
-  return dot > 0 && (LANGS as readonly string[]).includes(lang) ? { wordId: i.itemId.slice(0, dot), lang } : null
-}
-
-/** What to show for an item, from content already loaded; null = content gone (or not loaded yet). */
-function lookup(i: QueueItem): Shown | null {
-  if (i.courseId === VOCAB_COURSE_ID) {
-    const p = vocabParts(i)
-    const theme = loadedThemes()?.find((t) => t.id === i.moduleId)
-    const word = theme?.words.find((w) => w.id === p?.wordId)
-    const t = p && word?.[p.lang]
-    if (!p || !theme || !word || !t) return null
-    return {
-      context: `🗂️ Vocabolario · ${theme.title} · ${LANG_FLAG[p.lang]} ${LANG_LABEL[p.lang]}`,
-      front: (
-        <>
-          {word.it} <span className="text-base font-normal text-slate-500">→ {LANG_FLAG[p.lang]}</span>
-        </>
-      ),
-      back: (
-        <>
-          <span className="text-xl font-medium" lang={p.lang}>
-            {t.w}
-          </span>{' '}
-          <span className="text-slate-500 dark:text-slate-400">[{t.pron}]</span>
-          {t.note && <span className="mt-2 block text-sm text-slate-600 dark:text-slate-400">{t.note}</span>}
-        </>
-      ),
-    }
-  }
-  const course = loadedCourse(i.courseId)
-  const mod = course?.modules.find((m) => m.id === i.moduleId)
-  if (!course || !mod) return null
-  const context = `${course.emoji} ${course.title} · ${mod.title}`
-  if (i.kind === 'quiz') {
-    const x = mod.quiz.find((y) => y.id === i.itemId)
-    return x ? { context, front: <HtmlText html={x.q} />, quiz: x } : null
-  }
-  const c = mod.cards.find((y) => y.id === i.itemId)
-  return c ? { context, front: <HtmlText html={c.front} />, back: <HtmlText html={c.back} /> } : null
-}
-
-/** Loads the course chunks (and Vocabolario) the due items need; true once done. */
-function useContent(items: QueueItem[] | undefined): boolean {
-  const need = useMemo(() => [...new Set((items ?? []).map((i) => i.courseId))].sort().join(','), [items])
-  const [ready, setReady] = useState<string | null>(null)
-  useEffect(() => {
-    if (items === undefined) return
-    let live = true
-    const ids = need ? need.split(',') : []
-    void Promise.all(
-      ids.map((id) =>
-        id === VOCAB_COURSE_ID ? loadAllThemes() : courseMetaById(id) ? loadCourse(id) : Promise.resolve(),
-      ),
-    )
-      .catch(() => undefined)
-      .then(() => live && setReady(need))
-    return () => {
-      live = false
-    }
-  }, [need, items])
-  return ready === need
-}
+import { lookup, useReviewQueue, type Shown } from './content'
 
 // --- Page ---------------------------------------------------------------------------------------
 
 const GRADES: { grade: Grade; label: string; cls: string }[] = [
-  { grade: 'again', label: 'Di nuovo', cls: 'bg-rose-500/10 text-rose-700 hover:bg-rose-500/20 dark:text-rose-300' },
+  {
+    grade: 'again',
+    label: 'Di nuovo',
+    cls: 'bg-rose-500/10 text-rose-700 hover:bg-rose-500/20 dark:text-rose-300',
+  },
   {
     grade: 'hard',
     label: 'Difficile',
@@ -157,7 +83,7 @@ function Item({ item, shown, day }: { item: QueueItem; shown: Shown; day: string
                 <strong>{picked === quiz.answer ? 'Esatto: esce dal ripasso.' : 'Non ancora: torna domani.'}</strong>{' '}
                 <HtmlText html={quiz.explanation} />
               </p>
-              <Button onClick={() => void answerReviewQuiz(item, picked, quiz.answer, day)}>Avanti</Button>
+              <Button onClick={() => void answerReviewQuiz(item, picked, quiz, day)}>Avanti</Button>
             </>
           )}
         </>
@@ -183,12 +109,9 @@ function Item({ item, shown, day }: { item: QueueItem; shown: Shown; day: string
 }
 
 export default function ReviewPage() {
-  const [day] = useState(today)
-  const raw = useQueue(day)
-  const ready = useContent(raw?.items)
-  // Once content is loaded, drop items whose card/word/question no longer exists, then take today's slice.
-  const keep = useMemo(() => (ready ? (i: QueueItem) => lookup(i) !== null : undefined), [ready])
-  const q = useQueue(day, keep)
+  const day = useToday()
+  // Items whose card/word/question no longer exists are dropped (content.tsx), then today's slice.
+  const { q, ready } = useReviewQueue(day)
   const current = ready ? q?.items[0] : undefined
   const shown = current && lookup(current)
 
