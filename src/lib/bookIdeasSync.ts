@@ -67,6 +67,14 @@ export async function updateNotes(idea: BookIdea, notes: string): Promise<void> 
   await engine.upsert('book_ideas', { ...idea, notes: notes.slice(0, MAX_NOTES_LENGTH), updatedAt: Date.now() })
 }
 
+/** Upsert a bumped-updatedAt copy with a new title (trimmed, capped). Empty
+ *  titles are ignored: an idea always keeps a name. */
+export async function updateText(idea: BookIdea, text: string): Promise<void> {
+  const next = text.trim().slice(0, MAX_TEXT_LENGTH)
+  if (!next || next === idea.text) return
+  await engine.upsert('book_ideas', { ...idea, text: next, updatedAt: Date.now() })
+}
+
 export async function deleteBookIdea(id: string): Promise<void> {
   await engine.remove('book_ideas', id)
 }

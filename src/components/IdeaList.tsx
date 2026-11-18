@@ -1,10 +1,11 @@
-import { useState, type FormEvent } from 'react'
+import { useRef, useState, type FormEvent } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import type { OutboxTable } from '../lib/db'
 import type { CloudSync } from '../lib/cloudSync'
 import { useAuth } from '../lib/useAuth'
 import { useOwner } from '../lib/useOwner'
 import { useUndoSnackbar } from '../lib/useUndoSnackbar'
+import { useListHotkeys } from '../lib/useListHotkeys'
 import { FOCUS_RING_FIELD } from './focus'
 import { Button } from './Button'
 import { ListRow } from './ListRow'
@@ -39,6 +40,7 @@ export interface IdeaListConfig<T extends IdeaRow> {
   add: (text: string) => Promise<void>
   remove: (id: string) => Promise<void>
   updateNotes: (idea: T, notes: string) => Promise<void>
+  updateText: (idea: T, text: string) => Promise<void>
   sync: CloudSync
   /** Remote table name, used to re-insert a deleted row on Undo. */
   table: OutboxTable
@@ -55,6 +57,9 @@ export function IdeaList<T extends IdeaRow>({ config }: { config: IdeaListConfig
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const ideas = useLiveQuery(config.query, [config])
   const { pending, trigger, confirmUndo } = useUndoSnackbar()
+  const addRef = useRef<HTMLInputElement>(null)
+  const focusAdd = () => addRef.current?.focus()
+  useListHotkeys({ onSearch: focusAdd, onNew: focusAdd })
 
   async function addIdea(e: FormEvent) {
     e.preventDefault()
@@ -71,6 +76,10 @@ export function IdeaList<T extends IdeaRow>({ config }: { config: IdeaListConfig
   async function saveNotes(idea: T, notes: string) {
     if (notes === idea.notes) return
     await config.updateNotes(idea, notes)
+  }
+
+  async function saveText(idea: T, value: string) {
+    await config.updateText(idea, value)
   }
 
   // Delete executes immediately (same call as always); the snapshot lets
@@ -109,16 +118,30 @@ export function IdeaList<T extends IdeaRow>({ config }: { config: IdeaListConfig
           </div>
         </SwipeableRow>
         {expanded && (
-          <textarea
-            key={idea.id}
-            defaultValue={idea.notes}
-            onBlur={(e) => void saveNotes(idea, e.target.value)}
-            placeholder="Notes…"
-            aria-label={`Notes for ${idea.text}`}
-            rows={4}
-            maxLength={config.maxNotesLength}
-            className={`mt-2 w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm placeholder:text-slate-500 focus:border-(color:--accent-ring) focus:outline-none dark:border-slate-700 dark:bg-slate-800 ${FOCUS_RING_FIELD}`}
-          />
+          <div key={idea.id} className="mt-2 space-y-2">
+            <input
+              defaultValue={idea.text}
+              onBlur={(e) => {
+                void saveText(idea, e.target.value)
+                if (!e.target.value.trim()) e.target.value = idea.text
+              }}
+              placeholder="Title"
+              aria-label={`Title of ${idea.text}`}
+              maxLength={config.maxTextLength}
+              autoComplete="off"
+              enterKeyHint="done"
+              className={`${INPUT} ${FOCUS_RING_FIELD}`}
+            />
+            <textarea
+              defaultValue={idea.notes}
+              onBlur={(e) => void saveNotes(idea, e.target.value)}
+              placeholder="Notes…"
+              aria-label={`Notes for ${idea.text}`}
+              rows={4}
+              maxLength={config.maxNotesLength}
+              className={`w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm placeholder:text-slate-500 focus:border-(color:--accent-ring) focus:outline-none dark:border-slate-700 dark:bg-slate-800 ${FOCUS_RING_FIELD}`}
+            />
+          </div>
         )}
       </li>
     )
@@ -132,6 +155,7 @@ export function IdeaList<T extends IdeaRow>({ config }: { config: IdeaListConfig
 
       <form onSubmit={addIdea} className="mb-6 flex gap-2">
         <input
+          ref={addRef}
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder={config.addPlaceholder}
@@ -155,7 +179,7 @@ export function IdeaList<T extends IdeaRow>({ config }: { config: IdeaListConfig
           hint={
             isGuestViewer
               ? 'Nothing shared with you yet — ask Francesco to invite you from the Sharing page.'
-              : 'Ideas you add are saved on this device and work offline.'
+              : 'Ideas you add work offline and sync when you sign in.'
           }
         />
       ) : (

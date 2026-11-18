@@ -3,6 +3,8 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db, type Discipline } from '../../lib/db'
 import { useAuth } from '../../lib/useAuth'
 import { useOwner } from '../../lib/useOwner'
+import { useUndoSnackbar } from '../../lib/useUndoSnackbar'
+import { useListHotkeys } from '../../lib/useListHotkeys'
 import { Button } from '../../components/Button'
 import { FOCUS_RING_INSET } from '../../components/focus'
 import { Card } from '../../components/Card'
@@ -14,6 +16,7 @@ import { formatDate as formatDateLocal } from '../../lib/dates'
 import { SessionCard } from './SessionCard'
 import { SyncCard } from '../../components/SyncCard'
 import { Skeleton } from '../../components/Skeleton'
+import { Snackbar } from '../../components/Snackbar'
 
 const inputClass =
   'min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-(color:--accent-ring) focus:outline-none focus-visible:ring-2 focus-visible:ring-(color:--accent-ring) dark:border-slate-700 dark:bg-slate-800'
@@ -49,6 +52,9 @@ export function Climbing() {
   const [location, setLocation] = useState('')
   const [discipline, setDiscipline] = useState<Discipline>('boulder')
   const [notes, setNotes] = useState('')
+  const { pending, trigger, confirmUndo } = useUndoSnackbar()
+  // 'n' and '/' open the new-session form (its location field autofocuses).
+  useListHotkeys({ onSearch: () => setShowForm(true), onNew: () => setShowForm(true) })
 
   const sessions = useLiveQuery(() => db.climbSessions.orderBy('date').reverse().toArray())
   const climbs = useLiveQuery(() => db.climbs.toArray())
@@ -89,7 +95,7 @@ export function Climbing() {
 
   return (
     <div>
-      <PageHeader emoji="🧗" title="Climbing" subtitle="Log sessions and sends — data stays on this device.">
+      <PageHeader emoji="🧗" title="Climbing" subtitle="Log sessions and sends. Works offline, syncs when signed in.">
         {!showForm && <Button onClick={() => setShowForm(true)}>+ Session</Button>}
       </PageHeader>
 
@@ -230,11 +236,13 @@ export function Climbing() {
         ) : (
           <div className="space-y-3">
             {sessions.map((s) => (
-              <SessionCard key={s.id} session={s} />
+              <SessionCard key={s.id} session={s} onUndoable={trigger} />
             ))}
           </div>
         )}
       </section>
+
+      {pending && <Snackbar label={pending.label} onUndo={confirmUndo} />}
     </div>
   )
 }

@@ -137,6 +137,13 @@ export async function deleteClimb(id: string): Promise<void> {
   await engine.remove('climbs', id)
 }
 
+/** Re-insert a deleted session and its climbs (Undo). Plain engine upserts,
+ *  ids unchanged. */
+export async function restoreSession(session: ClimbSession, climbs: Climb[]): Promise<void> {
+  await engine.upsert('climb_sessions', session)
+  for (const c of climbs) await engine.upsert('climbs', c)
+}
+
 // --- Sync engine ------------------------------------------------------------
 
 export const flush = engine.flush

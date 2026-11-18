@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useRef, useState, type FormEvent } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, type TripCompanion, type TripIdea } from '../../lib/db'
 import {
@@ -14,6 +14,7 @@ import {
 import { useAuth } from '../../lib/useAuth'
 import { useOwner } from '../../lib/useOwner'
 import { useUndoSnackbar } from '../../lib/useUndoSnackbar'
+import { useListHotkeys } from '../../lib/useListHotkeys'
 import { Button } from '../../components/Button'
 import { Chip } from '../../components/Chip'
 import { FOCUS_RING_INSET } from '../../components/focus'
@@ -51,6 +52,9 @@ export function Trips() {
   const raw = useLiveQuery(() => db.tripIdeas.orderBy('createdAt').reverse().toArray())
   const companionsRaw = useLiveQuery(() => db.tripCompanions.orderBy('createdAt').toArray())
   const { pending, trigger, confirmUndo } = useUndoSnackbar()
+  const titleRef = useRef<HTMLInputElement>(null)
+  const focusTitle = () => titleRef.current?.focus()
+  useListHotkeys({ onSearch: focusTitle, onNew: focusTitle })
 
   // Not-done first; the stable sort keeps the newest-first order of the query.
   const ideas = raw ? [...raw].sort((a, b) => a.done - b.done) : raw
@@ -145,13 +149,18 @@ export function Trips() {
 
   return (
     <div>
-      <PageHeader emoji="✈️" title="Trips" subtitle="Travel ideas, solo or with friends. Saved on this device." />
+      <PageHeader
+        emoji="✈️"
+        title="Trips"
+        subtitle="Travel ideas, solo or with friends. Works offline, syncs when signed in."
+      />
 
       <SyncCard sync={sync} />
 
       <form onSubmit={handleAdd} className="mb-6 space-y-2">
         <div className="flex gap-2">
           <input
+            ref={titleRef}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             type="text"

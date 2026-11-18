@@ -68,6 +68,14 @@ export async function updateNotes(idea: BoardgameIdea, notes: string): Promise<v
   await engine.upsert('boardgame_ideas', { ...idea, notes: notes.slice(0, MAX_NOTES_LENGTH), updatedAt: Date.now() })
 }
 
+/** Upsert a bumped-updatedAt copy with a new title (trimmed, capped). Empty
+ *  titles are ignored: an idea always keeps a name. */
+export async function updateText(idea: BoardgameIdea, text: string): Promise<void> {
+  const next = text.trim().slice(0, MAX_TEXT_LENGTH)
+  if (!next || next === idea.text) return
+  await engine.upsert('boardgame_ideas', { ...idea, text: next, updatedAt: Date.now() })
+}
+
 export async function deleteBoardgameIdea(id: string): Promise<void> {
   await engine.remove('boardgame_ideas', id)
 }

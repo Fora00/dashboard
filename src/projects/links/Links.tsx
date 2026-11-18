@@ -319,7 +319,7 @@ export function Links() {
 
   return (
     <div>
-      <PageHeader emoji="🔗" title="Links" subtitle="Save links to read later. Saved on this device." />
+      <PageHeader emoji="🔗" title="Links" subtitle="Save links to read later. Works offline, syncs when signed in." />
 
       <SyncCard sync={sync} />
 

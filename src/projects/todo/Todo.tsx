@@ -100,7 +100,11 @@ export function Todo() {
 
   return (
     <div>
-      <PageHeader emoji="📝" title="Todo" subtitle="A simple list — tap to mark done. Saved on this device." />
+      <PageHeader
+        emoji="📝"
+        title="Todo"
+        subtitle="A simple list — tap to mark done. Works offline, syncs when signed in."
+      />
 
       <SyncCard sync={sync} />
 

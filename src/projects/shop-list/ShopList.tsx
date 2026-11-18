@@ -94,9 +94,9 @@ export function ShopList() {
     setAddingArea(false)
   }
 
-  // No standalone "delete item" button exists in this UI — swipe-to-delete
-  // is the only entry point, so it goes straight through the engine's
-  // generic remove() (same helper deleteArea/clearBoughtItems build on).
+  // Swipe-left is invisible on desktop and unreachable by keyboard, so each
+  // row also has a visible delete button. Both go straight through the
+  // engine's generic remove() (same helper deleteArea/clearBoughtItems use).
   async function removeItem(item: ShopItem) {
     await sync.remove('shop_items', item.id)
     trigger(`Deleted "${item.text}" · Undo`, () => sync.upsert('shop_items', item))
@@ -117,21 +117,31 @@ export function ShopList() {
   const renderItem = (item: ShopItem) => (
     <li key={item.id}>
       <SwipeableRow onSwipeRight={() => void toggleShopItem(item)} onSwipeLeft={() => void removeItem(item)}>
-        <ListRow
-          onClick={() => void toggleShopItem(item)}
-          className="flex min-h-12 w-full items-center gap-3 px-4 text-left"
-        >
-          <span
-            className={`flex size-5 shrink-0 items-center justify-center rounded-full border text-xs ${
-              item.done === 1
-                ? 'border-emerald-400 bg-emerald-400 text-slate-900'
-                : 'border-slate-400 dark:border-slate-500'
-            }`}
+        <div className="flex items-stretch gap-2">
+          <ListRow
+            onClick={() => void toggleShopItem(item)}
+            className="flex min-h-12 w-full min-w-0 flex-1 items-center gap-3 px-4 text-left"
           >
-            {item.done === 1 && '✓'}
-          </span>
-          <span className={item.done === 1 ? 'text-slate-500 line-through' : ''}>{item.text}</span>
-        </ListRow>
+            <span
+              className={`flex size-5 shrink-0 items-center justify-center rounded-full border text-xs ${
+                item.done === 1
+                  ? 'border-emerald-400 bg-emerald-400 text-slate-900'
+                  : 'border-slate-400 dark:border-slate-500'
+              }`}
+            >
+              {item.done === 1 && '✓'}
+            </span>
+            <span className={item.done === 1 ? 'text-slate-500 line-through' : ''}>{item.text}</span>
+          </ListRow>
+          <Button
+            variant="danger"
+            onClick={() => void removeItem(item)}
+            aria-label={`Delete ${item.text}`}
+            className="min-w-10"
+          >
+            ✕
+          </Button>
+        </div>
       </SwipeableRow>
     </li>
   )

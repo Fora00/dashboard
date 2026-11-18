@@ -4,7 +4,7 @@ import { db, type Climb, type ClimbSession } from '../../lib/db'
 import { Button } from '../../components/Button'
 import { Card } from '../../components/Card'
 import { FOCUS_RING_INSET } from '../../components/focus'
-import { addClimb, deleteClimb, deleteSession, toggleClimbSent } from '../../lib/climbSync'
+import { addClimb, deleteClimb, deleteSession, restoreSession, sync, toggleClimbSent } from '../../lib/climbSync'
 import { formatDate as formatDateLocal } from '../../lib/dates'
 import { DISCIPLINE_LABEL, GRADES } from './grades'
 
@@ -20,12 +20,18 @@ function formatDate(date: string): string {
   })
 }
 
-export function SessionCard({ session }: { session: ClimbSession }) {
+export function SessionCard({
+  session,
+  onUndoable,
+}: {
+  session: ClimbSession
+  /** Show the page's Undo snackbar (it outlives this card when the session is deleted). */
+  onUndoable: (label: string, undo: () => void | Promise<void>) => void
+}) {
   const grades = GRADES[session.discipline]
   // GRADES arrays are non-empty compile-time constants.
   const [grade, setGrade] = useState(grades[Math.floor(grades.length / 3)]!)
   const [sent, setSent] = useState(true)
-  const [confirmDelete, setConfirmDelete] = useState(false)
 
   const climbs = useLiveQuery(() => db.climbs.where('sessionId').equals(session.id).sortBy('createdAt'), [session.id])
   const sends = climbs?.filter((c) => c.sent === 1).length ?? 0
@@ -33,6 +39,18 @@ export function SessionCard({ session }: { session: ClimbSession }) {
   async function logClimb(e: FormEvent) {
     e.preventDefault()
     await addClimb(session, grade, sent)
+  }
+
+  async function removeClimb(climb: Climb) {
+    await deleteClimb(climb.id)
+    onUndoable(`Removed ${climb.grade} · Undo`, () => sync.upsert('climbs', climb))
+  }
+
+  async function removeSession() {
+    // Snapshot first: deleteSession cascades the local climbs.
+    const snapshot = await db.climbs.where('sessionId').equals(session.id).toArray()
+    await deleteSession(session.id)
+    onUndoable(`Deleted session at ${session.location} · Undo`, () => restoreSession(session, snapshot))
   }
 
   const renderClimb = (climb: Climb) => (
@@ -53,7 +71,7 @@ export function SessionCard({ session }: { session: ClimbSession }) {
       </button>
       <button
         type="button"
-        onClick={() => void deleteClimb(climb.id)}
+        onClick={() => void removeClimb(climb)}
         aria-label={`Remove ${climb.grade}`}
         className={`flex min-h-10 min-w-10 items-center justify-center rounded-r-lg border border-slate-200 bg-slate-50 text-xs text-slate-500 transition-colors hover:text-rose-600 dark:border-slate-800 dark:bg-slate-800/30 dark:hover:text-rose-400 ${FOCUS_RING_INSET}`}
       >
@@ -126,24 +144,13 @@ export function SessionCard({ session }: { session: ClimbSession }) {
       </form>
 
       <div className="mt-3 flex justify-end gap-2 border-t border-slate-200 pt-2 dark:border-slate-800">
-        {confirmDelete ? (
-          <>
-            <Button variant="ghost" onClick={() => setConfirmDelete(false)}>
-              Keep
-            </Button>
-            <Button variant="danger" onClick={() => void deleteSession(session.id)}>
-              Delete session
-            </Button>
-          </>
-        ) : (
-          <button
-            type="button"
-            onClick={() => setConfirmDelete(true)}
-            className={`min-h-10 px-2 text-xs text-slate-500 transition-colors hover:text-rose-600 dark:hover:text-rose-400 ${FOCUS_RING_INSET}`}
-          >
-            Delete…
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={() => void removeSession()}
+          className={`min-h-10 px-2 text-xs text-slate-500 transition-colors hover:text-rose-600 dark:hover:text-rose-400 ${FOCUS_RING_INSET}`}
+        >
+          Delete session
+        </button>
       </div>
     </Card>
   )
