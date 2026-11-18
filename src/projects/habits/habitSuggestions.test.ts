@@ -71,4 +71,11 @@ describe('suggest', () => {
       run(habit({ cycleStart: '2026-10-05', cycleEnd: '2026-11-01' }), new Map([['2026-10-29', 'done']])),
     ).toContain('verdict-soon')
   })
+
+  it('a cycle past its end with no verdict asks to judge it; a verdict silences it', () => {
+    const base = { cycleStart: '2026-09-01', cycleEnd: '2026-10-25' }
+    const states = new Map<string, HabitDayState>([['2026-10-29', 'done']])
+    expect(run(habit(base), states)).toContain('verdict-late')
+    expect(run(habit({ ...base, verdict: 'stay' }), states)).not.toContain('verdict-late')
+  })
 })

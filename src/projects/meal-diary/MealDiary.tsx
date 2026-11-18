@@ -1,7 +1,7 @@
 import { useMemo, useState, type FormEvent } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, type MealEntry, type MealKind } from '../../lib/db'
-import { dayKey } from '../../lib/dates'
+import { useToday } from '../life/useToday'
 import { addMeal, deleteMeal, MAX_TEXT_LENGTH, restoreMeal, sync, updateMeal } from '../../lib/mealDiarySync'
 import { useUndoSnackbar } from '../../lib/useUndoSnackbar'
 import { Button } from '../../components/Button'
@@ -24,14 +24,14 @@ const INPUT =
   'min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-(color:--accent-ring) focus:outline-none focus-visible:ring-2 focus-visible:ring-(color:--accent-ring) dark:border-slate-700 dark:bg-slate-800'
 
 export function MealDiary() {
-  // oxlint-disable-next-line react/purity -- the day must follow the wall clock across midnight
-  const now = new Date()
-  const today = dayKey(now)
+  const today = useToday()
+  // Day-granular: local noon of today, so memos keyed on it only change at midnight.
+  const now = useMemo(() => new Date(`${today}T12:00:00`), [today])
   const entries = useLiveQuery(() => db.meals.toArray())
   const { pending, trigger, confirmUndo } = useUndoSnackbar()
 
   const [day, setDay] = useState(today)
-  const [meal, setMeal] = useState<MealKind>(() => defaultMeal(now.getHours()))
+  const [meal, setMeal] = useState<MealKind>(() => defaultMeal(new Date().getHours()))
   const [text, setText] = useState('')
   // Sticky across entries: you tend to weigh (or not) a whole cooking session.
   const [weighed, setWeighed] = useState(false)

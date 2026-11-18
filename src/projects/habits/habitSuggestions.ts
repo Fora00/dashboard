@@ -46,7 +46,7 @@ export function suggest({ habit, stats, states, notes, today, openCount }: Input
     if (left < 0)
       out.push({
         id: 'verdict-late',
-        text: 'The cycle ended and has no verdict yet. Look at the numbers and choose: up, stay, down or closed.',
+        text: `Cycle ended ${-left} day${left === -1 ? '' : 's'} ago: judge it. Look at the numbers and choose: keep (stay), extend (up) or close.`,
       })
     else if (left <= 3)
       out.push({

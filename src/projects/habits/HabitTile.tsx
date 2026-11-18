@@ -8,7 +8,7 @@ import {
   slipLimit,
   STATE_ICON,
 } from './habitStates'
-import type { HabitStats } from './habitStats'
+import { daysBetween, type HabitStats } from './habitStats'
 import type { DisplayCell } from './habitDayStates'
 import { engineLabel } from '../life/model/engines'
 
@@ -180,6 +180,11 @@ export function HabitTile({
             className="text-[11px] font-medium tracking-wide text-slate-500 uppercase dark:text-slate-400"
           >
             {engineLabel(habit.engine)}
+          </span>
+        )}
+        {habit.cycleEnd && !habit.verdict && habit.cycleEnd < today && (
+          <span data-testid="tile-judge" className="text-[11px] font-medium text-amber-700 dark:text-amber-300">
+            Cycle ended {daysBetween(habit.cycleEnd, today)}d ago: judge it (⋯)
           </span>
         )}
         {avoid ? (
