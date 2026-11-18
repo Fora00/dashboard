@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { fitWithin, MAX_PHOTO_SIDE } from './photo'
+import { fitPhoto as fitWithin, MAX_PHOTO_SIDE } from './photo'
 
 describe('fitWithin', () => {
   it('scales the long side down to the max, keeping the aspect ratio', () => {

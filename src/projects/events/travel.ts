@@ -1,5 +1,6 @@
 import { minutesLabel } from './distance'
 import type { EventItem } from './types'
+import { normalize } from '../../lib/fuzzy'
 
 // Travel hint for the event card/detail: "≈ 1 h da Trento". Pure, no React.
 //
@@ -65,12 +66,8 @@ const TABLE: Record<string, readonly [trento: number, rovereto: number]> = {
 
 /** Lowercase, accent-free, no "(VR)"-style suffix (local copy: imports nothing from filters.ts). */
 function key(city: string): string {
-  return city
-    .replace(/\([^)]*\)/g, ' ')
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
+  return normalize(city.replace(/\([^)]*\)/g, ' '))
     .replace(/\s+/g, ' ')
-    .toLowerCase()
     .trim()
 }
 

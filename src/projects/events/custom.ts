@@ -331,13 +331,7 @@ export function parsePrefill(params: URLSearchParams): Partial<CustomEventForm> 
 
 // --- Image sizing --------------------------------------------------------------
 
-/** Scale (w, h) down so the long side is at most `max`; never upscales. */
-export function fitWithin(w: number, h: number, max: number): { width: number; height: number } {
-  const long = Math.max(w, h)
-  if (long <= max || long <= 0) return { width: Math.round(w), height: Math.round(h) }
-  const k = max / long
-  return { width: Math.max(1, Math.round(w * k)), height: Math.max(1, Math.round(h * k)) }
-}
+export { fitWithin } from '../../lib/image'
 
 /** Hand-added events are deleted this many days after their last day. */
 export const PRUNE_AFTER_DAYS = 14

@@ -1,5 +1,6 @@
 // Text helpers: HTML → plain text, entity decoding, normalisation, hashing.
 import { createHash } from 'node:crypto'
+import { normalize as foldAccents } from '../../src/lib/fuzzy.ts'
 
 const NAMED: Record<string, string> = {
   amp: '&',
@@ -130,10 +131,7 @@ export function snippet(text: string, max = 300): string {
 
 /** Lowercase, accents stripped, punctuation → spaces, whitespace collapsed. */
 export function normalize(s: string): string {
-  return s
-    .normalize('NFD')
-    .replace(/\p{M}+/gu, '')
-    .toLowerCase()
+  return foldAccents(s)
     .replace(/[^\p{L}\p{N}]+/gu, ' ')
     .trim()
 }

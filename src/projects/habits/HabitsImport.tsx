@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../../lib/db'
 import { useAuth } from '../../lib/useAuth'
+import { useLinkImport } from '../../lib/useLinkImport'
 import { Button } from '../../components/Button'
 import { Card } from '../../components/Card'
 import { PageHeader } from '../../components/PageHeader'
@@ -27,27 +28,15 @@ import { applyHabitsImport } from './habitsPlanApply'
 export function HabitsImport() {
   const navigate = useNavigate()
   const session = useAuth()
-  const [searchParams, setSearchParams] = useSearchParams()
-  const [text, setText] = useState('')
-  const [linkErrors, setLinkErrors] = useState<string[] | null>(null)
+  const { text, linkErrors } = useLinkImport({
+    maxChars: HABITS_LINK_MAX_PARAM,
+    decode: decodeHabitsParam,
+    tooLarge: 'Link too large',
+  })
   const [unticked, setUnticked] = useState<ReadonlySet<string>>(new Set())
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
-  const linkParam = searchParams.get('d')
   const habits = useLiveQuery(() => db.habits.toArray())
-
-  useEffect(() => {
-    if (!linkParam) return
-    const decoded =
-      linkParam.length > HABITS_LINK_MAX_PARAM
-        ? { ok: false as const, errors: ['Link too large'] }
-        : decodeHabitsParam(linkParam)
-    // Strip the data from the URL (replace) so it doesn't linger in history.
-    setSearchParams({}, { replace: true })
-    setText(decoded.ok ? decoded.text : '')
-    setLinkErrors(decoded.ok ? null : decoded.errors)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [linkParam])
 
   const result = useMemo(() => (text.trim() ? parseHabitsPlanJson(text) : null), [text])
   const rows = useMemo(() => (result?.ok && habits ? planHabitsImport(result.plan, habits) : null), [result, habits])

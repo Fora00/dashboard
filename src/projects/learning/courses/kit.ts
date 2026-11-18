@@ -1,3 +1,4 @@
+import { fnv1a } from '../../../lib/hash'
 import type { CourseModule, Flashcard, PracticeItem, QuizQuestion } from '../engine/types'
 
 // Compact builders shared by every course. Lesson text is light HTML
@@ -8,9 +9,7 @@ import type { CourseModule, Flashcard, PracticeItem, QuizQuestion } from '../eng
 // keep the AUTHOR-order index (see ../engine/quizAnswer.ts), never the shown one:
 // reword freely, but never reorder, insert or remove options of a live question.
 function seeded(text: string): () => number {
-  let h = 2166136261
-  for (let i = 0; i < text.length; i++) h = Math.imul(h ^ text.charCodeAt(i), 16777619)
-  let a = h >>> 0
+  let a = fnv1a(text)
   return () => {
     a = (a + 0x6d2b79f5) >>> 0
     let t = a

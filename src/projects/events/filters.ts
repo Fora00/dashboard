@@ -5,6 +5,7 @@ import { readJSON, writeJSON } from '../../lib/safeStorage'
 import { DISTANCE_STEPS } from './distance'
 import { categoryOf, listingDay, localDay, romeDate, isSparseSeries } from './model'
 import { categoryOfSubcategory } from './subcategories'
+import { normalize } from '../../lib/fuzzy'
 
 // Pure helpers for the events quick filters (date chips, text search) and the
 // per-device memory of the last selection. No React.
@@ -13,11 +14,7 @@ import { categoryOfSubcategory } from './subcategories'
 
 /** Lowercase, accent-free, trimmed: "Caffè " -> "caffe". */
 export function normalizeText(s: string): string {
-  return s
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .toLowerCase()
-    .trim()
+  return normalize(s).trim()
 }
 
 const HAYSTACK = new WeakMap<EventItem, string>()

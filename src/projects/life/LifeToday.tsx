@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { db } from '../../lib/db'
 import { addDayFocus, importChores } from '../../lib/lifeSync'
 import { useAuth } from '../../lib/useAuth'
+import { useLinkImport } from '../../lib/useLinkImport'
 import { decodeDayFocusParam, parseDayFocusJson, weekKey } from './model'
 import { Button } from '../../components/Button'
 import { Card } from '../../components/Card'
@@ -17,23 +18,13 @@ import { PageHeader } from '../../components/PageHeader'
 export function LifeToday() {
   const navigate = useNavigate()
   const session = useAuth()
-  const [searchParams, setSearchParams] = useSearchParams()
-  const [text, setText] = useState('')
-  const [linkErrors, setLinkErrors] = useState<string[] | null>(null)
+  const { text, linkErrors } = useLinkImport({
+    maxChars: 20_000,
+    decode: decodeDayFocusParam,
+    tooLarge: 'Link too large',
+  })
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
-  const linkParam = searchParams.get('d')
-
-  useEffect(() => {
-    if (!linkParam) return
-    const decoded =
-      linkParam.length > 20_000 ? { ok: false as const, errors: ['Link too large'] } : decodeDayFocusParam(linkParam)
-    // Strip the lines from the URL (replace) so they don't linger in history.
-    setSearchParams({}, { replace: true })
-    setText(decoded.ok ? decoded.text : '')
-    setLinkErrors(decoded.ok ? null : decoded.errors)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [linkParam])
 
   const result = useMemo(() => (text.trim() ? parseDayFocusJson(text) : null), [text])
   const day = result?.ok ? result.plan.day : null

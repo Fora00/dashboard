@@ -1,5 +1,6 @@
 // Vocabulary search and part-of-speech filter (pure, unit-tested in vocab.test.ts).
 import type { Lang, Pos, VocabTheme, VocabWord } from './types'
+import { normalize as foldAccents } from '../../../lib/fuzzy'
 
 export type PosFilter = 'all' | Pos
 
@@ -16,11 +17,8 @@ export const POS_FILTERS: { id: PosFilter; label: string }[] = [
  * query typed without them still matches. Apostrophe variants fold to one.
  */
 export const normalize = (s: string): string =>
-  s
-    .normalize('NFD')
-    .replace(/\p{M}/gu, '')
+  foldAccents(s)
     .replace(/[’ʼ]/g, "'")
-    .toLowerCase()
     .replace(/\s+/g, ' ')
     .trim()
 

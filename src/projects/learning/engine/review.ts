@@ -8,6 +8,7 @@
 // already there when Ripasso arrived, spread over the following week so day one is not a wall.
 import type { LearningCard, LearningQuizAnswer, LearningReview } from '../../../lib/db'
 import { addDays, dayKey } from '../../../lib/dates'
+import { fnv1a } from '../../../lib/hash'
 
 /** Days until the next review, by step. MAX_STEP MUST match the check on learning_reviews.step. */
 export const INTERVALS = [1, 3, 7, 21, 60, 120] as const
@@ -24,12 +25,6 @@ export const reviewId = (kind: ReviewKind, courseId: string, moduleId: string, i
 
 /** 'YYYY-MM-DD' + n days (local calendar, DST-safe). */
 export { addDays }
-
-function hash(s: string): number {
-  let h = 2166136261
-  for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619)
-  return h >>> 0
-}
 
 /** Next step and due day after a grade given today. */
 export function schedule(step: number, grade: Grade, today: string): { step: number; due: string } {
@@ -66,7 +61,7 @@ export function sourcesOf(cards: readonly LearningCard[], quiz: readonly Learnin
 /** Due day of an item never graded (or re-added after its last grading). */
 export function computedDue(s: ReviewSource): string {
   const day = dayKey(new Date(s.updatedAt))
-  return day < LAUNCH_DAY ? addDays(LAUNCH_DAY, 1 + (hash(s.id) % 7)) : addDays(day, 1)
+  return day < LAUNCH_DAY ? addDays(LAUNCH_DAY, 1 + (fnv1a(s.id) % 7)) : addDays(day, 1)
 }
 
 export interface QueueItem extends ReviewSource {
@@ -99,7 +94,7 @@ export function buildQueue(
     const due = live?.due ?? computedDue(s)
     if (due <= today) pending.push({ ...s, step: live?.step ?? 0, due })
   }
-  pending.sort((a, b) => (a.due < b.due ? -1 : a.due > b.due ? 1 : hash(a.id + today) - hash(b.id + today)))
+  pending.sort((a, b) => (a.due < b.due ? -1 : a.due > b.due ? 1 : fnv1a(a.id + today) - fnv1a(b.id + today)))
   const doneToday = reviews.filter((r) => r.reviewedOn === today).length
   return { items: pending.slice(0, Math.max(0, limit - doneToday)), dueCount: pending.length, doneToday, limit }
 }

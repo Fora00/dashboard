@@ -1,4 +1,5 @@
-import { MAX_IMAGE_LENGTH, fitWithin } from './custom'
+import { MAX_IMAGE_LENGTH } from './custom'
+import { fitWithin, loadImage } from '../../lib/image'
 
 // Client-side downscale for hand-added event images (browser only: canvas).
 // The result is stored inline in the custom_events row as a JPEG data URL, so
@@ -14,26 +15,10 @@ const ATTEMPTS: { max: number; quality: number }[] = [
   { max: 360, quality: 0.45 },
 ]
 
-function loadImage(file: Blob): Promise<HTMLImageElement> {
-  return new Promise((resolve, reject) => {
-    const url = URL.createObjectURL(file)
-    const img = new Image()
-    img.onload = () => {
-      URL.revokeObjectURL(url)
-      resolve(img)
-    }
-    img.onerror = () => {
-      URL.revokeObjectURL(url)
-      reject(new Error('This image could not be read.'))
-    }
-    img.src = url
-  })
-}
-
 /** Downscale + JPEG-encode a picked image. Throws a user-facing message. */
 export async function compressImage(file: Blob): Promise<string> {
   if (!file.type.startsWith('image/')) throw new Error('Pick an image file.')
-  const img = await loadImage(file)
+  const img = await loadImage(file, 'This image could not be read.')
   const w = img.naturalWidth
   const h = img.naturalHeight
   if (!w || !h) throw new Error('This image could not be read.')

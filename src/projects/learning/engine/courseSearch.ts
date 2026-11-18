@@ -2,6 +2,7 @@
 // case-insensitive (same folding as the Vocabolario search). Lesson hits point at the <h3> section
 // they fall in, numbered like headingsOf / HtmlText anchors, so the module page can scroll there.
 import { htmlToText } from './html'
+import { normalize as foldAccents } from '../../../lib/fuzzy'
 import type { Course, CourseModule } from './types'
 import { normalize } from '../vocab/search'
 
@@ -23,7 +24,7 @@ export interface CourseHit {
 const RANK: Record<HitKind, number> = { module: 0, section: 1, lesson: 2, quiz: 3, card: 3, practice: 3 }
 
 /** Folds case and accents without changing length (NFC input), so indexes map back to the shown text. */
-const fold = (s: string) => s.normalize('NFD').replace(/\p{M}/gu, '').normalize('NFC').toLowerCase()
+const fold = (s: string) => foldAccents(s).normalize('NFC')
 // Blocks (paragraphs, cells, items) end with a space so their texts don't run together.
 const flat = (html: string) =>
   htmlToText(html.replace(/<\/(p|li|h3|h4|td|th|div|tr|pre)>|<br\s*\/?>/gi, '$& '))

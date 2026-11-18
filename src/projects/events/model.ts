@@ -1,5 +1,6 @@
 import type { EventItem, EventsFile } from './types'
 import { addDaysUtc, daysBetweenUtc, romeDayKey, weekStartUtc } from '../../lib/dates'
+import { thingsUrl } from '../../lib/things'
 
 // Pure helpers for the events page (project 12). No React, no Dexie.
 // Times: events.json carries Europe/Rome offsets; the first 10 chars of
@@ -474,7 +475,7 @@ export function buildThingsAddUrl(e: EventItem, now: number = Date.now()): strin
   const notes = [formatRange(e), place, e.summary ? clip(e.summary, 200) : '', safeHttpUrl(e.url) ?? '']
     .filter(Boolean)
     .join('\n')
-  return `things:///add?title=${encodeURIComponent(e.title)}&notes=${encodeURIComponent(notes)}&when=${when}`
+  return thingsUrl('add', { title: e.title, notes, when })
 }
 
 /**

@@ -1,4 +1,5 @@
 import type { EventItem } from './types'
+import { normalize } from '../../lib/fuzzy'
 
 // Rough driving time from Rovereto, in minutes, for the towns the events come
 // from. Hand-estimated (not routed): good enough to say "close" or "a trip".
@@ -147,13 +148,8 @@ const MINUTES: Record<string, number> = {
   Milano: 150,
 }
 
-/** Lowercase, accent-free (kept local so this file imports nothing from filters.ts). */
-const normalizeText = (s: string): string =>
-  s
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .trim()
+/** Lowercase, accent-free, trimmed (imports fuzzy.ts, not filters.ts). */
+const normalizeText = (s: string): string => normalize(s).trim()
 
 const TABLE = new Map(Object.entries(MINUTES).map(([k, v]) => [normalizeText(k), v]))
 
@@ -212,10 +208,5 @@ export const SOURCE_CITIES: Record<string, readonly string[]> = {
 export function outsideSourceCities(e: Pick<EventItem, 'city' | 'source'>): boolean {
   const cities = SOURCE_CITIES[e.source]
   if (cities === undefined) return false
-  const plain = (s: string) =>
-    s
-      .normalize('NFD')
-      .replace(/[̀-ͯ]/g, '')
-      .toLowerCase()
-  return !cities.some((c) => plain(c) === plain(e.city))
+  return !cities.some((c) => normalize(c) === normalize(e.city))
 }

@@ -1,4 +1,5 @@
 import type { LifeChoreEntry, LifeChoreValue, LifeEntry } from '../../../lib/db'
+import { fnv1aHex } from '../../../lib/hash'
 
 // --- Household chores (Things project "Casa catia") ----------------------------
 // A Mac script reads the project (and the completion history of its recurring
@@ -9,16 +10,6 @@ import type { LifeChoreEntry, LifeChoreValue, LifeEntry } from '../../../lib/db'
 
 export function isChore(e: LifeEntry): e is LifeChoreEntry {
   return e.kind === 'chore'
-}
-
-/** 32-bit FNV-1a, hex: a stable fallback ref for names with no letters/digits. */
-function fnv1a(s: string): string {
-  let h = 0x811c9dc5
-  for (let i = 0; i < s.length; i++) {
-    h ^= s.charCodeAt(i)
-    h = Math.imul(h, 0x01000193)
-  }
-  return (h >>> 0).toString(16).padStart(8, '0')
 }
 
 /**
@@ -35,7 +26,7 @@ export function choreRef(name: string): string {
     .replace(/^-+|-+$/g, '')
     .slice(0, 40)
     .replace(/-+$/, '')
-  return slug || `h-${fnv1a(name.trim())}`
+  return slug || `h-${fnv1aHex(name.trim())}`
 }
 
 export function choreEntryId(ref: string): string {

@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { db } from '../../lib/db'
 import { importWeek } from '../../lib/lifeSync'
 import { useAuth } from '../../lib/useAuth'
+import { useLinkImport } from '../../lib/useLinkImport'
 import { decodeImportParam, parseWeekJson, type ParseResult } from './model'
 import { PlanPreview } from './PlanPreview'
 import { Button } from '../../components/Button'
@@ -22,33 +23,13 @@ const TOO_LARGE = 'That input is too large (over 200 KB) to be a week plan.'
 export function LifeImport() {
   const navigate = useNavigate()
   const session = useAuth()
-  const [searchParams, setSearchParams] = useSearchParams()
-  const [text, setText] = useState('')
-  const [linkErrors, setLinkErrors] = useState<string[] | null>(null)
+  const { text, setText, linkErrors, setLinkErrors } = useLinkImport({
+    maxChars: MAX_INPUT_CHARS,
+    decode: decodeImportParam,
+    tooLarge: TOO_LARGE,
+  })
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
-
-  const linkParam = searchParams.get('d')
-
-  // Prefill from an import link, once, whenever `d` changes.
-  useEffect(() => {
-    if (!linkParam) return
-    const decoded =
-      linkParam.length > MAX_INPUT_CHARS ? { ok: false as const, errors: [TOO_LARGE] } : decodeImportParam(linkParam)
-    // Strip the plan from the URL (replace, not push) so it doesn't linger in
-    // browser history / synced tabs. The decoded text lives in state only.
-    setSearchParams({}, { replace: true })
-    if (decoded.ok) {
-      setText(decoded.text)
-      setLinkErrors(null)
-    } else {
-      // Clear any earlier paste/link content so the damaged-link error is
-      // what shows, instead of a stale preview from before this link opened.
-      setText('')
-      setLinkErrors(decoded.errors)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [linkParam])
 
   const result = useMemo<ParseResult | null>(
     () => (text.trim() && text.length <= MAX_INPUT_CHARS ? parseWeekJson(text) : null),

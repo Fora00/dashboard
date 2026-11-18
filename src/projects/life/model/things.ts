@@ -1,4 +1,5 @@
 import type { LifeTask } from '../../../lib/db'
+import { thingsUrl } from '../../../lib/things'
 
 // --- Things bridge -------------------------------------------------------------
 
@@ -53,9 +54,9 @@ export interface ThingsUrlOptions {
  * same `things:///<command>` URL (Things URL scheme docs).
  */
 export function buildThingsUrl(tasks: readonly LifeTask[], opts: ThingsUrlOptions = {}): string {
-  const data = encodeURIComponent(JSON.stringify(thingsItems(tasks)))
-  const back = opts.xSuccess ? `&x-success=${encodeURIComponent(opts.xSuccess)}` : ''
-  return `things:///json?data=${data}&reveal=true${back}`
+  const params: Record<string, string> = { data: JSON.stringify(thingsItems(tasks)), reveal: 'true' }
+  if (opts.xSuccess) params['x-success'] = opts.xSuccess
+  return thingsUrl('json', params)
 }
 
 /** True on iPhone/iPod/iPad, including iPadOS, which reports itself as a Mac. */

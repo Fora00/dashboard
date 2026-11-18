@@ -3,6 +3,7 @@
 // film (festivals, cineforums, talks, exhibitions, library evenings) stay events.
 import type { EventItem } from './types'
 import { isOver, localDay, romeDate } from './model'
+import { normalize } from '../../lib/fuzzy'
 
 /** Sources whose `cinema` records are a hall's programme; the rest (mart, libraries…) are events. */
 const HALL_SOURCES = new Set(['supercinema', 'trentinospettacoli', 'cultura-trentino', 'pergine', 'mymovies'])
@@ -20,10 +21,7 @@ export function isScreening(e: EventItem): boolean {
 /** Lowercase, accent-free, "Hen – Storia di una Gallina" → "hen": the same film across sources. */
 export function filmKey(title: string): string {
   const head = title.split(/\s+[–—-]\s+/)[0] ?? title
-  return head
-    .normalize('NFD')
-    .replace(/\p{M}/gu, '')
-    .toLowerCase()
+  return normalize(head)
     .replace(/[^\p{L}\p{N}]+/gu, ' ')
     .trim()
 }

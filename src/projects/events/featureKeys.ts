@@ -9,6 +9,8 @@
 // [a-z0-9 _.-] becomes '-'), so the server's check
 // `^[a-z]+:[A-Za-z0-9 _.-]{1,80}$` (event_interest_profile.id) always holds.
 
+import { normalize } from '../../lib/fuzzy'
+
 export const FEATURE_KINDS = ['cat', 'sub', 'tag', 'city', 'src', 'ring', 'wd', 'hour'] as const
 export type FeatureKind = (typeof FEATURE_KINDS)[number]
 
@@ -20,10 +22,7 @@ export type HourBucket = (typeof HOUR_BUCKETS)[number]
 
 /** Canonical value part of a feature key ('' when nothing usable is left). */
 export function keyPart(raw: string): string {
-  return raw
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .toLowerCase()
+  return normalize(raw)
     .replace(/[^a-z0-9 _.-]+/g, '-')
     .replace(/\s+/g, ' ')
     .replace(/-{2,}/g, '-')

@@ -5,6 +5,7 @@ import { Card } from '../../../components/Card'
 import { Chip } from '../../../components/Chip'
 import { FOCUS_RING, FOCUS_RING_FIELD, FOCUS_RING_INSET } from '../../../components/focus'
 import type { LearningCard } from '../../../lib/db'
+import { useLazyChunk } from '../../../lib/useLazyChunk'
 import { CourseLoading } from '../ui/CourseLoading'
 import { HtmlText } from '../engine/HtmlText'
 import { NotFound } from '../ui/NotFound'
@@ -522,23 +523,9 @@ function ThemeView({ theme }: { theme: VocabTheme }) {
 /** Lazy theme content, same shape as useCourse: sync when the chunk is cached, otherwise loads it once. */
 function ThemePage() {
   const { themeId = '' } = useParams()
-  const [, bump] = useState(0)
-  const [failed, setFailed] = useState(false)
-  const cached = loadedTheme(themeId)
-  const known = themeMetaById(themeId) !== undefined
-  useEffect(() => {
-    if (cached || !known) return
-    let live = true
-    loadTheme(themeId).then(
-      () => live && bump((n) => n + 1),
-      () => live && setFailed(true),
-    )
-    return () => {
-      live = false
-    }
-  }, [themeId, cached, known])
-  if (cached) return <ThemeView key={cached.id} theme={cached} />
-  if (!known || failed) return <NotFound what="Theme" />
+  const { value, status } = useLazyChunk(themeId, loadedTheme(themeId), themeMetaById(themeId) !== undefined, loadTheme)
+  if (value) return <ThemeView key={value.id} theme={value} />
+  if (status === 'missing') return <NotFound what="Theme" />
   return <CourseLoading />
 }
 

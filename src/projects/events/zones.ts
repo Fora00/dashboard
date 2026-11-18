@@ -1,6 +1,7 @@
 import type { EventItem } from './types'
 import { areaOf } from './model'
 import { SOURCE_CITIES } from './distance'
+import { normalize } from '../../lib/fuzzy'
 
 // Zones: where an event is, at the size the owner thinks in (2026-11-02).
 // Trento and Rovereto are the default view; the rest of Trentino is grouped
@@ -140,10 +141,7 @@ const TOWNS: Record<string, string[]> = {
 }
 
 const plain = (s: string): string =>
-  s
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .toLowerCase()
+  normalize(s)
     .replace(/\([^)]*\)/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()
