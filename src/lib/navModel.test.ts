@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { activeProjectId, contentWidthClass, isHomePath, layoutForPath, navSections } from './navModel'
+import { areaIds, type AreaId } from './areas'
 import { projects } from './projects'
 
 const byId = (id: string) => projects.find((p) => p.id === id)!
@@ -103,5 +104,19 @@ describe('contentWidthClass', () => {
     expect(contentWidthClass('wide')).toContain('max-w-3xl')
     expect(contentWidthClass('wide')).toContain('lg:max-w-6xl')
     expect(contentWidthClass('full')).toContain('lg:max-w-[96rem]')
+  })
+})
+
+describe('navSections area order', () => {
+  it('follows the given area order', () => {
+    const visible = projects.filter((p) => !p.ownerOnly)
+    const ids = (order?: AreaId[]) =>
+      navSections(visible, () => false, null, order)
+        .filter((s) => s.id !== 'starred')
+        .map((s) => s.id)
+    const natural = ids()
+    expect(natural.length).toBeGreaterThan(1)
+    const reversed = [...areaIds].reverse()
+    expect(ids(reversed)).toEqual(reversed.filter((id) => natural.includes(id)))
   })
 })

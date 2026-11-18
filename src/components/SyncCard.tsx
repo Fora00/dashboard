@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { syncEnabled, requestLoginCode, verifyLoginCode, signOut } from '../lib/sync'
 import type { CloudSync } from '../lib/cloudSync'
 import { useSyncStatus } from '../lib/useSyncStatus'
-import { clearPrivateData, privateDataSummary, type PrivateDataSummary } from '../lib/privateData'
+import { PRIVATE_DATA_LABEL, clearPrivateData, privateDataSummary, type PrivateDataSummary } from '../lib/privateData'
 import { useAuth } from '../lib/useAuth'
 import { Button } from './Button'
 import { Card } from './Card'
@@ -18,7 +18,7 @@ import { relativeTime } from '../lib/format'
 // server's version — confirmed first). Without the prop the card behaves
 // exactly as before.
 //
-// Right after a sign-out from this card, if owner-only data (Life, Meal Diary,
+// Right after a sign-out from this card, if owner-only data (Life, Learning, Meal Diary,
 // the owner's events) is still on the device, the signed-out card offers to
 // remove it, warning first about changes that never reached the server. It is
 // only ever an offer: nothing is removed without the user's explicit tap.
@@ -135,7 +135,7 @@ export function SyncCard({ sync }: SyncCardProps) {
         ? `\n\n${summary.unsynced} change${summary.unsynced === 1 ? ' was' : 's were'} never synced and will be lost for good.`
         : ''
     const ok = window.confirm(
-      'Remove Life, Meal Diary and your events data from this device? The copy in the cloud is kept: ' +
+      `Remove ${PRIVATE_DATA_LABEL} data from this device? The copy in the cloud is kept: ` +
         `sign in again to get it back.${lost}`,
     )
     if (!ok) return
@@ -212,7 +212,7 @@ export function SyncCard({ sync }: SyncCardProps) {
       {privateOffer && (
         <div className="space-y-2 rounded-lg border border-amber-500/40 bg-amber-500/10 p-3">
           <p className="text-slate-700 dark:text-slate-200">
-            Your private data (Life, Meal Diary, your events) is still on this device. Anyone using it can read it.
+            Your private data ({PRIVATE_DATA_LABEL}) is still on this device. Anyone using it can read it.
           </p>
           {privateOffer.unsynced > 0 && (
             <p className="text-rose-600 dark:text-rose-400">

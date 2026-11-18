@@ -49,6 +49,10 @@ const PRIVATE_REMOTES = new Set<OutboxTable>([
   'event_interest_profile',
 ])
 
+/** What the private-data texts (Settings, SyncCard) call it: one place, next
+ *  to the table list above, so a new area is not forgotten in the copy. */
+export const PRIVATE_DATA_LABEL = 'Life, Learning, Meal Diary and your events'
+
 export interface PrivateDataSummary {
   /** Private rows stored on this device. */
   rows: number

@@ -17,12 +17,3 @@ export interface Guest {
 // Card look without Card's padding, for divided row lists.
 export const listBox =
   'divide-y divide-slate-200 rounded-xl border border-slate-200 bg-white dark:divide-slate-800 dark:border-slate-800 dark:bg-slate-800/50'
-
-export const chip = (on: boolean, accent: 'indigo' | 'emerald') =>
-  `min-h-10 rounded-full border px-3.5 text-sm transition-colors ${
-    on
-      ? accent === 'indigo'
-        ? 'border-(color:--accent-ring) bg-(color:--accent-soft) text-slate-900 dark:text-slate-100'
-        : 'border-emerald-400 bg-emerald-500/15 text-emerald-600 dark:text-emerald-300'
-      : 'border-slate-300 text-slate-500 dark:border-slate-700'
-  }`

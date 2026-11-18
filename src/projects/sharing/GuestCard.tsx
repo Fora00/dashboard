@@ -2,7 +2,8 @@ import { shareable } from './shareable'
 import { Button } from '../../components/Button'
 import { ProjectIcon } from '../../components/ProjectIcon'
 import { Card } from '../../components/Card'
-import { chip, type Area, type Guest } from './shared'
+import { Chip } from '../../components/Chip'
+import type { Area, Guest } from './shared'
 
 interface GuestCardProps {
   guest: Guest
@@ -35,26 +36,15 @@ export function GuestCard({
           </Button>
         </div>
         <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() => onToggleShop(shopEnabled)}
-            className={chip(shopEnabled, 'emerald')}
-          >
-            🛒 Shop List {shopEnabled ? '✓' : ''}
-          </button>
+          <Chip active={shopEnabled} disabled={busy} onClick={() => onToggleShop(shopEnabled)}>
+            🛒 Shop List
+          </Chip>
           {shareable.map((p) => {
             const on = g.memberships.includes(p.id)
             return (
-              <button
-                key={p.id}
-                type="button"
-                disabled={busy}
-                onClick={() => onToggleMembership(p.id)}
-                className={chip(on, 'emerald')}
-              >
-                <ProjectIcon project={p} size="sm" /> {p.name} {on ? '✓' : ''}
-              </button>
+              <Chip key={p.id} active={on} disabled={busy} onClick={() => onToggleMembership(p.id)}>
+                <ProjectIcon project={p} size="sm" /> {p.name}
+              </Chip>
             )
           })}
         </div>
@@ -65,15 +55,9 @@ export function GuestCard({
               {areas.map((a) => {
                 const on = g.areas.includes(a.id)
                 return (
-                  <button
-                    key={a.id}
-                    type="button"
-                    disabled={busy}
-                    onClick={() => onToggleArea(a.id)}
-                    className={chip(on, 'emerald')}
-                  >
-                    {a.name} {on ? '✓' : ''}
-                  </button>
+                  <Chip key={a.id} active={on} disabled={busy} onClick={() => onToggleArea(a.id)}>
+                    {a.name}
+                  </Chip>
                 )
               })}
             </div>

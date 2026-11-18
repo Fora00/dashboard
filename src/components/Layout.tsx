@@ -8,11 +8,10 @@ import { SyncHealth } from './SyncHealth'
 import { SkeletonList } from './Skeleton'
 import { UpdateToast } from './UpdateToast'
 import { ErrorFlash } from './ErrorFlash'
-import { projects } from '../lib/projects'
 import { recordOpen } from '../lib/projectStats'
 import { useHomeScreenMeta } from '../lib/homeScreenMeta'
 import { useProjectAccent } from '../lib/useProjectAccent'
-import { contentWidthClass, layoutForPath } from '../lib/navModel'
+import { activeProjectId, contentWidthClass, layoutForPath } from '../lib/navModel'
 import { Sidebar } from './Sidebar'
 import { FOCUS_RING } from './focus'
 import { CommandPalette } from './CommandPalette'
@@ -37,8 +36,9 @@ export function Layout() {
   useEffect(() => {
     if (lastCounted.current === location.pathname) return
     lastCounted.current = location.pathname
-    const p = projects.find((p) => p.path === location.pathname)
-    if (p) void recordOpen(p.id)
+    // Sub-pages count for their project (/life/oggi -> life).
+    const id = activeProjectId(location.pathname)
+    if (id) void recordOpen(id)
   }, [location.pathname])
 
   // A guest who just redeemed a project invite (JoinProject navigates here

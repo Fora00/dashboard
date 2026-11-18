@@ -1,4 +1,5 @@
 import { shareFile } from '../../lib/share'
+import { downloadBlob } from '../../lib/downloadBlob'
 import type { EventItem } from './types'
 import { TZ, localDay, safeHttpUrl } from './model'
 
@@ -170,18 +171,7 @@ export async function addToCalendar(e: EventItem): Promise<void> {
       if (outcome !== 'unsupported') return // shared, or the user dismissed the sheet
     }
 
-    if (typeof URL === 'undefined' || typeof URL.createObjectURL !== 'function' || typeof document === 'undefined')
-      return
-    const href = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = href
-    a.download = name
-    a.rel = 'noopener'
-    a.style.display = 'none'
-    document.body.appendChild(a)
-    a.click()
-    a.remove()
-    setTimeout(() => URL.revokeObjectURL(href), 1000)
+    downloadBlob(blob, name)
   } catch {
     // Blocked or unsupported: nothing to recover.
   }

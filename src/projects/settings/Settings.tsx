@@ -13,10 +13,12 @@ import { ProjectIcon } from '../../components/ProjectIcon'
 import { Card } from '../../components/Card'
 import { PageHeader } from '../../components/PageHeader'
 import { SyncCard } from '../../components/SyncCard'
+import { downloadBlob } from '../../lib/downloadBlob'
+import { clearKeysExcept } from '../../lib/safeStorage'
 import { runSafe } from '../../lib/runSafe'
 import { buildBackup, parseBackup, restoreBackup, type RestoreResult } from '../../lib/backup'
 import { DataView } from './DataView'
-import { clearPrivateData, privateDataSummary } from '../../lib/privateData'
+import { PRIVATE_DATA_LABEL, clearPrivateData, privateDataSummary } from '../../lib/privateData'
 
 // Settings: project visibility (per user, synced when signed in), storage
 // usage, persistence, sync status, local wipe.
@@ -88,7 +90,7 @@ function PrivateDataCard() {
         ? `\n\n${s.unsynced} change${s.unsynced === 1 ? ' was' : 's were'} never synced and will be lost for good.`
         : ''
     const ok = window.confirm(
-      'Remove Life, Meal Diary and your events data from this device? The copy in the cloud is kept: ' +
+      `Remove ${PRIVATE_DATA_LABEL} data from this device? The copy in the cloud is kept: ` +
         `sign in again to get it back.${lost}`,
     )
     if (!ok) return
@@ -100,7 +102,7 @@ function PrivateDataCard() {
       <div className="flex items-center justify-between gap-3">
         <span className="text-slate-500 dark:text-slate-400">
           {has
-            ? 'Life, Meal Diary and your events are stored on this device. The cloud copy is kept.'
+            ? `${PRIVATE_DATA_LABEL} are stored on this device. The cloud copy is kept.`
             : 'No private data on this device.'}
         </span>
         <Button variant="danger" disabled={!has} onClick={() => void runSafe(remove, 'Could not remove data')()}>
@@ -118,8 +120,14 @@ function PrivateDataCard() {
   )
 }
 
+const WIPE_ARM_MS = 5000
+
+// Supabase's persisted session (default key `sb-<project ref>-auth-token`).
+const isAuthKey = (key: string) => key.startsWith('sb-') && key.includes('-auth-token')
+
 export function Settings() {
   const session = useAuth()
+  const unsyncedAll = useLiveQuery(() => db.outbox.count())
   const [estimate, setEstimate] = useState<StorageEstimate | null>(null)
   const [persisted, setPersisted] = useState<boolean | null>(null)
   const [confirmWipe, setConfirmWipe] = useState(false)
@@ -136,25 +144,36 @@ export function Settings() {
 
   async function exportData() {
     const blob = new Blob([JSON.stringify(await buildBackup())], { type: 'application/json' })
-    const a = document.createElement('a')
-    a.href = URL.createObjectURL(blob)
-    a.download = `dashboard-backup-${new Date().toISOString().slice(0, 10)}.json`
-    a.click()
-    URL.revokeObjectURL(a.href)
+    downloadBlob(blob, `dashboard-backup-${new Date().toISOString().slice(0, 10)}.json`)
   }
 
   async function importData(file: File) {
     setImported(await restoreBackup(parseBackup(await file.text())))
   }
 
+  // Two taps: the first arms the button, it disarms itself after a few seconds
+  // (and on blur) so a stray later tap never wipes.
+  useEffect(() => {
+    if (!confirmWipe) return
+    const t = setTimeout(() => setConfirmWipe(false), WIPE_ARM_MS)
+    return () => clearTimeout(t)
+  }, [confirmWipe])
+
   async function wipeLocal() {
     if (!confirmWipe) {
       setConfirmWipe(true)
       return
     }
-    await Promise.all(db.tables.map((t) => t.clear()))
-    localStorage.clear()
     setConfirmWipe(false)
+    // Dexie first, in ONE transaction (all or nothing): it holds the real data.
+    // Then the per-device prefs in localStorage, best effort: if storage is
+    // blocked that only leaves harmless prefs behind instead of failing a
+    // half-finished wipe. The Supabase session key stays, so wiping the device
+    // does not sign you out (use Sign out for that).
+    await db.transaction('rw', db.tables, async () => {
+      for (const t of db.tables) await t.clear()
+    })
+    clearKeysExcept(isAuthKey)
   }
 
   return (
@@ -251,14 +270,26 @@ export function Settings() {
           <div className="mb-3">
             <PrivateDataCard />
           </div>
-          <Card className="flex items-center justify-between gap-3 text-sm">
-            <span className="text-slate-500 dark:text-slate-400">
-              Delete all data stored on this device.
-              {session && ' Synced data in the cloud is kept.'}
-            </span>
-            <Button variant="danger" onClick={() => void runSafe(wipeLocal, 'Could not wipe data')()}>
-              {confirmWipe ? 'Really wipe?' : 'Wipe device data'}
-            </Button>
+          <Card className="space-y-2 text-sm">
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-slate-500 dark:text-slate-400">
+                Delete all data stored on this device.
+                {session && ' Synced data in the cloud is kept, and you stay signed in.'}
+              </span>
+              <Button
+                variant="danger"
+                onClick={() => void runSafe(wipeLocal, 'Could not wipe data')()}
+                onBlur={() => setConfirmWipe(false)}
+              >
+                {confirmWipe ? 'Really wipe?' : 'Wipe device data'}
+              </Button>
+            </div>
+            {unsyncedAll !== undefined && unsyncedAll > 0 && (
+              <p className="text-rose-600 dark:text-rose-400">
+                ⚠️ {unsyncedAll} change{unsyncedAll === 1 ? ' has' : 's have'} not reached the cloud yet. Wiping deletes{' '}
+                {unsyncedAll === 1 ? 'it' : 'them'} for good.
+              </p>
+            )}
           </Card>
         </section>
       </div>

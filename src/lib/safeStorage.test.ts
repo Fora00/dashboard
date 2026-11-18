@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { readJSON, readString, removeKey, writeJSON, writeString } from './safeStorage'
+import { clearKeysExcept, readJSON, readString, removeKey, writeJSON, writeString } from './safeStorage'
 
 function memoryStorage() {
   const m = new Map<string, string>()
@@ -60,5 +60,37 @@ describe('safeStorage', () => {
     expect(() => writeString('k', 'v')).not.toThrow()
     expect(() => writeJSON('k', 1)).not.toThrow()
     expect(() => removeKey('k')).not.toThrow()
+  })
+})
+
+describe('clearKeysExcept', () => {
+  function indexedStorage(data: Record<string, string>) {
+    const m = new Map(Object.entries(data))
+    return {
+      get length() {
+        return m.size
+      },
+      key: (i: number) => [...m.keys()][i] ?? null,
+      getItem: (k: string) => m.get(k) ?? null,
+      removeItem: (k: string) => void m.delete(k),
+    }
+  }
+
+  it('removes everything the predicate does not keep', () => {
+    const store = indexedStorage({ a: '1', b: '2', 'sb-x-auth-token': 't' })
+    vi.stubGlobal('localStorage', store)
+    expect(clearKeysExcept((k) => k.startsWith('sb-'))).toBe(true)
+    expect(store.getItem('a')).toBeNull()
+    expect(store.getItem('b')).toBeNull()
+    expect(store.getItem('sb-x-auth-token')).toBe('t')
+  })
+
+  it('returns false instead of throwing when storage is blocked', () => {
+    vi.stubGlobal('localStorage', {
+      get length(): number {
+        throw new Error('blocked')
+      },
+    })
+    expect(clearKeysExcept(() => false)).toBe(false)
   })
 })

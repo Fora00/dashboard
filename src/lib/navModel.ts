@@ -1,5 +1,5 @@
 import { projectForPath } from './accent'
-import { areaIds, areas } from './areas'
+import { areaIds, areas, type AreaId } from './areas'
 import { groupByArea, type HomeSection } from './groupByArea'
 import type { ProjectLayout, ProjectMeta } from './projects'
 
@@ -8,8 +8,8 @@ import type { ProjectLayout, ProjectMeta } from './projects'
 // Kept free of React so it is unit-tested (navModel.test.ts).
 
 /**
- * Sidebar sections: Starred first, then one per area in areas.ts order (the
- * same split Home uses). `visible` must already be ownerOnly- and
+ * Sidebar sections: Starred first, then one per area in Home's stored area
+ * order (default areas.ts order; the same split Home uses). `visible` must already be ownerOnly- and
  * hidden-filtered (useVisibleProjects). Inside a section the REGISTRY order
  * is kept on purpose: Home's "most used / recent" orders reshuffle on every
  * open, which is fine for a grid you scan but bad for a nav you click by
@@ -19,8 +19,9 @@ export function navSections(
   visible: ProjectMeta[],
   isStarred: (id: string) => boolean,
   current?: ProjectMeta | null,
+  areaOrder: readonly AreaId[] = areaIds,
 ): HomeSection[] {
-  const sections = groupByArea(visible, isStarred)
+  const sections = groupByArea(visible, isStarred, areaOrder)
   // The page you are on stays in the nav even when it is not in the list (a
   // hidden project, opened by link or from the palette): an extra entry at
   // the top of its area section (the section is created if it would be empty).
@@ -36,7 +37,7 @@ export function navSections(
     color: areas[current.area].color,
     projects: [current],
   }
-  const rank = (s: HomeSection) => (s.id === 'starred' ? -1 : areaIds.indexOf(s.id))
+  const rank = (s: HomeSection) => (s.id === 'starred' ? -1 : areaOrder.indexOf(s.id as AreaId))
   const at = sections.findIndex((s) => rank(s) > rank(created))
   sections.splice(at < 0 ? sections.length : at, 0, created)
   return sections

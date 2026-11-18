@@ -1,3 +1,4 @@
+import { downloadBlob } from '../../lib/downloadBlob'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, requestPersistentStorage, type TransferFile } from '../../lib/db'
@@ -115,12 +116,7 @@ export function LocalTransfer() {
   }, [])
 
   function download(f: TransferFile) {
-    const url = URL.createObjectURL(f.blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = f.name
-    a.click()
-    URL.revokeObjectURL(url)
+    downloadBlob(f.blob, f.name)
   }
 
   async function share(f: TransferFile) {

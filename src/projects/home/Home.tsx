@@ -12,7 +12,8 @@ import { toggleStar } from '../../lib/projectStats'
 import { useVisibleProjects } from '../../lib/useVisibleProjects'
 import { Card } from '../../components/Card'
 import { ProjectIcon } from '../../components/ProjectIcon'
-import { groupByArea, moveArea, sanitizeAreaOrder } from '../../lib/groupByArea'
+import { useAreaOrder } from '../../lib/useAreaOrder'
+import { groupByArea, moveArea } from '../../lib/groupByArea'
 import { FOCUS_RING_INSET } from '../../components/focus'
 import { InstallHint } from '../../components/InstallHint'
 import { runSafe } from '../../lib/runSafe'
@@ -67,7 +68,6 @@ const sanitizeIds = (raw: unknown): string[] =>
   Array.isArray(raw) ? raw.filter((v): v is string => typeof v === 'string') : []
 
 // Per-device order of the home sections (Riordina mode, up/down buttons).
-const HOME_AREA_ORDER_KEY = 'dashboard:home-area-order'
 
 // Project grid: 2 columns at sm, 3 at lg, 4 at xl (the content is up to 72rem wide from lg).
 const GRID = 'grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 sm:gap-4'
@@ -83,11 +83,7 @@ export function Home() {
 
   const [grouped, setGrouped] = usePersistedState<boolean>(HOME_GROUPED_KEY, true, undefined, groupedCodec)
 
-  const [areaOrder, setAreaOrder] = usePersistedState<AreaId[]>(
-    HOME_AREA_ORDER_KEY,
-    sanitizeAreaOrder(null),
-    sanitizeAreaOrder,
-  )
+  const [areaOrder, setAreaOrder] = useAreaOrder()
   const [customIds, setCustomIds] = usePersistedState<string[]>(HOME_PROJECT_ORDER_KEY, [], sanitizeIds)
   const [rearranging, setRearranging] = useState(false)
 
@@ -246,23 +242,15 @@ export function Home() {
           >
             <div className="mb-2 flex items-center justify-between pr-10">
               <ProjectIcon project={p} />
-              {p.status === 'planned' ? (
-                <span className="rounded-full bg-slate-200 px-2.5 py-1 text-xs text-slate-500 dark:bg-slate-700/60 dark:text-slate-400">
-                  planned
+              {badgeFor(p.id) !== null && (
+                <span className="rounded-full bg-(--accent)/20 px-2.5 py-1 text-xs font-medium text-(--accent-border)">
+                  {badgeFor(p.id)}
                 </span>
-              ) : (
-                badgeFor(p.id) !== null && (
-                  <span className="rounded-full bg-indigo-500/20 px-2.5 py-1 text-xs font-medium text-indigo-600 dark:text-indigo-300">
-                    {badgeFor(p.id)}
-                  </span>
-                )
               )}
             </div>
             <h2 className="font-semibold">{p.name}</h2>
             <p className="mt-1 line-clamp-2 text-sm text-slate-500 dark:text-slate-400">{p.description}</p>
-            {statFor(p.id) && (
-              <p className="mt-3 text-xs font-medium text-indigo-600 dark:text-indigo-400">{statFor(p.id)}</p>
-            )}
+            {statFor(p.id) && <p className="mt-3 text-xs font-medium text-(--accent-border)">{statFor(p.id)}</p>}
           </Card>
         </Link>
       </div>
@@ -280,7 +268,7 @@ export function Home() {
             value={order}
             onChange={handleOrderChange}
             aria-label="Sort projects by"
-            className="min-h-10 rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 focus:border-indigo-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-indigo-300 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+            className="min-h-10 rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 focus:border-(--accent-ring) focus:outline-none focus-visible:ring-2 focus-visible:ring-(--accent-ring) dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
           >
             <option value="used">Most used</option>
             <option value="recent">Recently opened</option>
@@ -294,7 +282,7 @@ export function Home() {
             aria-pressed={grouped}
             className={`min-h-10 rounded-lg border px-3 text-sm transition-colors ${FOCUS_RING_INSET} ${
               grouped
-                ? 'border-indigo-400 bg-indigo-500/10 text-indigo-700 dark:text-indigo-300'
+                ? 'border-(--accent-ring) bg-(--accent-soft) text-(--accent-border)'
                 : 'border-slate-300 bg-white text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200'
             }`}
           >
@@ -307,22 +295,24 @@ export function Home() {
               aria-pressed={rearranging}
               className={`min-h-10 rounded-lg border px-3 text-sm transition-colors ${FOCUS_RING_INSET} ${
                 rearranging
-                  ? 'border-indigo-400 bg-indigo-500/10 text-indigo-700 dark:text-indigo-300'
+                  ? 'border-(--accent-ring) bg-(--accent-soft) text-(--accent-border)'
                   : 'border-slate-300 bg-white text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200'
               }`}
             >
               {rearranging ? 'Fatto' : 'Riordina'}
             </button>
           )}
-          <button
-            type="button"
-            onClick={handleReversedToggle}
-            aria-pressed={reversed}
-            aria-label={reversed ? 'Restore normal order' : 'Reverse order'}
-            className={`flex min-h-10 min-w-10 items-center justify-center rounded-lg border border-slate-300 bg-white text-base text-slate-700 transition-colors hover:bg-slate-100 active:bg-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 ${FOCUS_RING_INSET}`}
-          >
-            {reversed ? '↑' : '↓'}
-          </button>
+          {order !== 'custom' && (
+            <button
+              type="button"
+              onClick={handleReversedToggle}
+              aria-pressed={reversed}
+              aria-label={reversed ? 'Restore normal order' : 'Reverse order'}
+              className={`flex min-h-10 min-w-10 items-center justify-center rounded-lg border border-slate-300 bg-white text-base text-slate-700 transition-colors hover:bg-slate-100 active:bg-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 ${FOCUS_RING_INSET}`}
+            >
+              {reversed ? '↑' : '↓'}
+            </button>
+          )}
         </div>
       </div>
       <p className="mb-6 text-sm text-slate-500 dark:text-slate-400">

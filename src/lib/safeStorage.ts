@@ -22,6 +22,25 @@ export function writeString(key: string, value: string): void {
   }
 }
 
+/**
+ * Remove every localStorage key except those `keep` accepts. Never throws
+ * (blocked storage: nothing to remove); returns whether it ran to the end.
+ * Keys are collected first because removing while indexing shifts the indexes.
+ */
+export function clearKeysExcept(keep: (key: string) => boolean): boolean {
+  try {
+    const keys: string[] = []
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i)
+      if (k !== null && !keep(k)) keys.push(k)
+    }
+    for (const k of keys) localStorage.removeItem(k)
+    return true
+  } catch {
+    return false
+  }
+}
+
 export function removeKey(key: string): void {
   try {
     localStorage.removeItem(key)

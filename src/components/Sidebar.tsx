@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router-dom'
 import type { ProjectMeta } from '../lib/projects'
+import { useAreaOrder } from '../lib/useAreaOrder'
 import { activeProjectId, isHomePath, navSections } from '../lib/navModel'
 import { setSidebarCollapsed, useSidebarCollapsed } from '../lib/useSidebarCollapsed'
 import { useVisibleProjects } from '../lib/useVisibleProjects'
@@ -39,10 +40,11 @@ export function Sidebar({ onOpenPalette, onOpenHelp }: { onOpenPalette: () => vo
   const { pathname } = useLocation()
   const { visible, permitted, isStarred } = useVisibleProjects()
   const collapsed = useSidebarCollapsed()
+  const [areaOrder] = useAreaOrder()
   const activeId = activeProjectId(pathname)
   // A permitted but hidden project you are on still shows (extra entry).
   const current = permitted.find((p) => p.id === activeId) ?? null
-  const sections = navSections(visible, isStarred, current)
+  const sections = navSections(visible, isStarred, current, areaOrder)
   const homeActive = isHomePath(pathname)
 
   function renderItem(p: ProjectMeta) {

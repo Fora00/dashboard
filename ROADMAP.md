@@ -1724,7 +1724,7 @@ re-implementing, then per-project refactors. Do ONE at a time; owner picks.
 - [x] A5 **Home habit counts wrong** [sonnet, S]: `homeToday.ts:16-23`, `Home.tsx:188-195` count **DONE 2026-11-18** (`habitProgress` on `deriveHabitDays`, one helper for Home badge + TodayPanel; 12 tests).
       any check as done (rest/missed/partial) and "don't" habits / ended cycles as remaining;
       TodayPanel disagrees. Use the HB2a hook.
-- [ ] A6 **Wipe device data** [sonnet, S]: `Settings.tsx:151-159` no unsynced warning, unguarded
+- [x] A6 **Wipe device data** [sonnet, S]: `Settings.tsx:151-159` no unsynced warning, unguarded **DONE 2026-11-18** (outbox warning, Dexie first then `clearKeysExcept` keeping the Supabase session, armed resets after 5 s/blur).
       `localStorage.clear()` (signs out, half wipe if storage blocked), armed state never resets.
 
 ### B. Small bugs, one batch per project [sonnet, S each]
@@ -1734,7 +1734,7 @@ re-implementing, then per-project refactors. Do ONE at a time; owner picks.
 - [x] B2 Learning: Ripasso count home vs page (`TodayBlock.tsx:68` no `keep` filter); Today frozen **DONE 2026-11-18** (`review/content.tsx` useReviewQueue shared by home and page; useToday; resets remove Ripasso rows; `resetWrongQuiz` still leaves them — follow-up).
       (`TodayBlock.tsx:67`, `ReviewPage.tsx:186`); Vocab deck end links to Ripasso; `setWordKnown`
       writes per language outside a transaction; per-module resets leave `learning_reviews` rows.
-- [ ] B3 Shell: page opens of sub-pages not counted (`Layout.tsx:40` exact match); sidebar
+- [x] B3 Shell: page opens of sub-pages not counted (`Layout.tsx:40` exact match); sidebar **DONE 2026-11-18** (`activeProjectId` in Layout, `useAreaOrder` shared by Home + Sidebar, `PRIVATE_DATA_LABEL`, shared Chip in Sharing, `downloadBlob`, accent tokens on Home).
       ignores Home area order (`navModel.ts:23`); reverse no-op in "Mio ordine" (`Home.tsx:154`);
       private-data texts omit Learning (Settings.tsx:91,103, SyncCard.tsx:138); Sharing chips
       without aria-pressed/✓; downloads revoke the URL right after click (Safari) →
@@ -1742,7 +1742,7 @@ re-implementing, then per-project refactors. Do ONE at a time; owner picks.
 - [x] B4 Lists: shop items deletable only by swipe (`ShopList.tsx:97`); climbing delete without **DONE 2026-11-18** (shop ✕ button, climbing Undo + `restoreSession`, hotkeys, idea titles editable via `updateText`, subtitles).
       Undo / with confirm (`SessionCard.tsx:56,134`); hotkeys missing on IdeaList/Trips/Climbing;
       idea titles not editable (`IdeaList.tsx:111`); "Saved on this device" copy on synced pages.
-- [ ] B5 Habits: experiments past `cycleEnd` but not archived still count misses; `habitStats`
+- [x] B5 Habits: experiments past `cycleEnd` but not archived still count misses; `habitStats` **DONE 2026-11-18** (tile "Cycle ended Nd ago: judge it"; habitStats already once per tile; MealDiary on useToday).
       twice per tile (Habits.tsx:184,188). Meal diary: `new Date()` in render (MealDiary.tsx:28).
 
 ### C. Shared foundations (each removes N copies)

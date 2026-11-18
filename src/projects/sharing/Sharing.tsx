@@ -10,8 +10,9 @@ import { ProjectIcon } from '../../components/ProjectIcon'
 import { runSafe } from '../../lib/runSafe'
 import { GuestCard } from './GuestCard'
 import { ProjectInviteRow, PublicLinkRow } from './InviteRows'
-import { chip, listBox, type Area, type Guest } from './shared'
+import { listBox, type Area, type Guest } from './shared'
 import { Card } from '../../components/Card'
+import { Chip } from '../../components/Chip'
 import { PageHeader } from '../../components/PageHeader'
 import { EmptyState } from '../../components/EmptyState'
 import { SyncCard } from '../../components/SyncCard'
@@ -358,20 +359,19 @@ export function Sharing() {
               </Button>
             </div>
             <div className="flex flex-wrap gap-2">
-              <button type="button" onClick={() => setShopOn((s) => !s)} className={chip(shopOn, 'indigo')}>
+              <Chip active={shopOn} onClick={() => setShopOn((s) => !s)}>
                 🛒 Shop List
-              </button>
+              </Chip>
               {shareable.map((p) => {
                 const on = selected.includes(p.id)
                 return (
-                  <button
+                  <Chip
                     key={p.id}
-                    type="button"
+                    active={on}
                     onClick={() => setSelected((s) => (on ? s.filter((id) => id !== p.id) : [...s, p.id]))}
-                    className={chip(on, 'indigo')}
                   >
                     <ProjectIcon project={p} size="sm" /> {p.name}
-                  </button>
+                  </Chip>
                 )
               })}
             </div>
