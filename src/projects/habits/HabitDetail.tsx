@@ -1,4 +1,6 @@
 import { confirm } from '../../lib/confirm'
+import { SectionTitle } from '../../components/SectionTitle'
+import { DATE, SELECT } from '../../components/field'
 import { useState } from 'react'
 import { Stat } from '../../components/Stat'
 import { db, type Habit, type HabitDayState } from '../../lib/db'
@@ -106,9 +108,7 @@ function Body({ habit, states, notes, openCount, wins, today, onClose, onArchive
 
       {s.lastWeeks.length > 0 && (
         <section aria-label="Weeks">
-          <h3 className="mb-2 text-sm font-medium text-slate-500 dark:text-slate-400">
-            Last weeks (target {s.target}/week)
-          </h3>
+          <SectionTitle as="h3">Last weeks (target {s.target}/week)</SectionTitle>
           <div className="flex items-end gap-1.5">
             {[...s.lastWeeks, s.week].map((w) => (
               <div
@@ -266,23 +266,22 @@ function VacationForm({ habit, today }: { habit: Habit; today: string }) {
     void runSafe(setRestRange, 'Could not save')(habit.id, from, to, clear ? null : reason)
   }
 
-  const field = 'min-h-10 w-full rounded-lg border border-slate-300 bg-transparent px-2 text-sm dark:border-slate-700'
   return (
     <section aria-label="Vacation" className="space-y-2">
       <h3 className="text-sm font-medium text-slate-500 dark:text-slate-400">🏖 Vacation</h3>
       <div className="grid grid-cols-2 gap-2">
         <label className="text-xs text-slate-500">
           From
-          <input type="date" className={field} value={from} onChange={(e) => setFrom(e.target.value)} />
+          <input type="date" className={DATE} value={from} onChange={(e) => setFrom(e.target.value)} />
         </label>
         <label className="text-xs text-slate-500">
           To
-          <input type="date" className={field} value={to} onChange={(e) => setTo(e.target.value)} />
+          <input type="date" className={DATE} value={to} onChange={(e) => setTo(e.target.value)} />
         </label>
       </div>
       <label className="block text-xs text-slate-500">
         Reason
-        <select className={field} value={reason} onChange={(e) => setReason(e.target.value)}>
+        <select className={SELECT} value={reason} onChange={(e) => setReason(e.target.value)}>
           {REST_REASONS.map(([k, label]) => (
             <option key={k} value={k}>
               {label}

@@ -1,4 +1,6 @@
+import { INPUT } from './field'
 import { useRef, useState, type FormEvent } from 'react'
+import {} from './field'
 import { useLiveQuery } from 'dexie-react-hooks'
 import type { OutboxTable } from '../lib/db'
 import type { CloudSync } from '../lib/cloudSync'
@@ -45,9 +47,6 @@ export interface IdeaListConfig<T extends IdeaRow> {
   /** Remote table name, used to re-insert a deleted row on Undo. */
   table: OutboxTable
 }
-
-const INPUT =
-  'min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-(color:--accent-ring) focus:outline-none dark:border-slate-700 dark:bg-slate-800'
 
 export function IdeaList<T extends IdeaRow>({ config }: { config: IdeaListConfig<T> }) {
   const session = useAuth()

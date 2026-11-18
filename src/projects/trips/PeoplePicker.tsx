@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { INPUT } from '../../components/field'
 import type { TripCompanion } from '../../lib/db'
 import { addCompanion, MAX_COMPANIONS_PER_IDEA, MAX_NAME_LENGTH } from '../../lib/tripsSync'
 import { Button } from '../../components/Button'
@@ -101,7 +102,7 @@ export function PeoplePicker({ mode, onModeChange, companions, selected, onSelec
                   enterKeyHint="done"
                   aria-label="New person's name"
                   id={`${idPrefix}-new-person`}
-                  className="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-(color:--accent-ring) focus:outline-none focus-visible:ring-2 focus-visible:ring-(color:--accent-ring) dark:border-slate-700 dark:bg-slate-800"
+                  className={INPUT}
                 />
                 <Button type="button" onClick={() => void createPerson()}>
                   Add

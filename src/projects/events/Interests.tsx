@@ -1,3 +1,4 @@
+import { Switch } from '../../components/Switch'
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { Button } from '../../components/Button'
@@ -276,14 +277,11 @@ export function Interests() {
             </p>
             <label className="flex min-h-10 items-center justify-between gap-2 text-sm font-medium">
               Ordina per te
-              <input
-                type="checkbox"
-                role="switch"
+              <Switch
                 checked={forYouSetting && available}
                 disabled={!available}
                 aria-describedby="for-you-status"
-                onChange={(e) => setForYou(e.target.checked)}
-                className="size-5 disabled:cursor-not-allowed"
+                onChange={setForYou}
               />
             </label>
             <p id="for-you-status" className={SUBTLE}>

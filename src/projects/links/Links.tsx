@@ -1,4 +1,5 @@
 import { useRef, useState, type FormEvent } from 'react'
+import { INPUT, TEXTAREA } from '../../components/field'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, type LinkItem } from '../../lib/db'
 import {
@@ -248,7 +249,7 @@ export function Links() {
               maxLength={300}
               aria-label={`Title of ${link.title}`}
               placeholder="Title…"
-              className="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm placeholder:text-slate-500 focus:border-(color:--accent-ring) focus:outline-none focus-visible:ring-2 focus-visible:ring-(color:--accent-ring) dark:border-slate-700 dark:bg-slate-800"
+              className={TEXTAREA}
             />
             <textarea
               key={`notes-${link.id}`}
@@ -258,7 +259,7 @@ export function Links() {
               placeholder="Notes…"
               rows={3}
               maxLength={2000}
-              className="w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm placeholder:text-slate-500 focus:border-(color:--accent-ring) focus:outline-none focus-visible:ring-2 focus-visible:ring-(color:--accent-ring) dark:border-slate-700 dark:bg-slate-800"
+              className={TEXTAREA}
             />
             {/* Tag editor: current tags as removable chips + an add field. */}
             <div className="flex flex-wrap items-center gap-1.5">
@@ -338,7 +339,7 @@ export function Links() {
             maxLength={2000}
             aria-label="Link URL"
             placeholder="Paste a URL…"
-            className="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-(color:--accent-ring) focus:outline-none focus-visible:ring-2 focus-visible:ring-(color:--accent-ring) dark:border-slate-700 dark:bg-slate-800"
+            className={INPUT}
           />
           {!text && <Kbd>/</Kbd>}
         </div>

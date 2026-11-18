@@ -1,4 +1,6 @@
 import { confirm } from '../../lib/confirm'
+import { SectionTitle } from '../../components/SectionTitle'
+import { SwitchTrack } from '../../components/Switch'
 import { useEffect, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, requestPersistentStorage, type ProjectPref } from '../../lib/db'
@@ -41,7 +43,7 @@ function ProjectVisibility() {
 
   return (
     <section>
-      <h2 className="mb-2 text-sm font-medium text-slate-500 dark:text-slate-400">Projects</h2>
+      <SectionTitle>Projects</SectionTitle>
       <Card className="text-sm">
         <p className="mb-2 text-slate-500 dark:text-slate-400">
           Hidden projects stay reachable by URL; no data is deleted.
@@ -61,18 +63,7 @@ function ProjectVisibility() {
                 >
                   <ProjectIcon project={p} size="sm" />
                   <span className="flex-1 text-slate-800 dark:text-slate-200">{p.name}</span>
-                  <span
-                    aria-hidden="true"
-                    className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${
-                      shown ? 'bg-(--accent)' : 'bg-slate-300 dark:bg-slate-600'
-                    }`}
-                  >
-                    <span
-                      className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${
-                        shown ? 'translate-x-5' : 'translate-x-0.5'
-                      }`}
-                    />
-                  </span>
+                  <SwitchTrack checked={shown} />
                 </button>
               </li>
             )
@@ -179,7 +170,7 @@ export function Settings() {
         <ProjectVisibility />
 
         <section>
-          <h2 className="mb-2 text-sm font-medium text-slate-500 dark:text-slate-400">Cloud sync</h2>
+          <SectionTitle>Cloud sync</SectionTitle>
           {syncEnabled ? (
             // The engine shown here is the home layout's (starred/hidden), the
             // one sync this page owns: its Retry/Discard live here.
@@ -190,7 +181,7 @@ export function Settings() {
         </section>
 
         <section>
-          <h2 className="mb-2 text-sm font-medium text-slate-500 dark:text-slate-400">Storage</h2>
+          <SectionTitle>Storage</SectionTitle>
           <Card className="space-y-3 text-sm">
             <p className="text-slate-500 dark:text-slate-400">
               Used:{' '}
@@ -220,7 +211,7 @@ export function Settings() {
         <DataView />
 
         <section>
-          <h2 className="mb-2 text-sm font-medium text-slate-500 dark:text-slate-400">Backup</h2>
+          <SectionTitle>Backup</SectionTitle>
           <Card className="space-y-3 text-sm">
             <p className="text-slate-500 dark:text-slate-400">
               Save everything on this device to one file, or merge a saved file back in. Importing never deletes current
@@ -261,7 +252,7 @@ export function Settings() {
         </section>
 
         <section>
-          <h2 className="mb-2 text-sm font-medium text-slate-500 dark:text-slate-400">Danger zone</h2>
+          <SectionTitle>Danger zone</SectionTitle>
           <div className="mb-3">
             <PrivateDataCard />
           </div>

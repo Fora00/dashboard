@@ -1,12 +1,14 @@
+import { SectionTitle } from '../../../components/SectionTitle'
+import { INPUT } from '../../../components/field'
 import { LIFE_CAPS } from '../model'
 import { Button } from '../../../components/Button'
 import { Card } from '../../../components/Card'
-import { inputClass, newId, removeAt, removeBtnClass, updateAt, type FocusRow } from './rows'
+import { newId, removeAt, removeBtnClass, updateAt, type FocusRow } from './rows'
 
 export function FocusSection({ focus, setFocus }: { focus: FocusRow[]; setFocus: (v: FocusRow[]) => void }) {
   return (
     <section className="mb-6">
-      <h2 className="mb-2 text-sm font-medium text-slate-500 dark:text-slate-400">Focus</h2>
+      <SectionTitle>Focus</SectionTitle>
       <Card className="space-y-2">
         {focus.map((f, i) => (
           <div key={f.id} className="flex items-center gap-2">
@@ -16,7 +18,7 @@ export function FocusSection({ focus, setFocus }: { focus: FocusRow[]; setFocus:
               maxLength={LIFE_CAPS.focusTitle}
               placeholder="Focus title…"
               aria-label={`Focus ${i + 1}`}
-              className={inputClass}
+              className={INPUT}
             />
             <button
               type="button"

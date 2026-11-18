@@ -1,8 +1,10 @@
+import { SectionTitle } from '../../../components/SectionTitle'
+import { INPUT } from '../../../components/field'
 import type { LifeQuestionType } from '../../../lib/db'
 import { AUTO_QUESTION_TYPES, LIFE_CAPS } from '../model'
 import { Button } from '../../../components/Button'
 import { Card } from '../../../components/Card'
-import { inputClass, newId, removeAt, removeBtnClass, updateAt, type QuestionRow, type TrackerRow } from './rows'
+import { newId, removeAt, removeBtnClass, updateAt, type QuestionRow, type TrackerRow } from './rows'
 
 const QUESTION_TYPE_OPTIONS: { value: LifeQuestionType; label: string }[] = [
   { value: 'number', label: 'Number' },
@@ -24,7 +26,7 @@ export function SundaySection({
 }) {
   return (
     <section className="mb-6">
-      <h2 className="mb-2 text-sm font-medium text-slate-500 dark:text-slate-400">Sunday questions</h2>
+      <SectionTitle>Sunday questions</SectionTitle>
       <Card className="space-y-3">
         {sundayCheck.map((q, i) => (
           <div key={q.id} className="space-y-2">
@@ -35,7 +37,7 @@ export function SundaySection({
                 maxLength={LIFE_CAPS.questionLabel}
                 placeholder="Question…"
                 aria-label="Question label"
-                className={`${inputClass} flex-1`}
+                className={`${INPUT} flex-1`}
               />
               <select
                 value={q.type}
@@ -47,7 +49,7 @@ export function SundaySection({
                   )
                 }
                 aria-label="Question type"
-                className={`${inputClass} w-32`}
+                className={`${INPUT} w-32`}
               >
                 {QUESTION_TYPE_OPTIONS.map((o) => (
                   <option key={o.value} value={o.value}>
@@ -69,7 +71,7 @@ export function SundaySection({
                 value={trackers.some((t) => t.id === q.tracker) ? q.tracker : ''}
                 onChange={(e) => setSundayCheck(updateAt(sundayCheck, i, { tracker: e.target.value }))}
                 aria-label="Answer source"
-                className={inputClass}
+                className={INPUT}
               >
                 <option value="">Answered by hand</option>
                 {trackers.map((t) => (

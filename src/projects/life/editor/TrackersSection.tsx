@@ -1,7 +1,9 @@
+import { SectionTitle } from '../../../components/SectionTitle'
+import { INPUT } from '../../../components/field'
 import { LIFE_CAPS } from '../model'
 import { Button } from '../../../components/Button'
 import { Card } from '../../../components/Card'
-import { inputClass, newId, removeAt, removeBtnClass, updateAt, type CapMode, type TrackerRow } from './rows'
+import { newId, removeAt, removeBtnClass, updateAt, type CapMode, type TrackerRow } from './rows'
 
 export function TrackersSection({
   trackers,
@@ -12,7 +14,7 @@ export function TrackersSection({
 }) {
   return (
     <section className="mb-6">
-      <h2 className="mb-2 text-sm font-medium text-slate-500 dark:text-slate-400">Trackers</h2>
+      <SectionTitle>Trackers</SectionTitle>
       <div className="space-y-2">
         {trackers.map((tr, i) => (
           <Card key={tr.id} className="space-y-2">
@@ -23,7 +25,7 @@ export function TrackersSection({
                 maxLength={LIFE_CAPS.emoji}
                 placeholder="🔹"
                 aria-label="Tracker emoji"
-                className={`${inputClass} w-16 text-center`}
+                className={`${INPUT} w-16 text-center`}
               />
               <input
                 value={tr.label}
@@ -31,7 +33,7 @@ export function TrackersSection({
                 maxLength={LIFE_CAPS.trackerLabel}
                 placeholder="Tracker label…"
                 aria-label="Tracker label"
-                className={`${inputClass} flex-1`}
+                className={`${INPUT} flex-1`}
               />
               <button
                 type="button"
@@ -69,7 +71,7 @@ export function TrackersSection({
                 onChange={(e) => setTrackers(updateAt(trackers, i, { capValue: e.target.value }))}
                 placeholder="e.g. 3"
                 aria-label={`${tr.capMode} value`}
-                className={`${inputClass} w-24`}
+                className={`${INPUT} w-24`}
               />
               <button
                 type="button"

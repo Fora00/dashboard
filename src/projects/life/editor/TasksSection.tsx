@@ -1,21 +1,14 @@
+import { SectionTitle } from '../../../components/SectionTitle'
+import { INPUT, TEXTAREA } from '../../../components/field'
 import { LIFE_CAPS, THINGS_WHEN_KEYWORDS } from '../model'
 import { Button } from '../../../components/Button'
 import { Card } from '../../../components/Card'
-import {
-  inputClass,
-  newId,
-  removeAt,
-  removeBtnClass,
-  textareaClass,
-  updateAt,
-  type TaskRow,
-  type WhenMode,
-} from './rows'
+import { newId, removeAt, removeBtnClass, updateAt, type TaskRow, type WhenMode } from './rows'
 
 export function TasksSection({ tasks, setTasks }: { tasks: TaskRow[]; setTasks: (v: TaskRow[]) => void }) {
   return (
     <section className="mb-6">
-      <h2 className="mb-2 text-sm font-medium text-slate-500 dark:text-slate-400">Tasks</h2>
+      <SectionTitle>Tasks</SectionTitle>
       <div className="space-y-2">
         {tasks.map((t, i) => (
           <Card key={t.id} className="space-y-2">
@@ -26,7 +19,7 @@ export function TasksSection({ tasks, setTasks }: { tasks: TaskRow[]; setTasks: 
                 maxLength={LIFE_CAPS.taskTitle}
                 placeholder="Task title…"
                 aria-label="Task title"
-                className={`${inputClass} flex-1`}
+                className={`${INPUT} flex-1`}
               />
               <button
                 type="button"
@@ -43,7 +36,7 @@ export function TasksSection({ tasks, setTasks }: { tasks: TaskRow[]; setTasks: 
                 value={t.whenMode}
                 onChange={(e) => setTasks(updateAt(tasks, i, { whenMode: e.target.value as WhenMode }))}
                 aria-label="When"
-                className={`${inputClass} w-32`}
+                className={`${INPUT} w-32`}
               >
                 <option value="none">No date</option>
                 <option value="date">Date</option>
@@ -55,7 +48,7 @@ export function TasksSection({ tasks, setTasks }: { tasks: TaskRow[]; setTasks: 
                   value={t.whenDate}
                   onChange={(e) => setTasks(updateAt(tasks, i, { whenDate: e.target.value }))}
                   aria-label="When date"
-                  className={`${inputClass} w-40`}
+                  className={`${INPUT} w-40`}
                 />
               )}
               {t.whenMode === 'keyword' && (
@@ -63,7 +56,7 @@ export function TasksSection({ tasks, setTasks }: { tasks: TaskRow[]; setTasks: 
                   value={t.whenKeyword}
                   onChange={(e) => setTasks(updateAt(tasks, i, { whenKeyword: e.target.value }))}
                   aria-label="When keyword"
-                  className={`${inputClass} w-32`}
+                  className={`${INPUT} w-32`}
                 >
                   {THINGS_WHEN_KEYWORDS.map((k) => (
                     <option key={k} value={k}>
@@ -81,7 +74,7 @@ export function TasksSection({ tasks, setTasks }: { tasks: TaskRow[]; setTasks: 
                 value={t.deadline}
                 onChange={(e) => setTasks(updateAt(tasks, i, { deadline: e.target.value }))}
                 aria-label="Deadline"
-                className={`${inputClass} w-40`}
+                className={`${INPUT} w-40`}
               />
             </div>
 
@@ -92,7 +85,7 @@ export function TasksSection({ tasks, setTasks }: { tasks: TaskRow[]; setTasks: 
                 maxLength={LIFE_CAPS.areaProject}
                 placeholder="Area…"
                 aria-label="Area"
-                className={inputClass}
+                className={INPUT}
               />
               <input
                 value={t.project}
@@ -100,7 +93,7 @@ export function TasksSection({ tasks, setTasks }: { tasks: TaskRow[]; setTasks: 
                 maxLength={LIFE_CAPS.areaProject}
                 placeholder="Project…"
                 aria-label="Project"
-                className={inputClass}
+                className={INPUT}
               />
             </div>
 
@@ -115,7 +108,7 @@ export function TasksSection({ tasks, setTasks }: { tasks: TaskRow[]; setTasks: 
               onChange={(e) => setTasks(updateAt(tasks, i, { tags: e.target.value }))}
               placeholder="tags, comma, separated…"
               aria-label="Tags"
-              className={inputClass}
+              className={INPUT}
             />
 
             <textarea
@@ -125,7 +118,7 @@ export function TasksSection({ tasks, setTasks }: { tasks: TaskRow[]; setTasks: 
               placeholder="Notes…"
               rows={2}
               aria-label="Notes"
-              className={textareaClass}
+              className={TEXTAREA}
             />
           </Card>
         ))}

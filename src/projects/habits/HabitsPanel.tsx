@@ -1,4 +1,5 @@
 import { confirm } from '../../lib/confirm'
+import { SectionTitle } from '../../components/SectionTitle'
 import type { ReactNode } from 'react'
 import type { Habit } from '../../lib/db'
 import { Button } from '../../components/Button'
@@ -105,9 +106,9 @@ export function HabitsPanel({ data, today, viewKey, defaultView = 'today', empty
         <div className="space-y-6">
           {active.length > 0 && (
             <section>
-              <h2 className="mb-2 text-sm font-medium text-slate-500 dark:text-slate-400">
+              <SectionTitle>
                 Today · {data.doneToday}/{active.length} done
-              </h2>
+              </SectionTitle>
               <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 {active.map((habit) => {
                   const states = data.states.get(habit.id) ?? new Map()

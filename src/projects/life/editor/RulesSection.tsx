@@ -1,12 +1,14 @@
+import { SectionTitle } from '../../../components/SectionTitle'
+import { INPUT } from '../../../components/field'
 import { LIFE_CAPS } from '../model'
 import { Button } from '../../../components/Button'
 import { Card } from '../../../components/Card'
-import { inputClass, newKey, removeAt, removeBtnClass, updateAt, type RuleRow } from './rows'
+import { newKey, removeAt, removeBtnClass, updateAt, type RuleRow } from './rows'
 
 export function RulesSection({ rules, setRules }: { rules: RuleRow[]; setRules: (v: RuleRow[]) => void }) {
   return (
     <section className="mb-6">
-      <h2 className="mb-2 text-sm font-medium text-slate-500 dark:text-slate-400">Rules</h2>
+      <SectionTitle>Rules</SectionTitle>
       <Card className="space-y-2">
         {rules.map((r, i) => (
           <div key={r.key} className="flex items-center gap-2">
@@ -16,7 +18,7 @@ export function RulesSection({ rules, setRules }: { rules: RuleRow[]; setRules: 
               maxLength={LIFE_CAPS.rule}
               placeholder="Rule…"
               aria-label={`Rule ${i + 1}`}
-              className={inputClass}
+              className={INPUT}
             />
             <button
               type="button"

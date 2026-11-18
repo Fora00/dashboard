@@ -1,3 +1,4 @@
+import { DATE, INPUT, SELECT } from '../../components/field'
 import { useId, useRef, useState, type ReactNode } from 'react'
 import { Sheet } from '../../components/Sheet'
 import { Button } from '../../components/Button'
@@ -29,9 +30,6 @@ interface Props {
   onDelete: (row: CustomEvent) => void
   onSaved: (row: CustomEvent, isNew: boolean) => void
 }
-
-const INPUT =
-  'h-10 w-full rounded-lg border-2 border-slate-200 bg-white px-3 text-base text-slate-900 placeholder:text-slate-500 dark:placeholder:text-slate-400 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-100'
 
 function Field({
   label,
@@ -146,7 +144,7 @@ function Body({ onClose, editing, prefill, cities, onDelete, onSaved }: Props) {
             required
             value={form.date}
             onChange={(e) => set('date', e.target.value)}
-            className={INPUT}
+            className={DATE}
           />
         </Field>
         <Field label="End date" htmlFor={`${id}-end-date`}>
@@ -156,7 +154,7 @@ function Body({ onClose, editing, prefill, cities, onDelete, onSaved }: Props) {
             min={form.date || undefined}
             value={form.endDate}
             onChange={(e) => set('endDate', e.target.value)}
-            className={INPUT}
+            className={DATE}
           />
         </Field>
         <Field label="Time" htmlFor={`${id}-time`}>
@@ -232,7 +230,7 @@ function Body({ onClose, editing, prefill, cities, onDelete, onSaved }: Props) {
           id={`${id}-cat`}
           value={form.category}
           onChange={(e) => set('category', e.target.value)}
-          className={INPUT}
+          className={SELECT}
         >
           {CATEGORIES.map((c) => (
             <option key={c.id} value={c.id}>

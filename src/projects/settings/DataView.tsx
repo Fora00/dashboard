@@ -1,4 +1,5 @@
 import { confirm } from '../../lib/confirm'
+import { SectionTitle } from '../../components/SectionTitle'
 import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../../lib/db'
@@ -131,7 +132,7 @@ export function DataView() {
   const [open, setOpen] = useState(false)
   return (
     <section>
-      <h2 className="mb-2 text-sm font-medium text-slate-500 dark:text-slate-400">
+      <SectionTitle>
         <button
           type="button"
           aria-expanded={open}
@@ -140,7 +141,7 @@ export function DataView() {
         >
           <span aria-hidden="true">{open ? '▾' : '▸'}</span> Data on this device
         </button>
-      </h2>
+      </SectionTitle>
       {open && <Body />}
     </section>
   )

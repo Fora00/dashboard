@@ -1,4 +1,6 @@
+import { SectionTitle } from '../../components/SectionTitle'
 import { useRef, useState, type FormEvent } from 'react'
+import { INPUT } from '../../components/field'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, type Todo as TodoItem } from '../../lib/db'
 import {
@@ -119,7 +121,7 @@ export function Todo() {
             maxLength={MAX_TEXT_LENGTH}
             autoComplete="off"
             enterKeyHint="done"
-            className="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-(color:--accent-ring) focus:outline-none focus-visible:ring-2 focus-visible:ring-(color:--accent-ring) dark:border-slate-700 dark:bg-slate-800"
+            className={INPUT}
           />
           {!text && <Kbd>/</Kbd>}
         </div>
@@ -144,7 +146,7 @@ export function Todo() {
         <div className="space-y-6">
           {open.length > 0 && (
             <section>
-              <h2 className="mb-2 text-sm font-medium text-slate-500 dark:text-slate-400">Open · {open.length}</h2>
+              <SectionTitle>Open · {open.length}</SectionTitle>
               <ul className="space-y-2">{open.map(renderTodo)}</ul>
             </section>
           )}

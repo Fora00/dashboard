@@ -1,3 +1,4 @@
+import { INPUT } from '../../components/field'
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { supabase, syncEnabled, requestLoginCode, verifyLoginCode } from '../../lib/sync'
@@ -23,9 +24,6 @@ type Lookup =
   | { state: 'ok'; projectId: string }
   | { state: 'invalid' }
   | { state: 'error'; message: string }
-
-const inputClass =
-  'min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-base placeholder:text-slate-500 focus:border-(color:--accent-ring) focus:outline-none sm:text-sm dark:border-slate-700 dark:bg-slate-800'
 
 function errorMessage(err: unknown): string {
   if (err instanceof Error) return err.message
@@ -233,7 +231,7 @@ export function JoinProject() {
                   autoComplete="email"
                   aria-label="Email"
                   required
-                  className={inputClass}
+                  className={INPUT}
                 />
                 <Button type="submit" disabled={busy || !email.trim()}>
                   {busy ? '…' : 'Continue'}
@@ -256,7 +254,7 @@ export function JoinProject() {
                   autoComplete="one-time-code"
                   aria-label="Sign-in code"
                   required
-                  className={inputClass}
+                  className={INPUT}
                 />
                 <Button type="submit" disabled={busy || code.trim().length < 6}>
                   {busy ? '…' : 'Join'}

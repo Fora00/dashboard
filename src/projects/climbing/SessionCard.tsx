@@ -1,3 +1,4 @@
+import { SELECT } from '../../components/field'
 import { useState, type FormEvent } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, type Climb, type ClimbSession } from '../../lib/db'
@@ -7,9 +8,6 @@ import { FOCUS_RING_INSET } from '../../components/focus'
 import { addClimb, deleteClimb, deleteSession, restoreSession, sync, toggleClimbSent } from '../../lib/climbSync'
 import { formatDate } from '../../lib/dates'
 import { DISCIPLINE_LABEL, GRADES } from './grades'
-
-const inputClass =
-  'min-h-10 rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-(color:--accent-ring) focus:outline-none focus-visible:ring-2 focus-visible:ring-(color:--accent-ring) dark:border-slate-700 dark:bg-slate-800'
 
 function sessionDate(date: string): string {
   return formatDate(date, {
@@ -111,7 +109,7 @@ export function SessionCard({
       {climbs && climbs.length > 0 && <ul className="mt-3 flex flex-wrap gap-2">{climbs.map(renderClimb)}</ul>}
 
       <form onSubmit={logClimb} className="mt-3 flex flex-wrap items-center gap-2">
-        <select value={grade} onChange={(e) => setGrade(e.target.value)} aria-label="Grade" className={inputClass}>
+        <select value={grade} onChange={(e) => setGrade(e.target.value)} aria-label="Grade" className={SELECT}>
           {grades.map((g) => (
             <option key={g} value={g}>
               {g}

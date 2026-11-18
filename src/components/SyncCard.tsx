@@ -1,5 +1,6 @@
 import { confirm } from '../lib/confirm'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { INPUT } from './field'
 import { syncEnabled, requestLoginCode, verifyLoginCode, signOut } from '../lib/sync'
 import type { CloudSync } from '../lib/cloudSync'
 import { useSyncStatus } from '../lib/useSyncStatus'
@@ -245,7 +246,7 @@ export function SyncCard({ sync }: SyncCardProps) {
             aria-label="Email"
             autoComplete="email"
             required
-            className="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-(color:--accent-ring) focus:outline-none dark:border-slate-700 dark:bg-slate-800"
+            className={INPUT}
           />
           <Button type="submit" disabled={busy || !email.trim()}>
             {busy ? '…' : 'Send code'}
@@ -266,7 +267,7 @@ export function SyncCard({ sync }: SyncCardProps) {
             aria-label="6-digit code"
             autoComplete="one-time-code"
             required
-            className="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-(color:--accent-ring) focus:outline-none dark:border-slate-700 dark:bg-slate-800"
+            className={INPUT}
           />
           <Button type="submit" disabled={busy || code.length < 6}>
             {busy ? '…' : 'Sign in'}

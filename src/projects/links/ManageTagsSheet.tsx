@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { INPUT } from '../../components/field'
 import { normalizeTag } from '../../lib/linksSync'
 import { Button } from '../../components/Button'
 import { Sheet } from '../../components/Sheet'
@@ -83,7 +84,7 @@ export function ManageTagsSheet({ open, onClose, tags, optionsId, onRename }: Pr
                       spellCheck={false}
                       enterKeyHint="done"
                       aria-label={`New name for ${tag}`}
-                      className="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-(color:--accent-ring) focus:outline-none focus-visible:ring-2 focus-visible:ring-(color:--accent-ring) dark:border-slate-700 dark:bg-slate-800"
+                      className={INPUT}
                     />
                     <Button type="submit" disabled={!canSave}>
                       Save

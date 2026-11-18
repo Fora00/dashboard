@@ -6,7 +6,8 @@ import { runSafe } from '../../../lib/runSafe'
 import { Button } from '../../../components/Button'
 import { Card } from '../../../components/Card'
 import { Sheet } from '../../../components/Sheet'
-import { FOCUS_RING_FIELD, FOCUS_RING_INSET } from '../../../components/focus'
+import { FOCUS_RING_INSET } from '../../../components/focus'
+import { INPUT, TEXTAREA } from '../../../components/field'
 import {
   ENGINES,
   ENGINE_SCORE_MAX,
@@ -23,7 +24,6 @@ import {
   type IcebergInput,
 } from '../model'
 
-const FIELD = `w-full rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm focus:border-(color:--accent-ring) focus:outline-none dark:border-slate-700 dark:bg-slate-800 ${FOCUS_RING_FIELD}`
 const ICON_BTN = `flex size-10 shrink-0 items-center justify-center rounded-lg text-lg text-slate-600 hover:bg-slate-100 active:bg-slate-200 disabled:opacity-40 dark:text-slate-300 dark:hover:bg-slate-700 dark:active:bg-slate-600 ${FOCUS_RING_INSET}`
 
 /**
@@ -238,7 +238,7 @@ function IcebergSheet({
               value={draft[l.key]}
               maxLength={LIFE_CAPS.engineLayer}
               onChange={(ev) => set({ [l.key]: ev.target.value })}
-              className={`mt-1 ${FIELD}`}
+              className={`mt-1 ${TEXTAREA}`}
             />
           </label>
         ))}
@@ -254,7 +254,7 @@ function IcebergSheet({
               value={draft.whys[i] ?? ''}
               maxLength={LIFE_CAPS.engineWhy}
               onChange={(ev) => set({ whys: draft.whys.map((w, j) => (j === i ? ev.target.value : w)) })}
-              className={`min-h-10 ${FIELD}`}
+              className={INPUT}
             />
           ))}
         </fieldset>
@@ -266,7 +266,7 @@ function IcebergSheet({
             value={draft.lever}
             maxLength={LIFE_CAPS.engineLever}
             onChange={(ev) => set({ lever: ev.target.value })}
-            className={`mt-1 min-h-10 ${FIELD}`}
+            className={`mt-1 ${INPUT}`}
           />
         </label>
         <label className="block">
@@ -279,7 +279,7 @@ function IcebergSheet({
             value={draft.link}
             maxLength={LIFE_CAPS.engineLink}
             onChange={(ev) => set({ link: ev.target.value })}
-            className={`mt-1 min-h-10 ${FIELD}`}
+            className={`mt-1 ${INPUT}`}
           />
         </label>
       </div>

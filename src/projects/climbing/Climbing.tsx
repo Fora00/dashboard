@@ -1,4 +1,6 @@
+import { SectionTitle } from '../../components/SectionTitle'
 import { useMemo, useState, type FormEvent } from 'react'
+import { INPUT } from '../../components/field'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, type Discipline } from '../../lib/db'
 import { useAuth } from '../../lib/useAuth'
@@ -17,9 +19,6 @@ import { SessionCard } from './SessionCard'
 import { SyncCard } from '../../components/SyncCard'
 import { Skeleton } from '../../components/Skeleton'
 import { Snackbar } from '../../components/Snackbar'
-
-const inputClass =
-  'min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-(color:--accent-ring) focus:outline-none focus-visible:ring-2 focus-visible:ring-(color:--accent-ring) dark:border-slate-700 dark:bg-slate-800'
 
 const BAR_COLOR: Record<Discipline, string> = {
   boulder: 'bg-indigo-400/70',
@@ -127,7 +126,7 @@ export function Climbing() {
                 onChange={(e) => setDate(e.target.value)}
                 required
                 aria-label="Session date"
-                className={`${inputClass} w-auto`}
+                className={`${INPUT} w-auto`}
               />
               <input
                 value={location}
@@ -136,7 +135,7 @@ export function Climbing() {
                 placeholder="Where? e.g. Vertical Gym"
                 autoFocus
                 maxLength={MAX_LOCATION_LENGTH}
-                className={`${inputClass} min-w-40 flex-1`}
+                className={`${INPUT} min-w-40 flex-1`}
               />
             </div>
             <input
@@ -145,7 +144,7 @@ export function Climbing() {
               aria-label="Session notes"
               placeholder="Notes (optional)"
               maxLength={MAX_NOTES_LENGTH}
-              className={inputClass}
+              className={INPUT}
             />
             <div className="flex justify-end gap-2">
               <Button variant="ghost" type="button" onClick={() => setShowForm(false)}>
@@ -160,7 +159,7 @@ export function Climbing() {
       )}
 
       <section className="mb-6">
-        <h2 className="mb-2 text-sm font-medium text-slate-500 dark:text-slate-400">Progress</h2>
+        <SectionTitle>Progress</SectionTitle>
         <Card>
           <div className="flex gap-6">
             <div>
@@ -213,10 +212,10 @@ export function Climbing() {
       </section>
 
       <section>
-        <h2 className="mb-2 text-sm font-medium text-slate-500 dark:text-slate-400">
+        <SectionTitle>
           Sessions
           {sessions && sessions.length > 0 ? ` · ${sessions.length}` : ''}
-        </h2>
+        </SectionTitle>
         {sessions === undefined ? (
           <div className="space-y-3">
             <Skeleton className="h-24 w-full" />

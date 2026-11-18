@@ -1,3 +1,4 @@
+import { DATE, INPUT } from '../../components/field'
 import { useState, type FormEvent, type ReactNode } from 'react'
 import type { HabitKind, HabitVerdict } from '../../lib/db'
 import { Button } from '../../components/Button'
@@ -6,8 +7,6 @@ import { ENGINES } from '../life/model/engines'
 import { shiftDayKey } from './habitStats'
 import { AVOID_IDEAS, AVOID_PRESETS, CYCLE_DAYS, IDEAS, PRESETS, type HabitFormValues } from './habitFormDefaults'
 
-const INPUT =
-  'min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm placeholder:text-slate-500 focus:border-(color:--accent-ring) focus:outline-none dark:border-slate-700 dark:bg-slate-800'
 const CHIP = 'min-h-10 rounded-lg border px-3 text-sm'
 const CHIP_ON = 'border-(color:--accent-ring) bg-(color:--accent)/15'
 const CHIP_OFF = 'border-slate-300 dark:border-slate-700'
@@ -376,12 +375,12 @@ export function HabitForm({ initial, submitLabel, onSubmit, presets, verdict, ex
               type="date"
               value={v.cycleStart}
               onChange={(e) => set('cycleStart', e.target.value)}
-              className={INPUT}
+              className={DATE}
             />
           </label>
           <label className="flex-1 text-xs text-slate-500">
             End
-            <input type="date" value={v.cycleEnd} onChange={(e) => set('cycleEnd', e.target.value)} className={INPUT} />
+            <input type="date" value={v.cycleEnd} onChange={(e) => set('cycleEnd', e.target.value)} className={DATE} />
           </label>
         </div>
         <Button

@@ -1,5 +1,6 @@
 import { confirm } from '../../lib/confirm'
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
+import { INPUT } from '../../components/field'
 import { supabase, syncEnabled } from '../../lib/sync'
 import { useAuth } from '../../lib/useAuth'
 import { useOwner } from '../../lib/useOwner'
@@ -351,7 +352,7 @@ export function Sharing() {
                 aria-label="Guest email"
                 autoComplete="off"
                 required
-                className="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-(color:--accent-ring) focus:outline-none dark:border-slate-700 dark:bg-slate-800"
+                className={INPUT}
               />
               <Button type="submit" disabled={busy || !email.trim() || (selected.length === 0 && !shopOn)}>
                 Invite

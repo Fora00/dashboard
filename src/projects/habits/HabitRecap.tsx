@@ -1,3 +1,4 @@
+import { SectionTitle } from '../../components/SectionTitle'
 import { useRef, useState } from 'react'
 import { Stat } from '../../components/Stat'
 import { Button } from '../../components/Button'
@@ -420,9 +421,7 @@ export function HabitRecap({
 
       {reasons.length > 0 && (
         <section aria-label="Reasons">
-          <h3 className="mb-2 text-sm font-medium text-slate-500 dark:text-slate-400">
-            What got in the way, this {kind}
-          </h3>
+          <SectionTitle as="h3">What got in the way, this {kind}</SectionTitle>
           <div className="flex flex-wrap gap-2">
             {reasons.map(([k, n]) => (
               <span key={k} className="rounded-full bg-slate-100 px-3 py-1 text-sm dark:bg-slate-800">

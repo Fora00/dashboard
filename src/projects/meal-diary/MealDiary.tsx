@@ -1,4 +1,6 @@
+import { INPUT } from '../../components/field'
 import { useMemo, useState, type FormEvent } from 'react'
+import {} from '../../components/field'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, type MealEntry, type MealKind } from '../../lib/db'
 import { useToday } from '../../lib/useToday'
@@ -19,9 +21,6 @@ import { NutritionTrends } from './NutritionTrends'
 import { DayTotalsLine, MoodPicker, WeighedToggle } from './MealParts'
 import { moodFace } from './mood'
 import { macros, toForm, toNutrition } from './mealFormat'
-
-const INPUT =
-  'min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-(color:--accent-ring) focus:outline-none focus-visible:ring-2 focus-visible:ring-(color:--accent-ring) dark:border-slate-700 dark:bg-slate-800'
 
 export function MealDiary() {
   const today = useToday()

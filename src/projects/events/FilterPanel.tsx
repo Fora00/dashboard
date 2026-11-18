@@ -1,3 +1,4 @@
+import { Switch } from '../../components/Switch'
 import { useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { Chip } from '../../components/Chip'
@@ -64,14 +65,11 @@ function ForYouSection({ forYou }: { forYou: FilterPanelProps['forYou'] }) {
     <div className="mt-2 border-t border-slate-100 pt-2 dark:border-slate-800">
       <label className="flex min-h-10 items-center justify-between gap-2 text-sm text-slate-700 dark:text-slate-200">
         Ordina per te
-        <input
-          type="checkbox"
-          role="switch"
+        <Switch
           checked={forYou.on}
           disabled={!forYou.available}
           aria-describedby="for-you-hint"
-          onChange={(e) => forYou.onChange(e.target.checked)}
-          className="size-5 disabled:cursor-not-allowed"
+          onChange={forYou.onChange}
         />
       </label>
       <p id="for-you-hint" className="text-xs text-slate-500 dark:text-slate-400">
@@ -381,13 +379,7 @@ export function FilterPanel({ variant, ...p }: FilterPanelProps & { variant: Fil
       {p.canShowHidden && (
         <label className="mt-2 flex min-h-10 items-center justify-between gap-2 text-sm text-slate-700 dark:text-slate-200">
           Show hidden
-          <input
-            type="checkbox"
-            role="switch"
-            checked={p.showHidden}
-            onChange={(e) => p.onShowHidden(e.target.checked)}
-            className="size-5"
-          />
+          <Switch checked={p.showHidden} onChange={p.onShowHidden} />
         </label>
       )}
 

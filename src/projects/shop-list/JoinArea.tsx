@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
+import { INPUT } from '../../components/field'
 import { useNavigate, useParams } from 'react-router-dom'
 import { supabase, syncEnabled, requestLoginCode, verifyLoginCode } from '../../lib/sync'
 import { useAuth } from '../../lib/useAuth'
@@ -137,7 +138,7 @@ export function JoinArea() {
                   placeholder="you@example.com"
                   autoComplete="email"
                   required
-                  className="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-(color:--accent-ring) focus:outline-none focus-visible:ring-2 focus-visible:ring-(color:--accent-ring) dark:border-slate-700 dark:bg-slate-800"
+                  className={INPUT}
                 />
                 <Button type="submit" disabled={busy || !email.trim()}>
                   {busy ? '…' : 'Continue'}
@@ -160,7 +161,7 @@ export function JoinArea() {
                   placeholder="6-digit code"
                   autoComplete="one-time-code"
                   required
-                  className="min-h-10 w-full rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-(color:--accent-ring) focus:outline-none focus-visible:ring-2 focus-visible:ring-(color:--accent-ring) dark:border-slate-700 dark:bg-slate-800"
+                  className={INPUT}
                 />
                 <Button type="submit" disabled={busy || code.trim().length < 6}>
                   {busy ? '…' : 'Join'}
