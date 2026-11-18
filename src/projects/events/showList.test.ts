@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { showKind, stageOn, upcomingShows } from './showList'
 import type { EventItem } from './types'
+import { mergeEvents } from './custom'
 
 const NOW = Date.parse('2026-10-20T10:00:00Z')
 
@@ -45,5 +46,29 @@ describe('shows', () => {
     expect(stageOn(shows, '2026-10-21', NOW, null, null).map((e) => e.id)).toEqual(['play'])
     expect(stageOn(shows, '2026-10-22', NOW, 'concerts', 'Rovereto').map((e) => e.id)).toEqual(['gig'])
     expect(stageOn(shows, '2026-10-22', NOW, 'theatre', null)).toEqual([])
+  })
+
+  it('hand-added shows are merged in and listed (Shows page)', () => {
+    const mine = {
+      id: 'c1',
+      title: 'Serata mia',
+      start: '2026-10-21T20:30:00+02:00',
+      end: null,
+      allDay: false,
+      venue: null,
+      city: 'Trento',
+      url: '',
+      note: '',
+      category: 'theatre',
+      image: null,
+      createdAt: 0,
+      updatedAt: 0,
+    }
+    const shows = upcomingShows(
+      mergeEvents([], [mine], () => false),
+      NOW,
+    )
+    expect(shows.map((e) => e.id)).toEqual(['c1'])
+    expect(showKind(shows[0]!)).toBe('theatre')
   })
 })

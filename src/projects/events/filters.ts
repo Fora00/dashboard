@@ -141,7 +141,6 @@ const KEY = 'dashboard:events-filters'
 export interface StoredFilters {
   /** null = "not touched": favourites are the default. */
   cats: string[] | null
-  chip: DateChip | null
   /** "Come" tags (format.ts); missing in older stored values = none. */
   formats: string[]
   showHidden: boolean
@@ -153,7 +152,6 @@ export interface StoredFilters {
 
 export const EMPTY_FILTERS: StoredFilters = {
   cats: null,
-  chip: null,
   formats: [],
   showHidden: false,
   maxMin: null,
@@ -169,7 +167,6 @@ function sanitizeFilters(v: unknown): StoredFilters {
   const o = v as Record<string, unknown>
   return {
     cats: Array.isArray(o.cats) ? strings(o.cats) : null,
-    chip: DATE_CHIPS.some((c) => c.id === o.chip) ? (o.chip as DateChip) : null,
     formats: cleanFormats(strings(o.formats)),
     showHidden: o.showHidden === true,
     subs: Array.isArray(o.subs) ? strings(o.subs).filter((id) => categoryOfSubcategory(id) !== null) : null,

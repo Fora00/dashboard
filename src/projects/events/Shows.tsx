@@ -6,6 +6,7 @@ import { PageHeader } from '../../components/PageHeader'
 import { SkeletonList } from '../../components/Skeleton'
 import { Snackbar } from '../../components/Snackbar'
 import { db } from '../../lib/db'
+import { mergeEvents } from './custom'
 import { EventCard } from './EventCard'
 import { EventsNav } from './EventsNav'
 import { dayLabel, relativeTime, romeDate } from './model'
@@ -69,13 +70,19 @@ export function Shows() {
   const file = cache?.file
   const actions = useEventActions()
   const marksRaw = useLiveQuery(() => db.eventMarks.toArray())
+  const customRows = useLiveQuery(() => db.customEvents.toArray())
   const interestRows = useLiveQuery(() => db.eventInterest.toArray())
   const marks = useMemo(() => new Map((marksRaw ?? []).map((m) => [m.id, m])), [marksRaw])
   const interest = useMemo(() => new Map((interestRows ?? []).map((r) => [r.id, r.value])), [interestRows])
   // Children's films are listed too (the event list drops them, this page does not).
   const shows = useMemo(
-    () => upcomingShows(file?.events ?? [], now).filter((e) => marks.get(e.id)?.state !== 'hidden'),
-    [file, now, marks],
+    () =>
+      upcomingShows(
+        // Hand-added events are merged in like on the Events page; kids' events are kept (no filter here).
+        mergeEvents(file?.events ?? [], customRows ?? [], () => false),
+        now,
+      ).filter((e) => marks.get(e.id)?.state !== 'hidden'),
+    [file, customRows, now, marks],
   )
   const [kind, setKind] = useState<ShowKind | null>(null)
   const [picked, setPicked] = useState<string | null>(null)

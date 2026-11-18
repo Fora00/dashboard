@@ -93,11 +93,11 @@ export function useEventFilters(
   { now, persist, scoreOf = null }: Options,
 ) {
   const [view, setViewState] = useState<View>('all')
-  // The last selection of this device (guarded localStorage); the search text is not kept.
+  // The last selection of this device (guarded localStorage); the search text and the date chip are not kept (a stale "Oggi" would come back on another day).
   const [initial] = useState(loadFilters)
   // null = "not touched": the favourites (if any) are the default filter.
   const [rawCats, setSelectedCats] = useState<string[] | null>(initial.cats)
-  const [dateChip, setDateChip] = useState<DateChip | null>(initial.chip)
+  const [dateChip, setDateChip] = useState<DateChip | null>(null)
   const [rawFormats, setSelectedFormats] = useState<string[]>(initial.formats)
   const [showHidden, setShowHiddenState] = useState(initial.showHidden)
   const [maxMin, setMaxMin] = useState<number | null>(initial.maxMin)
@@ -122,13 +122,12 @@ export function useEventFilters(
     if (!persist) return
     saveFilters({
       cats: selectedCats,
-      chip: dateChip,
       formats: selectedFormats,
       showHidden,
       maxMin,
       subs: rawSubs,
     })
-  }, [persist, selectedCats, dateChip, selectedFormats, showHidden, maxMin, rawSubs])
+  }, [persist, selectedCats, selectedFormats, showHidden, maxMin, rawSubs])
 
   const nq = useMemo(() => normalizeText(query), [query])
   // Untouched = the favourites, or the default picks when there are none.

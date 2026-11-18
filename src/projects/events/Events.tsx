@@ -58,7 +58,7 @@ export function Events() {
   const marksRaw = useLiveQuery(() => db.eventMarks.toArray())
   const prefs = useLiveQuery(() => db.eventPrefs.get('prefs'), [], null)
   const customRows = useLiveQuery(() => db.customEvents.toArray())
-  // The owner's 👍 / 👎 (collected only; nothing ranks by them yet). Never
+  // The owner's 👍 / 👎 (they feed "Ordina per te", interestScore.ts). Never
   // pruned with the events: the snapshot outlives events.json.
   const interestRows = useLiveQuery(() => db.eventInterest.toArray())
   const interest = useMemo(
@@ -122,7 +122,7 @@ export function Events() {
     [allEvents],
   )
 
-  // "Ordina per te" (interestScore.ts): per device, default off, and only
+  // "Ordina per te" (interestScore.ts): per device, default on (forYou.ts), and only
   // effective with enough signals. The model behind the ORDER is built once
   // per refresh (`now`) and when the switch flips, not on every 👍 / save, so
   // cards never jump under the finger; the gate and the counts stay live.

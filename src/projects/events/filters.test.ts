@@ -187,7 +187,6 @@ describe('remembered selection', () => {
     stubStorage()
     const f: StoredFilters = {
       cats: ['theatre'],
-      chip: 'weekend',
       formats: ['solo-ok'],
       showHidden: true,
       maxMin: 50,
@@ -224,7 +223,6 @@ describe('remembered selection', () => {
     })
     expect(loadFilters()).toEqual({
       cats: ['a'],
-      chip: null,
       formats: ['solo-ok'],
       showHidden: false,
       maxMin: null,
@@ -234,7 +232,15 @@ describe('remembered selection', () => {
 
   it('values from before formats existed load with none', () => {
     stubStorage({ [KEY]: JSON.stringify({ cats: null, areas: [], cities: [], chip: 'today', showHidden: false }) })
-    expect(loadFilters()).toMatchObject({ cats: null, chip: 'today', formats: [] })
+    expect(loadFilters()).toMatchObject({ cats: null, formats: [] })
+  })
+
+  it('a stored date chip is ignored and never written back', () => {
+    stubStorage({ [KEY]: JSON.stringify({ cats: ['a'], chip: 'today', formats: [] }) })
+    const f = loadFilters()
+    expect(f).not.toHaveProperty('chip')
+    saveFilters(f)
+    expect(localStorage.getItem(KEY)).not.toContain('chip')
   })
 
   it('storage that throws (Safari private mode) is survived on read and write', () => {

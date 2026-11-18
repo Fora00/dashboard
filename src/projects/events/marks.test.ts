@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { MAX_SNAPSHOT_BYTES, isValidMarkId, sanitizeFavourites, sanitizeSnapshot } from './marks'
+import { MAX_SNAPSHOT_BYTES, isPastEvent, isValidMarkId, sanitizeFavourites, sanitizeSnapshot } from './marks'
 
 const base = {
   id: 'abcdef0123456789',
@@ -86,5 +86,21 @@ describe('sanitizeFavourites', () => {
     expect(sanitizeFavourites(['theatre', 'theatre', 'Bad', 3, 'social-girl'])).toEqual(['theatre', 'social-girl'])
     expect(sanitizeFavourites('theatre')).toEqual([])
     expect(sanitizeFavourites(Array.from({ length: 80 }, (_, i) => `c${i}`))).toHaveLength(50)
+  })
+})
+
+describe('isPastEvent (Rome day)', () => {
+  // 2026-11-18T23:30Z is already 00:30 on the 19th in Rome (UTC+1), whatever the device zone.
+  const lateEvening = Date.parse('2026-11-18T23:30:00Z')
+  it('an event of the 18th is over once Rome is on the 19th', () => {
+    expect(isPastEvent({ start: '2026-11-18T20:00:00+01:00', end: null }, lateEvening)).toBe(true)
+  })
+  it('an event of the 19th is not over', () => {
+    expect(isPastEvent({ start: '2026-11-19T20:00:00+01:00', end: null }, lateEvening)).toBe(false)
+  })
+  it('uses the end day when there is one', () => {
+    expect(isPastEvent({ start: '2026-11-10T20:00:00+01:00', end: '2026-11-19T22:00:00+01:00' }, lateEvening)).toBe(
+      false,
+    )
   })
 })
