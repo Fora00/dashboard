@@ -12,7 +12,7 @@ import { PageHeader } from '../../components/PageHeader'
 import { EmptyState } from '../../components/EmptyState'
 import { addSession, MAX_LOCATION_LENGTH, MAX_NOTES_LENGTH, sync } from '../../lib/climbSync'
 import { DISCIPLINES, DISCIPLINE_LABEL, gradeFraction, gradeIndex } from './grades'
-import { formatDate as formatDateLocal } from '../../lib/dates'
+import { dayKey, formatDate } from '../../lib/dates'
 import { SessionCard } from './SessionCard'
 import { SyncCard } from '../../components/SyncCard'
 import { Skeleton } from '../../components/Skeleton'
@@ -27,12 +27,11 @@ const BAR_COLOR: Record<Discipline, string> = {
 }
 
 function today(): string {
-  const d = new Date()
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+  return dayKey(new Date())
 }
 
 function formatMonth(month: string): string {
-  return formatDateLocal(month, {
+  return formatDate(month, {
     month: 'short',
     year: 'numeric',
   })

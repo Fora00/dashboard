@@ -7,7 +7,7 @@ import { FOCUS_RING_INSET } from '../../../components/focus'
 import { db } from '../../../lib/db'
 import { courseMetaById, loadCourse, loadedCourse } from '../courses/registry'
 import { useReviewQueue } from '../review/content'
-import { useToday } from '../../life/useToday'
+import { useToday } from '../../../lib/useToday'
 
 const TAB_LABEL = {
   lesson: 'lezione',

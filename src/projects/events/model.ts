@@ -1,4 +1,5 @@
 import type { EventItem, EventsFile } from './types'
+import { addDaysUtc, daysBetweenUtc, romeDayKey, weekStartUtc } from '../../lib/dates'
 
 // Pure helpers for the events page (project 12). No React, no Dexie.
 // Times: events.json carries Europe/Rome offsets; the first 10 chars of
@@ -169,27 +170,12 @@ export async function fetchEventsFile(base: string = import.meta.env.BASE_URL): 
 
 // --- Dates -----------------------------------------------------------------------
 
-const dayFmt = new Intl.DateTimeFormat('en-CA', {
-  timeZone: TZ,
-  year: 'numeric',
-  month: '2-digit',
-  day: '2-digit',
-})
-
-/** Local Rome date `YYYY-MM-DD` of an instant. */
-export function romeDate(ms: number): string {
-  return dayFmt.format(new Date(ms))
-}
+// Rome / UTC-noon day helpers live in src/lib/dates.ts (one copy).
+export { romeDayKey as romeDate, weekStartUtc as weekStart }
 
 /** Local date `YYYY-MM-DD` of an event ISO string (its own offset is Rome's). */
 export function localDay(iso: string): string {
   return iso.slice(0, 10)
-}
-
-function addDays(day: string, n: number): string {
-  const d = new Date(`${day}T12:00:00Z`)
-  d.setUTCDate(d.getUTCDate() + n)
-  return d.toISOString().slice(0, 10)
 }
 
 /** The last local day the event covers (inclusive). */
@@ -203,23 +189,19 @@ function lastDay(e: EventItem): string {
  * source with no end time would otherwise vanish the minute it starts).
  */
 export function isOver(e: EventItem, now: number): boolean {
-  if (e.allDay || !e.end) return romeDate(now) > lastDay(e)
+  if (e.allDay || !e.end) return romeDayKey(now) > lastDay(e)
   return now >= Date.parse(e.end)
 }
 
 /** Recomputed with the device clock; the file's `ongoing` is ignored. */
 export function isOngoingNow(e: EventItem, now: number): boolean {
   if (e.allDay) {
-    const today = romeDate(now)
+    const today = romeDayKey(now)
     return localDay(e.start) <= today && today <= lastDay(e)
   }
   const start = Date.parse(e.start)
   const end = e.end ? Date.parse(e.end) : start
   return start <= now && now < end
-}
-
-function daysBetween(a: string, b: string): number {
-  return Math.round((Date.parse(`${b}T12:00:00Z`) - Date.parse(`${a}T12:00:00Z`)) / 86400000)
 }
 
 /**
@@ -230,7 +212,7 @@ function daysBetween(a: string, b: string): number {
  */
 export function isSparseSeries(e: EventItem): boolean {
   if (!(e.occurrences > 1)) return false
-  const span = daysBetween(localDay(e.start), lastDay(e)) + 1
+  const span = daysBetweenUtc(localDay(e.start), lastDay(e)) + 1
   return e.occurrences / span < 0.5
 }
 
@@ -243,16 +225,16 @@ export function isSparseSeries(e: EventItem): boolean {
 export function nextSeriesDay(e: EventItem, now: number): string {
   const first = localDay(e.start)
   const last = lastDay(e)
-  const today = romeDate(now)
+  const today = romeDayKey(now)
   if (first >= today) return first
-  const step = Math.max(1, Math.round(daysBetween(first, last) / Math.max(1, e.occurrences - 1)))
-  const next = addDays(first, Math.ceil(daysBetween(first, today) / step) * step)
+  const step = Math.max(1, Math.round(daysBetweenUtc(first, last) / Math.max(1, e.occurrences - 1)))
+  const next = addDaysUtc(first, Math.ceil(daysBetweenUtc(first, today) / step) * step)
   return next > last ? last : next
 }
 
 /** Started before today and not over: goes in the "Open now" group. */
 export function isLongRunning(e: EventItem, now: number): boolean {
-  return localDay(e.start) < romeDate(now) && isOngoingNow(e, now) && !isSparseSeries(e)
+  return localDay(e.start) < romeDayKey(now) && isOngoingNow(e, now) && !isSparseSeries(e)
 }
 
 function fmt(iso: string, opts: Intl.DateTimeFormatOptions): string {
@@ -287,9 +269,9 @@ export function formatRange(e: EventItem): string {
 
 /** "Oggi", "Domani", else "gio 2 ott" for a local day key. */
 export function dayLabel(day: string, now: number): string {
-  const today = romeDate(now)
+  const today = romeDayKey(now)
   if (day === today) return 'Oggi'
-  if (day === addDays(today, 1)) return 'Domani'
+  if (day === addDaysUtc(today, 1)) return 'Domani'
   return capFirst(fmt(`${day}T12:00:00Z`, DATE_SHORT))
 }
 
@@ -301,7 +283,7 @@ export interface DayGroup {
 
 /** The day an event is listed under: its start, or a series' next date. */
 export function listingDay(e: EventItem, now: number): string {
-  return isSparseSeries(e) && localDay(e.start) < romeDate(now) ? nextSeriesDay(e, now) : localDay(e.start)
+  return isSparseSeries(e) && localDay(e.start) < romeDayKey(now) ? nextSeriesDay(e, now) : localDay(e.start)
 }
 
 /** "gio 2 ott" for a local day key (no Oggi/Domani), for the series hint. */
@@ -429,26 +411,20 @@ export interface WeekGroup {
   count: number
 }
 
-/** Monday (local day key) of the week containing `day`. */
-export function weekStart(day: string): string {
-  const dow = (new Date(`${day}T12:00:00Z`).getUTCDay() + 6) % 7
-  return addDays(day, -dow)
-}
-
 /** ISO 8601 week number of the week starting on `monday`. */
 export function isoWeekNumber(monday: string): number {
-  const thursday = new Date(`${addDays(monday, 3)}T12:00:00Z`)
+  const thursday = new Date(`${addDaysUtc(monday, 3)}T12:00:00Z`)
   const jan1 = Date.UTC(thursday.getUTCFullYear(), 0, 1, 12)
   return Math.floor((thursday.getTime() - jan1) / 86_400_000 / 7) + 1
 }
 
 /** "This week", "Next week", else "Week 43 · 19 ott – 25 ott". */
 export function weekLabel(start: string, now: number): string {
-  const thisWeek = weekStart(romeDate(now))
+  const thisWeek = weekStartUtc(romeDayKey(now))
   if (start === thisWeek) return 'This week'
-  if (start === addDays(thisWeek, 7)) return 'Next week'
+  if (start === addDaysUtc(thisWeek, 7)) return 'Next week'
   const noWeekday = (day: string) => shortDay(day).split(' ').slice(1).join(' ')
-  return `Week ${isoWeekNumber(start)} · ${noWeekday(start)} – ${noWeekday(addDays(start, 6))}`
+  return `Week ${isoWeekNumber(start)} · ${noWeekday(start)} – ${noWeekday(addDaysUtc(start, 6))}`
 }
 
 /** Buckets consecutive day groups into weeks (Mon–Sun); the 'open-now' and 'past' groups stay their own buckets. */
@@ -456,7 +432,7 @@ export function groupByWeek(days: DayGroup[], now: number): WeekGroup[] {
   const out: WeekGroup[] = []
   for (const g of days) {
     const flat = isFlatGroup(g.key)
-    const key = flat ? g.key : weekStart(g.key)
+    const key = flat ? g.key : weekStartUtc(g.key)
     const last = out[out.length - 1]
     if (last && last.key === key && !flat) {
       last.days.push(g)
@@ -491,7 +467,7 @@ function clip(text: string, max: number): string {
  * the start date if it is still in the future, else today (ongoing events).
  */
 export function buildThingsAddUrl(e: EventItem, now: number = Date.now()): string {
-  const today = romeDate(now)
+  const today = romeDayKey(now)
   const start = localDay(e.start)
   const when = start > today ? start : today
   const place = [e.venue, e.city].filter(Boolean).join(' · ')

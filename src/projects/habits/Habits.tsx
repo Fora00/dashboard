@@ -17,7 +17,7 @@ import { useHabitDays } from './useHabitDays'
 import { Kbd } from '../../components/Kbd'
 import { useListHotkeys } from '../../lib/useListHotkeys'
 import { runSafe } from '../../lib/runSafe'
-import { useToday } from '../life/useToday'
+import { useToday } from '../../lib/useToday'
 
 /** The Habits page: header, sync, New habit and How it works around the
  *  shared HabitsPanel (the same panel Life shows). */

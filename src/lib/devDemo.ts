@@ -5,7 +5,7 @@
 // only when sync is off (the default in dev, see sync.ts). Re-fill any time
 // from the console: `await resetDemoData()`.
 import { seedDemoHabits } from '../projects/habits/demoHabits'
-import { dayKey } from './dates'
+import { dayKey, weekKey as mondayOf } from './dates'
 import { db, DEFAULT_AREA_ID, type LifeEntry, type LifePlan, type MealKind } from './db'
 import { syncEnabled } from './sync'
 
@@ -13,12 +13,6 @@ const FLAG = 'dashboard.dev-demo-seeded'
 const DAY = 86_400_000
 
 const ago = (days: number) => dayKey(new Date(Date.now() - days * DAY))
-
-function mondayOf(d: Date): string {
-  const m = new Date(d)
-  m.setDate(m.getDate() - ((m.getDay() + 6) % 7))
-  return dayKey(m)
-}
 
 export async function resetDemoData(): Promise<void> {
   await db.transaction('rw', db.tables, async () => {

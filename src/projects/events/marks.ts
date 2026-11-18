@@ -1,5 +1,6 @@
 import type { EventItem } from './types'
-import { romeDate, safeHttpUrl } from './model'
+import { romeDayKey } from '../../lib/dates'
+import { safeHttpUrl } from './model'
 
 // Pure helpers for the owner's saved/hidden marks and favourite categories,
 // which sync owner-only (src/lib/eventMarksSync.ts). No React, no Dexie.
@@ -139,5 +140,5 @@ export function sanitizeFavourites(raw: unknown): string[] {
 /** Is the event over, i.e. its last day (end, else start) before today? */
 export function isPastEvent(e: { start: string; end: string | null }, now: number): boolean {
   const last = (e.end ?? e.start).slice(0, 10)
-  return /^\d{4}-\d{2}-\d{2}$/.test(last) && last < romeDate(now)
+  return /^\d{4}-\d{2}-\d{2}$/.test(last) && last < romeDayKey(now)
 }

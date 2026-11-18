@@ -4,6 +4,7 @@ import { db, type Habit, type HabitDayState } from '../../lib/db'
 import { Button } from '../../components/Button'
 import { Sheet } from '../../components/Sheet'
 import { daysInRange, MAX_REST_RANGE, setDayState, setRestRange, updateHabit } from '../../lib/habitSync'
+import { shiftMonth } from '../../lib/dates'
 import { runSafe } from '../../lib/runSafe'
 import { habitStats, monthGrid, shiftDayKey } from './habitStats'
 import { HabitForm } from './HabitForm'
@@ -36,12 +37,6 @@ interface Props {
   today: string
   onClose: () => void
   onArchive: (habit: Habit) => void
-}
-
-function shiftMonth(month: string, n: number): string {
-  const [y, m] = month.split('-').map(Number) as [number, number]
-  const d = new Date(y, m - 1 + n, 1)
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
 }
 
 export function HabitDetail({ habit, states, notes, openCount, wins, today, onClose, onArchive }: Props) {

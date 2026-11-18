@@ -2,6 +2,7 @@ import { db, type Habit, type HabitCheck, type HabitDayState, type HabitKind, ty
 import { createCloudSync, type TableSync } from './cloudSync'
 import { useSyncStatus } from './useSyncStatus'
 import { uuidV5 } from './uuidV5'
+import { dayKey } from './dates'
 import { isEngineKey } from '../projects/life/model/engines'
 // Caps and clipEmoji live in habitCaps.ts (pure, shared with the import link
 // script); re-exported so existing imports are untouched.
@@ -350,8 +351,7 @@ export function daysInRange(from: string, to: string): string[] {
   const out: string[] = []
   const [y, m, d] = a.split('-').map(Number) as [number, number, number]
   for (let i = 0; i <= MAX_REST_RANGE; i++) {
-    const t = new Date(y, m - 1, d + i)
-    const day = `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`
+    const day = dayKey(new Date(y, m - 1, d + i))
     if (day > b) break
     out.push(day)
   }

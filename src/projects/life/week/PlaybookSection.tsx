@@ -3,7 +3,7 @@ import type { LifePlaybook } from '../../../lib/db'
 import { logPlaybook, removeTrackerEntry } from '../../../lib/lifeSync'
 import { runSafe } from '../../../lib/runSafe'
 import { LIFE_CAPS, type PlaybookSummary } from '../model'
-import { useToday } from '../useToday'
+import { useToday } from '../../../lib/useToday'
 import { CollapsibleSection } from './CollapsibleSection'
 
 // "Playbook of the week": the one practice chosen for the week and a one-tap

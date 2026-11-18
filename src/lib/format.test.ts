@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatBytes, formatDate } from './format'
+import { formatBytes, formatDateTime } from './format'
 
 describe('formatBytes', () => {
   it('uses bytes under 1 KB', () => {
@@ -20,8 +20,8 @@ describe('formatBytes', () => {
   })
 })
 
-describe('formatDate', () => {
+describe('formatDateTime', () => {
   it('renders something non-empty containing the day', () => {
-    expect(formatDate(new Date(2026, 9, 5, 14, 30).getTime())).toContain('5')
+    expect(formatDateTime(new Date(2026, 9, 5, 14, 30).getTime())).toContain('5')
   })
 })

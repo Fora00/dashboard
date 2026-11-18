@@ -1,5 +1,6 @@
 import type { EventItem } from './types'
 import { cleanFormats } from './format'
+import { addDaysUtc } from '../../lib/dates'
 import { readJSON, writeJSON } from '../../lib/safeStorage'
 import { DISTANCE_STEPS } from './distance'
 import { categoryOf, listingDay, localDay, romeDate, isSparseSeries } from './model'
@@ -49,25 +50,19 @@ export const DATE_CHIPS: { id: DateChip; label: string }[] = [
   { id: 'ending', label: 'In scadenza' },
 ]
 
-function addDays(day: string, n: number): string {
-  const d = new Date(`${day}T12:00:00Z`)
-  d.setUTCDate(d.getUTCDate() + n)
-  return d.toISOString().slice(0, 10)
-}
-
 /** Inclusive local-day range [from, to] of a chip. Weekend = Sat+Sun, or what is left of it. */
 export function chipRange(chip: DateChip, now: number): [string, string] {
   const today = romeDate(now)
   if (chip === 'today') return [today, today]
   if (chip === 'tomorrow') {
-    const t = addDays(today, 1)
+    const t = addDaysUtc(today, 1)
     return [t, t]
   }
-  if (chip === 'ending') return [today, addDays(today, ENDING_DAYS)]
+  if (chip === 'ending') return [today, addDaysUtc(today, ENDING_DAYS)]
   const dow = new Date(`${today}T12:00:00Z`).getUTCDay() // 0 = Sun
   if (dow === 0) return [today, today]
-  if (dow === 6) return [today, addDays(today, 1)]
-  return [addDays(today, 6 - dow), addDays(today, 7 - dow)]
+  if (dow === 6) return [today, addDaysUtc(today, 1)]
+  return [addDaysUtc(today, 6 - dow), addDaysUtc(today, 7 - dow)]
 }
 
 /**

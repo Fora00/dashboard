@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { readJSON, writeJSON } from '../../lib/safeStorage'
 import { addDays, dayKey, daysBetween, isDateKey, parseDayKey } from './model'
-import { todayInfo, useToday } from './useToday'
+import { todayInfo, useToday } from '../../lib/useToday'
 
 // Late answers for last week's Sunday check and check-ins (ROADMAP LF5).
 //

@@ -13,7 +13,7 @@ import { Button } from '../../components/Button'
 import { Chip } from '../../components/Chip'
 import { FOCUS_RING, FOCUS_RING_INSET } from '../../components/focus'
 import { Snackbar } from '../../components/Snackbar'
-import { formatDate as formatDateLocal } from '../../lib/dates'
+import { formatDate } from '../../lib/dates'
 import { SkeletonList } from '../../components/Skeleton'
 import { zoneLabel } from './zones'
 import { FilterSheet } from './FilterSheet'
@@ -395,7 +395,7 @@ export function Events() {
     <>
       {file && fetchState === 'offline' && (
         <p className="mb-3 text-xs text-slate-500 dark:text-slate-400">
-          Offline — showing copy from {formatDateLocal(cache?.fetchedAt ?? 0, undefined, 'it-IT')}
+          Offline — showing copy from {formatDate(cache?.fetchedAt ?? 0, undefined, 'it-IT')}
         </p>
       )}
       {failed.length > 0 && (

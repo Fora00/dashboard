@@ -2,7 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { db, type LifeChoreEntry } from '../../../lib/db'
 import { toggleChore, toggleChoreCancelled } from '../../../lib/lifeSync'
 import { runSafe } from '../../../lib/runSafe'
-import { useToday } from '../useToday'
+import { useToday } from '../../../lib/useToday'
 import { cancelledLast, isCancelled, sortChores, summarizeChores, visibleChores } from '../model'
 
 // "Casa": the household chores of the Things project "Casa catia", imported by

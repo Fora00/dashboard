@@ -1,4 +1,5 @@
 import type { LifeEntry, LifePlan } from '../../../lib/db'
+import { shiftMonth } from '../../../lib/dates.ts'
 import { summarizeWeek } from './summary.ts'
 
 // --- Month check (read-only) ---------------------------------------------------
@@ -19,10 +20,7 @@ export function monthRange(month: string): { first: string; last: string } {
 }
 
 /** 'YYYY-MM' shifted by n months. */
-export function addMonths(month: string, n: number): string {
-  const d = new Date(Number(month.slice(0, 4)), Number(month.slice(5, 7)) - 1 + n, 1)
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
-}
+export const addMonths = shiftMonth
 
 /** How a share of kept days reads: words, never red/green verdicts. */
 export type Reading = 'kept' | 'half' | 'few'

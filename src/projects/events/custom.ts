@@ -1,5 +1,6 @@
 import type { CustomEvent } from '../../lib/db'
 import type { EventItem } from './types'
+import { addDays, dayKey } from '../../lib/dates'
 import { CATEGORIES, TZ, safeHttpUrl } from './model'
 
 // Pure helpers for the owner's hand-added events ("Manual events" in
@@ -348,8 +349,6 @@ export const PRUNE_AFTER_DAYS = 14
  */
 export function isExpiredCustomEvent(r: Pick<CustomEvent, 'start' | 'end'>, now: number): boolean {
   const last = (r.end ?? r.start).slice(0, 10)
-  const cut = new Date(now)
-  cut.setDate(cut.getDate() - PRUNE_AFTER_DAYS)
-  const cutoff = `${cut.getFullYear()}-${String(cut.getMonth() + 1).padStart(2, '0')}-${String(cut.getDate()).padStart(2, '0')}`
+  const cutoff = addDays(dayKey(new Date(now)), -PRUNE_AFTER_DAYS)
   return isValidDate(last) && last < cutoff
 }

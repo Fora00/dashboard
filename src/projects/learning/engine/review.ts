@@ -7,7 +7,7 @@
 // e.g. a card marked known again) the due date is computed: the day after the source, and for items that were
 // already there when Ripasso arrived, spread over the following week so day one is not a wall.
 import type { LearningCard, LearningQuizAnswer, LearningReview } from '../../../lib/db'
-import { dayKey } from '../../../lib/dates'
+import { addDays, dayKey } from '../../../lib/dates'
 
 /** Days until the next review, by step. MAX_STEP MUST match the check on learning_reviews.step. */
 export const INTERVALS = [1, 3, 7, 21, 60, 120] as const
@@ -23,10 +23,7 @@ export const reviewId = (kind: ReviewKind, courseId: string, moduleId: string, i
   `${kind}:${courseId}:${moduleId}:${itemId}`
 
 /** 'YYYY-MM-DD' + n days (local calendar, DST-safe). */
-export function addDays(day: string, n: number): string {
-  const [y, m, d] = day.split('-').map(Number)
-  return dayKey(new Date(y!, m! - 1, d! + n))
-}
+export { addDays }
 
 function hash(s: string): number {
   let h = 2166136261

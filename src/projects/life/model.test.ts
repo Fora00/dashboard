@@ -1,20 +1,16 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import type { LifeEntry, LifePlan, LifeTask } from '../../lib/db'
 import {
   LIFE_CAPS,
-  addDays,
   buildThingsUrl,
   canReturnFromThings,
-  daysBetween,
   decodeImportParam,
   derivedCheckinId,
   diffPlans,
   encodeImportLink,
   entryId,
-  isDateKey,
   isEnergy,
   isIosLike,
-  isMondayKey,
   lifeReturnUrl,
   nextCheckin,
   parseWeekJson,
@@ -22,8 +18,6 @@ import {
   thingsItems,
   validateAnswer,
   validatePlan,
-  weekDays,
-  weekKey,
   withCheckinIds,
 } from './model'
 
@@ -66,72 +60,6 @@ function errors(value: unknown): string[] {
   if (r.ok) throw new Error('expected invalid')
   return r.errors
 }
-
-describe('date keys', () => {
-  it('isDateKey accepts real dates only', () => {
-    expect(isDateKey('2026-09-28')).toBe(true)
-    expect(isDateKey('2028-02-29')).toBe(true)
-    expect(isDateKey('2026-02-29')).toBe(false)
-    expect(isDateKey('2026-02-30')).toBe(false)
-    expect(isDateKey('2026-13-01')).toBe(false)
-    expect(isDateKey('2026-9-28')).toBe(false)
-    expect(isDateKey(20260928)).toBe(false)
-    expect(isDateKey(null)).toBe(false)
-  })
-
-  it('isMondayKey', () => {
-    expect(isMondayKey('2026-09-28')).toBe(true)
-    expect(isMondayKey('2026-09-27')).toBe(false)
-    expect(isMondayKey('nonsense')).toBe(false)
-  })
-
-  it('addDays / weekDays cross month and year ends', () => {
-    expect(addDays('2026-12-30', 3)).toBe('2027-01-02')
-    expect(addDays('2026-03-01', -1)).toBe('2026-02-28')
-    expect(weekDays('2026-12-28')).toEqual([
-      '2026-12-28',
-      '2026-12-29',
-      '2026-12-30',
-      '2026-12-31',
-      '2027-01-01',
-      '2027-01-02',
-      '2027-01-03',
-    ])
-  })
-
-  it('weekKey is the Monday; Sunday belongs to the week that started six days earlier', () => {
-    expect(weekKey(new Date(2026, 8, 28))).toBe('2026-09-28') // Monday
-    expect(weekKey(new Date(2026, 9, 4, 23, 59))).toBe('2026-09-28') // Sunday night
-    expect(weekKey(new Date(2026, 9, 5, 0, 1))).toBe('2026-10-05')
-    expect(weekKey(new Date(2027, 0, 1))).toBe('2026-12-28')
-  })
-
-  it('daysBetween is whole days, signed', () => {
-    expect(daysBetween('2026-09-28', '2026-10-04')).toBe(6)
-    expect(daysBetween('2026-10-04', '2026-09-28')).toBe(-6)
-    expect(daysBetween('2026-09-28', '2026-09-28')).toBe(0)
-  })
-
-  describe('across a DST change (the local calendar must not drift)', () => {
-    afterEach(() => vi.unstubAllEnvs())
-
-    it.each([
-      ['Europe/Rome', -120],
-      ['America/Los_Angeles', 420],
-      ['Pacific/Auckland', -720],
-    ])('%s', (tz, julyOffset) => {
-      vi.stubEnv('TZ', tz) // Node re-reads TZ on assignment
-      expect(new Date(2026, 6, 1, 12).getTimezoneOffset()).toBe(julyOffset) // the zone really changed
-      // Rome: 25 Oct 2026 (25 h day); LA: 1 Nov 2026; Auckland: 27 Sep 2026.
-      for (const start of ['2026-03-28', '2026-09-26', '2026-10-24', '2026-10-31']) {
-        expect(daysBetween(start, addDays(start, 3))).toBe(3)
-        expect(weekDays(weekKey(new Date(`${start}T12:00:00`)))).toHaveLength(7)
-      }
-      expect(addDays('2026-10-24', 2)).toBe('2026-10-26')
-      expect(weekKey(new Date(2026, 9, 25, 12))).toBe('2026-10-19')
-    })
-  })
-})
 
 describe('parseWeekJson', () => {
   it('reports invalid JSON', () => {

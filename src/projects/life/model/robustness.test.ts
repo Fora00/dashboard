@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { LifeEntry, LifePlan, LifeTracker, LifeWeek } from '../../../lib/db'
 import { buildChartPoints } from '../week/chartPoints'
-import { msUntilNextMidnight, todayInfo } from '../useToday'
+import { msUntilNextMidnight, todayInfo } from '../../../lib/useToday'
 import {
   buildExportMarkdown,
   diffPlans,

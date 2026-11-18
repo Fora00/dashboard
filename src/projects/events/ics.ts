@@ -1,3 +1,4 @@
+import { addDaysUtc } from '../../lib/dates'
 import { shareFile } from '../../lib/share'
 import { downloadBlob } from '../../lib/downloadBlob'
 import type { EventItem } from './types'
@@ -72,12 +73,6 @@ function compactDay(day: string): string {
   return day.replace(/-/g, '')
 }
 
-function addDay(day: string, n: number): string {
-  const d = new Date(`${day}T12:00:00Z`)
-  d.setUTCDate(d.getUTCDate() + n)
-  return d.toISOString().slice(0, 10)
-}
-
 const VTIMEZONE = [
   'BEGIN:VTIMEZONE',
   'TZID:Europe/Rome',
@@ -122,7 +117,7 @@ export function buildIcs(e: EventItem, now: number = Date.now()): string {
     let last = localDay(e.end ?? e.start)
     if (last < first) last = first
     body.push(`DTSTART;VALUE=DATE:${compactDay(first)}`)
-    body.push(`DTEND;VALUE=DATE:${compactDay(addDay(last, 1))}`) // exclusive
+    body.push(`DTEND;VALUE=DATE:${compactDay(addDaysUtc(last, 1))}`) // exclusive
   } else {
     const end = Number.isFinite(endMs) && endMs > startMs ? endMs : startMs + TWO_HOURS
     body.push(`DTSTART;TZID=${TZ}:${romeLocal(startMs)}`)

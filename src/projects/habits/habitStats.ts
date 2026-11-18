@@ -5,6 +5,7 @@
 // (daily habits) or hit weeks (weekly ones); skips are neutral.
 
 import type { Habit, HabitDayState } from '../../lib/db'
+import { addDays, daysBetween, parseDayKey, weekStart } from '../../lib/dates'
 import { dayKey, habitStartDay } from './habitStore'
 
 export interface WeekStat {
@@ -50,25 +51,8 @@ export interface HabitStats {
   cycle: { day: number; length: number } | null
 }
 
-function parse(day: string): Date {
-  const [y, m, d] = day.split('-').map(Number) as [number, number, number]
-  return new Date(y, m - 1, d)
-}
-function shift(day: string, n: number): string {
-  const d = parse(day)
-  d.setDate(d.getDate() + n)
-  return dayKey(d)
-}
-export const shiftDayKey = shift
-
-/** The Monday of the week containing `day`. */
-export function weekStart(day: string): string {
-  const dow = (parse(day).getDay() + 6) % 7
-  return shift(day, -dow)
-}
-export function daysBetween(a: string, b: string): number {
-  return Math.round((parse(b).getTime() - parse(a).getTime()) / 86_400_000)
-}
+// Re-exported under the names the Habits files already use.
+export { addDays as shiftDayKey, daysBetween, weekStart }
 
 export function habitTarget(habit: Pick<Habit, 'target'>): number {
   return habit.target ?? 7
@@ -84,7 +68,7 @@ export function weekStat(
   let d = 0
   let s = 0
   for (let i = 0; i < 7; i++) {
-    const day = shift(start, i)
+    const day = addDays(start, i)
     if (day > today) break
     if (done.has(day)) d++
     else if (skip.has(day)) s++
@@ -116,12 +100,12 @@ export function habitStats(
 
   const lastWeeks: WeekStat[] = []
   for (let i = 8; i >= 1; i--) {
-    const start = shift(thisWeek, -7 * i)
-    if (shift(start, 6) < started) continue // the habit didn't exist yet
+    const start = addDays(thisWeek, -7 * i)
+    if (addDays(start, 6) < started) continue // the habit didn't exist yet
     lastWeeks.push(weekStat(start, doneDays, skipDays, target, today))
   }
 
-  const windowStart = shift(today, -29) < started ? started : shift(today, -29)
+  const windowStart = addDays(today, -29) < started ? started : addDays(today, -29)
   let done30 = 0
   let floor30 = 0
   let skipped30 = 0
@@ -130,7 +114,7 @@ export function habitStats(
   let returns = 0
   const windowDays = daysBetween(windowStart, today) + 1
   for (let i = 0; i < windowDays; i++) {
-    const day = shift(windowStart, i)
+    const day = addDays(windowStart, i)
     if (doneDays.has(day)) {
       done30++
       if (states.get(day) === 'floor') floor30++
@@ -155,13 +139,13 @@ export function habitStats(
   let cur = 0
   let best = 0
   if (daily) {
-    for (let day = started; day <= today; day = shift(day, 1)) {
+    for (let day = started; day <= today; day = addDays(day, 1)) {
       if (doneDays.has(day)) best = Math.max(best, ++cur)
       else if (skipDays.has(day) || day === today) continue
       else cur = 0
     }
   } else {
-    for (let start = weekStart(started); start <= thisWeek; start = shift(start, 7)) {
+    for (let start = weekStart(started); start <= thisWeek; start = addDays(start, 7)) {
       const w = weekStat(start, doneDays, skipDays, target, today)
       if (w.hit && (w.done > 0 || w.expected === 0)) best = Math.max(best, ++cur)
       else if (start !== thisWeek) cur = 0
@@ -170,17 +154,17 @@ export function habitStats(
 
   const restWeek = week_.skipped
   let restRun = 0
-  for (let day = skipDays.has(today) ? today : shift(today, -1); skipDays.has(day); day = shift(day, -1)) restRun++
+  for (let day = skipDays.has(today) ? today : addDays(today, -1); skipDays.has(day); day = addDays(day, -1)) restRun++
   let gap = 0
   if (daily) {
-    for (let day = shift(today, -1); day >= started; day = shift(day, -1)) {
+    for (let day = addDays(today, -1); day >= started; day = addDays(day, -1)) {
       if (doneDays.has(day) || skipDays.has(day)) break
       gap++
     }
   }
 
   const byWeekday = [0, 0, 0, 0, 0, 0, 0]
-  for (const day of doneDays) byWeekday[(parse(day).getDay() + 6) % 7]!++
+  for (const day of doneDays) byWeekday[(parseDayKey(day).getDay() + 6) % 7]!++
 
   const cycle =
     habit.cycleStart && habit.cycleEnd
@@ -221,9 +205,9 @@ export function habitStats(
 /** Month grid for the calendar: rows of 7 (Mon..Sun), null = outside the month. */
 export function monthGrid(month: string, today: string): ({ day: string; future: boolean } | null)[][] {
   const first = `${month}-01`
-  const lead = (parse(first).getDay() + 6) % 7
+  const lead = (parseDayKey(first).getDay() + 6) % 7
   const cells: ({ day: string; future: boolean } | null)[] = Array(lead).fill(null)
-  for (let d = parse(first); dayKey(d).startsWith(month); d.setDate(d.getDate() + 1)) {
+  for (let d = parseDayKey(first); dayKey(d).startsWith(month); d.setDate(d.getDate() + 1)) {
     const day = dayKey(d)
     cells.push({ day, future: day > today })
   }

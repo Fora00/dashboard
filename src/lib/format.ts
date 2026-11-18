@@ -11,7 +11,7 @@ export function formatBytes(bytes: number): string {
   return `${value.toFixed(value >= 100 ? 0 : 1)} ${unit}`
 }
 
-export function formatDate(timestamp: number): string {
+export function formatDateTime(timestamp: number): string {
   return new Date(timestamp).toLocaleString(undefined, {
     day: 'numeric',
     month: 'short',

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { readJSON, writeJSON } from '../../../lib/safeStorage'
 import { parseDayKey } from '../model'
-import { useToday } from '../useToday'
+import { useToday } from '../../../lib/useToday'
 
 // --- Collapsible sections (per-device UI preference, guarded localStorage) --
 // Every section except Rules starts open; Rules keeps its

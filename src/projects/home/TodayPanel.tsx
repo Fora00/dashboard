@@ -8,7 +8,7 @@ import { eventWhen, habitProgress, lifeToday, nextEvents } from '../../lib/homeT
 import { useAuth } from '../../lib/useAuth'
 import { useOwner } from '../../lib/useOwner'
 import { parseDayKey, weekKey } from '../life/model'
-import { useToday } from '../life/useToday'
+import { useToday } from '../../lib/useToday'
 import { useHabitWeekRows } from '../life/week/useHabitWeekRows'
 import { ProjectIcon } from '../../components/ProjectIcon'
 import { FOCUS_RING_INSET } from '../../components/focus'

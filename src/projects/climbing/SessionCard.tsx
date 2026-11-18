@@ -5,14 +5,14 @@ import { Button } from '../../components/Button'
 import { Card } from '../../components/Card'
 import { FOCUS_RING_INSET } from '../../components/focus'
 import { addClimb, deleteClimb, deleteSession, restoreSession, sync, toggleClimbSent } from '../../lib/climbSync'
-import { formatDate as formatDateLocal } from '../../lib/dates'
+import { formatDate } from '../../lib/dates'
 import { DISCIPLINE_LABEL, GRADES } from './grades'
 
 const inputClass =
   'min-h-10 rounded-lg border border-slate-300 bg-white px-3.5 text-sm placeholder:text-slate-500 focus:border-(color:--accent-ring) focus:outline-none focus-visible:ring-2 focus-visible:ring-(color:--accent-ring) dark:border-slate-700 dark:bg-slate-800'
 
-function formatDate(date: string): string {
-  return formatDateLocal(date, {
+function sessionDate(date: string): string {
+  return formatDate(date, {
     weekday: 'short',
     day: 'numeric',
     month: 'short',
@@ -86,7 +86,7 @@ export function SessionCard({
         <div>
           <p className="font-medium text-slate-800 dark:text-slate-200">{session.location}</p>
           <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
-            {formatDate(session.date)}
+            {sessionDate(session.date)}
             {climbs && climbs.length > 0 && (
               <span className="text-slate-500">
                 {' '}

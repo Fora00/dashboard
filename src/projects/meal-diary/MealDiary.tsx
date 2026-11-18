@@ -1,7 +1,7 @@
 import { useMemo, useState, type FormEvent } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, type MealEntry, type MealKind } from '../../lib/db'
-import { useToday } from '../life/useToday'
+import { useToday } from '../../lib/useToday'
 import { addMeal, deleteMeal, MAX_TEXT_LENGTH, restoreMeal, sync, updateMeal } from '../../lib/mealDiarySync'
 import { useUndoSnackbar } from '../../lib/useUndoSnackbar'
 import { Button } from '../../components/Button'

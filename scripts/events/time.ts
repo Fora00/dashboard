@@ -62,17 +62,8 @@ export function parseYmd(date: string): [number, number, number] {
   return [Number(m[1]), Number(m[2]), Number(m[3])]
 }
 
-/** Add days to a YYYY-MM-DD date (calendar arithmetic, no DST involved). */
-export function addDays(date: string, days: number): string {
-  const [y, m, d] = parseYmd(date)
-  const t = new Date(Date.UTC(y, m - 1, d) + days * DAY_MS)
-  return `${t.getUTCFullYear()}-${pad(t.getUTCMonth() + 1)}-${pad(t.getUTCDate())}`
-}
-
-/** Today's date in Rome for an instant. */
-export function romeDate(ms: number): string {
-  return instantToIso(ms).slice(0, 10)
-}
+// Rome date of an instant and calendar-day arithmetic: one copy, in src/lib/dates.ts.
+export { addDaysUtc as addDays, romeDayKey as romeDate } from '../../src/lib/dates.ts'
 
 /**
  * Any ISO string with an explicit offset (or Z) → the same instant expressed

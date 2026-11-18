@@ -1,6 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../../../lib/db'
-import { useToday } from '../useToday'
+import { useToday } from '../../../lib/useToday'
 import { habitWeekRows, type HabitWeekRow } from './liveHabitRatios'
 
 /** Habits-page rows per week (Monday key), live; undefined while loading. */

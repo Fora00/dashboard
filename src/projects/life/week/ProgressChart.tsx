@@ -4,7 +4,7 @@ import { db, type LifeEntry, type LifeWeek } from '../../../lib/db'
 import { Card } from '../../../components/Card'
 import { buildChartPoints } from './chartPoints'
 import { liveHabitRatiosByWeek } from './liveHabitRatios'
-import { useToday } from '../useToday'
+import { useToday } from '../../../lib/useToday'
 
 const W = 320
 const H = 130

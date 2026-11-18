@@ -3,7 +3,7 @@ import { downloadBlob } from '../../lib/downloadBlob'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, requestPersistentStorage, type TransferFile } from '../../lib/db'
-import { formatBytes, formatDate } from '../../lib/format'
+import { formatBytes, formatDateTime } from '../../lib/format'
 import { shareFile, shareOrCopy } from '../../lib/share'
 import { useOnline } from '../../lib/useOnline'
 import { useAuth } from '../../lib/useAuth'
@@ -243,7 +243,7 @@ export function LocalTransfer() {
                         <div className="min-w-0">
                           <p className="truncate font-medium">{f.name}</p>
                           <p className="mt-0.5 text-xs text-slate-500">
-                            {formatBytes(f.size)} · {formatDate(f.createdAt)}
+                            {formatBytes(f.size)} · {formatDateTime(f.createdAt)}
                             {f.synced === 1 ? ' · ☁️ in cloud' : session ? ' · ⏳ upload pending' : ''}
                           </p>
                         </div>

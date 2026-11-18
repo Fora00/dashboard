@@ -1,6 +1,6 @@
 import { HabitsPanel } from '../../habits/HabitsPanel'
 import { useHabitDays } from '../../habits/useHabitDays'
-import { useToday } from '../useToday'
+import { useToday } from '../../../lib/useToday'
 import { CollapsibleSection } from './CollapsibleSection'
 
 interface Props {

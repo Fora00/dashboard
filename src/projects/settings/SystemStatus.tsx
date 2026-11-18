@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { formatBytes, formatDate, relativeTime } from '../../lib/format'
+import { formatBytes, formatDateTime, relativeTime } from '../../lib/format'
 import { watchedEngines } from '../../lib/syncHealth'
 import { useAuth } from '../../lib/useAuth'
 import { useOnline } from '../../lib/useOnline'
@@ -54,7 +54,7 @@ export function SystemStatus() {
         <Row label="Connection" value={online ? 'Online' : 'Offline'} />
         <Row label="Account" value={session === undefined ? '…' : session ? 'Signed in' : 'Signed out'} />
         <Row label="Last pull" value={lastPull === null ? 'Not yet' : relativeTime(lastPull)} />
-        <Row label="Build" value={`${__BUILD_COMMIT__} · ${formatDate(Date.parse(__BUILD_TIME__))}`} />
+        <Row label="Build" value={`${__BUILD_COMMIT__} · ${formatDateTime(Date.parse(__BUILD_TIME__))}`} />
         {storage && <Row label="Storage" value={`${formatBytes(storage.used)} of ${formatBytes(storage.quota)}`} />}
       </ul>
     </div>
