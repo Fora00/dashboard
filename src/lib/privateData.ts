@@ -53,6 +53,18 @@ const PRIVATE_REMOTES = new Set<OutboxTable>([
  *  to the table list above, so a new area is not forgotten in the copy. */
 export const PRIVATE_DATA_LABEL = 'Life, Learning, Meal Diary and your events'
 
+/** Confirm text for "remove private data from this device" (Settings + SyncCard). */
+export function removePrivateDataConfirm(unsynced: number): { title: string; body: string } {
+  const lost =
+    unsynced > 0
+      ? `\n\n${unsynced} change${unsynced === 1 ? ' was' : 's were'} never synced and will be lost for good.`
+      : ''
+  return {
+    title: `Remove ${PRIVATE_DATA_LABEL} data from this device?`,
+    body: `The copy in the cloud is kept: sign in again to get it back.${lost}`,
+  }
+}
+
 export interface PrivateDataSummary {
   /** Private rows stored on this device. */
   rows: number

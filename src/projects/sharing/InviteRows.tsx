@@ -15,23 +15,16 @@ interface ProjectInviteRowProps {
   project: ProjectMeta
   notice: string | null
   busy: boolean
-  armed: boolean
   onReset: () => void
   onInvite: () => void
 }
 
-export function ProjectInviteRow({ project: p, notice, busy, armed, onReset, onInvite }: ProjectInviteRowProps) {
+export function ProjectInviteRow({ project: p, notice, busy, onReset, onInvite }: ProjectInviteRowProps) {
   return (
     <div className="flex items-center gap-2 px-4 py-2">
       <Label project={p} notice={notice} />
-      <Button
-        variant="ghost"
-        disabled={busy}
-        onClick={onReset}
-        aria-label={`Reset ${p.name} invite link`}
-        className={armed ? 'text-rose-600 dark:text-rose-400' : ''}
-      >
-        {armed ? 'Reset?' : '♻️'}
+      <Button variant="ghost" disabled={busy} onClick={onReset} aria-label={`Reset ${p.name} invite link`}>
+        ♻️
       </Button>
       <Button variant="ghost" disabled={busy} onClick={onInvite} aria-label={`Share ${p.name} invite link`}>
         🔗 Invite

@@ -14,6 +14,7 @@ import { useProjectAccent } from '../lib/useProjectAccent'
 import { activeProjectId, contentWidthClass, layoutForPath } from '../lib/navModel'
 import { Sidebar } from './Sidebar'
 import { FOCUS_RING } from './focus'
+import { ConfirmHost } from './ConfirmDialog'
 import { CommandPalette } from './CommandPalette'
 import { HelpButton } from './HelpButton'
 import { ShortcutsSheet } from './ShortcutsSheet'
@@ -176,6 +177,7 @@ export function Layout() {
       </div>
       <CommandPalette open={paletteOpen} onClose={closePalette} onShowShortcuts={openHelp} />
       <ShortcutsSheet open={helpOpen} onClose={() => setHelpOpen(false)} />
+      <ConfirmHost />
       <UpdateToast />
       <ErrorFlash />
     </div>

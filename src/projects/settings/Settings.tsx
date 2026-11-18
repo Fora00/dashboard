@@ -1,3 +1,4 @@
+import { confirm } from '../../lib/confirm'
 import { useEffect, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, requestPersistentStorage, type ProjectPref } from '../../lib/db'
@@ -18,7 +19,12 @@ import { clearKeysExcept } from '../../lib/safeStorage'
 import { runSafe } from '../../lib/runSafe'
 import { buildBackup, parseBackup, restoreBackup, type RestoreResult } from '../../lib/backup'
 import { DataView } from './DataView'
-import { PRIVATE_DATA_LABEL, clearPrivateData, privateDataSummary } from '../../lib/privateData'
+import {
+  PRIVATE_DATA_LABEL,
+  clearPrivateData,
+  privateDataSummary,
+  removePrivateDataConfirm,
+} from '../../lib/privateData'
 
 // Settings: project visibility (per user, synced when signed in), storage
 // usage, persistence, sync status, local wipe.
@@ -85,14 +91,7 @@ function PrivateDataCard() {
 
   async function remove() {
     const s = await privateDataSummary()
-    const lost =
-      s.unsynced > 0
-        ? `\n\n${s.unsynced} change${s.unsynced === 1 ? ' was' : 's were'} never synced and will be lost for good.`
-        : ''
-    const ok = window.confirm(
-      `Remove ${PRIVATE_DATA_LABEL} data from this device? The copy in the cloud is kept: ` +
-        `sign in again to get it back.${lost}`,
-    )
+    const ok = await confirm({ ...removePrivateDataConfirm(s.unsynced), confirmLabel: 'Remove', danger: true })
     if (!ok) return
     await clearPrivateData()
   }
@@ -120,8 +119,6 @@ function PrivateDataCard() {
   )
 }
 
-const WIPE_ARM_MS = 5000
-
 // Supabase's persisted session (default key `sb-<project ref>-auth-token`).
 const isAuthKey = (key: string) => key.startsWith('sb-') && key.includes('-auth-token')
 
@@ -130,7 +127,6 @@ export function Settings() {
   const unsyncedAll = useLiveQuery(() => db.outbox.count())
   const [estimate, setEstimate] = useState<StorageEstimate | null>(null)
   const [persisted, setPersisted] = useState<boolean | null>(null)
-  const [confirmWipe, setConfirmWipe] = useState(false)
   const [imported, setImported] = useState<RestoreResult | null>(null)
 
   useEffect(() => {
@@ -151,20 +147,19 @@ export function Settings() {
     setImported(await restoreBackup(parseBackup(await file.text())))
   }
 
-  // Two taps: the first arms the button, it disarms itself after a few seconds
-  // (and on blur) so a stray later tap never wipes.
-  useEffect(() => {
-    if (!confirmWipe) return
-    const t = setTimeout(() => setConfirmWipe(false), WIPE_ARM_MS)
-    return () => clearTimeout(t)
-  }, [confirmWipe])
-
   async function wipeLocal() {
-    if (!confirmWipe) {
-      setConfirmWipe(true)
-      return
-    }
-    setConfirmWipe(false)
+    const ok = await confirm({
+      title: 'Wipe all data on this device?',
+      body:
+        'Everything stored on this device is deleted.' +
+        (session ? ' Synced data in the cloud is kept, and you stay signed in.' : '') +
+        (unsyncedAll
+          ? `\n\n${unsyncedAll} change${unsyncedAll === 1 ? ' has' : 's have'} not reached the cloud and will be lost for good.`
+          : ''),
+      confirmLabel: 'Wipe',
+      danger: true,
+    })
+    if (!ok) return
     // Dexie first, in ONE transaction (all or nothing): it holds the real data.
     // Then the per-device prefs in localStorage, best effort: if storage is
     // blocked that only leaves harmless prefs behind instead of failing a
@@ -276,12 +271,8 @@ export function Settings() {
                 Delete all data stored on this device.
                 {session && ' Synced data in the cloud is kept, and you stay signed in.'}
               </span>
-              <Button
-                variant="danger"
-                onClick={() => void runSafe(wipeLocal, 'Could not wipe data')()}
-                onBlur={() => setConfirmWipe(false)}
-              >
-                {confirmWipe ? 'Really wipe?' : 'Wipe device data'}
+              <Button variant="danger" onClick={() => void runSafe(wipeLocal, 'Could not wipe data')()}>
+                Wipe device data
               </Button>
             </div>
             {unsyncedAll !== undefined && unsyncedAll > 0 && (

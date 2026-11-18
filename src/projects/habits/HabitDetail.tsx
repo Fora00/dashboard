@@ -1,3 +1,4 @@
+import { confirm } from '../../lib/confirm'
 import { useState } from 'react'
 import { db, type Habit, type HabitDayState } from '../../lib/db'
 import { Button } from '../../components/Button'
@@ -259,10 +260,23 @@ function VacationForm({ habit, today }: { habit: Habit; today: string }) {
     if (
       !clear &&
       stored > 0 &&
-      !window.confirm(`${stored} day(s) in this range already have a state. Make them rest days too?`)
+      !(await confirm({
+        title: 'Make them rest days too?',
+        body: `${stored} day(s) in this range already have a state.`,
+        confirmLabel: 'Make rest days',
+      }))
     )
       return
-    if (clear && !window.confirm(`Clear every day from ${days[0]} to ${days[days.length - 1]}?`)) return
+    if (
+      clear &&
+      !(await confirm({
+        title: 'Clear the vacation days?',
+        body: `Every day from ${days[0]} to ${days[days.length - 1]} is cleared.`,
+        confirmLabel: 'Clear',
+        danger: true,
+      }))
+    )
+      return
     void runSafe(setRestRange, 'Could not save')(habit.id, from, to, clear ? null : reason)
   }
 

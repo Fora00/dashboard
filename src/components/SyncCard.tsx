@@ -1,8 +1,16 @@
+import { confirm } from '../lib/confirm'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { syncEnabled, requestLoginCode, verifyLoginCode, signOut } from '../lib/sync'
 import type { CloudSync } from '../lib/cloudSync'
 import { useSyncStatus } from '../lib/useSyncStatus'
-import { PRIVATE_DATA_LABEL, clearPrivateData, privateDataSummary, type PrivateDataSummary } from '../lib/privateData'
+import {
+  PRIVATE_DATA_LABEL,
+  clearPrivateData,
+  privateDataSummary,
+  removePrivateDataConfirm,
+  type PrivateDataSummary,
+} from '../lib/privateData'
+import { discardDeadConfirm } from '../lib/syncHealth'
 import { useAuth } from '../lib/useAuth'
 import { Button } from './Button'
 import { Card } from './Card'
@@ -130,14 +138,7 @@ export function SyncCard({ sync }: SyncCardProps) {
   }
 
   async function removePrivateData(summary: PrivateDataSummary) {
-    const lost =
-      summary.unsynced > 0
-        ? `\n\n${summary.unsynced} change${summary.unsynced === 1 ? ' was' : 's were'} never synced and will be lost for good.`
-        : ''
-    const ok = window.confirm(
-      `Remove ${PRIVATE_DATA_LABEL} data from this device? The copy in the cloud is kept: ` +
-        `sign in again to get it back.${lost}`,
-    )
+    const ok = await confirm({ ...removePrivateDataConfirm(summary.unsynced), confirmLabel: 'Remove', danger: true })
     if (!ok) return
     setPrivateBusy(true)
     setError(null)
@@ -163,10 +164,7 @@ export function SyncCard({ sync }: SyncCardProps) {
 
   async function discardDead(engine: CloudSync) {
     const n = status.dead
-    const ok = window.confirm(
-      `Discard ${n === 1 ? 'this rejected change' : `these ${n} rejected changes`}? ` +
-        "This device will take the server's version instead. This can't be undone.",
-    )
+    const ok = await confirm({ ...discardDeadConfirm(n), confirmLabel: 'Discard', danger: true })
     if (!ok) return
     setDeadBusy(true)
     try {

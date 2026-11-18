@@ -1,3 +1,4 @@
+import { confirm } from '../../lib/confirm'
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { db, type ShopArea } from '../../lib/db'
@@ -26,7 +27,6 @@ export function AreaManager({ area }: { area: ShopArea }) {
   const [email, setEmail] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [confirmDelete, setConfirmDelete] = useState(false)
   const { pending, trigger, confirmUndo } = useUndoSnackbar()
 
   // Reset per-area UI when the selected area changes (adjusting state during
@@ -36,7 +36,6 @@ export function AreaManager({ area }: { area: ShopArea }) {
     setSeenAreaId(area.id)
     setShowMembers(false)
     setMembers(null)
-    setConfirmDelete(false)
     setError(null)
   }
 
@@ -136,16 +135,18 @@ export function AreaManager({ area }: { area: ShopArea }) {
   }
 
   async function onDelete() {
-    if (!confirmDelete) {
-      setConfirmDelete(true)
-      return
-    }
+    const ok = await confirm({
+      title: `Delete the area "${area.name}"?`,
+      body: 'Its items are deleted too. You can undo right after.',
+      confirmLabel: 'Delete',
+      danger: true,
+    })
+    if (!ok) return
     // Snapshot the area row and its items before the (unchanged) delete
     // call, so Undo can re-upsert both — area first, then items, same ids.
     const areaSnapshot = area
     const itemsSnapshot = await db.shopItems.where('areaId').equals(area.id).toArray()
     await deleteArea(area.id)
-    setConfirmDelete(false)
     trigger(`Deleted "${areaSnapshot.name}" · Undo`, async () => {
       await sync.upsert('shop_areas', areaSnapshot)
       for (const item of itemsSnapshot) await sync.upsert('shop_items', item)
@@ -185,7 +186,7 @@ export function AreaManager({ area }: { area: ShopArea }) {
           </>
         )}
         <Button variant="danger" disabled={busy} onClick={() => void onDelete()}>
-          {confirmDelete ? 'Really delete?' : 'Delete area'}
+          Delete area
         </Button>
       </div>
 

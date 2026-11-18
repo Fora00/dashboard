@@ -1,9 +1,10 @@
+import { confirm } from '../../lib/confirm'
 import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../../lib/db'
 import { runSafe } from '../../lib/runSafe'
 import { useSyncStatus } from '../../lib/useSyncStatus'
-import { watchedEngines, type WatchedEngine } from '../../lib/syncHealth'
+import { discardDeadConfirm, watchedEngines, type WatchedEngine } from '../../lib/syncHealth'
 import { Button } from '../../components/Button'
 import { Card } from '../../components/Card'
 import { SystemStatus } from './SystemStatus'
@@ -30,10 +31,7 @@ function EngineRecovery({ engine }: { engine: WatchedEngine }) {
   }
   async function discard() {
     const n = status.dead
-    const ok = window.confirm(
-      `Discard ${n === 1 ? 'this rejected change' : `these ${n} rejected changes`} (${engine.label})? ` +
-        "This device will take the server's version instead. This can't be undone.",
-    )
+    const ok = await confirm({ ...discardDeadConfirm(n, engine.label), confirmLabel: 'Discard', danger: true })
     if (ok) await run(engine.sync.discardDead)
   }
 

@@ -1,3 +1,4 @@
+import { confirm } from '../../lib/confirm'
 import { downloadBlob } from '../../lib/downloadBlob'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
@@ -137,8 +138,6 @@ export function LocalTransfer() {
   }
 
   async function remove(f: TransferFile) {
-    const where = f.synced === 1 ? 'on all devices' : 'on this device only'
-    if (!window.confirm(`Delete "${f.name}"? This removes it ${where}.`)) return
     // Snapshot (including the Blob) before the unchanged delete, so Undo can
     // re-put the local row and let uploadPending() re-sync it — the cloud
     // object was just removed above, so it goes back to "pending upload".
@@ -165,7 +164,12 @@ export function LocalTransfer() {
   }
 
   async function deleteRemote(r: RemoteFile) {
-    if (!window.confirm(`Delete "${r.name}" from the cloud?`)) return
+    const ok = await confirm({
+      title: `Delete "${r.name}" from the cloud?`,
+      confirmLabel: 'Delete',
+      danger: true,
+    })
+    if (!ok) return
     await removeRemote(r.path)
     await refreshRemote()
   }

@@ -1,3 +1,4 @@
+import { confirm } from '../../lib/confirm'
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { supabase, syncEnabled } from '../../lib/sync'
 import { useAuth } from '../../lib/useAuth'
@@ -42,10 +43,8 @@ export function Sharing() {
   const [shopOn, setShopOn] = useState(true)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  // Per-project feedback after a share/copy ("Copied"), and the project whose
-  // "Reset" is armed (two taps: resetting kills links already sent out).
+  // Per-project feedback after a share/copy ("Copied").
   const [notice, setNotice] = useState<{ id: string; text: string } | null>(null)
-  const [armedReset, setArmedReset] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     if (!supabase) return
@@ -254,7 +253,6 @@ export function Sharing() {
   }
 
   async function shareInvite(p: ProjectMeta) {
-    setArmedReset(null)
     await run(async () => {
       const { data, error: err } = await supabase!.rpc('project_invite_token', {
         pid: p.id,
@@ -271,12 +269,13 @@ export function Sharing() {
   // Rotate the project's token: every previously sent link dies (guests who
   // already joined keep access), then share the fresh one.
   async function resetInvite(p: ProjectMeta) {
-    if (armedReset !== p.id) {
-      setArmedReset(p.id)
-      setNotice(null)
-      return
-    }
-    setArmedReset(null)
+    const ok = await confirm({
+      title: `Reset the ${p.name} invite link?`,
+      body: 'Links you already sent stop working. Guests who already joined keep access.',
+      confirmLabel: 'Reset',
+      danger: true,
+    })
+    if (!ok) return
     await run(async () => {
       const { data, error: err } = await supabase!.rpc('rotate_project_invite', { pid: p.id })
       if (err) throw err
@@ -416,7 +415,6 @@ export function Sharing() {
                   project={p}
                   notice={notice?.id === p.id ? notice.text : null}
                   busy={busy}
-                  armed={armedReset === p.id}
                   onReset={() => void runSafe(resetInvite)(p)}
                   onInvite={() => void runSafe(shareInvite)(p)}
                 />

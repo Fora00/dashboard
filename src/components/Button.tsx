@@ -1,4 +1,4 @@
-import type { ButtonHTMLAttributes } from 'react'
+import type { ComponentProps } from 'react'
 import { FOCUS_RING } from './focus'
 
 type Variant = 'primary' | 'ghost' | 'danger'
@@ -12,7 +12,7 @@ const styles: Record<Variant, string> = {
   danger: 'bg-rose-500/10 text-rose-600 hover:bg-rose-500/20 active:bg-rose-500/30 dark:text-rose-400',
 }
 
-interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
+interface Props extends ComponentProps<'button'> {
   variant?: Variant
 }
 

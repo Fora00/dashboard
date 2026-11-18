@@ -1,3 +1,4 @@
+import { confirm } from '../../lib/confirm'
 import type { ReactNode } from 'react'
 import type { Habit } from '../../lib/db'
 import { Button } from '../../components/Button'
@@ -52,10 +53,14 @@ export function HabitsPanel({ data, today, viewKey, defaultView = 'today', empty
       if (next === 'sheet') dispatch({ kind: 'slip', id: habit.id }) // a slip needs its reason
     }, 'Could not save')()
 
-  function removeHabit(habit: Habit) {
-    if (window.confirm(`Delete “${habit.name}” and its whole history?`)) {
-      void runSafe(deleteHabit, 'Could not delete habit')(habit)
-    }
+  async function removeHabit(habit: Habit) {
+    const ok = await confirm({
+      title: `Delete “${habit.name}”?`,
+      body: 'Its whole history is deleted too.',
+      confirmLabel: 'Delete',
+      danger: true,
+    })
+    if (ok) void runSafe(deleteHabit, 'Could not delete habit')(habit)
   }
 
   const active = data?.active ?? []

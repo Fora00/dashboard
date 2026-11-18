@@ -20,6 +20,14 @@ import { sync as trips } from './tripsSync'
 // One place that watches every project's sync engine, so a failure shows up
 // wherever the user is, not only on the failing project's own page.
 
+/** Confirm text for discarding rejected changes (DataView + SyncCard). */
+export function discardDeadConfirm(n: number, label?: string): { title: string; body: string } {
+  return {
+    title: `Discard ${n === 1 ? 'this rejected change' : `these ${n} rejected changes`}${label ? ` (${label})` : ''}?`,
+    body: "This device will take the server's version instead. This can't be undone.",
+  }
+}
+
 export interface WatchedEngine {
   label: string
   path: string
