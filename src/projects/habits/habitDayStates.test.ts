@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Habit, HabitCheck } from '../../lib/db'
-import { activeDaysOf, habitDayStates } from './habitDayStates'
+import { activeDaysOf, displayCell, habitBounds, habitDayStates, habitStartDay } from './habitDayStates'
 import { overshootOf, slipLimit } from './habitStates'
 
 const habit = (extra: Partial<Habit> = {}): Habit => ({
@@ -135,5 +135,60 @@ describe('daily grace for habits to avoid', () => {
       '2026-10-23',
     )
     expect(d.states.get('2026-10-21')).toBe('fail')
+  })
+})
+
+describe('displayCell (TH1: every past day of a daily habit shows its state)', () => {
+  const today = '2026-10-23'
+  const daily = habit() // created 2026-10-20, target 7 (default), direction do
+  const bounds = habitBounds(daily)
+
+  it('a stored state always wins, even in the future (planned rest)', () => {
+    expect(displayCell(daily, '2026-10-21', 'skip', today, bounds)).toBe('skip')
+    expect(displayCell(daily, '2026-10-30', 'skip', today, bounds)).toBe('skip')
+    expect(displayCell(daily, '2026-10-10', 'done', today, bounds)).toBe('done')
+  })
+
+  it('an empty past day of a daily habit is missed; today stays blank; later days are future', () => {
+    expect(displayCell(daily, '2026-10-22', undefined, today, bounds)).toBe('missed')
+    expect(displayCell(daily, '2026-10-20', undefined, today, bounds)).toBe('missed')
+    expect(displayCell(daily, today, undefined, today, bounds)).toBe('empty')
+    expect(displayCell(daily, '2026-10-24', undefined, today, bounds)).toBe('future')
+  })
+
+  it('nothing before the habit started, nor after it was archived', () => {
+    expect(displayCell(daily, '2026-10-19', undefined, today, bounds)).toBe('before')
+    const archived = habit({ archivedAt: new Date('2026-10-21T18:00:00').getTime() })
+    const b = habitBounds(archived)
+    expect(b.end).toBe('2026-10-21')
+    expect(displayCell(archived, '2026-10-21', undefined, today, b)).toBe('missed')
+    expect(displayCell(archived, '2026-10-22', undefined, today, b)).toBe('after')
+  })
+
+  it('a cycle end counts only once the cycle is closed', () => {
+    const running = habit({ cycleEnd: '2026-10-21' })
+    expect(displayCell(running, '2026-10-22', undefined, today, habitBounds(running))).toBe('missed')
+    const closed = habit({ cycleEnd: '2026-10-21', verdict: 'closed' })
+    expect(displayCell(closed, '2026-10-22', undefined, today, habitBounds(closed))).toBe('after')
+  })
+
+  it('weekly habits and habits to avoid keep empty days blank', () => {
+    const weekly = habit({ target: 3 })
+    expect(displayCell(weekly, '2026-10-22', undefined, today, habitBounds(weekly))).toBe('empty')
+    const avoid = habit({ direction: 'avoid' })
+    expect(displayCell(avoid, '2026-10-22', undefined, today, habitBounds(avoid))).toBe('empty')
+  })
+
+  it('the start is the earliest of creation, cycle start and the first marked day', () => {
+    expect(habitStartDay(daily)).toBe('2026-10-20')
+    expect(habitStartDay(habit({ cycleStart: '2026-10-18' }))).toBe('2026-10-18')
+    expect(habitStartDay(daily, ['2026-10-15', '2026-10-22'])).toBe('2026-10-15')
+    expect(habitBounds(daily, new Map([['2026-10-17', 'fail']])).start).toBe('2026-10-17')
+  })
+
+  it('a habit to avoid gets no kept days after it was archived', () => {
+    const avoid = habit({ direction: 'avoid', archivedAt: new Date('2026-10-21T18:00:00').getTime() })
+    const d = habitDayStates(avoid, [], new Set(['2026-10-20', '2026-10-21', '2026-10-22']), today)
+    expect([...d.states.keys()].sort()).toEqual(['2026-10-20', '2026-10-21'])
   })
 })

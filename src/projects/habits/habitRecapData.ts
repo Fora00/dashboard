@@ -5,6 +5,7 @@
 import type { Habit, HabitDayState } from '../../lib/db'
 import { dayKey } from './habitStore'
 import { overshootOf } from './habitStates'
+import { displayCell, habitBounds, type DisplayCell } from './habitDayStates'
 import { daysBetween, gracedSlips, habitTarget, shiftDayKey, weekStart } from './habitStats'
 
 export type RecapKind = 'week' | 'month'
@@ -37,13 +38,13 @@ export function shiftPeriod(p: RecapPeriod, n: number): RecapPeriod {
 
 export interface RecapRow {
   habit: Habit
-  /** One entry per day of the period; 'future' / 'before' = not countable. */
-  cells: { day: string; state: HabitDayState | 'empty' | 'future' | 'before'; note?: string | undefined }[]
+  /** One entry per day of the period (see displayCell); 'future' / 'before' / 'after' = not countable. */
+  cells: { day: string; state: DisplayCell; note?: string | undefined }[]
   done: number // done + floor days
   floor: number
   skip: number
   fail: number
-  empty: number // past, unmarked days
+  empty: number // past (and today's) unmarked days, 'missed' cells included
   expected: number
   /** null when nothing was expected yet (period not started, or habit too new). */
   hit: boolean | null
@@ -67,10 +68,8 @@ export function buildRecap(
   return habits.map((habit) => {
     const st = states.get(habit.id)
     const nt = notes.get(habit.id)
-    const firstMarked = st ? [...st.keys()].sort()[0] : undefined
-    const created = dayKey(new Date(habit.createdAt))
-    let started = firstMarked && firstMarked < created ? firstMarked : created
-    if (habit.cycleStart && habit.cycleStart < started) started = habit.cycleStart
+    const bounds = habitBounds(habit, st)
+    const started = bounds.start
 
     let done = 0
     let floor = 0
@@ -84,17 +83,20 @@ export function buildRecap(
       if (state === 'done' || state === 'floor') {
         done++
         if (state === 'floor') floor++
-      } else if (state === 'skip') skip++
-      else if (state === 'fail') fail++
+      } else if (state === 'skip') {
+        // A planned future rest day (vacation) must not lower what the period expects yet.
+        if (day <= today) skip++
+      } else if (state === 'fail') fail++
       if ((state === 'skip' || state === 'fail') && note) reasons[note] = (reasons[note] ?? 0) + 1
-      if (state) return { day, state, note }
-      if (day > today) return { day, state: 'future' as const }
-      if (day < started) return { day, state: 'before' as const }
-      empty++
-      return { day, state: 'empty' as const }
+      const cell = displayCell(habit, day, state, today, bounds)
+      if (cell === 'empty' || cell === 'missed') empty++
+      return state ? { day, state: cell, note } : { day, state: cell }
     })
 
-    const elapsed = period.days.filter((d) => d >= started && d <= today).length
+    // Days after the habit ended (archived) expect nothing, like days before it started.
+    const elapsed = period.days.filter(
+      (d) => d >= started && d <= today && (bounds.end === undefined || d <= bounds.end),
+    ).length
     const target = habitTarget(habit)
     const available = Math.max(0, elapsed - skip)
     const expected = target === 7 ? available : Math.min(available, Math.round((elapsed / 7) * target))

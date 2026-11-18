@@ -18,16 +18,50 @@ const check = (habitId: string, day: string): HabitCheck => ({
 })
 
 describe('habitProgress', () => {
-  it('counts active habits checked today only', () => {
+  const T = '2026-10-08'
+  const withCheck = (habitId: string, day: string, extra: Partial<HabitCheck> = {}): HabitCheck => ({
+    ...check(habitId, day),
+    ...extra,
+  })
+  it('counts done habits, not other days', () => {
+    const p = habitProgress([habit('a'), habit('b')], [check('a', T), check('b', '2026-10-07')], T)
+    expect(p).toEqual({ done: 1, total: 2, remaining: 1 })
+  })
+  it('a rest day is not remaining and not done', () => {
+    const p = habitProgress([habit('a'), habit('b')], [withCheck('a', T, { status: 'skip' })], T)
+    expect(p).toEqual({ done: 0, total: 1, remaining: 1 })
+  })
+  it('a missed day is not done', () => {
+    const p = habitProgress([habit('a')], [withCheck('a', T, { status: 'fail' })], T)
+    expect(p).toEqual({ done: 0, total: 1, remaining: 1 })
+  })
+  it('a partial multi-tap is not done until it reaches perDay', () => {
+    const h = { ...habit('a'), perDay: 3 }
+    expect(habitProgress([h], [withCheck('a', T, { count: 2 })], T).done).toBe(0)
+    expect(habitProgress([h], [withCheck('a', T, { count: 3 })], T).done).toBe(1)
+  })
+  it('a floor day is done', () => {
+    expect(habitProgress([habit('a')], [withCheck('a', T, { status: 'floor' })], T).done).toBe(1)
+  })
+  it("never counts a don't habit as remaining", () => {
+    const avoid = { ...habit('n'), direction: 'avoid' as const }
+    expect(habitProgress([avoid, habit('a')], [check('a', T)], T)).toEqual({ done: 1, total: 1, remaining: 0 })
+  })
+  it('ignores archived, not-yet-started and ended habits', () => {
     const p = habitProgress(
-      [habit('a'), habit('b'), habit('c', 5)],
-      [check('a', '2026-10-08'), check('b', '2026-10-07'), check('c', '2026-10-08')],
-      '2026-10-08',
+      [
+        habit('arch', 5),
+        { ...habit('future'), cycleStart: '2026-11-01' },
+        { ...habit('ended'), cycleEnd: '2026-10-01', verdict: 'closed' as const },
+        habit('a'),
+      ],
+      [],
+      T,
     )
-    expect(p).toEqual({ done: 1, total: 2 })
+    expect(p).toEqual({ done: 0, total: 1, remaining: 1 })
   })
   it('is 0/0 without habits', () => {
-    expect(habitProgress([], [], '2026-10-08')).toEqual({ done: 0, total: 0 })
+    expect(habitProgress([], [], T)).toEqual({ done: 0, total: 0, remaining: 0 })
   })
 })
 

@@ -311,15 +311,24 @@ export async function toggleCheck(habitId: string, day: string): Promise<void> {
 }
 
 /** Set a day's state (null clears it). A day has one state: setting one
- *  replaces whatever was there. 'done' is stored as no status. */
+ *  replaces whatever was there. 'done' is stored as no status. `note`
+ *  undefined keeps the reason when the same state is picked again. */
 export async function setDayState(
   habitId: string,
   day: string,
   state: HabitDayState | null,
   note?: string,
 ): Promise<void> {
-  const existing = await db.habitChecks.where('[habitId+day]').equals([habitId, day]).primaryKeys()
-  if (existing.length > 0) await engine.removeMany('habit_checks', existing)
+  const existing = await db.habitChecks.where('[habitId+day]').equals([habitId, day]).toArray()
+  // Picking the same state again keeps the day's reason (a 🏖 Vacation day stays one);
+  // a new reason replaces it, '' clears it, and a different state starts without one.
+  const kept =
+    note !== undefined ? note || undefined : existing.find((c) => (c.status ?? 'done') === state && c.note)?.note
+  if (existing.length > 0)
+    await engine.removeMany(
+      'habit_checks',
+      existing.map((c) => c.id),
+    )
   if (state === null) return
   const check: HabitCheck = {
     id: checkId(habitId, day),
@@ -327,9 +336,52 @@ export async function setDayState(
     day,
     createdAt: Date.now(),
     status: state === 'done' ? undefined : state,
-    note: note?.slice(0, MAX_NOTE_LENGTH),
+    note: kept?.slice(0, MAX_NOTE_LENGTH),
   }
   await engine.upsert('habit_checks', check)
+}
+
+/** Longest range setRestRange accepts, in days (a typo in the year must not write 400 rows). */
+export const MAX_REST_RANGE = 92
+
+/** Every day from `from` to `to` ('YYYY-MM-DD', both included; swapped if reversed). */
+export function daysInRange(from: string, to: string): string[] {
+  const [a, b] = from <= to ? [from, to] : [to, from]
+  const out: string[] = []
+  const [y, m, d] = a.split('-').map(Number) as [number, number, number]
+  for (let i = 0; i <= MAX_REST_RANGE; i++) {
+    const t = new Date(y, m - 1, d + i)
+    const day = `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`
+    if (day > b) break
+    out.push(day)
+  }
+  return out
+}
+
+/** Vacation: every day from `from` to `to` becomes a rest day ('skip') with
+ *  `note`, whatever it held before; `note` null clears those days instead.
+ *  Future days are allowed (a trip planned ahead). */
+export async function setRestRange(habitId: string, from: string, to: string, note: string | null): Promise<void> {
+  const days = daysInRange(from, to)
+  if (days.length === 0 || days.length > MAX_REST_RANGE) throw new Error(`At most ${MAX_REST_RANGE} days`)
+  const existing = await db.habitChecks
+    .where('[habitId+day]')
+    .between([habitId, days[0]!], [habitId, days[days.length - 1]!], true, true)
+    .primaryKeys()
+  if (existing.length > 0) await engine.removeMany('habit_checks', existing)
+  if (note === null) return
+  const now = Date.now()
+  await engine.upsertMany(
+    'habit_checks',
+    days.map((day) => ({
+      id: checkId(habitId, day),
+      habitId,
+      day,
+      createdAt: now,
+      status: 'skip' as const,
+      note: note.slice(0, MAX_NOTE_LENGTH),
+    })),
+  )
 }
 
 /** Set how many slips a "don't" habit has on a day (0 clears it). Stored as a

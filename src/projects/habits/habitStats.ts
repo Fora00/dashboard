@@ -5,7 +5,7 @@
 // (daily habits) or hit weeks (weekly ones); skips are neutral.
 
 import type { Habit, HabitDayState } from '../../lib/db'
-import { dayKey } from './habitStore'
+import { dayKey, habitStartDay } from './habitStore'
 
 export interface WeekStat {
   start: string // Monday
@@ -109,9 +109,8 @@ export function habitStats(
   const gracedDays = gracedSlips(states, grace)
   for (const day of gracedDays) doneDays.add(day)
   const target = habitTarget(habit)
-  const created = dayKey(new Date(habit.createdAt))
-  const firstEver = [...doneDays, ...skipDays, created].sort()[0]!
-  const started = habit.cycleStart && habit.cycleStart < firstEver ? habit.cycleStart : firstEver
+  // Same start as the day states and the recap (a slip marked before the first done day counts too).
+  const started = habitStartDay(habit, states.keys())
   const thisWeek = weekStart(today)
   const week_ = weekStat(thisWeek, doneDays, skipDays, target, today)
 

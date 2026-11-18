@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { useNavigate } from 'react-router-dom'
 import { db, type LifeEntry, type LifeWeek } from '../../../lib/db'
 import { Button } from '../../../components/Button'
 import { useFlash } from '../../../lib/useFlash'
@@ -26,8 +25,11 @@ import { RecapItems } from './RecapSection'
 import { EnginesSection } from './EnginesSection'
 import { HabitRecap } from '../../habits/HabitRecap'
 import { buildRecap, recapPeriod } from '../../habits/habitRecapData'
-import { hasStarted, reasonLabel } from '../../habits/habitStates'
-import { activeDaysOf, habitDayStates, type HabitDays } from '../../habits/habitDayStates'
+import { reasonLabel } from '../../habits/habitStates'
+import type { HabitDaysData } from '../../habits/habitDaysData'
+import { HabitSheets } from '../../habits/HabitSheets'
+import { useHabitSheets } from '../../habits/useHabitSheets'
+import { useHabitDays } from '../../habits/useHabitDays'
 
 const MONTHS = [
   'January',
@@ -53,7 +55,11 @@ function shortDay(day: string): string {
   return `${Number(day.slice(8, 10))} ${(MONTHS[Number(day.slice(5, 7)) - 1] ?? '').slice(0, 3)}`
 }
 
-const READING: Record<Reading, string> = { kept: 'Kept', half: 'Half', few: 'Few' }
+const READING: Record<Reading, string> = {
+  kept: 'Kept',
+  half: 'Half',
+  few: 'Few',
+}
 
 const LINES = [
   { key: 'focus', label: 'Focus' },
@@ -158,32 +164,26 @@ function TrackerRow({ t }: { t: MonthTracker }) {
   )
 }
 
-/** The live Habits project for the picked month (read-only): the same month
- *  recap as on the Habits page. Streaks entries are no longer imported. */
-function HabitsMonthCard({ month, today }: { month: string; today: string }) {
-  const navigate = useNavigate()
-  const habits = useLiveQuery(() => db.habits.orderBy('createdAt').toArray(), [])
-  const checks = useLiveQuery(() => db.habitChecks.toArray(), [])
-  if (!habits || !checks) return null
-  const active = habits.filter((h) => h.archivedAt === undefined && hasStarted(h, today))
-  if (active.length === 0) return null
-  const activeDays = activeDaysOf(checks)
-  const days = new Map<string, HabitDays>(active.map((h) => [h.id, habitDayStates(h, checks, activeDays, today)]))
-  const states = new Map([...days].map(([id, d]) => [id, d.states]))
-  const notes = new Map([...days].map(([id, d]) => [id, d.notes]))
+/** The live Habits project for the picked month, read-only: the same month
+ *  recap as on the Habits page; Open shows the habit's detail in place.
+ *  Streaks entries are no longer imported. */
+function HabitsMonthCard({ month, today, data }: { month: string; today: string; data: HabitDaysData | undefined }) {
+  const [sheet, dispatch] = useHabitSheets()
+  if (!data || data.active.length === 0) return null
   return (
     <Card>
       <HabitRecap
         kind="month"
         anchor={`${month}-01`}
-        habits={active}
-        states={states}
-        notes={notes}
-        counts={new Map([...days].map(([id, d]) => [id, d.counts]))}
-        slips={new Map([...days].map(([id, d]) => [id, d.slips]))}
+        habits={data.active}
+        states={data.states}
+        notes={data.notes}
+        counts={data.counts}
+        slips={data.slips}
         today={today}
-        onOpen={() => void navigate('/habits')}
+        onOpen={(id) => dispatch({ kind: 'detail', id })}
       />
+      <HabitSheets data={data} today={today} sheet={sheet} dispatch={dispatch} />
     </Card>
   )
 }
@@ -204,9 +204,8 @@ export function MonthView({
 }) {
   const entries = useLiveQuery<LifeEntry[]>(() => db.lifeEntries.toArray(), [])
   const dayFocus = useLiveQuery(() => db.lifeDayFocus.toArray(), [])
-  const habitRows = useLiveQuery(() => db.habits.orderBy('createdAt').toArray(), [])
-  const habitChecks = useLiveQuery(() => db.habitChecks.toArray(), [])
-  const liveHabits = habitRows?.filter((h) => h.archivedAt === undefined && hasStarted(h, today)).length ?? 0
+  const habitData = useHabitDays(today)
+  const liveHabits = habitData?.active.length ?? 0
   const [picked, setPicked] = useState<string | null>(null)
   const [copied, flashCopied] = useFlash(2000)
 
@@ -237,8 +236,8 @@ export function MonthView({
         60,
         dayFocus ?? [],
         liveHabitRatiosByWeek(
-          habitRows ?? [],
-          habitChecks ?? [],
+          habitData?.habits ?? [],
+          habitData?.checks ?? [],
           weeks.map((w) => w.week),
           today,
         ),
@@ -256,17 +255,15 @@ export function MonthView({
       now: lineMean(points, month, l.key),
       before: lineMean(points, prev, l.key),
     }))
-    const live = (habitRows ?? []).filter((h) => h.archivedAt === undefined && hasStarted(h, today))
-    const activeDays = activeDaysOf(habitChecks ?? [])
-    const dayStates = new Map(live.map((h) => [h.id, habitDayStates(h, habitChecks ?? [], activeDays, today)]))
+    const live = habitData?.active ?? []
     const habits: MonthHabit[] = buildRecap(
       live,
-      new Map([...dayStates].map(([id, d]) => [id, d.states])),
-      new Map([...dayStates].map(([id, d]) => [id, d.notes])),
+      habitData?.states ?? new Map(),
+      habitData?.notes ?? new Map(),
       recapPeriod('month', `${month}-01`),
       today,
-      new Map([...dayStates].map(([id, d]) => [id, d.counts])),
-      new Map([...dayStates].map(([id, d]) => [id, d.slips])),
+      habitData?.counts,
+      habitData?.slips,
     ).map((r) => ({
       emoji: r.habit.emoji,
       name: r.habit.name,
@@ -348,7 +345,7 @@ export function MonthView({
             </Card>
           )}
 
-          <HabitsMonthCard month={month} today={today} />
+          <HabitsMonthCard month={month} today={today} data={habitData} />
 
           {hasHabits ? (
             <Card className="space-y-4">

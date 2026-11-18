@@ -97,3 +97,21 @@ describe('buildRecap overshoot', () => {
     expect(row?.extra).toBe(4) // (2-1) + (4-1)
   })
 })
+
+describe('buildRecap cells (TH1)', () => {
+  it('a past empty day of a daily habit is missed and still counted as empty; today stays blank', () => {
+    const week = recapPeriod('week', '2026-10-28')
+    const states = new Map([['d', st({ '2026-10-26': 'done' })]])
+    const [row] = buildRecap([habit('d', 7)], states, new Map(), week, '2026-10-28')
+    expect(row!.cells.map((c) => c.state)).toEqual(['done', 'missed', 'empty', 'future', 'future', 'future', 'future'])
+    expect(row).toMatchObject({ empty: 2, expected: 3 })
+  })
+
+  it('an archived habit expects nothing after its archive day', () => {
+    const week = recapPeriod('week', '2026-10-28')
+    const h = { ...habit('d', 7), archivedAt: new Date('2026-10-27T12:00:00').getTime() }
+    const [row] = buildRecap([h], new Map(), new Map(), week, '2026-10-30')
+    expect(row!.cells.slice(0, 5).map((c) => c.state)).toEqual(['missed', 'missed', 'after', 'after', 'after'])
+    expect(row).toMatchObject({ empty: 2, expected: 2 })
+  })
+})

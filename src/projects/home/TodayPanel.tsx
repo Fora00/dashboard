@@ -97,7 +97,7 @@ export function TodayPanel({ visibleIds }: { visibleIds: ReadonlySet<string> }) 
   const session = useAuth()
 
   const habits = useLiveQuery(async () => {
-    const [list, checks] = await Promise.all([db.habits.toArray(), db.habitChecks.where('day').equals(today).toArray()])
+    const [list, checks] = await Promise.all([db.habits.toArray(), db.habitChecks.toArray()])
     return habitProgress(list, checks, today)
   }, [today])
   const openTodos = useLiveQuery(() => db.todos.where('done').equals(0).count())

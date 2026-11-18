@@ -1,21 +1,27 @@
 import type { Habit, HabitDayState } from '../../lib/db'
 
-export const STATE_ICON: Record<HabitDayState | 'open', string | undefined> = {
+export const STATE_ICON: Record<HabitDayState | 'open' | 'missed', string | undefined> = {
   done: '✓',
   floor: '◐',
   skip: '⏸',
   fail: '✕',
+  // A past empty day of a daily habit: drawn as a miss, lighter than a marked one.
+  missed: '✕',
   open: undefined,
 }
 
 /** Day-cell colours, shared by the month calendar and the legend. */
-export const STATE_CELL: Record<HabitDayState | 'empty', string> = {
+export const STATE_CELL: Record<HabitDayState | 'missed' | 'empty', string> = {
   done: 'bg-emerald-400 text-slate-900',
   floor: 'bg-lime-300 text-slate-900',
   skip: 'bg-sky-400/40',
   fail: 'bg-rose-400/50',
+  missed: 'bg-rose-400/20 text-rose-700 dark:text-rose-300',
   empty: 'bg-slate-100 dark:bg-slate-800',
 }
+
+/** More open forever habits than this and none gets finished. */
+export const MAX_OPEN = 3
 
 /** Overshoot (more than the goal): its own icon and colour, never the done green. */
 export const OVERSHOOT_ICON = '⚡'
@@ -48,6 +54,7 @@ export function overshootOf(habit: Habit, count: number, slips: number): number 
 export const REST_REASONS = [
   ['tired', '😴 Tired'],
   ['sick', '🤒 Sick'],
+  ['vacation', '🏖 Vacation'],
   ['away', '🧳 Away'],
   ['planned', '🌿 Planned rest'],
   ['other', '… Other'],

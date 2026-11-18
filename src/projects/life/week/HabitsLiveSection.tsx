@@ -1,12 +1,5 @@
-import { useLiveQuery } from 'dexie-react-hooks'
-import { useNavigate } from 'react-router-dom'
-import { db, type Habit, type HabitDayState } from '../../../lib/db'
-import { runSafe } from '../../../lib/runSafe'
-import { activeDaysOf, habitDayStates, type HabitDays } from '../../habits/habitDayStates'
-import { HabitRecap } from '../../habits/HabitRecap'
-import { setDayCount, setDayState, setSlipCount } from '../../../lib/habitSync'
-import { tapHabit } from '../../habits/habitTap'
-import { hasStarted } from '../../habits/habitStates'
+import { HabitsPanel } from '../../habits/HabitsPanel'
+import { useHabitDays } from '../../habits/useHabitDays'
 import { useToday } from '../useToday'
 import { CollapsibleSection } from './CollapsibleSection'
 
@@ -16,67 +9,22 @@ interface Props {
   readOnly: boolean
 }
 
-/** The Habits project inside Life, as the same week view as on the Habits page
- *  (every habit side by side, the week's days, counts, reasons, tips) with a
- *  button on each row that taps the habit for today. */
+/** The Habits project inside Life: the very same panel as the Habits page
+ *  (today / week / month / board, tiles, sheets), its tab remembered apart. */
 export function HabitsLiveSection({ open, onToggle, readOnly }: Props) {
   const today = useToday()
-  const navigate = useNavigate()
-  const habits = useLiveQuery(() => db.habits.orderBy('createdAt').toArray(), [])
-  const checks = useLiveQuery(() => db.habitChecks.toArray(), [])
-  if (!habits || !checks) return null
-  const active = habits.filter((h) => h.archivedAt === undefined && hasStarted(h, today))
-  if (active.length === 0) return null
-
-  const activeDays = activeDaysOf(checks)
-  const days = new Map<string, HabitDays>(active.map((h) => [h.id, habitDayStates(h, checks, activeDays, today)]))
-  const states = new Map<string, ReadonlyMap<string, HabitDayState>>([...days].map(([id, d]) => [id, d.states]))
-  const notes = new Map<string, ReadonlyMap<string, string>>([...days].map(([id, d]) => [id, d.notes]))
-  const counts = new Map<string, ReadonlyMap<string, number>>([...days].map(([id, d]) => [id, d.counts]))
-  const slips = new Map<string, ReadonlyMap<string, number>>([...days].map(([id, d]) => [id, d.slips]))
-  const doneToday = active.filter((h) => {
-    const st = days.get(h.id)?.states.get(today)
-    return st === 'done' || st === 'floor'
-  }).length
-
-  const tap = (habit: Habit) =>
-    void runSafe(async () => {
-      const d = days.get(habit.id)!
-      const next = await tapHabit(habit, {
-        state: d.states.get(today) ?? 'open',
-        count: d.counts.get(today) ?? 0,
-        slips: d.slips.get(today) ?? 0,
-        today,
-      })
-      if (next === 'sheet') void navigate('/habits') // a slip needs its reason
-    }, 'Could not save')()
+  const data = useHabitDays(today)
+  if (!data || data.active.length === 0) return null
 
   return (
     <CollapsibleSection
       title="Habits"
-      summary={`Habits · today ${doneToday}/${active.length}`}
+      summary={`Habits · today ${data.doneToday}/${data.active.length}`}
       open={open}
       onToggle={onToggle}
       readOnly={readOnly}
     >
-      <HabitRecap
-        kind="week"
-        habits={active}
-        states={states}
-        notes={notes}
-        today={today}
-        onOpen={() => void navigate('/habits')}
-        onTapToday={tap}
-        counts={counts}
-        slips={slips}
-        onSetCount={(habit, day, n) => void runSafe(() => setDayCount(habit.id, day, n), 'Could not save')()}
-        onSetSlips={(habit, day, n) => void runSafe(() => setSlipCount(habit.id, day, n), 'Could not save')()}
-        onSetDay={(habit, day, state) => void runSafe(() => setDayState(habit.id, day, state), 'Could not save')()}
-      />
-      <p className="mt-3 text-xs text-slate-500">
-        ○ = tap for today, hold for floor, rest or missed (steps count up; on a habit to avoid it opens kept / slipped).
-        Tap any day for floor, rest or missed. Calendar and settings: Open on any row.
-      </p>
+      <HabitsPanel data={data} today={today} viewKey="life:habits-view" />
     </CollapsibleSection>
   )
 }

@@ -5,7 +5,8 @@ const DAYS = [
   ['floor', 'Floor: only the minimum (counts as done)'],
   ['skip', 'Rest day: on purpose, never a miss'],
   ['fail', 'Missed (a gap reason may be attached)'],
-  ['empty', 'Empty: nothing marked'],
+  ['missed', 'Missed, not marked: a past day of a daily habit left empty'],
+  ['empty', 'Empty: nothing marked (today, or a habit not due every day)'],
 ] as const
 
 const TILE = [

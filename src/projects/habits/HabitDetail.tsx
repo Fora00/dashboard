@@ -1,15 +1,16 @@
 import { useState } from 'react'
-import type { Habit, HabitDayState } from '../../lib/db'
+import { db, type Habit, type HabitDayState } from '../../lib/db'
 import { Button } from '../../components/Button'
 import { Sheet } from '../../components/Sheet'
-import { setDayState, updateHabit } from '../../lib/habitSync'
+import { daysInRange, MAX_REST_RANGE, setDayState, setRestRange, updateHabit } from '../../lib/habitSync'
 import { runSafe } from '../../lib/runSafe'
-import { habitStats, monthGrid } from './habitStats'
+import { habitStats, monthGrid, shiftDayKey } from './habitStats'
 import { HabitForm } from './HabitForm'
 import { HabitSuggestionList } from './HabitSuggestionList'
 import { suggest } from './habitSuggestions'
 import { toForm } from './habitFormDefaults'
-import { STATE_CELL } from './habitStates'
+import { REST_REASONS, STATE_CELL } from './habitStates'
+import { displayCell, habitBounds } from './habitDayStates'
 import { HabitLegend } from './HabitLegend'
 import { engineLabel } from '../life/model/engines'
 
@@ -67,6 +68,7 @@ function Body({ habit, states, notes, openCount, wins, today, onClose, onArchive
   // The brush: one click on a day applies it (the same state again clears the day).
   const [brush, setBrush] = useState<HabitDayState | null>(habit.direction === 'avoid' ? 'fail' : 'done')
   const s = habitStats(habit, states, today)
+  const bounds = habitBounds(habit, states)
   const unit = s.streakUnit === 'weeks' ? 'w' : 'd'
 
   return (
@@ -140,7 +142,7 @@ function Body({ habit, states, notes, openCount, wins, today, onClose, onArchive
             variant="ghost"
             onClick={() => setMonth(shiftMonth(month, 1))}
             aria-label="Next month"
-            disabled={month >= today.slice(0, 7)}
+            disabled={month >= shiftMonth(today.slice(0, 7), 3)}
           >
             ›
           </Button>
@@ -171,10 +173,11 @@ function Body({ habit, states, notes, openCount, wins, today, onClose, onArchive
           ))}
           {monthGrid(month, today)
             .flat()
-            .map((c, i) =>
-              c === null ? (
-                <span key={i} />
-              ) : (
+            .map((c, i) => {
+              if (c === null) return <span key={i} />
+              const cell = displayCell(habit, c.day, states.get(c.day), today, bounds)
+              const look = cell === 'future' || cell === 'before' || cell === 'after' ? 'empty' : cell
+              return (
                 <button
                   key={c.day}
                   type="button"
@@ -187,21 +190,23 @@ function Body({ habit, states, notes, openCount, wins, today, onClose, onArchive
                       brush === null || current === brush ? null : brush,
                     )
                   }}
-                  aria-label={`${c.day}: ${states.get(c.day) ?? 'empty'}`}
-                  className={`flex size-9 items-center justify-center justify-self-center rounded-full ${STATE_CELL[states.get(c.day) ?? 'empty']} ${
+                  aria-label={`${c.day}: ${cell === 'missed' ? 'missed, not marked' : (states.get(c.day) ?? 'empty')}`}
+                  className={`flex size-10 items-center justify-center justify-self-center rounded-full ${STATE_CELL[look]} ${
                     c.future ? 'text-slate-400' : ''
                   } ${c.day === today ? 'ring-2 ring-slate-400' : ''}`}
                 >
                   {Number(c.day.slice(8))}
                 </button>
-              ),
-            )}
+              )
+            })}
         </div>
         <p className="mt-2 text-xs text-slate-500">
           One click on a day applies the chosen state; the same state again clears it.
         </p>
         <HabitLegend />
       </section>
+
+      <VacationForm habit={habit} today={today} />
 
       <section aria-label="Cycle and settings" className="space-y-3">
         <h3 className="text-sm font-medium text-slate-500 dark:text-slate-400">Cycle and settings</h3>
@@ -231,5 +236,73 @@ function Stat({ label, value, sub }: { label: string; value: string; sub?: strin
       <div className="text-xs text-slate-500 dark:text-slate-400">{label}</div>
       {sub && <div className="text-[10px] text-slate-500">{sub}</div>}
     </div>
+  )
+}
+
+/** Vacation: one habit, every day from X to Y becomes a rest day with a
+ *  reason (default 🏖 Vacation), whatever it held before. Future days allowed. */
+function VacationForm({ habit, today }: { habit: Habit; today: string }) {
+  const [from, setFrom] = useState(today)
+  const [to, setTo] = useState(shiftDayKey(today, 6))
+  const [reason, setReason] = useState<string>('vacation')
+  const days = from && to ? daysInRange(from, to) : []
+  const tooLong = from && to && days.length > MAX_REST_RANGE
+  const valid = days.length > 0 && !tooLong
+  async function apply(clear: boolean) {
+    if (!valid) return
+    // Only stored checks count: a habit to avoid shows a derived "kept" on days with nothing saved.
+    const stored = await db.habitChecks
+      .where('[habitId+day]')
+      .between([habit.id, days[0]!], [habit.id, days[days.length - 1]!], true, true)
+      .filter((c) => c.status !== 'skip')
+      .count()
+    if (
+      !clear &&
+      stored > 0 &&
+      !window.confirm(`${stored} day(s) in this range already have a state. Make them rest days too?`)
+    )
+      return
+    if (clear && !window.confirm(`Clear every day from ${days[0]} to ${days[days.length - 1]}?`)) return
+    void runSafe(setRestRange, 'Could not save')(habit.id, from, to, clear ? null : reason)
+  }
+
+  const field = 'min-h-10 w-full rounded-lg border border-slate-300 bg-transparent px-2 text-sm dark:border-slate-700'
+  return (
+    <section aria-label="Vacation" className="space-y-2">
+      <h3 className="text-sm font-medium text-slate-500 dark:text-slate-400">🏖 Vacation</h3>
+      <div className="grid grid-cols-2 gap-2">
+        <label className="text-xs text-slate-500">
+          From
+          <input type="date" className={field} value={from} onChange={(e) => setFrom(e.target.value)} />
+        </label>
+        <label className="text-xs text-slate-500">
+          To
+          <input type="date" className={field} value={to} onChange={(e) => setTo(e.target.value)} />
+        </label>
+      </div>
+      <label className="block text-xs text-slate-500">
+        Reason
+        <select className={field} value={reason} onChange={(e) => setReason(e.target.value)}>
+          {REST_REASONS.map(([k, label]) => (
+            <option key={k} value={k}>
+              {label}
+            </option>
+          ))}
+        </select>
+      </label>
+      <div className="flex flex-wrap gap-2">
+        <Button type="button" disabled={!valid} onClick={() => void apply(false)}>
+          Set {valid ? days.length : ''} rest day{days.length === 1 ? '' : 's'}
+        </Button>
+        <Button type="button" variant="ghost" disabled={!valid} onClick={() => void apply(true)}>
+          ⌫ Clear these days
+        </Button>
+      </div>
+      <p className="text-xs text-slate-500">
+        {tooLong
+          ? `At most ${MAX_REST_RANGE} days at a time.`
+          : 'Every day in the range becomes a rest day: it does not break the streak. Future days are fine.'}
+      </p>
+    </section>
   )
 }

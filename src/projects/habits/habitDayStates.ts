@@ -8,8 +8,10 @@
 //    that day). Otherwise a stopped log would look like a perfect streak.
 
 import type { Habit, HabitCheck, HabitDayState } from '../../lib/db'
-import { dayKey } from './habitStore'
+import { habitEndDay, habitStartDay } from './habitStore'
 import { shiftDayKey } from './habitStats'
+
+export { habitEndDay, habitStartDay }
 
 export interface HabitDays {
   states: Map<string, HabitDayState>
@@ -54,11 +56,11 @@ export function habitDayStates(
     }
   }
   if (habit.direction === 'avoid') {
-    const marked = [...states.keys()].sort()[0]
-    const created = dayKey(new Date(habit.createdAt))
-    let from = marked && marked < created ? marked : created
-    if (habit.cycleStart && habit.cycleStart < from) from = habit.cycleStart
-    for (let day = from; day <= today; day = shiftDayKey(day, 1)) {
+    // Kept days run from the start to today, never past the day the habit ended (archived).
+    const from = habitStartDay(habit, states.keys())
+    const end = habitEndDay(habit)
+    const last = end !== undefined && end < today ? end : today
+    for (let day = from; day <= last; day = shiftDayKey(day, 1)) {
       if (!states.has(day) && (activeDays.has(day) || day === today)) states.set(day, 'done')
     }
   }
@@ -68,4 +70,60 @@ export function habitDayStates(
 /** Days on which any habit has a check: proof the app was used that day. */
 export function activeDaysOf(checks: readonly HabitCheck[]): Set<string> {
   return new Set(checks.map((c) => c.day))
+}
+
+/** Per habit id: day -> state / reason / taps / slips, for a list of habits. Pure. */
+export interface HabitDaysMaps {
+  states: Map<string, Map<string, HabitDayState>>
+  notes: Map<string, Map<string, string>>
+  counts: Map<string, Map<string, number>>
+  slips: Map<string, Map<string, number>>
+}
+
+export function habitDaysMaps(habits: readonly Habit[], checks: readonly HabitCheck[], today: string): HabitDaysMaps {
+  const activeDays = activeDaysOf(checks)
+  const out: HabitDaysMaps = { states: new Map(), notes: new Map(), counts: new Map(), slips: new Map() }
+  for (const h of habits) {
+    const d = habitDayStates(h, checks, activeDays, today)
+    out.states.set(h.id, d.states)
+    out.notes.set(h.id, d.notes)
+    out.counts.set(h.id, d.counts)
+    out.slips.set(h.id, d.slips)
+  }
+  return out
+}
+
+/** What one day cell shows. 'missed' = a past day of a daily habit left empty
+ *  (stats already count it as a miss; this only draws it). 'empty' = blank. */
+export type DisplayCell = HabitDayState | 'missed' | 'empty' | 'future' | 'before' | 'after'
+
+export interface HabitBounds {
+  start: string
+  end: string | undefined
+}
+
+export function habitBounds(habit: Habit, states?: ReadonlyMap<string, HabitDayState>): HabitBounds {
+  return { start: habitStartDay(habit, states?.keys()), end: habitEndDay(habit) }
+}
+
+/**
+ * The cell for one day. A stored state always wins (a planned rest day in the
+ * future too). Otherwise: after today 'future'; before the habit started
+ * 'before'; after it ended 'after'; today blank; a past empty day of a daily
+ * (target 7) habit to do is 'missed'; anything else blank. Pure.
+ */
+export function displayCell(
+  habit: Pick<Habit, 'target' | 'direction'>,
+  day: string,
+  stored: HabitDayState | undefined,
+  today: string,
+  bounds: HabitBounds,
+): DisplayCell {
+  if (stored) return stored
+  if (day > today) return 'future'
+  if (day < bounds.start) return 'before'
+  if (bounds.end !== undefined && day > bounds.end) return 'after'
+  if (day === today) return 'empty'
+  if ((habit.target ?? 7) === 7 && habit.direction !== 'avoid') return 'missed'
+  return 'empty'
 }

@@ -6,7 +6,19 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { db, resetDb } from '../test/fakeDb'
 import { drain } from '../test/drain'
 import type { FakeSupabase } from '../test/fakeSupabase'
-import { addHabit, checkId, dedupeChecks, setDayState, setSlipCount, sync, toggleCheck, updateHabit } from './habitSync'
+import {
+  addHabit,
+  checkId,
+  daysInRange,
+  dedupeChecks,
+  MAX_REST_RANGE,
+  setDayState,
+  setRestRange,
+  setSlipCount,
+  sync,
+  toggleCheck,
+  updateHabit,
+} from './habitSync'
 import type { HabitCheck, LifeEngineKey } from './db'
 
 const fake = await vi.hoisted(async () => {
@@ -137,6 +149,21 @@ describe('rest-day and missed-day reasons', () => {
     expect(remoteChecks()[0]).toMatchObject({ status: null, note: null })
   })
 
+  it('re-picking the same state keeps the reason; a new reason, a new state or an empty one drop it', async () => {
+    await setRestRange('h1', DAY, DAY, 'vacation')
+    await setDayState('h1', DAY, 'skip') // re-picked from a picker, no reason given
+    expect(await db.habitChecks.get(checkId('h1', DAY))).toMatchObject({ status: 'skip', note: 'vacation' })
+    await setDayState('h1', DAY, 'skip', 'sick')
+    expect(await db.habitChecks.get(checkId('h1', DAY))).toMatchObject({ note: 'sick' })
+    await setDayState('h1', DAY, 'skip', '')
+    expect((await db.habitChecks.get(checkId('h1', DAY)))?.note).toBeUndefined()
+    await setDayState('h1', DAY, 'fail', 'anchor')
+    await setDayState('h1', DAY, 'skip')
+    expect((await db.habitChecks.get(checkId('h1', DAY)))?.note).toBeUndefined()
+    await settle()
+    expect(remoteChecks()).toEqual([expect.objectContaining({ status: 'skip', note: null })])
+  })
+
   it('a missed day keeps its reason too, and no reason stays empty', async () => {
     await setDayState('h1', DAY, 'fail', 'anchor')
     await setDayState('h1', '2026-10-09', 'skip')
@@ -144,6 +171,45 @@ describe('rest-day and missed-day reasons', () => {
     const rows = remoteChecks()
     expect(rows.find((r) => r.day === DAY)).toMatchObject({ status: 'fail', note: 'anchor' })
     expect(rows.find((r) => r.day === '2026-10-09')).toMatchObject({ status: 'skip', note: null })
+  })
+})
+
+describe('vacation: a range of rest days', () => {
+  it('daysInRange includes both ends, crosses months, swaps a reversed range', () => {
+    expect(daysInRange('2026-10-30', '2026-11-02')).toEqual(['2026-10-30', '2026-10-31', '2026-11-01', '2026-11-02'])
+    expect(daysInRange('2026-11-02', '2026-11-01')).toEqual(['2026-11-01', '2026-11-02'])
+  })
+
+  it('every day becomes a rest day with the reason, overwriting what was there', async () => {
+    await setDayState('h1', '2026-10-09', 'done')
+    await setDayState('h1', '2026-10-10', 'fail', 'anchor')
+    await setRestRange('h1', '2026-10-08', '2026-10-11', 'vacation')
+    await settle()
+    const rows = remoteChecks().sort((a, b) => a.day.localeCompare(b.day))
+    expect(rows.map((r) => [r.day, r.status, r.note])).toEqual([
+      ['2026-10-08', 'skip', 'vacation'],
+      ['2026-10-09', 'skip', 'vacation'],
+      ['2026-10-10', 'skip', 'vacation'],
+      ['2026-10-11', 'skip', 'vacation'],
+    ])
+    expect(sync.getStatus().dead).toBe(0)
+  })
+
+  it('a null reason clears the range, other habits and days untouched', async () => {
+    await setRestRange('h1', '2026-10-08', '2026-10-11', 'vacation')
+    await setDayState('h1', '2026-10-12', 'done')
+    await setDayState('h2', '2026-10-09', 'done')
+    await setRestRange('h1', '2026-10-08', '2026-10-11', null)
+    await settle()
+    expect(
+      remoteChecks()
+        .map((r) => r.day)
+        .sort(),
+    ).toEqual(['2026-10-09', '2026-10-12'])
+  })
+
+  it('refuses a range longer than the cap', async () => {
+    await expect(setRestRange('h1', '2026-01-01', '2026-12-31', 'vacation')).rejects.toThrow(String(MAX_REST_RANGE))
   })
 })
 

@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '../../lib/db'
 import type { AreaId } from '../../lib/areas'
-import { hasStarted } from '../habits/habitStates'
+import { habitProgress } from '../../lib/homeToday'
+import { useToday } from '../life/useToday'
 import type { ProjectMeta } from '../../lib/projects'
 import { formatBytes } from '../../lib/format'
 import { usePersistedState, type Codec } from '../../lib/safeStorage'
@@ -16,13 +17,6 @@ import { FOCUS_RING_INSET } from '../../components/focus'
 import { InstallHint } from '../../components/InstallHint'
 import { runSafe } from '../../lib/runSafe'
 import { TodayPanel } from './TodayPanel'
-
-// Local calendar-day key, matching the Habits project's own day boundary
-// ('YYYY-MM-DD' in device local time — see habits/habitStore.ts).
-function todayKey(): string {
-  const d = new Date()
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
 
 // Within-group order shown in the home grid (starred/unstarred grouping is
 // separate and always wins — see the sort in Home()). Persisted per-device
@@ -185,14 +179,11 @@ export function Home() {
     const open = await db.todos.where('done').equals(0).count()
     return { open }
   })
+  const today = useToday()
   const habitStats = useLiveQuery(async () => {
-    const habits = await db.habits.toArray()
-    const active = habits.filter((h) => h.archivedAt === undefined && hasStarted(h, todayKey()))
-    if (active.length === 0) return { remaining: 0 }
-    const checksToday = await db.habitChecks.where('day').equals(todayKey()).toArray()
-    const doneIds = new Set(checksToday.map((c) => c.habitId))
-    return { remaining: active.filter((h) => !doneIds.has(h.id)).length }
-  })
+    const [habits, checks] = await Promise.all([db.habits.toArray(), db.habitChecks.toArray()])
+    return habitProgress(habits, checks, today)
+  }, [today])
   const linksStats = useLiveQuery(async () => {
     const unread = await db.links.where('read').equals(0).count()
     return { unread }

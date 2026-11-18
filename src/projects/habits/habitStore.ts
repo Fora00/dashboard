@@ -3,6 +3,7 @@
 // user actually saw (no UTC drift around midnight). Mutation helpers live in
 // src/lib/habitSync.ts (local-first, optionally cloud-synced).
 
+import type { Habit } from '../../lib/db'
 import { dayKey } from '../../lib/dates'
 // dayKey lives in src/lib/dates.ts (shared with Life); re-exported so Habits
 // imports are untouched.
@@ -30,4 +31,27 @@ export function streak(doneDays: ReadonlySet<string>, today = new Date()): numbe
     cursor = shiftDay(cursor, -1)
   }
   return count
+}
+
+/** The first day a habit counts from: the earliest of its creation day, its
+ *  cycle start and its first marked day (history imported from before). One
+ *  definition for the day states, the recap and the stats. */
+export function habitStartDay(
+  habit: Pick<Habit, 'createdAt' | 'cycleStart'>,
+  markedDays: Iterable<string> = [],
+): string {
+  let start = dayKey(new Date(habit.createdAt))
+  if (habit.cycleStart && habit.cycleStart < start) start = habit.cycleStart
+  for (const d of markedDays) if (d < start) start = d
+  return start
+}
+
+/** The last day a habit counts: the day it was archived, or its cycle end once
+ *  the cycle is closed. undefined = still running. A cycle end alone is not an
+ *  end: habits keep running past it until judged (verdict up / stay / down). */
+export function habitEndDay(habit: Pick<Habit, 'archivedAt' | 'cycleEnd' | 'verdict'>): string | undefined {
+  const archived = habit.archivedAt !== undefined ? dayKey(new Date(habit.archivedAt)) : undefined
+  const closed = habit.verdict === 'closed' ? habit.cycleEnd : undefined
+  if (archived && closed) return archived < closed ? archived : closed
+  return archived ?? closed
 }

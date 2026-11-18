@@ -1,5 +1,5 @@
 import type { Habit, HabitCheck } from '../../../lib/db'
-import { activeDaysOf, habitDayStates } from '../../habits/habitDayStates'
+import { habitDaysMaps } from '../../habits/habitDayStates'
 import { hasStarted } from '../../habits/habitStates'
 import { buildRecap, recapPeriod } from '../../habits/habitRecapData'
 import { habitTarget } from '../../habits/habitStats'
@@ -18,10 +18,7 @@ export function liveHabitRatiosByWeek(
   const out = new Map<string, number[]>()
   const live = habits.filter((h) => h.archivedAt === undefined && hasStarted(h, today))
   if (live.length === 0) return out
-  const activeDays = activeDaysOf(checks)
-  const days = new Map(live.map((h) => [h.id, habitDayStates(h, checks, activeDays, today)]))
-  const states = new Map([...days].map(([id, d]) => [id, d.states]))
-  const notes = new Map([...days].map(([id, d]) => [id, d.notes]))
+  const { states, notes } = habitDaysMaps(live, checks, today)
   for (const week of weeks) {
     const ratios = buildRecap(live, states, notes, recapPeriod('week', week), today)
       // Overshoot (more done days than the week's target) is left out, not counted as a full 100%.
@@ -60,15 +57,16 @@ export function habitWeekRows(
 ): Map<string, HabitWeekRow[]> {
   const out = new Map<string, HabitWeekRow[]>()
   if (habits.length === 0) return out
-  const activeDays = activeDaysOf(checks)
-  const days = new Map(habits.map((h) => [h.id, habitDayStates(h, checks, activeDays, today)]))
-  const states = new Map([...days].map(([id, d]) => [id, d.states]))
-  const notes = new Map([...days].map(([id, d]) => [id, d.notes]))
+  const { states, notes } = habitDaysMaps(habits, checks, today)
   for (const week of weeks) {
     const rows = buildRecap(habits, states, notes, recapPeriod('week', week), today)
       .filter((r) => {
         // Not yet created / started that week: nothing to show.
-        if (r.cells.every((c) => c.state === 'before' || c.state === 'future') && r.done === 0 && r.fail === 0)
+        if (
+          r.cells.every((c) => c.state === 'before' || c.state === 'future' || c.state === 'after') &&
+          r.done === 0 &&
+          r.fail === 0
+        )
           return false
         return r.habit.archivedAt === undefined || r.done > 0 || r.fail > 0
       })

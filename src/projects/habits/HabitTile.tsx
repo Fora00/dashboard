@@ -9,16 +9,20 @@ import {
   STATE_ICON,
 } from './habitStates'
 import type { HabitStats } from './habitStats'
+import type { DisplayCell } from './habitDayStates'
 import { engineLabel } from '../life/model/engines'
 
-export type WeekCell = HabitDayState | 'empty' | 'future'
+export type WeekCell = DisplayCell
 const CELL_STROKE: Record<WeekCell, string> = {
   done: 'stroke-emerald-400',
   floor: 'stroke-lime-300',
   skip: 'stroke-sky-400',
   fail: 'stroke-rose-400',
+  missed: 'stroke-rose-300/60 dark:stroke-rose-400/40',
   empty: 'stroke-slate-200 dark:stroke-slate-700',
   future: 'stroke-slate-100 dark:stroke-slate-800',
+  before: 'stroke-slate-100 dark:stroke-slate-800',
+  after: 'stroke-slate-100 dark:stroke-slate-800',
 }
 const LONG_PRESS_MS = 500
 const STATE_LABEL: Record<HabitDayState | 'open', string> = {

@@ -1,5 +1,6 @@
 import type { Habit, HabitCheck, LifeEntry, LifePlan } from './db'
-import { hasStarted } from '../projects/habits/habitStates'
+import { deriveHabitDays } from '../projects/habits/habitDaysData'
+import { habitEndDay } from '../projects/habits/habitStore'
 import { isLongRunning, isOver, localDay, romeDate } from '../projects/events/model'
 import type { EventItem } from '../projects/events/types'
 import { summarizeWeek } from '../projects/life/model/summary'
@@ -9,17 +10,33 @@ import { summarizeWeek } from '../projects/life/model/summary'
 
 export interface HabitProgress {
   done: number
+  /** "Do" habits that count today: active, started, not ended, not on a rest day. */
   total: number
+  /** total - done: what is still to do today (never "don't" habits, never rest days). */
+  remaining: number
 }
 
-/** Active (non-archived) habits and how many are checked on `day`. */
+/**
+ * Today's habit progress, derived like the Habits page (deriveHabitDays): done =
+ * state 'done' or 'floor' (partial multi-tap and misses are not done); a rest day
+ * ('skip') leaves the habit out; "don't" habits are kept unless a slip, so they
+ * are never remaining; archived, not-yet-started and ended habits do not count.
+ * Home's badge and Today panel both read this.
+ */
 export function habitProgress(habits: readonly Habit[], checks: readonly HabitCheck[], day: string): HabitProgress {
-  const active = habits.filter((h) => h.archivedAt === undefined && hasStarted(h, day))
-  const doneIds = new Set(checks.filter((c) => c.day === day).map((c) => c.habitId))
-  return {
-    total: active.length,
-    done: active.filter((h) => doneIds.has(h.id)).length,
+  const data = deriveHabitDays(habits, checks, day)
+  let done = 0
+  let total = 0
+  for (const h of data.active) {
+    if (h.direction === 'avoid') continue
+    const end = habitEndDay(h)
+    if (end !== undefined && end < day) continue
+    const st = data.states.get(h.id)?.get(day)
+    if (st === 'skip') continue
+    total++
+    if (st === 'done' || st === 'floor') done++
   }
+  return { done, total, remaining: total - done }
 }
 
 /**

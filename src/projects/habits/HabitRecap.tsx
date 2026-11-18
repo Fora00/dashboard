@@ -11,8 +11,10 @@ import {
   NEG_OVERSHOOT_ICON,
   NEG_OVERSHOOT_TEXT,
   OVERSHOOT_TEXT,
+  MISS_REASONS,
   overshootOf,
   reasonLabel,
+  REST_REASONS,
   slipLimit,
   STATE_CELL,
   STATE_ICON,
@@ -29,8 +31,9 @@ interface Props {
   onOpen: (habitId: string) => void
   /** When given, every row gets a button that taps the habit for today (used in Life). */
   onTapToday?: ((habit: Habit) => void) | undefined
-  /** When given, a day can be tapped to pick its state (done, floor, rest, missed, clear). */
-  onSetDay?: ((habit: Habit, day: string, state: HabitDayState | null) => void) | undefined
+  /** When given, a day can be tapped to pick its state (done, floor, rest, missed, clear). `reason`
+   *  undefined keeps the day's reason when the same state is picked again; '' clears it. */
+  onSetDay?: ((habit: Habit, day: string, state: HabitDayState | null, reason?: string) => void) | undefined
   /** Taps per day (multi-tap habits) and slips per day (daily-grace "don't" habits), per habit. */
   counts?: ReadonlyMap<string, ReadonlyMap<string, number>> | undefined
   slips?: ReadonlyMap<string, ReadonlyMap<string, number>> | undefined
@@ -72,7 +75,8 @@ export function HabitRecap({
   onSetSlips,
 }: Props) {
   const [offset, setOffset] = useState(0)
-  const [picked, setPicked] = useState<{ id: string; day: string } | null>(null)
+  // The day being picked; after Rest or Missed, `reasonFor` shows the one-tap reasons.
+  const [picked, setPicked] = useState<{ id: string; day: string; reasonFor?: 'skip' | 'fail' } | null>(null)
   // Long press on today's button opens today's choices (floor, rest, missed, clear).
   const pressTimer = useRef<number | undefined>(undefined)
   const longPressed = useRef(false)
@@ -171,6 +175,13 @@ export function HabitRecap({
                   const n = counts?.get(r.habit.id)?.get(today) ?? 0
                   const sl = slips?.get(r.habit.id)?.get(today) ?? 0
                   const slipped = todayState === 'fail' || sl > 0
+                  // Same amber as the Today tile (floor mode): open today after a missed day, the streak is at risk.
+                  const atRisk =
+                    !avoid &&
+                    !done &&
+                    todayState !== 'skip' &&
+                    todayState !== 'fail' &&
+                    habitStats(r.habit, states.get(r.habit.id) ?? new Map(), today).gap >= 1
                   const face = avoid
                     ? sl > 0 && (sl > slipLimit(r.habit) || r.habit.graceScope === 'day')
                       ? sl > slipLimit(r.habit)
@@ -225,7 +236,9 @@ export function HabitRecap({
                               ? 'border-violet-400 bg-violet-400 text-slate-900'
                               : done || (avoid && todayState !== 'skip')
                                 ? 'border-emerald-400 bg-emerald-400 text-slate-900'
-                                : 'border-slate-300 dark:border-slate-600'
+                                : atRisk
+                                  ? 'border-amber-400 bg-amber-300/20'
+                                  : 'border-slate-300 dark:border-slate-600'
                       }`}
                     >
                       {face}
@@ -256,7 +269,7 @@ export function HabitRecap({
             </div>
             <div className={`mt-2 flex flex-wrap ${kind === 'week' ? 'justify-between' : 'gap-1'}`} aria-label="Days">
               {r.cells.map((c, i) => {
-                const st = c.state === 'future' || c.state === 'before' ? null : c.state
+                const st = c.state === 'future' || c.state === 'before' || c.state === 'after' ? null : c.state
                 const dayCount = counts?.get(r.habit.id)?.get(c.day) ?? 0
                 const goal = r.habit.perDay ?? 1
                 const daySlips = slips?.get(r.habit.id)?.get(c.day) ?? 0
@@ -273,7 +286,7 @@ export function HabitRecap({
                       ? STATE_CELL[st]
                       : 'border border-slate-200 text-slate-300 dark:border-slate-800'
                 } ${picked?.id === r.habit.id && picked.day === c.day ? 'ring-2 ring-slate-500' : ''}`
-                const partial = dayCount > 0 && st === 'empty'
+                const partial = dayCount > 0 && (st === 'empty' || st === 'missed')
                 const icon = partial
                   ? String(dayCount)
                   : over
@@ -290,7 +303,7 @@ export function HabitRecap({
                       <button
                         type="button"
                         title={title}
-                        aria-label={`${r.habit.name}, ${c.day}: choose a state`}
+                        aria-label={`${r.habit.name}, ${c.day}${st === 'missed' ? ' (missed, not marked)' : ''}: choose a state`}
                         onClick={() =>
                           setPicked(
                             picked?.id === r.habit.id && picked.day === c.day ? null : { id: r.habit.id, day: c.day },
@@ -316,7 +329,7 @@ export function HabitRecap({
                 )
               })}
             </div>
-            {onSetDay && picked?.id === r.habit.id && (
+            {onSetDay && picked?.id === r.habit.id && picked.reasonFor === undefined && (
               <div className="mt-2 flex flex-wrap gap-1" role="group" aria-label={`State for ${picked.day}`}>
                 {pickOptions(
                   r.habit,
@@ -324,13 +337,13 @@ export function HabitRecap({
                   counts?.get(r.habit.id)?.get(picked.day) ?? 0,
                   slips?.get(r.habit.id)?.get(picked.day) ?? 0,
                   { onSetDay, onSetCount, onSetSlips },
-                ).map(({ label, run }) => (
+                ).map(({ label, run, reasonFor }) => (
                   <button
                     key={label}
                     type="button"
                     onClick={() => {
                       run()
-                      setPicked(null)
+                      setPicked(reasonFor ? { ...picked, reasonFor } : null)
                     }}
                     className="min-h-10 flex-1 rounded-lg bg-slate-100 px-2 text-xs hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700"
                   >
@@ -339,6 +352,42 @@ export function HabitRecap({
                 ))}
               </div>
             )}
+            {onSetDay &&
+              picked?.id === r.habit.id &&
+              picked.reasonFor !== undefined &&
+              (() => {
+                const { day, reasonFor } = picked
+                const current = notes.get(r.habit.id)?.get(day)
+                return (
+                  <div className="mt-2 flex flex-wrap gap-1" role="group" aria-label={`Reason for ${day}`}>
+                    {(reasonFor === 'skip' ? REST_REASONS : MISS_REASONS).map(([reason, label]) => (
+                      <button
+                        key={reason}
+                        type="button"
+                        aria-pressed={current === reason}
+                        onClick={() => {
+                          onSetDay(r.habit, day, reasonFor, reason)
+                          setPicked(null)
+                        }}
+                        className={`min-h-10 flex-1 rounded-lg px-2 text-xs ${
+                          current === reason
+                            ? 'bg-slate-300 font-medium dark:bg-slate-600'
+                            : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700'
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => setPicked(null)}
+                      className="min-h-10 flex-1 rounded-lg border border-slate-300 px-2 text-xs dark:border-slate-700"
+                    >
+                      {current ? 'Keep the reason' : 'No reason'}
+                    </button>
+                  </div>
+                )
+              })()}
             {Object.keys(r.reasons).length > 0 && (
               <div className="mt-2 flex flex-wrap gap-1.5">
                 {Object.entries(r.reasons).map(([k, n]) => (
@@ -434,6 +483,8 @@ function Stat({ label, value, sub }: { label: string; value: string; sub?: strin
 interface PickOption {
   label: string
   run: () => void
+  /** Rest and missed: after saving, offer the one-tap reasons. */
+  reasonFor?: 'skip' | 'fail' | undefined
 }
 
 /** The choices for one day, shaped by the kind of habit: steps count taps,
@@ -446,6 +497,7 @@ function pickOptions(
   p: Pick<Props, 'onSetDay' | 'onSetCount' | 'onSetSlips'>,
 ): PickOption[] {
   const set = (state: HabitDayState | null) => () => p.onSetDay?.(habit, day, state)
+  const rest: PickOption = { label: '⏸ Rest', run: set('skip'), reasonFor: 'skip' }
   const perDay = habit.perDay ?? 1
   if (habit.direction === 'avoid') {
     const daily = habit.graceScope === 'day' && (habit.grace ?? 0) > 0
@@ -461,8 +513,8 @@ function pickOptions(
         : slipCount >= 1
           ? [{ label: NEG_OVERSHOOT_ICON, run: () => p.onSetSlips?.(habit, day, slipCount + 1) }]
           : []),
-      { label: '✕ Slipped', run: set('fail') },
-      { label: '⏸ Rest', run: set('skip') },
+      { label: '✕ Slipped', run: set('fail'), reasonFor: 'fail' },
+      rest,
     ]
   }
   if (perDay > 1) {
@@ -470,12 +522,19 @@ function pickOptions(
       { label: count >= perDay ? OVERSHOOT_ICON : '+1', run: () => p.onSetCount?.(habit, day, count + 1) },
       { label: '✓ All', run: set('done') },
       { label: '◐ Floor', run: set('floor') },
-      { label: '⏸ Rest', run: set('skip') },
-      { label: '✕ Missed', run: set('fail') },
+      rest,
+      { label: '✕ Missed', run: set('fail'), reasonFor: 'fail' },
       { label: 'Clear', run: set(null) },
     ]
   }
   const extras: PickOption[] =
     count >= 1 && p.onSetCount ? [{ label: OVERSHOOT_ICON, run: () => p.onSetCount?.(habit, day, count + 1) }] : []
-  return [...PICK.map(([state, label]) => ({ label, run: set(state) })), ...extras]
+  return [
+    ...PICK.map(([state, label]) => ({
+      label,
+      run: set(state),
+      reasonFor: state === 'skip' || state === 'fail' ? state : undefined,
+    })),
+    ...extras,
+  ]
 }
