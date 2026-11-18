@@ -1,14 +1,13 @@
 import { useState } from 'react'
 import type { LifePlan } from '../../../lib/db'
 import { describeAnswer, shortAnswer } from '../format'
-import { isMissedStreak, type WeekSummary } from '../model'
+import type { WeekSummary } from '../model'
 import { Button } from '../../../components/Button'
 import { Card } from '../../../components/Card'
 import { CollapsibleSection } from './CollapsibleSection'
 import { AutoAnswer, SundayQuestion } from './SundayQuestion'
 import { SpockWhy } from './SpockWhy'
 import { useHabitWeekRows } from './useHabitWeekRows'
-import { useStreakList } from './useStreakList'
 import { WeekRecap } from './WeekRecap'
 
 export function SundaySection({
@@ -39,12 +38,7 @@ export function SundaySection({
   const manualQuestions = plan.sundayCheck.filter((q) => !summary.autoAnswered.has(q.id)).length
   const manualAnswered = [...summary.answers.keys()].filter((id) => !summary.autoAnswered.has(id)).length
 
-  // Streaks habits only on a week that can still be answered: the snapshot is today's, not that week's.
-  const streaks = useStreakList()?.filter(() => editable) ?? []
-  const missedIds = [
-    ...summary.trackers.filter((t) => t.reachedTarget === false).map((t) => t.tracker.id),
-    ...streaks.filter(isMissedStreak).map((e) => e.ref),
-  ]
+  const missedIds = [...summary.trackers.filter((t) => t.reachedTarget === false).map((t) => t.tracker.id)]
   const missed = { length: missedIds.length }
   const explained = missedIds.filter((id) => summary.whys.has(id)).length
 
@@ -62,7 +56,7 @@ export function SundaySection({
         checkins={[summary.checkins.filter((c) => c.done).length, summary.checkins.length]}
         tasks={[tasksSent, plan.tasks.length]}
       />
-      <SpockWhy week={week} trackers={summary.trackers} streaks={streaks} whys={summary.whys} editable={editable} />
+      <SpockWhy week={week} trackers={summary.trackers} streaks={[]} whys={summary.whys} editable={editable} />
       {!editable ? (
         <Card className="space-y-2 text-sm">
           {plan.sundayCheck.map((q) => (

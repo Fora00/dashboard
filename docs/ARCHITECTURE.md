@@ -23,7 +23,7 @@ queue: `ROADMAP.md` (`npm run roadmap` lists the open tasks).
 | `.githooks/` | Pre-commit runs `npm run check` (installed by `npm run prepare`) |
 | `scripts/events/` | Events crawler (adapters, pipeline, `spot.json`); output `public/events.json`, see `docs/EVENTS.md` |
 | `scripts/new-project.mjs` | Scaffolder behind `docs/NEW_PROJECT.md` |
-| `scripts/life-habits-link.ts` | `npm run life:habits-link -- [plan.json]` (default `~/life/_sync/habits-plan.json`): validates a habits plan (new habits + edits, matched by name) and prints `#/habits/import?d=<base64url JSON>`. The route `/habits/import` (`src/projects/habits/HabitsImport.tsx`; pure model `habitsPlan.ts`, apply `habitsPlanApply.ts`) previews `+ new` / before → after / no change and writes only on tap via `addHabit`/`updateHabit`; never archives, deletes or touches checks. Same pattern as `life-streaks-link.ts` → `/life/streaks`. Caps shared via `src/lib/habitCaps.ts` |
+| `scripts/life-habits-link.ts` | `npm run life:habits-link -- [plan.json]` (default `~/life/_sync/habits-plan.json`): validates a habits plan (new habits + edits, matched by name) and prints `#/habits/import?d=<base64url JSON>`. The route `/habits/import` (`src/projects/habits/HabitsImport.tsx`; pure model `habitsPlan.ts`, apply `habitsPlanApply.ts`) previews `+ new` / before → after / no change and writes only on tap via `addHabit`/`updateHabit`; never archives, deletes or touches checks. Same pattern as the old (retired) streaks link. Caps shared via `src/lib/habitCaps.ts` |
 | `.github/workflows/` | `deploy.yml` (push, reuses published events.json), `crawl.yml` (daily crawl), `_site.yml` (shared build/deploy); see `docs/CI.md` |
 
 ## Sync files and their tables

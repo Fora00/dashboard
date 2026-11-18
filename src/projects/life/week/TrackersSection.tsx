@@ -1,35 +1,26 @@
 import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { db, type LifeStreakEntry, type LifeTrackerEntry } from '../../../lib/db'
+import { db, type LifeTrackerEntry } from '../../../lib/db'
 import { removeTrackerEntry, restoreEntry } from '../../../lib/lifeSync'
 import { trackersSummary } from '../format'
 import { addDays, type TrackerSummary } from '../model'
 import { useToday } from '../useToday'
 import { CollapsibleSection } from './CollapsibleSection'
-import { StreakRow } from './StreakRow'
 import { TrackerRow, type LastSunday } from './TrackerRow'
 import { runSafe } from '../../../lib/runSafe'
 
 export function TrackersSection({
   week,
   trackers,
-  streaks = [],
   open,
   onToggle,
-  streaksOpen = false,
-  onToggleStreaks,
   readOnly,
   trigger,
 }: {
   week: string
   trackers: TrackerSummary[]
-  /** Streaks-app habits (read-only snapshot), shown under the trackers. */
-  streaks?: readonly LifeStreakEntry[]
   open: boolean
   onToggle: () => void
-  /** The Streaks list is read-only, so it starts collapsed. */
-  streaksOpen?: boolean
-  onToggleStreaks?: () => void
   readOnly: boolean
   /** Undo snackbar trigger (useUndoSnackbar). */
   trigger: (label: string, undo: () => void | Promise<void>) => void
@@ -71,7 +62,7 @@ export function TrackersSection({
   return (
     <CollapsibleSection
       title="Habits"
-      summary={`Habits · ${trackersSummary(trackers)}${streaks.length ? ` · 🔥 ${streaks.length} in Streaks` : ''}`}
+      summary={`Habits · ${trackersSummary(trackers)}`}
       open={open}
       onToggle={onToggle}
       readOnly={readOnly}
@@ -111,31 +102,6 @@ export function TrackersSection({
           />
         ))}
       </ul>
-      {streaks.length > 0 && (
-        <div className={trackers.length ? 'mt-5 border-t border-slate-200 pt-4 dark:border-slate-800' : ''}>
-          <button
-            type="button"
-            onClick={onToggleStreaks}
-            aria-expanded={streaksOpen}
-            className="flex min-h-11 w-full items-center justify-between gap-3 rounded-xl border border-dashed border-amber-300/70 bg-amber-50/50 px-4 text-left dark:border-amber-400/30 dark:bg-amber-400/5"
-          >
-            <span className="min-w-0">
-              <span className="block text-sm font-medium">🔥 Streaks ({streaks.length})</span>
-              <span className="block text-xs text-slate-500 dark:text-slate-400">
-                Logged in the Streaks app, read-only
-              </span>
-            </span>
-            <span aria-hidden>{streaksOpen ? '▾' : '▸'}</span>
-          </button>
-          {streaksOpen && (
-            <ul className="mt-2 space-y-2" aria-label="Streaks habits (logged in the Streaks app)">
-              {streaks.map((e) => (
-                <StreakRow key={e.id} entry={e} today={today} week={week} />
-              ))}
-            </ul>
-          )}
-        </div>
-      )}
     </CollapsibleSection>
   )
 }

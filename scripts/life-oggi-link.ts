@@ -1,10 +1,10 @@
 // Prints the "Oggi" link (#/life/oggi?d=…): 0-3 focus lines plus, when their
-// snapshots exist, the Streaks habits and (opt-in, --chores) the household
-// chores, so one Save on the page updates them together. Used by /oggi.
+// snapshot exists, (opt-in, --chores) the household chores, so one Save on the
+// page updates them together. Used by /oggi. Streaks is retired (2026-11-18).
 //
-//   npm run life:oggi-link -- <YYYY-MM-DD> "line 1" "line 2" ...  [--no-streaks] [--chores]
+//   npm run life:oggi-link -- <YYYY-MM-DD> "line 1" "line 2" ...  [--chores]
 //
-// Streaks: ~/life/_sync/streaks/snapshot.json (streaks-sync.py). Chores
+// Chores
 // (only with --chores; the section is switched off for now):
 // ~/life/_sync/chores/snapshot.json (chores-sync.py; each chore gets the
 // snapshot's asOf). A missing file is skipped. Exit 1 with one error per line
@@ -20,8 +20,6 @@ const [day, ...lines] = args.filter((a) => !a.startsWith('--'))
 const read = (file: string): string | null => (existsSync(file) ? readFileSync(file, 'utf8') : null)
 
 const payload: Record<string, unknown> = { day, lines }
-const streaks = flags.includes('--no-streaks') ? null : read(join(homedir(), 'life/_sync/streaks/snapshot.json'))
-if (streaks) payload.streaks = JSON.parse(streaks)
 const choresRaw = flags.includes('--chores') ? read(join(homedir(), 'life/_sync/chores/snapshot.json')) : null
 if (choresRaw) {
   const { asOf, chores } = JSON.parse(choresRaw) as {

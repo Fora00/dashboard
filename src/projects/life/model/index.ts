@@ -103,7 +103,6 @@ export {
   type LearningCourseWeek,
 } from './learning.ts'
 export { LIFE_IMPORT_BASE, encodeImportLink, decodeImportParam } from './importLink.ts'
-export { encodeStreaksLink, decodeStreaksParam } from './streaksLink.ts'
 export { encodeDayFocusLink, parseDayFocusJson, decodeDayFocusParam, type DayFocusPlan } from './dayFocusLink.ts'
 export {
   ENGINES,

@@ -222,6 +222,15 @@ handle". Items are `life_entries` rows of kind `upgrade`, no new table:
 
 ### Streaks (iOS app, read-only)
 
+**Retired 2026-11-18.** The owner no longer uses the Streaks app. Removed: the
+`/streaks` command, the `#/life/streaks` route (`LifeStreaks.tsx`),
+`scripts/life-streaks-link.ts`, the streaks part of the `/oggi` link (an old
+link that still carries `streaks` is accepted and the field ignored) and the
+"Old habits" box and `StreakRow` on the live week. Existing `streak` entries
+stay in Dexie/Supabase untouched (no migration); the weekly import/export and
+the History/Month views still read them. The text below is the historical
+description.
+
 Added 2026-10-26. Some habits live in the owner's iPhone **Streaks** app,
 which the dashboard can't write to. A Mac script outside the repo reads the
 app's iCloud backup (it can be ~2 days old) and `/settimana` puts the

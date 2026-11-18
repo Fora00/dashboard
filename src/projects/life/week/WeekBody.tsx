@@ -2,7 +2,9 @@ import { useMemo, useState, type ReactNode } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db, type LifeEntry, type LifePlan } from '../../../lib/db'
 import { summarizeLearningWeek, summarizeMealsWeek, summarizeWeek } from '../model'
-import { courses } from '../../learning/courses'
+import { courseMetas, loadedCourse } from '../../learning/courses/registry'
+import { useLoadCourses } from '../../learning/home/useLoadCourses'
+import type { Course } from '../../learning/engine/types'
 import { addDays } from '../model/dates.ts'
 import { useUndoSnackbar } from '../../../lib/useUndoSnackbar'
 import { Snackbar } from '../../../components/Snackbar'
@@ -25,11 +27,12 @@ import { TrackersSection } from './TrackersSection'
 import { RecapSection } from './RecapSection'
 import { ProgressAside } from './ProgressAside'
 import { useSections } from './useSections'
-import { useStreakList } from './useStreakList'
 import { HabitsLiveSection } from './HabitsLiveSection'
 
 // Week body (shared by the current week and read-only History). Sections are
 // collapsible (per-device preference, see useSections.ts).
+
+const COURSE_IDS = courseMetas.map((m) => m.id)
 
 interface WeekBodyProps {
   week: string
@@ -99,11 +102,15 @@ export function WeekBody({ week, plan, entries, readOnly, lateEdit = false, dayF
     () => db.lifeEntries.filter((e) => e.kind === 'idea' || e.kind === 'upgrade' || e.kind === 'streak').toArray(),
     [],
   )
-  // Streaks-app habits: a current snapshot, shown (read-only) on the live week only.
-  const allStreaks = useStreakList()
-  const streaks = readOnly ? [] : (allStreaks ?? [])
   const exportEntries = useMemo(() => [...entries, ...(ideas ?? [])], [entries, ideas])
   // Learning's rows (local Dexie, owner-only sync) fold into the week's activity.
+  // Course content is lazy: chunks load one per idle tick; the section appears once all are in (no half numbers).
+  const coursesReady = useLoadCourses(COURSE_IDS)
+  const courses = useMemo(
+    () =>
+      coursesReady >= COURSE_IDS.length ? COURSE_IDS.map((id) => loadedCourse(id)).filter((c): c is Course => !!c) : [],
+    [coursesReady],
+  )
   const learningStates = useLiveQuery(async () => {
     const [quiz, cards, practice] = await Promise.all([
       db.learningQuiz.toArray(),
@@ -120,10 +127,10 @@ export function WeekBody({ week, plan, entries, readOnly, lateEdit = false, dayF
         },
       ]),
     )
-  }, [])
+  }, [courses])
   const learning = useMemo(
-    () => (learningStates ? summarizeLearningWeek(courses, learningStates, week) : null),
-    [learningStates, week],
+    () => (learningStates && courses.length > 0 ? summarizeLearningWeek(courses, learningStates, week) : null),
+    [learningStates, courses, week],
   )
   const food = useMemo(() => summarizeMealsWeek(meals ?? [], week), [meals, week])
   const { pending, trigger, confirmUndo } = useUndoSnackbar()
@@ -178,7 +185,6 @@ export function WeekBody({ week, plan, entries, readOnly, lateEdit = false, dayF
         <TrackersSection
           week={week}
           trackers={summary.trackers}
-          streaks={[]}
           open={sections.trackers}
           onToggle={() => toggleSection('trackers')}
           readOnly
@@ -186,33 +192,9 @@ export function WeekBody({ week, plan, entries, readOnly, lateEdit = false, dayF
         />
       )
   } else {
-    // The live week: the Habits project, live. The old trackers and the Streaks
-    // snapshot are hidden behind a closed "Old habits" box.
-    const oldHabits = plan.trackers.length > 0 || streaks.length > 0
+    // The live week: the Habits project, live (the old trackers and Streaks are retired).
     blocks.trackers = (
-      <>
-        <HabitsLiveSection open={sections.trackers} onToggle={() => toggleSection('trackers')} readOnly={false} />
-        {oldHabits && (
-          <details className="mb-6 rounded-xl border border-dashed border-slate-300 p-3 text-sm dark:border-slate-700">
-            <summary className="cursor-pointer text-slate-500 dark:text-slate-400">
-              Old habits (week trackers and Streaks, read-only)
-            </summary>
-            <div className="mt-3">
-              <TrackersSection
-                week={week}
-                trackers={summary.trackers}
-                streaks={streaks}
-                open
-                onToggle={() => {}}
-                streaksOpen={sections.streaks}
-                onToggleStreaks={() => toggleSection('streaks')}
-                readOnly={false}
-                trigger={trigger}
-              />
-            </div>
-          </details>
-        )}
-      </>
+      <HabitsLiveSection open={sections.trackers} onToggle={() => toggleSection('trackers')} readOnly={false} />
     )
   }
   if (plan.recap && plan.recap.length > 0)
