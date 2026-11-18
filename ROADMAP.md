@@ -1655,6 +1655,170 @@ run a week without `/settimana`, rearrange the home, study offline.
       iPad, accept the update prompt, open one module of each course, test one in airplane mode.
       iOS keeps the Home Screen icon from install time: a new icon needs remove + re-add (sync first).
 
+## From Things: project "Dashboard roadmap" (imported 2026-11-18)
+
+Owner's capture list in Things (id `8XD9VzRW5mZaKzQGpCdzXe`). Things is the inbox; once a to-do
+is here it is tracked here. Re-read Things before the next import (owner reorganizes it often).
+
+- [x] TH1 **Daily habits: every past day shows its state** [sonnet, S] (Things: "Abitudini **DONE 2026-11-18** inside HB2 (`displayCell`; missed = light rose ✕; legend row "Missed, not marked").
+      automaticamente skippate se non fatte e sono giornaliere"; decided 2026-11-18).
+      Owner: a past day of a daily (`target` 7, direction `do`) habit is never blank: missed
+      shows as missed (✗), skip shows as skip; **blank only for today**. Stats do NOT change
+      (`habitStats.ts` already counts an empty past day as a miss, skip as neutral): this is
+      display only, derived, no schema/sync change. Not before the habit started (`createdAt` /
+      `cycleStart`) nor after `cycleEnd`/archive. Apply everywhere day cells are drawn: Habits
+      page week view + calendar, Life → Habits (`HabitsLiveSection`, `HabitRecap`), Life month
+      view. Accept: a test on the derived state (empty past day → 'fail'-looking, today → blank),
+      screenshots iPhone width light/dark, `npm run check` + build green.
+- [x] HB1 **Vacation for one habit** DONE 2026-11-18 (not committed). Owner: from day X to day Y
+      the habit is always a rest day ('skip') with a reason (default 🏖 Vacation, any rest reason),
+      whatever the days held before (confirm if some had a state). Future days allowed; "Clear
+      these days" empties the range. `setRestRange` / `daysInRange` in `src/lib/habitSync.ts`
+      (max 92 days, one upsertMany, synced like any check), `VacationForm` in `HabitDetail.tsx`,
+      reason `vacation` in `REST_REASONS`, 4 tests in `habitSync.test.ts`. Audit fixes: planned future
+      rest days don't lower the current period yet (`habitRecapData.ts`), the overwrite warning
+      counts stored checks only, the calendar browses up to 3 months ahead.
+- [x] HB2 **Life → Habits identical to the Habits page** [opus, M] (owner, 2026-11-18). Plan (audit **DONE 2026-11-18** (useHabitDays/deriveHabitDays, HabitsPanel + HabitSheets, Habits.tsx 570→105 lines; Life shows the same panel, defaults to the week tab; reasons kept on re-pick; e2e `habits-panel.spec.ts`). End day = archive day, or cycleEnd only when the verdict is closed.
+      2026-11-18, habits + life agents agree), in order:
+      a. `habits/useHabitDays(today)` hook: habits, checks, states/notes/counts/slips, boardData,
+         wins. Replaces 6 copies of the derivation (Habits.tsx:56-79, HabitsLiveSection:25-36,
+         MonthView:163-189 and 259-261, liveHabitRatios x2) and the extra live queries. [sonnet, S]
+      b. `HabitsPanel` (tabs today/week/month/board, tiles, legend, archived) + `HabitSheets`
+         (slip, pick-reason, reset, detail; one `useHabitSheets` reducer) moved out of Habits.tsx.
+         Habits.tsx keeps header, SyncCard, New/Rules, hotkeys (~120 lines). Life =
+         `<CollapsibleSection><HabitsPanel viewKey="life:habits-view"/></CollapsibleSection>`.
+         Week/month tabs interactive on BOTH pages (today the Habits page week tab shows no counts
+         or slips). No more `navigate('/habits')` from Life (a slip tapped in Life is lost today).
+         `useToday()` on both (Habits.tsx:51 goes stale after midnight).
+      c. `onSetDay` carries a reason; re-picking a day keeps its note (today `setDayState` wipes
+         it: a 🏖 Vacation day changed from the picker loses "vacation").
+      d. TH1 inside it: pure `displayCell` in habitDayStates.ts (stored state / future / today
+         blank / before start / after end / daily `do` habit past empty → `missed`), one
+         `habitStartDay`/`habitEndDay` (3 versions disagree today), `missed` in STATE_CELL,
+         CELL_STROKE, HabitLegend; used by buildRecap, HabitRecap, tile weekCells, HabitDetail.
+      e. MonthView's habits card reuses the panel read-only. Accept: same e2e flow on `#/habits`
+         and `#/life` (tap, hold → reason, open detail); check + build; iPhone screenshots.
+- [x] TH2 **Refactor: general audit** DONE 2026-11-18 (7 read-only agents). Result: the section
+      "Audit 2026-11-18" below. Step 2 (owner picks, one at a time) lives there.
+
+## Audit 2026-11-18 — overlaps, bugs, refactors (from TH2)
+
+Seven read-only audits (Learning, Life, Events, Habits+Meal diary, list projects, app shell,
+src/lib+sync). Order: data-correctness bugs first, then the shared foundations the projects keep
+re-implementing, then per-project refactors. Do ONE at a time; owner picks.
+
+### A. Bugs that lose or corrupt data
+- [x] A1 **Saved quiz answers can point at the wrong option** [opus, S–M]: `learning/courses/kit.ts:29` **DONE 2026-11-18** (author-order index +10 in `selected`, no migration; `engine/quizAnswer.ts`; old rows read safely, not rewritten).
+      seeds the shuffle with `id|text`, rows store `selected` as a shuffled index, so any wording
+      edit (L16/L22 do this constantly) moves old answers; QuizTab shows ✗ next to "Esatto.".
+      Seed by id or store the author-order index; guard old rows; test.
+- [x] A2 **Vocabolario progress keyed by theme** [opus, M]: `vocab/progress.ts`, `vocab/store.ts:15` **DONE 2026-11-18** (key `vocabolario:_words:<wordId>.<lang>`; rewrite of old rows through the engine whenever found, idempotent; batched writes; WS0 word moves are now safe).
+      key `vocabolario:<themeId>:<wordId>.<lang>`; WS0 word moves orphan known-marks and Ripasso
+      drops them. Key by word id + one-time rewrite through the engine. Before more WS0 moves.
+- [x] A3 **Outbox shield not scoped to the table** [opus, S]: `cloudSync.ts:536` (and pull shield **DONE 2026-11-18** (`shieldKey(table,rowId)` in pull + realtime; 2 regression tests).
+      :473) match `rowId` across tables; `event_marks`/`event_interest` share the event id, learning
+      ids repeat across 4 tables. Key by `table\0rowId`.
+- [ ] A4 **Backup restore bypasses the outbox** [opus, M]: `backup.ts:78-85` bulkPuts without
+      queueing → signed in, the next pull deletes restored rows; old backups skip shape upgrades
+      (db.ts v3/v5/v9/v15). Route synced tables through `upsertMany`, normalise old shapes.
+- [x] A5 **Home habit counts wrong** [sonnet, S]: `homeToday.ts:16-23`, `Home.tsx:188-195` count **DONE 2026-11-18** (`habitProgress` on `deriveHabitDays`, one helper for Home badge + TodayPanel; 12 tests).
+      any check as done (rest/missed/partial) and "don't" habits / ended cycles as remaining;
+      TodayPanel disagrees. Use the HB2a hook.
+- [ ] A6 **Wipe device data** [sonnet, S]: `Settings.tsx:151-159` no unsynced warning, unguarded
+      `localStorage.clear()` (signs out, half wipe if storage blocked), armed state never resets.
+
+### B. Small bugs, one batch per project [sonnet, S each]
+- [x] B1 Events: date chip remembered across days (`useEventFilters.ts:100,124`, don't store **DONE 2026-11-18** (chip not stored, Rome day in marks, Shows merges custom events, comments).
+      `chip`); `marks.ts:140` isPastEvent uses device day not Rome; Spettacoli ignores hand-added
+      events (`Shows.tsx:76`); stale comments Events.tsx:61,125.
+- [x] B2 Learning: Ripasso count home vs page (`TodayBlock.tsx:68` no `keep` filter); Today frozen **DONE 2026-11-18** (`review/content.tsx` useReviewQueue shared by home and page; useToday; resets remove Ripasso rows; `resetWrongQuiz` still leaves them — follow-up).
+      (`TodayBlock.tsx:67`, `ReviewPage.tsx:186`); Vocab deck end links to Ripasso; `setWordKnown`
+      writes per language outside a transaction; per-module resets leave `learning_reviews` rows.
+- [ ] B3 Shell: page opens of sub-pages not counted (`Layout.tsx:40` exact match); sidebar
+      ignores Home area order (`navModel.ts:23`); reverse no-op in "Mio ordine" (`Home.tsx:154`);
+      private-data texts omit Learning (Settings.tsx:91,103, SyncCard.tsx:138); Sharing chips
+      without aria-pressed/✓; downloads revoke the URL right after click (Safari) →
+      `downloadBlob()`; Home dead `planned` branch + hard-coded indigo.
+- [ ] B4 Lists: shop items deletable only by swipe (`ShopList.tsx:97`); climbing delete without
+      Undo / with confirm (`SessionCard.tsx:56,134`); hotkeys missing on IdeaList/Trips/Climbing;
+      idea titles not editable (`IdeaList.tsx:111`); "Saved on this device" copy on synced pages.
+- [ ] B5 Habits: experiments past `cycleEnd` but not archived still count misses; `habitStats`
+      twice per tile (Habits.tsx:184,188). Meal diary: `new Date()` in render (MealDiary.tsx:28).
+
+### C. Shared foundations (each removes N copies)
+- [ ] C1 **`src/lib/dates.ts` is the one date module** [sonnet, S–M]: move `life/model/dates.ts`
+      in (re-export), add `monthKey`, keep events' Rome/UTC variants as named exports; replace
+      addDays x7, weekStart x4, daysBetween x3, inline YYYY-MM-DD x5 (incl. `habitSync.ts` daysInRange),
+      the two `formatDate` (rename `format.ts` one to `formatDateTime`), relativeTime x2. Move
+      `useToday` to `src/lib`. Reference: `life/model/dates.ts` + its tests.
+- [ ] C2 **UI kit** [sonnet, S each]: `SegmentedTabs` (roving focus; 7 copies: Habits, ModulePage,
+      VocabPage, Events, PeoplePicker, MealParts, Home), `CollapsibleSection` (Life + events
+      FilterPanel), `field.ts` input/select/date classes (10 constants, 48 inline), `SectionTitle`
+      (18), `Switch` (4), `Stat` (2), `useLongPress` (2), `FlipDeck` (3, learning), `PageHeader`
+      `back` prop (6 learning pages), `useModalDialog` (Sheet + CommandPalette).
+- [ ] C3 **`useConfirm()` dialog** [sonnet, M]: replaces 13 `window.confirm` + 3 two-tap buttons;
+      duplicated confirm texts move to `privateData.ts` / `syncHealth.ts`.
+- [ ] C4 **One engine registry `lib/engines.ts`** [opus, M]: App.tsx start list, `syncHealth`
+      watchedEngines, `privateData` local/remote lists derive from it; test vs registry `ownerOnly`;
+      NEW_PROJECT gains the step. Trim the unused `flush`/`useStatus` exports of the 16 wrappers.
+- [ ] C5 Text helpers [sonnet, XS]: accent fold (10 copies → `fuzzy.normalize`), FNV hash (3),
+      `useLazyChunk`, image downscale (learning `photo.ts` = events `image.ts`), Things URL (2),
+      `useLinkImport` for the 4 "?d= link → preview → Save" screens (caps differ).
+- [ ] C6 Shared auth/owner store [opus, M]: 26 `useAuth` subscriptions; `useOwner` refires the
+      `is_owner` RPC on every token refresh per mounted user. One `useSyncExternalStore`.
+- [ ] C7 Shared OTP login form + `friendlyError` [opus, M]: JoinProject, JoinArea, SyncCard;
+      email normalised differently (SyncCard trims only).
+
+### D. Per-project refactors
+- [ ] D1 **`ListPage<T>`** [opus API, sonnet ports, M]: generalise `IdeaList` with optional done
+      sections, notes, editable title, tags (from links), people (from trips), groups, random pick;
+      `useGuestViewer()` + list empty state (7 copies). Then Todo, book/boardgame, later Shop.
+      Makes gift ideas / places / climbing wishlist config-only. Then update the scaffolder
+      (`scripts/new-project.mjs:135+`, dark-only classes).
+- [ ] D2 **Events vocabulary single source** [opus, M]: categories, areas, subcategories and one
+      `places.ts` row per town in `src/projects/events/shared/`, imported by `scripts/events/*`
+      (5 town tables today). Then split `model.ts` (513) and slim `Events.tsx` (700; reuse
+      `useInterestRows`); move the `_site.yml:86-98` inline validator to a script.
+- [ ] D3 **Life** [sonnet]: ~~lazy the `courses` import in `WeekBody.tsx:5`~~ DONE 2026-11-18 (registry +
+      `useLoadCourses`; precache 3825 → 1684 KiB, 13 course chunks runtime-cached; e2e Life offline); delete unused `week/ChoresSection.tsx` [XS]; split `lifeSync.ts` (906) after C4 [M].
+- [ ] D4 **db.ts version blocks** [opus, S]: 690 lines repeat every table per version; keep only
+      changed tables, `db.upgrade.test.ts` as net.
+- [ ] D5 `transferSync` [opus, S–M]: offline delete leaves Storage objects, errors swallowed,
+      not in sync health.
+- [ ] D6 DX [sonnet, S]: vitest `include` without `*.test.tsx` (blocks render tests, F1);
+      pre-commit could run `vitest related`; lazy supabase client (L7 half); e2e not in CI.
+
+### E. Owner decisions (asked one at a time when reached)
+- [x] E1 Streaks app import → **owner 2026-11-18: retire it.** Task E1a below.
+- [x] E1a **Retire the Streaks import** [sonnet, S, after HB2]: drop streaks from the `/oggi` link **DONE 2026-11-18** (route, skill, `/oggi` part, "Old habits" removed; parser kept for `/settimana` import + History; Sunday "why" no longer counts Streaks misses). Open: drop Streaks from the weekly `/settimana` import too?
+      (`scripts/life-oggi-link.ts`, `LifeToday.tsx`), the `/streaks` skill and route, "Old habits"
+      on the live week (`WeekBody.tsx` ~189-213: TrackerRow live branch, StreakRow,
+      useStreakList); History keeps its read-only branch; update HANDOFF-life + docs.
+- [x] E2 Learning L7/L8 tied to the Open Move interview → **owner 2026-11-18: keep both.**
+- [x] E3 "Ideas / later" → **owner 2026-11-18: regroup as proposed** (done: keep as list configs,
+      folded, real projects; dropped ones archived).
+- [x] E4 PWA precache of course chunks → **owner 2026-11-18: opened courses + a button.**
+- [x] E4a **Courses cached when opened, plus "Scarica per offline"** [opus, S–M, after A2]: in **DONE 2026-11-18** (`learn-course-*`/`learn-vocab-*` chunks runtime-cached CacheFirst unless statically imported; `home/OfflineDownload.tsx`; 2 e2e). Saving only lands with D3 (WeekBody static `courses` import pins 10 chunks): 3.8 MB → ~1.7 MB.
+      `vite.config.ts` (vite-plugin-pwa/workbox) keep course content chunks out of the precache
+      (globIgnores by chunk name) and serve them CacheFirst via runtimeCaching; a course opened
+      online once works offline. Learning home gets a "Scarica per offline" button that loads
+      every course chunk (call each registry loader) so the runtime cache fills, with a done
+      state. App shell, engine and Ripasso stay precached. Note: deliberate exception to "every
+      page fully offline" for courses never opened (owner choice). Verify with a build: precache
+      count/size before vs after; offline test of an opened vs unopened course.
+
+### F. Roadmap/doc hygiene [orchestrator, S]
+- [ ] F1 Tick/compact stale items: Learning R5, L17 → R4/R6/R7, refactor-plan header :428, all
+      "not committed" notes, title +Russo, archive L19 a–f, L18b; Life :682, :585 → one [owner]
+      line, LF5 "Tuesday"; Home :1645 (stars sync done), :550 backup follow-up, IC3 notes, L9 →
+      won't-fix; F1/L10 reopen-or-split; Milan items past; Events section ~290 → ~25 lines
+      (archive [x] blocks, facts to docs/EVENTS.md; open: recurring places [owner], spot.json
+      cleanup (local entries → curated, ~20 past), source follow-ups, interest follow-ups
+      (snapshot subcategory, zod to deps, seed alias)). Delete `docs/learning-drafts/francese.c.{1,2}.ts`.
+- [ ] F2 Docs: CLAUDE.md "cloudSync (once landed)"; ARCHITECTURE.md `.claude/` + sync.ts;
+      HANDOFF-life.md (decision 6, §2.2, Streaks, nothing on HabitsLive/Engines/ScreenTime);
+      COURSES.md "locked until Rifai"; db.ts:41 climbing "local-only"; learning store comments.
+
 ## Ideas / later
 
 - [ ] **🤝 Sharing review: what can be shared, and better ways to do it** [opus]
@@ -1671,44 +1835,11 @@ run a week without `/settimana`, rearrange the home, study offline.
       Analysis written 2026-10-29 in `docs/SHARING_REVIEW.md`; awaiting the
       owner's decision on which proposal to build.
 
-Candidate new subprojects (brainstormed 2026-07-04, not committed to):
+Candidate new subprojects (brainstormed 2026-07-04; regrouped with the owner 2026-11-18 after the
+audit, see "Audit 2026-11-18" D1). Dropped ideas are archived in `docs/ROADMAP_ARCHIVE.md`.
 
-- [ ] **💰 Expenses / shared budget** [opus] — couple-shared ledger with
-      who-paid and running balance (mini Splitwise). Reuses the shop-list
-      area-sharing + outbox pattern almost exactly. Effort L. *Top pick.*
-- [x] **🍽️ Meal diary** [sonnet] — built 2026-10-05, owner-only and synced across the owner's devices (same model as Life: `is_owner()` RLS, `ownerOnly` in the registry). Log what you ate per day and meal (breakfast/lunch/dinner/snack), edit text, backdate, delete with Undo. Files: `src/projects/meal-diary/`, `src/lib/mealDiarySync.ts`, `supabase/migrations/20261005140000_meal_diary.sql`, hand-written `meal_entries` block in `database.types.ts`. Migration applied and types regenerated 2026-10-05. Optional per-entry grams, kcal, protein, carbs, fat (+ an `estimated` flag), day header shows totals only (no goals). **Simplified later the same day (owner: "entry super simple"):** no numeric fields, food table, Open Food Facts lookup or barcode scan (all removed); an entry is one line of text with the quantity ("100g pasta al pesto rosso"). Numbers come from the AI estimate, with or without photos, and can be corrected by hand when editing an entry. AI estimate without a server: the local command `/meal-reconcile` (`.claude/commands/`, git-ignored) reads entries with no nutrition via `supabase db query --linked`, estimates them in the session, asks for confirmation, then writes them back marked as estimates; SQL tested in a rolled-back transaction; it now also takes photos, merges with stored estimates as a diff + average and uses optimistic concurrency (`updated_at`). Life/settimana link (2026-10-05): read-only Food section on the Life week screen + `## Food` and `meals` in "Export week" (see `docs/HANDOFF-life.md`). Not a planner: no plans, recipes or shop-list link.
-- [ ] **🍲 Meal planner + recipe box** [sonnet CRUD, opus for shop-list
-      integration] — (the diary above covers logging only) plan the week, "add ingredients to shop list" button
-      writing into `db.shopItems`. Effort M–L. *Top pick.*
-- [ ] **📚 Reading / watch list** [sonnet] — `todos`-shaped table with a
-      status field + "pick something random" button; couple-shareable.
-      Effort S. *Top pick, best value/effort.*
-- [ ] **📔 Daily journal** [sonnet] — mood + free text per day; pairs with
-      habits. Local-only (private). Effort S.
-- [ ] **⚖️ Weight / body metrics** [sonnet] — daily weight log + line chart;
-      synergy with climbing. Effort S.
-- [ ] **🔁 Subscriptions tracker** [sonnet] — recurring bills with next-due
-      and monthly-total rollup. Effort S.
-- [ ] **🎒 Gear tracker** [sonnet] — climbing gear wear/retire dates,
-      cross-referencing `climbSessions` counts. Effort M.
-- [ ] **🎯 Climbing wishlist** [sonnet] — "want to climb" list that links to a
-      `climbs` entry when sent. Effort S–M.
-- [ ] **📈 Habit insights** [sonnet] — read-only cross-project charts
-      (habits × climbing × metrics); no new tables. Effort M.
-- [ ] **🧳 Packing list templates** [sonnet] — reusable trip checklists,
-      shareable. Effort S–M.
-- [ ] **🔐 Info vault** [opus if encrypted] — local-only private store
-      (documents, emergency contacts); never sync in cleartext. Effort S–M.
-- [ ] **🎙️ Voice memos / camera capture** [opus] — capture media straight
-      into `db.files`, reusing `transferSync`. iOS media APIs are fiddly.
-      Effort M.
+**Cheap once `ListPage<T>` (D1) exists — config only:**
 
-Second batch (brainstormed 2026-07-04, later the same day):
-
-- [ ] **🥫 Pantry inventory** [opus for the shop-list bridge] — what's in the
-      house, optional expiry dates, one-tap "running low → add to shop list"
-      writing into `db.shopItems`. Third leg of the shop-list + meal-planner
-      triangle. Effort M. *Top pick of this batch.*
 - [ ] **🎁 Gift ideas** [sonnet] — per-person gift jottings year-round, mark
       bought/given. Deliberately NOT shared (the giftee must never see it):
       local-only or owner-only sync. Simplest possible table. Effort S.
@@ -1717,21 +1848,39 @@ Second batch (brainstormed 2026-07-04, later the same day):
       visited flag and a "pick one at random" date-night button;
       `todos`-shaped, couple-shareable. Pairs with the reading list idea.
       Effort S.
+- [ ] **🎯 Climbing wishlist** [sonnet] — "want to climb" list that links to a
+      `climbs` entry when sent. Effort S–M.
+- [ ] **🎒 Gear tracker** [sonnet] — climbing gear wear/retire dates,
+      cross-referencing `climbSessions` counts. Effort M.
+
+**Folded into existing projects:**
+
+- [ ] **📚 Reading / watch list → Links** [sonnet, S]: a "pick at random" button and entries
+      without a URL (a `kind` tag), instead of a new project.
+- [ ] **🧳 Packing lists → shop-list areas** [sonnet, S]: "duplicate area" and "uncheck all".
+
+**Real projects (own data model):**
+
+- [ ] **💰 Expenses / shared budget** [opus] — couple-shared ledger with
+      who-paid and running balance (mini Splitwise). Reuses the shop-list
+      area-sharing + outbox pattern almost exactly. Effort L. *Top pick.*
+- [ ] **🍲 Meal planner + recipe box** [sonnet CRUD, opus for shop-list
+      integration] — (the diary above covers logging only) plan the week, "add ingredients to shop list" button
+      writing into `db.shopItems`. Effort M–L. *Top pick.*
+- [ ] **🥫 Pantry inventory** [opus for the shop-list bridge] — what's in the
+      house, optional expiry dates, one-tap "running low → add to shop list"
+      writing into `db.shopItems`. Third leg of the shop-list + meal-planner
+      triangle. Effort M. *Top pick of this batch.*
 - [ ] **🗓️ Countdowns & dates** [sonnet] — birthdays, renewals, trips; home
       grid badge shows the nearest one ("Trip in 12d"), reusing the live
       badge pattern. Effort S.
-- [ ] **🧾 Warranties & receipts** [sonnet] — snap the receipt (Blob into
-      `db.files`, reusing `transferSync`), purchase + warranty-end dates,
-      "expiring soon" view. Effort M.
-- [ ] **🌱 Plant care** [sonnet] — per-plant watering/feeding interval,
-      "due today" list, streak-style dot row copied from habits. Effort S–M.
 - [ ] **🧹 Chores rotation** [sonnet] — recurring household tasks that
       alternate between partners ("whose turn is the bathroom"); shared and
       assignable, unlike habits; reuses `project_members` sharing as-is.
       Effort M.
-- [ ] **🚗 Vehicle log** [sonnet] — fuel fill-ups, maintenance, Italian
-      paperwork deadlines (bollo, revisione, insurance) with next-due
-      rollup — the subscriptions tracker idea, but for the car. Effort S–M.
+- [ ] **🔁 Subscriptions + 🚗 Vehicle log as one "recurring due" engine** [sonnet/opus] — both are
+      next-due rollups (bills, revisione, bollo, insurance, service). Build one engine, two views.
+      Original notes in the archive. Chores needs a shared people table (from trips companions).
 
 - [x] **🔍 On-device data view in Settings** [sonnet] — DONE 2026-10-09 (`DataView.tsx`: rows per table, outbox per table, rejected entries read-only, per-engine Retry all / Discard all; per-entry actions would need an engine API, so the per-entry part of the dead-letter item stays open). Original: — *to evaluate
       (2026-09-30)*. Owner asked how to see what's in the db; on Mac the

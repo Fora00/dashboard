@@ -290,3 +290,37 @@ ever pushed to `main`, so GitHub Pages never served it.
       the deploy rather than just the diff. `node-version: 22` in the
       workflow is unrelated and already fine. Effort XS.
       Ref: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+
+
+## Ideas regrouped or dropped (owner, 2026-11-18)
+
+Dropped: journal and weight (Life and meal diary cover them), habit insights (Life month view), plant care (habits model "every N days"), info vault, voice memos, warranties (low value for the effort). Folded: reading list into Links, packing into shop-list areas, subscriptions + vehicle into one recurring-due engine. Original entries:
+
+- [ ] **📔 Daily journal** [sonnet] — mood + free text per day; pairs with
+      habits. Local-only (private). Effort S.
+- [ ] **⚖️ Weight / body metrics** [sonnet] — daily weight log + line chart;
+      synergy with climbing. Effort S.
+- [ ] **📈 Habit insights** [sonnet] — read-only cross-project charts
+      (habits × climbing × metrics); no new tables. Effort M.
+- [ ] **🌱 Plant care** [sonnet] — per-plant watering/feeding interval,
+      "due today" list, streak-style dot row copied from habits. Effort S–M.
+- [ ] **🔐 Info vault** [opus if encrypted] — local-only private store
+      (documents, emergency contacts); never sync in cleartext. Effort S–M.
+- [ ] **🎙️ Voice memos / camera capture** [opus] — capture media straight
+      into `db.files`, reusing `transferSync`. iOS media APIs are fiddly.
+      Effort M.
+
+Second batch (brainstormed 2026-07-04, later the same day):
+- [ ] **🧾 Warranties & receipts** [sonnet] — snap the receipt (Blob into
+      `db.files`, reusing `transferSync`), purchase + warranty-end dates,
+      "expiring soon" view. Effort M.
+- [ ] **🔁 Subscriptions tracker** [sonnet] — recurring bills with next-due
+      and monthly-total rollup. Effort S.
+- [ ] **🚗 Vehicle log** [sonnet] — fuel fill-ups, maintenance, Italian
+      paperwork deadlines (bollo, revisione, insurance) with next-due
+      rollup — the subscriptions tracker idea, but for the car. Effort S–M.
+- [ ] **📚 Reading / watch list** [sonnet] — `todos`-shaped table with a
+      status field + "pick something random" button; couple-shareable.
+      Effort S. *Top pick, best value/effort.*
+- [ ] **🧳 Packing list templates** [sonnet] — reusable trip checklists,
+      shareable. Effort S–M.
