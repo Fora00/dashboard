@@ -4,6 +4,7 @@ import { addCompanion, MAX_COMPANIONS_PER_IDEA, MAX_NAME_LENGTH } from '../../li
 import { Button } from '../../components/Button'
 import { Chip } from '../../components/Chip'
 import { FOCUS_RING_INSET } from '../../components/focus'
+import { SegmentedTabs } from '../../components/SegmentedTabs'
 
 interface Props {
   /** 'solo' hides the people chips; 'group' shows them. */
@@ -15,11 +16,6 @@ interface Props {
   /** Used to make aria labels and ids unique when several pickers coexist. */
   idPrefix: string
 }
-
-const SEGMENT = `min-h-10 flex-1 border-2 px-3 text-sm font-medium transition-colors first:rounded-l-lg last:rounded-r-lg ${FOCUS_RING_INSET}`
-const SEGMENT_ON = 'border-(color:--accent-border) bg-(color:--accent-selected) text-(color:--accent-fg)'
-const SEGMENT_OFF =
-  'border-slate-200 bg-white text-slate-600 hover:bg-slate-100 active:bg-slate-200 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-300 dark:hover:bg-slate-800'
 
 /** Solo | With others segmented control plus the multi-select people chips. Shared by the add form and the expanded row. */
 export function PeoplePicker({ mode, onModeChange, companions, selected, onSelectedChange, idPrefix }: Props) {
@@ -47,24 +43,17 @@ export function PeoplePicker({ mode, onModeChange, companions, selected, onSelec
 
   return (
     <div className="space-y-2">
-      <div role="group" aria-label="Trip type" className="flex">
-        <button
-          type="button"
-          aria-pressed={mode === 'solo'}
-          onClick={() => onModeChange('solo')}
-          className={`${SEGMENT} ${mode === 'solo' ? SEGMENT_ON : SEGMENT_OFF}`}
-        >
-          {mode === 'solo' ? '✓ Solo' : 'Solo'}
-        </button>
-        <button
-          type="button"
-          aria-pressed={mode === 'group'}
-          onClick={() => onModeChange('group')}
-          className={`${SEGMENT} ${mode === 'group' ? SEGMENT_ON : SEGMENT_OFF}`}
-        >
-          {mode === 'group' ? '✓ With others' : 'With others'}
-        </button>
-      </div>
+      <SegmentedTabs
+        kind="choice"
+        variant="joined"
+        label="Trip type"
+        options={[
+          { id: 'solo', label: mode === 'solo' ? '✓ Solo' : 'Solo' },
+          { id: 'group', label: mode === 'group' ? '✓ With others' : 'With others' },
+        ]}
+        value={mode}
+        onChange={onModeChange}
+      />
 
       {mode === 'group' && (
         <>

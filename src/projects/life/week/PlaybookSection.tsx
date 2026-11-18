@@ -4,7 +4,7 @@ import { logPlaybook, removeTrackerEntry } from '../../../lib/lifeSync'
 import { runSafe } from '../../../lib/runSafe'
 import { LIFE_CAPS, type PlaybookSummary } from '../model'
 import { useToday } from '../../../lib/useToday'
-import { CollapsibleSection } from './CollapsibleSection'
+import { CollapsibleSection } from '../../../components/CollapsibleSection'
 
 // "Playbook of the week": the one practice chosen for the week and a one-tap
 // "Used it today" log, repeatable: each tap logs another use (the

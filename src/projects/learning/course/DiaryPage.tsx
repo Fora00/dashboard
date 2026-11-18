@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { Link, useParams } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import { EmptyState } from '../../../components/EmptyState'
 import { courseSketches } from '../../../lib/learningLocal'
 import { CourseLoading } from '../ui/CourseLoading'
@@ -9,6 +9,7 @@ import { useCourse } from '../engine/useCourse'
 import { courseHasChecklist } from '../engine/progress'
 import { SketchThumb, SketchViewer } from '../module/Sketches'
 import type { Course } from '../engine/types'
+import { BackLink } from '../../../components/PageHeader'
 
 /** Every photo of a course's sheets, oldest first: watch the hand improve. Local-only. */
 function DiaryView({ course }: { course: Course }) {
@@ -23,12 +24,7 @@ function DiaryView({ course }: { course: Course }) {
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <Link
-          to={`/learning/${course.id}`}
-          className="mb-3 inline-block text-sm text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
-        >
-          ← {course.title}
-        </Link>
+        <BackLink to={`/learning/${course.id}`}>{course.title}</BackLink>
         <h1 className="text-2xl font-semibold tracking-tight">Diario</h1>
         <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
           Le foto dei tuoi fogli, dalla più vecchia. Restano solo su questo dispositivo.

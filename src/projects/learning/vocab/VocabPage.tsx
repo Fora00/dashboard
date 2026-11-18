@@ -3,7 +3,9 @@ import { Link, Route, Routes, useParams } from 'react-router-dom'
 import { Button } from '../../../components/Button'
 import { Card } from '../../../components/Card'
 import { Chip } from '../../../components/Chip'
-import { FOCUS_RING_FIELD, FOCUS_RING_INSET } from '../../../components/focus'
+import { FOCUS_RING_FIELD } from '../../../components/focus'
+import { BackLink } from '../../../components/PageHeader'
+import { SegmentedTabs } from '../../../components/SegmentedTabs'
 import type { LearningCard } from '../../../lib/db'
 import { useLazyChunk } from '../../../lib/useLazyChunk'
 import { CourseLoading } from '../ui/CourseLoading'
@@ -76,8 +78,6 @@ function LangPicker({ langs, toggle }: { langs: Lang[]; toggle: (l: Lang) => voi
   )
 }
 
-const backLink = 'mb-3 inline-block text-sm text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-
 function ThemeList() {
   const [langs, toggle] = useLangs()
   const cards = useVocabCards() ?? []
@@ -99,9 +99,7 @@ function ThemeList() {
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <Link to="/learning/lingue" className={backLink}>
-          ← Lingue
-        </Link>
+        <BackLink to="/learning/lingue">Lingue</BackLink>
         <h1 className="text-2xl font-semibold tracking-tight">
           <span className="mr-2">🗂️</span>Vocabolario
         </h1>
@@ -199,9 +197,7 @@ function PronunciationPage() {
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <Link to="/learning/vocabolario" className={backLink}>
-          ← Vocabolario
-        </Link>
+        <BackLink to="/learning/vocabolario">Vocabolario</BackLink>
         <h1 className="text-2xl font-semibold tracking-tight">
           <span className="mr-2">🗣️</span>Pronuncia
         </h1>
@@ -452,9 +448,7 @@ function ThemeView({ theme }: { theme: VocabTheme }) {
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <Link to="/learning/vocabolario" className={backLink}>
-          ← Vocabolario
-        </Link>
+        <BackLink to="/learning/vocabolario">Vocabolario</BackLink>
         <h1 className="text-2xl font-semibold tracking-tight">
           <span className="mr-2">{theme.emoji}</span>
           {theme.title}
@@ -470,28 +464,7 @@ function ThemeView({ theme }: { theme: VocabTheme }) {
       </div>
       <LangPicker langs={langs} toggle={toggle} />
       <Legend langs={langs} />
-      <div
-        role="tablist"
-        aria-label="Sezioni del tema"
-        className="flex gap-1 overflow-x-auto rounded-xl bg-slate-100 p-1 dark:bg-slate-800"
-      >
-        {tabs.map((t) => (
-          <button
-            key={t.id}
-            type="button"
-            role="tab"
-            aria-selected={tab === t.id}
-            onClick={() => setTab(t.id)}
-            className={`min-h-10 shrink-0 flex-1 rounded-lg px-3 text-sm font-medium whitespace-nowrap ${FOCUS_RING_INSET} ${
-              tab === t.id
-                ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-slate-100'
-                : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'
-            }`}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
+      <SegmentedTabs label="Sezioni del tema" options={tabs} value={tab} onChange={setTab} />
       <div role="tabpanel">
         {tab === 'dict' && (
           <div className="flex flex-col gap-3">

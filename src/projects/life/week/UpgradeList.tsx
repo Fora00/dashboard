@@ -3,7 +3,7 @@ import type { LifeUpgradeEntry, LifeUpgradeSize } from '../../../lib/db'
 import { addUpgrade, removeUpgrade, restoreEntry, updateUpgrade } from '../../../lib/lifeSync'
 import { runSafe } from '../../../lib/runSafe'
 import { LIFE_CAPS, summarizeUpgrades } from '../model'
-import { CollapsibleSection } from './CollapsibleSection'
+import { CollapsibleSection } from '../../../components/CollapsibleSection'
 import { useUpgradeList } from './useUpgradeList'
 
 // "Upgrade list": small annoyances to fix, kept across weeks. Not a to-do list

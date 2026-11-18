@@ -14,6 +14,8 @@ import { QuizTab } from './QuizTab'
 import { useCourseState } from '../engine/store'
 import type { Course, CourseModule } from '../engine/types'
 import { useCourse } from '../engine/useCourse'
+import { BackLink } from '../../../components/PageHeader'
+import { SegmentedTabs } from '../../../components/SegmentedTabs'
 
 type TabId = 'lesson' | 'quiz' | 'cards' | 'practice'
 
@@ -139,12 +141,7 @@ function ModuleView({ course, mod }: { course: Course; mod: CourseModule }) {
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <Link
-          to={`/learning/${course.id}`}
-          className="mb-3 inline-block text-sm text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
-        >
-          ← {course.title}
-        </Link>
+        <BackLink to={`/learning/${course.id}`}>{course.title}</BackLink>
         <h1 className="text-2xl font-semibold tracking-tight">{mod.title}</h1>
         <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">{mod.subtitle}</p>
         <div className="mt-3">
@@ -172,28 +169,7 @@ function ModuleView({ course, mod }: { course: Course; mod: CourseModule }) {
         className="sticky z-[5] -mx-1 bg-slate-50/95 px-1 py-1 backdrop-blur dark:bg-slate-900/95"
         style={{ top: stickyTop }}
       >
-        <div
-          role="tablist"
-          aria-label="Sezioni del modulo"
-          className="flex gap-1 overflow-x-auto rounded-xl bg-slate-100 p-1 dark:bg-slate-800"
-        >
-          {tabs.map((t) => (
-            <button
-              key={t.id}
-              type="button"
-              role="tab"
-              aria-selected={tab === t.id}
-              onClick={() => setTab(t.id)}
-              className={`min-h-10 shrink-0 flex-1 rounded-lg px-3 text-sm font-medium whitespace-nowrap ${FOCUS_RING_INSET} ${
-                tab === t.id
-                  ? 'bg-white text-slate-900 shadow-sm dark:bg-slate-700 dark:text-slate-100'
-                  : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200'
-              }`}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
+        <SegmentedTabs label="Sezioni del modulo" options={tabs} value={tab} onChange={setTab} />
       </div>
 
       <div role="tabpanel">

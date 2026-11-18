@@ -1,6 +1,5 @@
 // Ripasso page (/learning/ripasso) and its Learning-home card. Queue logic: ./review.ts; writes: learningSync.ts.
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
 import { Button } from '../../../components/Button'
 import { Card } from '../../../components/Card'
 import { FOCUS_RING } from '../../../components/focus'
@@ -10,6 +9,7 @@ import { CourseLoading } from '../ui/CourseLoading'
 import { HtmlText } from '../engine/HtmlText'
 import { gradeDays, type Grade, type QueueItem } from '../engine/review'
 import { lookup, useReviewQueue, type Shown } from './content'
+import { BackLink } from '../../../components/PageHeader'
 
 // --- Page ---------------------------------------------------------------------------------------
 
@@ -118,12 +118,7 @@ export default function ReviewPage() {
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <Link
-          to="/learning"
-          className="mb-3 inline-block text-sm text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
-        >
-          ← Learning
-        </Link>
+        <BackLink to="/learning">Learning</BackLink>
         <h1 className="text-2xl font-semibold tracking-tight">🔁 Ripasso</h1>
         <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
           Flashcard che conosci, parole del Vocabolario e domande sbagliate, quando è il momento di rivederle. Al

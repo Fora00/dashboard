@@ -5,7 +5,7 @@ import { formatLastSent, lastSentInfo } from '../format'
 import { buildThingsUrl, canReturnFromThings, isIosLike, lifeReturnUrl, type WeekSummary } from '../model'
 import { Button } from '../../../components/Button'
 import { Card } from '../../../components/Card'
-import { CollapsibleSection } from './CollapsibleSection'
+import { CollapsibleSection } from '../../../components/CollapsibleSection'
 import { runSafe } from '../../../lib/runSafe'
 
 export function ThingsSection({

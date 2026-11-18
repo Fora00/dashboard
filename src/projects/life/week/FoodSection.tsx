@@ -1,7 +1,7 @@
 import type { MealsWeek } from '../model'
 import { addDays } from '../model/dates.ts'
 import { ProjectLink } from '../../../components/ProjectLink'
-import { CollapsibleSection } from './CollapsibleSection'
+import { CollapsibleSection } from '../../../components/CollapsibleSection'
 
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 

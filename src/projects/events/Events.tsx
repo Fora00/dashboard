@@ -11,7 +11,7 @@ import { PageHeader } from '../../components/PageHeader'
 import { EmptyState } from '../../components/EmptyState'
 import { Button } from '../../components/Button'
 import { Chip } from '../../components/Chip'
-import { FOCUS_RING, FOCUS_RING_INSET } from '../../components/focus'
+import { FOCUS_RING_INSET } from '../../components/focus'
 import { Snackbar } from '../../components/Snackbar'
 import { formatDate } from '../../lib/dates'
 import { SkeletonList } from '../../components/Skeleton'
@@ -43,6 +43,7 @@ import { isScreening } from './screenings'
 import { canOrderForYou, explain, makeScorer } from './interestScore'
 import { interestModelFrom } from './useInterestModel'
 import { useForYouSetting } from './forYou'
+import { SegmentedTabs } from '../../components/SegmentedTabs'
 
 /** The add/edit sheet: closed, adding (with an optional prefill) or editing a row. */
 type Editor =
@@ -424,39 +425,26 @@ export function Events() {
   )
 
   // View tabs, search, date chips: on top of the list in both layouts.
+  const savedCount = marksRaw.filter((m) => m.state !== 'hidden').length
+  const wentCount = marksRaw.filter((m) => m.state === 'going' && isPastEvent(m.event, now)).length
+  const VIEW_OPTIONS: { id: View; label: string }[] = [
+    { id: 'all', label: 'All' },
+    { id: 'open', label: 'Open now' },
+    { id: 'series', label: 'Si ripete' },
+    { id: 'saved', label: `Saved${savedCount ? ` (${savedCount})` : ''}` },
+    { id: 'went', label: `Been${wentCount ? ` (${wentCount})` : ''}` },
+  ]
   const controls = (
     <>
-      <div className="mb-3 grid grid-cols-3 gap-2 sm:grid-cols-5">
-        {(
-          [
-            ['all', 'All'],
-            ['open', 'Open now'],
-            ['series', 'Si ripete'],
-            [
-              'saved',
-              `Saved${marksRaw.filter((m) => m.state !== 'hidden').length ? ` (${marksRaw.filter((m) => m.state !== 'hidden').length})` : ''}`,
-            ],
-            [
-              'went',
-              `Been${marksRaw.filter((m) => m.state === 'going' && isPastEvent(m.event, now)).length ? ` (${marksRaw.filter((m) => m.state === 'going' && isPastEvent(m.event, now)).length})` : ''}`,
-            ],
-          ] as [View, string][]
-        ).map(([id, label]) => (
-          <button
-            key={id}
-            type="button"
-            aria-pressed={view === id}
-            onClick={() => toggles.setView(id)}
-            className={`min-h-10 rounded-lg px-2 text-sm font-medium transition-colors ${FOCUS_RING} ${
-              view === id
-                ? 'bg-(color:--accent-selected) text-(color:--accent-fg)'
-                : 'bg-slate-100 text-slate-800 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700'
-            }`}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
+      <SegmentedTabs
+        kind="choice"
+        variant="chips"
+        label="View"
+        className="mb-3 grid grid-cols-3 gap-2 sm:grid-cols-5"
+        options={VIEW_OPTIONS}
+        value={view}
+        onChange={toggles.setView}
+      />
 
       <div className="relative mb-2">
         <input

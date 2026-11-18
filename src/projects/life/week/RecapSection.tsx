@@ -1,6 +1,6 @@
 import type { LifeRecapItem } from '../../../lib/db'
 import { Card } from '../../../components/Card'
-import { CollapsibleSection } from './CollapsibleSection'
+import { CollapsibleSection } from '../../../components/CollapsibleSection'
 
 // Read-only recap, one calm row per item: bars for "kept the minimum" (done
 // of the days, per week, current week outlined), a step line for a metric.

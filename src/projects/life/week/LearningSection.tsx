@@ -1,7 +1,7 @@
 import { ProjectLink } from '../../../components/ProjectLink'
 import { ProgressBar } from '../../learning/ui/ProgressBar'
 import { describeLearningActivity, type LearningWeek } from '../model'
-import { CollapsibleSection } from './CollapsibleSection'
+import { CollapsibleSection } from '../../../components/CollapsibleSection'
 
 // The week's Learning activity (quiz answers, cards known, practice ticked),
 // read-only: Learning is where you study. Same idea as FoodSection. The

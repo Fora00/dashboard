@@ -11,6 +11,7 @@ import { courseProgress, EMPTY_STATE } from '../engine/progress'
 import { resetCourse } from '../../../lib/learningSync'
 import { useCourseState, useResume } from '../engine/store'
 import type { Course } from '../engine/types'
+import { BackLink } from '../../../components/PageHeader'
 
 function ResetCourse({ course }: { course: Course }) {
   const [armed, setArmed] = useState(false)
@@ -47,12 +48,7 @@ function CourseView({ course }: { course: Course }) {
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <Link
-          to={`/learning/${back?.id ?? ''}`}
-          className="mb-3 inline-block text-sm text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
-        >
-          ← {back?.title ?? 'Learning'}
-        </Link>
+        <BackLink to={`/learning/${back?.id ?? ''}`}>{back?.title ?? 'Learning'}</BackLink>
         <h1 className="text-2xl font-semibold tracking-tight">
           <span className="mr-2">{course.emoji}</span>
           {course.title}

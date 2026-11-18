@@ -6,20 +6,29 @@ interface Props {
   emoji: string
   title: string
   subtitle?: string
+  /** Back link; defaults to "← All projects". */
+  back?: { to: string; label: string }
   children?: ReactNode
 }
 
-export function PageHeader({ emoji, title, subtitle, children }: Props) {
+/** "← label" link above a page title. */
+export function BackLink({ to, children }: { to: string; children: ReactNode }) {
+  return (
+    <Link
+      to={to}
+      className="mb-3 inline-block text-sm text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
+    >
+      ← {children}
+    </Link>
+  )
+}
+
+export function PageHeader({ emoji, title, subtitle, back, children }: Props) {
   // Accent marker only on project pages; join pages keep the plain title.
   const accent = useProjectAccent()
   return (
     <div className="mb-6">
-      <Link
-        to="/"
-        className="mb-3 inline-block text-sm text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
-      >
-        ← All projects
-      </Link>
+      <BackLink to={back?.to ?? '/'}>{back?.label ?? 'All projects'}</BackLink>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">

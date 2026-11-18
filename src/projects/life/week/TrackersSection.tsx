@@ -5,7 +5,7 @@ import { removeTrackerEntry, restoreEntry } from '../../../lib/lifeSync'
 import { trackersSummary } from '../format'
 import { addDays, type TrackerSummary } from '../model'
 import { useToday } from '../../../lib/useToday'
-import { CollapsibleSection } from './CollapsibleSection'
+import { CollapsibleSection } from '../../../components/CollapsibleSection'
 import { TrackerRow, type LastSunday } from './TrackerRow'
 import { runSafe } from '../../../lib/runSafe'
 

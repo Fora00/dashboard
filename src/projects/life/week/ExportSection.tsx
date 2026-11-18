@@ -7,7 +7,7 @@ import { shareOrCopy } from '../../../lib/share'
 import { useFlash } from '../../../lib/useFlash'
 import { Button } from '../../../components/Button'
 import { Card } from '../../../components/Card'
-import { CollapsibleSection } from './CollapsibleSection'
+import { CollapsibleSection } from '../../../components/CollapsibleSection'
 
 export function ExportSection({
   plan,

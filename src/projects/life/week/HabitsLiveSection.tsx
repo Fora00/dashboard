@@ -1,7 +1,7 @@
 import { HabitsPanel } from '../../habits/HabitsPanel'
 import { useHabitDays } from '../../habits/useHabitDays'
 import { useToday } from '../../../lib/useToday'
-import { CollapsibleSection } from './CollapsibleSection'
+import { CollapsibleSection } from '../../../components/CollapsibleSection'
 
 interface Props {
   open: boolean

@@ -1,7 +1,7 @@
 import type { LifeFocus } from '../../../lib/db'
 import { AddLine } from './AddLine'
 import { addFocus, toggleFocus, toggleFocusCancelled } from '../../../lib/lifeSync'
-import { CollapsibleSection } from './CollapsibleSection'
+import { CollapsibleSection } from '../../../components/CollapsibleSection'
 import { LIFE_CAPS } from '../model'
 import { runSafe } from '../../../lib/runSafe'
 

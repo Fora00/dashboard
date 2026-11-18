@@ -3,7 +3,7 @@ import type { LifeAnswer } from '../../../lib/db'
 import { Card } from '../../../components/Card'
 import { describeAnswer } from '../format'
 import { SCREEN_QUESTIONS, validateAnswer, type WeekSummary } from '../model'
-import { CollapsibleSection } from './CollapsibleSection'
+import { CollapsibleSection } from '../../../components/CollapsibleSection'
 import { AppsInput, DurationInput } from './SundayQuestion'
 
 /** Phone screen time for the week (from iOS Screen Time): total, daily

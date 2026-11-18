@@ -17,6 +17,7 @@ import { MAX_OPEN } from './habitStates'
 import { tapHabit } from './habitTap'
 import { HabitTile } from './HabitTile'
 import { Lifeboard } from './Lifeboard'
+import { SegmentedTabs } from '../../components/SegmentedTabs'
 
 const HABIT_VIEWS = ['today', 'week', 'month', 'board'] as const
 export type HabitView = (typeof HABIT_VIEWS)[number]
@@ -68,24 +69,13 @@ export function HabitsPanel({ data, today, viewKey, defaultView = 'today', empty
 
   return (
     <div>
-      <div
-        role="tablist"
-        aria-label="View"
+      <SegmentedTabs
+        label="View"
+        options={HABIT_VIEWS.map((v) => ({ id: v, label: <span className="capitalize">{v}</span> }))}
+        value={view}
+        onChange={setView}
         className="mb-6 grid grid-cols-4 gap-1 rounded-xl bg-slate-100 p-1 dark:bg-slate-800"
-      >
-        {HABIT_VIEWS.map((v) => (
-          <button
-            key={v}
-            type="button"
-            role="tab"
-            aria-selected={view === v}
-            onClick={() => setView(v)}
-            className={`min-h-10 rounded-lg text-sm font-medium capitalize ${view === v ? 'bg-white shadow-sm dark:bg-slate-700' : 'text-slate-500'}`}
-          >
-            {v}
-          </button>
-        ))}
-      </div>
+      />
 
       {data === undefined ? (
         <SkeletonList rows={3} rowClassName="h-16" />
