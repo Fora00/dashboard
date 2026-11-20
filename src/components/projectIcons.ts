@@ -1,6 +1,6 @@
 // Icon data for the project registry.
 //
-// These 15 icons are copied from Lucide (https://lucide.dev), licensed under
+// These 17 icons are copied from Lucide (https://lucide.dev), licensed under
 // the ISC licence: https://github.com/lucide-icons/lucide/blob/main/LICENSE
 // (Copyright (c) Lucide Contributors; portions Copyright (c) 2013-2022 Cole
 // Bemis, MIT/Feather). All are 24x24, stroke currentColor, stroke width 2.
@@ -12,6 +12,21 @@
 export type IconElement = readonly [tag: 'path' | 'circle' | 'line' | 'rect', attrs: Record<string, string>]
 
 export const projectIcons: Record<string, readonly IconElement[]> = {
+  wrench: [
+    [
+      'path',
+      {
+        d: 'M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.106-3.105c.32-.322.863-.22.983.218a6 6 0 0 1-8.259 7.057l-7.91 7.91a1 1 0 0 1-2.999-3l7.91-7.91a6 6 0 0 1 7.057-8.259c.438.12.54.662.219.984z',
+      },
+    ],
+  ],
+  scissors: [
+    ['circle', { cx: '6', cy: '6', r: '3' }],
+    ['path', { d: 'M8.12 8.12 12 12' }],
+    ['path', { d: 'M20 4 8.12 15.88' }],
+    ['circle', { cx: '6', cy: '18', r: '3' }],
+    ['path', { d: 'M14.8 14.8 20 20' }],
+  ],
   link: [
     ['path', { d: 'M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71' }],
     ['path', { d: 'M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71' }],

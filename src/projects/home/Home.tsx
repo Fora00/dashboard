@@ -6,7 +6,6 @@ import type { AreaId } from '../../lib/areas'
 import { habitProgress } from '../../lib/homeToday'
 import { useToday } from '../../lib/useToday'
 import type { ProjectMeta } from '../../lib/projects'
-import { formatBytes } from '../../lib/format'
 import { usePersistedState, type Codec } from '../../lib/safeStorage'
 import { toggleStar } from '../../lib/projectStats'
 import { useVisibleProjects } from '../../lib/useVisibleProjects'
@@ -160,13 +159,6 @@ export function Home() {
     setCustomIds(all)
     setOrder('custom')
   }
-  const fileStats = useLiveQuery(async () => {
-    const files = await db.files.toArray()
-    return {
-      count: files.length,
-      bytes: files.reduce((sum, f) => sum + f.size, 0),
-    }
-  })
   const shopStats = useLiveQuery(async () => {
     const open = await db.shopItems.where('done').equals(0).count()
     return { open }
@@ -188,15 +180,6 @@ export function Home() {
     const open = await db.tripIdeas.where('done').equals(0).count()
     return { open }
   })
-
-  const statFor = (id: string): string | null => {
-    if (id === 'local-transfer' && fileStats) {
-      return fileStats.count === 0
-        ? 'No files yet'
-        : `${fileStats.count} file${fileStats.count === 1 ? '' : 's'} · ${formatBytes(fileStats.bytes)}`
-    }
-    return null
-  }
 
   // Small live counts shown as a pill on the tile; hidden entirely at zero.
   const badgeFor = (id: string): number | null => {
@@ -250,7 +233,6 @@ export function Home() {
             </div>
             <h2 className="font-semibold">{p.name}</h2>
             <p className="mt-1 line-clamp-2 text-sm text-slate-500 dark:text-slate-400">{p.description}</p>
-            {statFor(p.id) && <p className="mt-3 text-xs font-medium text-(--accent-border)">{statFor(p.id)}</p>}
           </Card>
         </Link>
       </div>

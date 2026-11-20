@@ -43,10 +43,17 @@ export function navSections(
   return sections
 }
 
-/** Id of the project the route belongs to (sub-pages included, e.g. /life/edit), or null (Home, join, unknown). */
+/**
+ * Id of the project the route belongs to (sub-pages included, e.g. /life/edit),
+ * or null (Home, join, unknown). A tool counts as the Strumenti entry, so the
+ * sidebar highlights Strumenti while you are on a tool.
+ */
 export function activeProjectId(pathname: string): string | null {
-  return projectForPath(pathname)?.id ?? null
+  const p = projectForPath(pathname)
+  return p?.tool ? TOOLS_ID : (p?.id ?? null)
 }
+
+const TOOLS_ID = 'strumenti'
 
 /** Whether the app title (the Home link) is the current page. */
 export function isHomePath(pathname: string): boolean {

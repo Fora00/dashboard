@@ -42,6 +42,8 @@ const LifeToday = page(() => import('./projects/life/LifeToday'), 'LifeToday')
 const LifeImport = page(() => import('./projects/life/LifeImport'), 'LifeImport')
 const Learning = page(() => import('./projects/learning/Learning'), 'Learning')
 const Links = page(() => import('./projects/links/Links'), 'Links')
+const Strumenti = page(() => import('./projects/strumenti/Strumenti'), 'Strumenti')
+const Zine = page(() => import('./projects/zine/Zine'), 'Zine')
 const LocalTransfer = page(() => import('./projects/local-transfer/LocalTransfer'), 'LocalTransfer')
 const Settings = page(() => import('./projects/settings/Settings'), 'Settings')
 const Todo = page(() => import('./projects/todo/Todo'), 'Todo')
@@ -89,7 +91,9 @@ export default function App() {
       <Routes>
         <Route element={<Layout />}>
           <Route index element={<Home />} />
+          <Route path="/strumenti" element={<Strumenti />} />
           <Route path="/local-transfer" element={<LocalTransfer />} />
+          <Route path="/zine" element={<Zine />} />
           <Route path="/shop-list" element={<ShopList />} />
           <Route path="/todo" element={<Todo />} />
           <Route path="/climbing" element={<Climbing />} />

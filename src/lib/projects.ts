@@ -29,6 +29,9 @@ export interface ProjectMeta {
   // Public: local-only public data, usable by anyone with the plain link — no
   // login, no invite. Never offered as a grantable project on /sharing.
   public?: boolean
+  // A small self-contained tool: listed only on /strumenti (not on Home or in the
+  // sidebar), works offline and signed out, shareable by plain link.
+  tool?: boolean
   // Content width at lg+ (see ProjectLayout). Omitted = 'narrow'.
   layout?: ProjectLayout
 }
@@ -48,6 +51,19 @@ export function isInvitable(p: ProjectMeta): boolean {
 
 export const projects: ProjectMeta[] = [
   {
+    id: 'strumenti',
+    name: 'Strumenti',
+    emoji: '🧰',
+    area: 'utility',
+    icon: 'wrench',
+    color: '#64748b',
+    description: 'Piccoli strumenti che funzionano offline e senza account.',
+    path: '/strumenti',
+    status: 'live',
+    layout: 'narrow',
+    public: true,
+  },
+  {
     id: 'local-transfer',
     name: 'Local Transfer',
     emoji: '📁',
@@ -58,6 +74,21 @@ export const projects: ProjectMeta[] = [
     path: '/local-transfer',
     status: 'live',
     layout: 'narrow',
+    tool: true,
+  },
+  {
+    id: 'zine',
+    name: 'Zine',
+    emoji: '✂️',
+    area: 'utility',
+    icon: 'scissors',
+    color: '#ec4899',
+    description: 'Editor di zine A5 da fotocopia: impagina, stampa o scarica il PDF.',
+    path: '/zine',
+    status: 'live',
+    layout: 'full',
+    public: true,
+    tool: true,
   },
   {
     id: 'shop-list',

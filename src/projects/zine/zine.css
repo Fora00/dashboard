@@ -1,0 +1,983 @@
+/* ZINE//SPORCA, ported from the standalone tool. Everything is scoped:
+   .zine-scope = any container holding zine pages (the editor, the print root, the PDF root);
+   .zine-app   = the editor UI itself (mounted inside the dashboard's <main>);
+   .zine-print = the print root, a direct child of <body> while the editor is mounted. */
+
+.zine-scope {
+  --ui-bg: #e6e1d4;
+  --ui-ink: #111;
+  --ui-paper: #f3efe4;
+  --ui-accent: #ff2e63;
+  --scale: 1;
+  font-family: 'Courier Prime', ui-monospace, monospace;
+  color: var(--ui-ink);
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+.zine-scope,
+.zine-scope *,
+.zine-scope *::before,
+.zine-scope *::after {
+  box-sizing: border-box;
+}
+
+/* ---------- layout ---------- */
+/* The negative margins cancel <main>'s px-4 py-6 pb-16 (components/Layout.tsx) so the editor fills the
+   content area edge to edge; --zine-top (set by the editor) is the root's distance from the page top. */
+.zine-app {
+  display: grid;
+  grid-template-columns: 200px 1fr 290px;
+  grid-template-rows: auto 1fr;
+  grid-template-areas: 'bar bar bar' 'nav stage panel';
+  margin: -1.5rem -1rem -4rem;
+  height: max(440px, calc(100dvh - var(--zine-top, 0px) - env(safe-area-inset-bottom)));
+  background: var(--ui-bg);
+  overflow: hidden;
+}
+@media (max-width: 1100px) {
+  .zine-app {
+    grid-template-columns: 150px 1fr 250px;
+  }
+}
+.zine-app .z-bar {
+  grid-area: bar;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 8px 12px;
+  background: #111;
+  color: var(--ui-paper);
+}
+.zine-app .z-back {
+  color: var(--ui-paper);
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  min-height: 40px;
+  margin: -6px 0;
+}
+.zine-app .logo {
+  font-family: 'Rubik Mono One', sans-serif;
+  font-size: 18px;
+  letter-spacing: -1px;
+  margin-right: 12px;
+  transform: rotate(-2deg);
+}
+.zine-app .sep {
+  width: 1px;
+  height: 22px;
+  background: #555;
+  margin: 0 4px;
+}
+.zine-app .grow {
+  flex: 1;
+}
+
+.zine-app button {
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  background: var(--ui-paper);
+  color: #111;
+  border: 2px solid #111;
+  padding: 4px 10px;
+  cursor: pointer;
+  box-shadow: 2px 2px 0 var(--ui-accent);
+  border-radius: 0;
+}
+.zine-app button:active {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0 var(--ui-accent);
+}
+.zine-app button.hot {
+  background: var(--ui-accent);
+  color: #fff;
+  box-shadow: 2px 2px 0 var(--ui-paper);
+}
+.zine-app dialog button.hot,
+.zine-app .z-progress button.hot {
+  box-shadow: 2px 2px 0 #111;
+}
+.zine-app .z-bar button {
+  border-color: var(--ui-paper);
+}
+.zine-app button.on {
+  background: #111;
+  color: var(--ui-paper);
+}
+.zine-app button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.zine-app .z-nav {
+  grid-area: nav;
+  overflow: auto;
+  padding: 10px;
+  border-right: 2px solid #111;
+}
+.zine-app .z-panel {
+  grid-area: panel;
+  overflow: auto;
+  padding: 12px 14px;
+  border-left: 2px solid #111;
+}
+.zine-app .z-stage {
+  grid-area: stage;
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(#0000001a 1px, transparent 1px) 0 0 / 14px 14px,
+    var(--ui-bg);
+}
+.zine-app .z-spreadwrap {
+  position: absolute;
+}
+.zine-app .z-spreadlabel {
+  position: absolute;
+  bottom: 10px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 13px;
+  opacity: 0.7;
+}
+
+/* ---------- nav ---------- */
+.zine-app .nav-title {
+  font-family: 'Rubik Mono One';
+  font-size: 12px;
+  margin: 4px 0 8px;
+}
+.zine-app .thumb {
+  cursor: pointer;
+  margin-bottom: 10px;
+  padding: 4px;
+  border: 2px solid transparent;
+}
+.zine-app .thumb.cur {
+  border-color: var(--ui-accent);
+}
+.zine-app .thumb-box {
+  position: relative;
+  overflow: hidden;
+}
+.zine-app .thumb-box .spread {
+  pointer-events: none;
+}
+.zine-app .thumb-label {
+  font-size: 11px;
+  text-align: center;
+  margin-top: 2px;
+}
+.zine-app .nav-pages {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  margin-bottom: 12px;
+  font-size: 13px;
+}
+
+/* ---------- panel ---------- */
+.zine-app .z-panel h3 {
+  font-family: 'Rubik Mono One';
+  font-size: 13px;
+  margin: 14px 0 8px;
+  border-bottom: 2px solid #111;
+  padding-bottom: 3px;
+  font-weight: 400;
+}
+.zine-app .z-panel h3:first-child {
+  margin-top: 0;
+}
+.zine-app .field {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-bottom: 9px;
+  font-size: 12px;
+}
+.zine-app .field > span {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 11px;
+}
+.zine-app .field input[type='text'],
+.zine-app .field input[type='number'],
+.zine-app .field select,
+.zine-app .field textarea {
+  font: inherit;
+  font-size: 13px;
+  padding: 4px 6px;
+  border: 2px solid #111;
+  background: #fff;
+  color: #111;
+  width: 100%;
+  border-radius: 0;
+}
+.zine-app .field textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+.zine-app .field input[type='range'] {
+  width: 100%;
+  accent-color: var(--ui-accent);
+}
+.zine-app .check {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+.zine-app .row {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-bottom: 9px;
+}
+.zine-app .swatches {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.zine-app .sw {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 2px solid #111;
+  box-shadow: none;
+}
+.zine-app .sw.on {
+  outline: 3px solid var(--ui-accent);
+  outline-offset: 1px;
+}
+.zine-app .hint {
+  font-size: 11px;
+  opacity: 0.7;
+  line-height: 1.4;
+}
+.zine-app .info {
+  font-size: 12px;
+  line-height: 1.5;
+  background: #fff8;
+  padding: 8px;
+  border: 1px dashed #111;
+}
+
+/* Touch (iPad): bigger targets, 16px inputs so iOS does not zoom. */
+@media (pointer: coarse) {
+  .zine-app button {
+    min-height: 40px;
+  }
+  .zine-app .sw {
+    width: 40px;
+    height: 40px;
+    min-height: 0;
+  }
+  .zine-app .field input[type='text'],
+  .zine-app .field input[type='number'],
+  .zine-app .field select,
+  .zine-app .field textarea {
+    font-size: 16px;
+    min-height: 40px;
+  }
+  .zine-app .check input {
+    width: 22px;
+    height: 22px;
+  }
+}
+
+/* ---------- pages ---------- */
+.zine-scope .spread {
+  display: flex;
+  transform-origin: top left;
+}
+.zine-scope .slot {
+  width: 148mm;
+  height: 210mm;
+  flex: none;
+}
+.zine-scope .page {
+  position: relative;
+  flex: none;
+  width: 148mm;
+  height: 210mm;
+  background: var(--paper);
+  color: var(--c-ink);
+  overflow: hidden;
+}
+.zine-app .z-spread .page {
+  box-shadow:
+    0 0 0 calc(1px / var(--scale)) #0003,
+    0 12px 30px #0003;
+}
+.zine-app .z-spread .page + .page {
+  box-shadow:
+    inset calc(6px / var(--scale)) 0 calc(8px / var(--scale)) -4px #0002,
+    0 12px 30px #0003;
+}
+.zine-scope .page.inverted {
+  background: var(--c-ink);
+}
+.zine-scope .page-inner {
+  position: absolute;
+  inset: 0;
+  /* The crooked-copy transform makes page-inner its own stacking context, so mix-blend-mode (white-as-
+     transparent images) only blends with what is inside it: carry the paper colour here, or the white
+     of an image shows over the paper. Gaps the tilt opens show the same colour from .page underneath. */
+  background: inherit;
+}
+.zine-scope .grain {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: var(--dirt);
+  background-size:
+    260px 260px,
+    100% 100%;
+}
+.zine-scope .page.inverted .grain {
+  filter: invert(1);
+}
+.zine-scope .guides {
+  position: absolute;
+  pointer-events: none;
+  border: calc(1px / var(--scale)) dashed #00a0ff99;
+}
+.zine-scope .pnum {
+  position: absolute;
+  bottom: 6mm;
+  font-family: 'Special Elite';
+  font-size: 3.2mm;
+}
+.zine-scope .pnum.l {
+  left: 8mm;
+}
+.zine-scope .pnum.r {
+  right: 8mm;
+}
+.zine-scope .page.inverted .pnum {
+  color: var(--paper);
+}
+
+/* ---------- elements ---------- */
+.zine-scope .el {
+  position: absolute;
+  transform-origin: center;
+}
+.zine-scope .tape-fill {
+  position: absolute;
+  inset: 0;
+}
+.zine-scope .el.blend {
+  mix-blend-mode: multiply;
+}
+.zine-scope .el img {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  display: block;
+  user-select: none;
+  -webkit-user-drag: none;
+  pointer-events: none;
+}
+.zine-app .edit .el {
+  cursor: move;
+  /* Pointer events drive drag/resize/rotate on touch too (iPad). */
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+.zine-app .el.selected {
+  outline: calc(1.5px / var(--scale)) dashed var(--ui-accent);
+  outline-offset: calc(2px / var(--scale));
+}
+.zine-app .handle {
+  position: absolute;
+  z-index: 5;
+  width: calc(14px / var(--scale));
+  height: calc(14px / var(--scale));
+  background: var(--ui-accent);
+  border: calc(2px / var(--scale)) solid #fff;
+  border-radius: 50%;
+}
+.zine-app .handle.resize {
+  right: calc(-7px / var(--scale));
+  bottom: calc(-7px / var(--scale));
+  cursor: nwse-resize;
+}
+.zine-app .handle.rotate {
+  right: calc(-7px / var(--scale));
+  top: calc(-7px / var(--scale));
+  cursor: grab;
+  background: #111;
+}
+@media (pointer: coarse) {
+  /* Bigger, and centred 6px outside the corners so the two never overlap on a thin element (tape). */
+  .zine-app .handle {
+    width: calc(26px / var(--scale));
+    height: calc(26px / var(--scale));
+  }
+  .zine-app .handle.resize {
+    right: calc(-19px / var(--scale));
+    bottom: calc(-19px / var(--scale));
+  }
+  .zine-app .handle.rotate {
+    right: calc(-19px / var(--scale));
+    top: calc(-19px / var(--scale));
+  }
+}
+
+.zine-scope .txt {
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  line-height: 1.15;
+}
+.zine-app .txt[contenteditable] {
+  outline: none;
+  cursor: text;
+  background: #fff8;
+  -webkit-user-select: text;
+  user-select: text;
+}
+.zine-scope .f-typewriter {
+  font-family: 'Special Elite', monospace;
+}
+.zine-scope .f-mono {
+  font-family: 'Courier Prime', monospace;
+}
+.zine-scope .f-marker {
+  font-family: 'Permanent Marker', cursive;
+  line-height: 1.1;
+}
+.zine-scope .f-hand {
+  font-family: 'Rock Salt', cursive;
+  line-height: 1.6;
+}
+.zine-scope .f-stencil {
+  font-family: 'Stardos Stencil', sans-serif;
+  font-weight: 700;
+}
+.zine-scope .f-impact {
+  font-family: 'Anton', sans-serif;
+  text-transform: uppercase;
+  line-height: 1;
+}
+.zine-scope .f-serif {
+  font-family: 'Playfair Display', serif;
+  font-weight: 900;
+  line-height: 1.05;
+}
+.zine-scope .f-block {
+  font-family: 'Rubik Mono One', sans-serif;
+  line-height: 1.05;
+}
+.zine-scope .f-ransom {
+  line-height: 1.45;
+}
+.zine-scope .rs {
+  display: inline-block;
+  padding: 0 0.08em;
+  margin: 0 0.03em;
+  line-height: 1.05;
+}
+.zine-scope .rs-inv {
+  background: var(--c-ink);
+  color: var(--paper);
+}
+.zine-scope .rs-yel {
+  background: #f5e663;
+  color: #111;
+}
+.zine-scope .rs-paper {
+  background: #fff;
+  color: #111;
+  box-shadow: 0 0 0 0.03em #0003;
+}
+.zine-scope .rs-word {
+  white-space: nowrap;
+}
+.zine-scope .rs-space {
+  display: inline-block;
+  width: 0.35em;
+}
+.zine-scope .strip {
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  padding: 0.02em 0.25em;
+}
+
+/* ---------- dialog + progress ---------- */
+.zine-app dialog {
+  border: 3px solid #111;
+  box-shadow: 6px 6px 0 var(--ui-accent);
+  background: var(--ui-paper);
+  color: var(--ui-ink);
+  max-width: min(460px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  overflow: auto;
+  font-family: inherit;
+  padding: 16px;
+}
+.zine-app dialog::backdrop {
+  background: #0006;
+}
+.zine-app dialog h2 {
+  font-family: 'Rubik Mono One';
+  font-weight: 400;
+  font-size: 20px;
+  margin: 0 0 12px;
+}
+.zine-app .dlg-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+.zine-app .dlg-actions .pdf {
+  font-size: 15px;
+  padding: 8px 14px;
+}
+.zine-app .z-progress p {
+  margin: 0 0 10px;
+  font-size: 13px;
+}
+.zine-app .z-progress progress {
+  width: 100%;
+  height: 14px;
+  accent-color: var(--ui-accent);
+}
+
+/* ---------- print ---------- */
+/* While the editor is mounted (html.zine-mounted) printing shows only the imposed sheets. */
+.zine-print,
+.zine-pdf {
+  display: none;
+}
+.zine-pdf.on {
+  display: block;
+  position: fixed;
+  left: -100000px;
+  top: 0;
+  pointer-events: none;
+}
+@media print {
+  html.zine-mounted,
+  html.zine-mounted body {
+    background: none !important;
+    color-scheme: light;
+    padding: 0 !important;
+    margin: 0 !important;
+    min-height: 0 !important;
+    height: auto !important;
+  }
+  html.zine-mounted body > :not(.zine-print) {
+    display: none !important;
+  }
+  html.zine-mounted body > .zine-print {
+    display: block;
+  }
+}
+.zine-scope .sheet {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  width: 297mm;
+  height: 210mm;
+  overflow: hidden;
+  break-after: page;
+  page-break-after: always;
+}
+.zine-scope .sheet.a5 {
+  width: 148mm;
+}
+.zine-scope .sheet:last-child {
+  break-after: auto;
+  page-break-after: auto;
+}
+.zine-scope .blank {
+  width: 148mm;
+  height: 210mm;
+  flex: none;
+}
+.zine-scope.no-paper .page:not(.inverted) {
+  background: #fff;
+}
+.zine-scope .fold {
+  position: absolute;
+  left: 148.5mm;
+  width: 0;
+  height: 4mm;
+  border-left: 0.2mm solid #999;
+}
+.zine-scope .fold.t {
+  top: 0;
+}
+.zine-scope .fold.b {
+  bottom: 0;
+}
+
+/* ---------- compact: phone + tablet (editor sets data-mode on the root) ---------- */
+/* Desktop-only and compact-only chrome. */
+.zine-app .z-more,
+.zine-app .z-menu,
+.zine-app .z-tools,
+.zine-app .z-pager,
+.zine-app .z-sheet-head {
+  display: none;
+}
+/* iPad landscape (touch, three columns): narrower columns, file actions in the ⋯ menu. */
+.zine-app.z-touch[data-mode='desktop'] {
+  grid-template-columns: 150px minmax(0, 1fr) 260px;
+}
+.zine-app.z-touch .z-bar > button {
+  min-width: 44px;
+}
+.zine-app.z-touch[data-mode='desktop'] .z-bar > button {
+  white-space: nowrap;
+  padding: 4px 8px;
+}
+.zine-app.z-touch[data-mode='desktop'] .logo {
+  font-size: 14px;
+  margin-right: 4px;
+  white-space: nowrap;
+}
+.zine-app.z-touch[data-mode='desktop'] .nav-pages {
+  gap: 2px;
+  white-space: nowrap;
+}
+.zine-app.z-touch[data-mode='desktop'] .nav-pages button {
+  padding: 4px 8px;
+}
+.zine-app.z-touch[data-mode='desktop'] .z-file,
+.zine-app.z-touch[data-mode='desktop'] .z-menu-compact {
+  display: none;
+}
+.zine-app.z-touch .z-more {
+  display: inline-flex;
+}
+.zine-app.z-touch .z-bar {
+  flex-wrap: nowrap;
+}
+.zine-app.z-touch .z-stage,
+.zine-app.z-compact .z-stage {
+  /* The editor handles every finger on the page area: no browser zoom/scroll, selection or callout. */
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+.zine-app.z-touch button,
+.zine-app.z-compact button {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.zine-app.z-compact {
+  /* Fixed between the dashboard header and the bottom of the visual viewport (keyboard), set by the editor. */
+  position: fixed;
+  z-index: 5;
+  top: var(--zine-top, 0px);
+  left: var(--zine-left, 0px);
+  right: var(--zine-right, 0px);
+  bottom: var(--zine-kb, 0px);
+  height: auto;
+  margin: 0;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-areas: 'bar' 'stage' 'tools';
+  overscroll-behavior: none;
+  -webkit-text-size-adjust: 100%;
+}
+
+.zine-app.z-compact .z-bar {
+  position: relative;
+  z-index: 20;
+  flex-wrap: nowrap;
+  gap: 6px;
+  padding: 4px 8px;
+}
+.zine-app.z-compact .z-add,
+.zine-app.z-compact .z-file,
+.zine-app.z-compact .z-print,
+.zine-app.z-compact .z-spreadlabel {
+  display: none;
+}
+.zine-app.z-compact .logo {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: clip;
+  font-size: 15px;
+  margin: 0 4px;
+  padding: 4px 0;
+}
+.zine-app.z-compact .z-bar button {
+  min-width: 44px;
+  min-height: 44px;
+  font-size: 20px;
+  padding: 0 6px;
+}
+.zine-app.z-compact .z-more {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.zine-app.z-compact .grow {
+  display: none;
+}
+/* bottom toolbar, thumb reach */
+.zine-app.z-compact .z-tools {
+  grid-area: tools;
+  display: flex;
+  gap: 6px;
+  position: relative;
+  z-index: 20;
+  padding: 6px max(6px, env(safe-area-inset-right)) calc(6px + env(safe-area-inset-bottom))
+    max(6px, env(safe-area-inset-left));
+  background: #111;
+}
+.zine-app.z-compact .z-tools button {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 52px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 4px 2px;
+  font-size: 11px;
+  border-color: var(--ui-paper);
+  white-space: nowrap;
+  overflow: hidden;
+}
+.zine-app.z-compact .z-tools b {
+  font-size: 18px;
+  line-height: 1;
+}
+.zine-app.z-compact.z-kb .z-tools {
+  display: none;
+}
+/* page indicator + arrows */
+.zine-app.z-compact .z-pager {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: absolute;
+  left: 50%;
+  bottom: 4px;
+  transform: translateX(-50%);
+  z-index: 3;
+  white-space: nowrap;
+}
+.zine-app.z-compact .z-pager button {
+  min-width: 44px;
+  min-height: 40px;
+  font-size: 22px;
+  line-height: 1;
+  padding: 0;
+}
+.zine-app.z-compact .z-pager-label {
+  font-size: 13px;
+  font-weight: 700;
+  background: #f3efe4d9;
+  padding: 4px 8px;
+}
+.zine-app.z-compact .z-spreadwrap.z-anim {
+  transition:
+    left 0.22s ease,
+    top 0.22s ease,
+    translate 0.22s ease;
+}
+/* bottom sheets: properties (.z-panel) and pages (.z-nav), over the page area */
+.zine-app.z-compact .z-panel,
+.zine-app.z-compact .z-nav {
+  grid-area: stage;
+  align-self: end;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  height: 46%;
+  min-height: min(240px, 100%);
+  padding: 0;
+  border: 0;
+  border-top: 3px solid #111;
+  background: var(--ui-paper);
+  box-shadow: 0 -10px 28px #0004;
+  overflow: hidden;
+  transform: translateY(105%);
+  visibility: hidden;
+  transition:
+    transform 0.22s ease,
+    height 0.22s ease,
+    visibility 0s linear 0.22s;
+}
+.zine-app.z-compact[data-sheet='panel'] .z-panel,
+.zine-app.z-compact[data-sheet='nav'] .z-nav {
+  transform: none;
+  visibility: visible;
+  transition:
+    transform 0.22s ease,
+    height 0.22s ease;
+}
+.zine-app.z-compact[data-sheet-size='full'] .z-panel,
+.zine-app.z-compact[data-sheet-size='full'] .z-nav {
+  height: calc(100% - 6px);
+}
+.zine-app.z-compact .z-sheet-head {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+  padding: 14px 10px 8px;
+  border-bottom: 2px solid #111;
+  touch-action: none;
+  cursor: grab;
+}
+.zine-app.z-compact .z-sheet-head::before {
+  content: '';
+  position: absolute;
+  top: 5px;
+  left: 50%;
+  width: 44px;
+  height: 4px;
+  margin-left: -22px;
+  background: #111;
+  opacity: 0.35;
+}
+.zine-app.z-compact .z-sheet-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-family: 'Rubik Mono One';
+  font-size: 12px;
+}
+.zine-app.z-compact .z-sheet-head button {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 8px;
+  font-size: 15px;
+}
+.zine-app.z-compact .z-sheet-head .z-del {
+  background: #111;
+  color: var(--ui-paper);
+}
+.zine-app.z-compact .z-sheet-head .z-x {
+  box-shadow: none;
+}
+.zine-app.z-compact .z-count {
+  font-size: 13px;
+  white-space: nowrap;
+}
+.zine-app.z-compact .z-panel-body,
+.zine-app.z-compact .z-nav-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding: 12px max(14px, env(safe-area-inset-right)) 24px max(14px, env(safe-area-inset-left));
+}
+.zine-app.z-compact .z-panel-body > h3:first-child {
+  display: none;
+}
+.zine-app.z-compact .z-panel-body > h3:first-child + * {
+  margin-top: 0;
+}
+.zine-app.z-compact .row button {
+  min-height: 44px;
+}
+.zine-app.z-compact .z-reorder {
+  align-items: center;
+  font-weight: 700;
+  font-size: 13px;
+}
+.zine-app.z-compact .z-thumbs {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(212px, 1fr));
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.zine-app.z-compact .z-thumbs.single {
+  grid-template-columns: repeat(auto-fill, minmax(108px, 1fr));
+}
+.zine-app.z-compact .z-thumbs .thumb {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0;
+  padding: 4px;
+  background: transparent;
+  border: 2px solid transparent;
+  box-shadow: none;
+  font-weight: 400;
+}
+.zine-app.z-compact .z-thumbs .thumb.cur {
+  border-color: var(--ui-accent);
+}
+.zine-app.z-compact .z-thumbs .thumb-box {
+  box-shadow: 0 2px 8px #0003;
+}
+/* inputs: 16px so iOS never zooms on focus */
+.zine-app.z-compact .field input[type='text'],
+.zine-app.z-compact .field input[type='number'],
+.zine-app.z-compact .field select,
+.zine-app.z-compact .field textarea {
+  font-size: 16px;
+  min-height: 40px;
+}
+.zine-app.z-compact .sw {
+  width: 40px;
+  height: 40px;
+}
+.zine-app.z-compact .check {
+  min-height: 40px;
+  font-size: 14px;
+}
+.zine-app.z-compact .check input {
+  width: 22px;
+  height: 22px;
+  flex: none;
+}
+.zine-app.z-compact .field input[type='range'] {
+  min-height: 40px;
+}
+
+/* ⋯ menu (compact and iPad landscape) */
+.zine-app .z-menu:not([hidden]) {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: absolute;
+  top: 100%;
+  right: max(8px, env(safe-area-inset-right));
+  z-index: 30;
+  min-width: 230px;
+  padding: 10px;
+  background: #111;
+  box-shadow: 4px 4px 0 var(--ui-accent);
+}
+.zine-app .z-bar .z-menu button {
+  display: block;
+  min-height: 44px;
+  font-size: 15px;
+  text-align: left;
+  padding: 0 12px;
+}
+.zine-app.z-touch .z-bar {
+  position: relative;
+}

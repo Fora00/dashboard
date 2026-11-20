@@ -29,9 +29,19 @@
       "color": "#3b82f6",
       "area": "utility"
     },
+    "strumenti": {
+      "icon": "wrench",
+      "color": "#64748b",
+      "area": "utility"
+    },
     "local-transfer": {
       "icon": "folder-sync",
       "color": "#0ea5e9",
+      "area": "utility"
+    },
+    "zine": {
+      "icon": "scissors",
+      "color": "#ec4899",
       "area": "utility"
     },
     "sharing": {

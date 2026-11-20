@@ -47,6 +47,11 @@ describe('activeProjectId', () => {
     expect(activeProjectId('/life/edit')).toBe('life')
   })
 
+  it('maps a tool route to the Strumenti entry', () => {
+    expect(activeProjectId('/strumenti')).toBe('strumenti')
+    expect(activeProjectId('/local-transfer')).toBe('strumenti')
+  })
+
   it('is null on Home, join pages and unknown routes, and never prefix-matches a longer name', () => {
     expect(activeProjectId('/')).toBeNull()
     expect(activeProjectId('/join/p/abc')).toBeNull()
