@@ -1855,6 +1855,21 @@ local part already works for anyone with the link; the cloud part still needs an
 - [ ] T8 Zine touch follow-ups [sonnet, each XS-S, optional]: drag-to-reorder thumbnails in the
       pages sheet; bigger page in iPhone landscape (hide the dashboard header on /zine there);
       text glyph instead of the trash emoji in the sheet header.
+- [x] T9 Zine images, every format (owner, 2026-11-20) [orchestrator], done 2026-11-20: native decode, then
+      HEIC via heic-to (3 MB chunk `zine-heic`, runtime-cached, not precached), TIFF via utif2, PSD composite
+      (own decoder), camera RAW via embedded JPEG preview; drop anywhere in the editor, window swallows near
+      misses; error alert by file name. Not supported: JPEG 2000.
+- [x] T10 Zine draggable margins [opus, M] (owner, 2026-11-20), done 2026-11-20 (`margins.ts`, Chromium +
+      WebKit iPhone/iPad flows; follow-ups: reset button, page numbers follow margins): four margins (top, bottom,
+      outer, spine) dragged on the page guides, mirrored per side, four inputs in settings.
+- [ ] T11 Zine text manipulation (owner, 2026-11-20, all four wanted; ONE builder at a time, in order,
+      after T10 since all touch editor.ts):
+  - [ ] a [opus, S] (stopped by owner 2026-11-20; the half-done work was removed from the tree, restart from
+        scratch) Spacing and lines: letter spacing, line height, uppercase, outline, shadow.
+  - [ ] b [opus, M] Deform by hand: stretch/squash (scaleX/scaleY) and skew with handles and fingers.
+  - [ ] c [opus, L] Per-word style: select part of the text and change font, colour, size, bold,
+        underline (rich runs in the doc; ransom mode, print and PDF must still work).
+  - [ ] d [opus, M] Zine effects: text on a curve/circle, vertical text, smudged/crooked photocopy letters.
 - [ ] T5 Zine e2e [sonnet, S]: test in `e2e/` that clicks Scarica PDF and checks page count and
       MediaBox; adapt the T2 Playwright scripts (session scratchpad, may be gone: rewrite).
 - [ ] T6 Zine "Qualità" option [sonnet, XS, optional]: 200 / 300 dpi in the PDF dialog.
