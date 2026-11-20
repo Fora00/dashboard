@@ -1819,6 +1819,46 @@ re-implementing, then per-project refactors. Do ONE at a time; owner picks.
       HANDOFF-life.md (decision 6, §2.2, Streaks, nothing on HabitsLive/Engines/ScreenTime);
       COURSES.md "locked until Rifai"; db.ts:41 climbing "local-only"; learning store comments.
 
+## Strumenti 🧰 (owner, 2026-11-20)
+
+Owner wants small self-contained tools in their own section: one home tile **Strumenti** opens
+`/strumenti`, a picker listing the tools (Local Transfer, Zine, future ones). Hard requirements:
+every tool works **offline** and **signed out**, and is **shareable with friends by plain link**
+(no login, no invite, like Events `public: true`). Tools keep their own paths (`/local-transfer`,
+`/zine`); a tool is a registry entry with `tool: true`, hidden from the home grid and sidebar,
+listed in the picker. Local Transfer keeps id, path and its cloud sharing (project_members): its
+local part already works for anyone with the link; the cloud part still needs an invite.
+
+- [x] T1 Strumenti section [sonnet, S], done 2026-11-20 (build + 1507 tests green; tool routes
+      highlight Strumenti and count its opens; Strumenti also listed as public on /sharing): `tool?: boolean` in `ProjectMeta`; registry entry
+      `strumenti` (area utility, path `/strumenti`, `public: true`); `local-transfer` gets
+      `tool: true`; Home and sidebar skip tools; picker page `src/projects/strumenti/` with one
+      card per tool (Local Transfer card shows the file stats Home showed) and a **Condividi
+      link** button (Web Share, copy fallback) giving the plain `#/<path>` link.
+- [x] T2 Zine in the dashboard [opus, M], done 2026-11-20 (Playwright: 8-page booklet = 4 A4 PDF
+      pages 8|1 2|7 6|3 4|5, works offline from the SW; own ~70-line PDF writer instead of jsPDF;
+      modern-screenshot at 250 dpi; @fontsource woff2; fixed white-as-transparent over paper and
+      tape handles; Chromium only, Safari unverified): port `public/tools/zine/` (vanilla editor, untracked)
+      to `src/projects/zine/` as a module mounted by a React page `Zine.tsx` (no iframe); fonts
+      self-hosted (no Google Fonts) so it works offline; keep its own IndexedDB store; **Scarica
+      PDF** button: imposed sheets rendered client-side to a PDF file (iOS: share sheet with the
+      file, else download); keeps the print path too. `public/tools/` deleted 2026-11-20 (owner OK).
+- [x] T3 Wire Zine [orchestrator, XS], done 2026-11-20 (also restored the /strumenti route lost
+      when T2 reverted its temp route; tile PNGs for strumenti + zine via choice.json): registry entry `zine` (`tool: true`, `public: true`,
+      path `/zine`), route in `App.tsx`, build, offline check.
+- [ ] T4 Real-device pass [owner]: iPhone/iPad open a tool link signed out, airplane mode,
+      Scarica PDF.
+- [x] T7 Zine on iPhone/iPad [opus, M] (owner, 2026-11-20), done 2026-11-20 (WebKit iPhone 13/15 +
+      iPad 11 portrait/landscape flows green, PDF in WebKit 4 A4 pages; iOS keyboard untested -> T4): phone = compact top bar +
+      bottom toolbar, one page fitted with swipe, properties and pages as bottom sheets; iPad portrait
+      roomy, landscape three columns; pinch/rotate on the selected element; verified in WebKit.
+- [ ] T8 Zine touch follow-ups [sonnet, each XS-S, optional]: drag-to-reorder thumbnails in the
+      pages sheet; bigger page in iPhone landscape (hide the dashboard header on /zine there);
+      text glyph instead of the trash emoji in the sheet header.
+- [ ] T5 Zine e2e [sonnet, S]: test in `e2e/` that clicks Scarica PDF and checks page count and
+      MediaBox; adapt the T2 Playwright scripts (session scratchpad, may be gone: rewrite).
+- [ ] T6 Zine "Qualità" option [sonnet, XS, optional]: 200 / 300 dpi in the PDF dialog.
+
 ## Ideas / later
 
 - [ ] **🤝 Sharing review: what can be shared, and better ways to do it** [opus]
