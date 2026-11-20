@@ -4,6 +4,16 @@
    by hand and drags mutate the nodes directly. Data stays in its own per-device IndexedDB 'zine-sporca'. */
 
 import { selectSides, slug, type PrintOptions } from './imposition'
+import {
+  DEFAULT_MARGINS,
+  marginsOf,
+  pageBox,
+  setMargin,
+  sideOf,
+  type Edge,
+  type MarginSide,
+  type Margins,
+} from './margins'
 
 const MM = 96 / 25.4 // px per mm (CSS)
 const PW = 148,
@@ -125,8 +135,10 @@ interface ZineDoc {
   crooked: boolean
   pageNumbers: boolean
   guides: boolean
-  margin: number
-  gutter: number
+  /** Same on every page, mirrored on the spine side (see margins.ts). */
+  margins: Margins
+  /** Top, bottom and outer margins move together. */
+  linkMargins: boolean
   pages: Page[]
   print: PrintOptions
 }
@@ -160,7 +172,23 @@ type Gesture =
       a0: number
       c0: Pt
     }
+  | {
+      kind: 'margin'
+      id: number
+      edge: Edge
+      side: MarginSide
+      sx: number
+      sy: number
+      start: Margins
+      snap: ZineDoc
+      moved: boolean
+      pointerType: string
+      grip: HTMLElement
+      target: HTMLElement
+    }
   | { kind: 'dead' }
+
+const SIDE_LABEL: Record<MarginSide, string> = { top: 'alto', bottom: 'basso', outer: 'esterno', spine: 'dorso' }
 
 /* ---------- utils ---------- */
 const uid = () => Math.random().toString(36).slice(2, 10)
@@ -308,11 +336,19 @@ function blankZine(): ZineDoc {
     crooked: true,
     pageNumbers: true,
     guides: true,
-    margin: 8,
-    gutter: 12,
+    margins: { ...DEFAULT_MARGINS },
+    linkMargins: false,
     pages,
     print: { mode: 'booklet', sides: 'all', creep: 0, marks: true, paper: false },
   }
+}
+
+/** A saved or opened doc on top of the defaults; docs from before per-side margins carry `margin`/`gutter`. */
+function loadDoc(z: Partial<ZineDoc> & { margin?: number; gutter?: number }): ZineDoc {
+  const doc: ZineDoc & { margin?: number; gutter?: number } = { ...blankZine(), ...z, margins: marginsOf(z) }
+  delete doc.margin
+  delete doc.gutter
+  return doc
 }
 
 // Grain texture: canvas PNG with toner specks + roller streaks. (SVG feTurbulence greys the first tile in
@@ -345,12 +381,15 @@ async function downscale(file: File, max: number) {
   const url = URL.createObjectURL(file)
   try {
     const img = await loadImg(url)
-    const s = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight))
+    // An SVG without width/height has no intrinsic size in some browsers: draw it at the max size.
+    const iw = img.naturalWidth || max,
+      ih = img.naturalHeight || max
+    const s = Math.min(1, max / Math.max(iw, ih))
     const c = document.createElement('canvas')
-    c.width = Math.round(img.naturalWidth * s)
-    c.height = Math.round(img.naturalHeight * s)
+    c.width = Math.round(iw * s)
+    c.height = Math.round(ih * s)
     const ctx = ctx2d(c)
-    const png = file.type === 'image/png' || file.type === 'image/gif' || file.type === 'image/webp'
+    const png = /^image\/(png|gif|webp|avif|svg|x-icon|vnd\.microsoft\.icon)/.test(file.type)
     if (!png) {
       ctx.fillStyle = '#fff'
       ctx.fillRect(0, 0, c.width, c.height)
@@ -359,6 +398,184 @@ async function downscale(file: File, max: number) {
     return png ? c.toDataURL('image/png') : c.toDataURL('image/jpeg', 0.88)
   } finally {
     URL.revokeObjectURL(url)
+  }
+}
+
+const HEIC = /\.(heic|heif)$/i
+const TIFF = /\.tiff?$/i
+/** What the image picker offers: every browser image type plus formats only we decode (HEIC, TIFF, camera RAW, PSD). */
+const IMAGE_ACCEPT =
+  'image/*,.heic,.heif,.tif,.tiff,.dng,.cr2,.cr3,.nef,.nrw,.arw,.srf,.sr2,.raf,.orf,.rw2,.pef,.srw,.x3f,.psd,.psb,.svg'
+const isHeic = (f: File) => /^image\/hei[cf]/.test(f.type) || HEIC.test(f.name)
+const isTiff = (f: File) => f.type === 'image/tiff' || TIFF.test(f.name)
+
+/** TIFF (Chrome/Firefox can't): first page through UTIF (~100 KB, lazy). */
+async function tiffToPng(file: File): Promise<Blob> {
+  const mod = await import('utif2')
+  // CommonJS package: the namespace or its default, depending on the bundler interop.
+  const UTIF = (mod.default as typeof mod | undefined) ?? mod
+  const buf = await file.arrayBuffer()
+  const [page] = UTIF.decode(buf)
+  if (!page) throw new Error('empty tiff')
+  UTIF.decodeImage(buf, page)
+  const rgba = UTIF.toRGBA8(page)
+  const c = document.createElement('canvas')
+  c.width = page.width
+  c.height = page.height
+  ctx2d(c).putImageData(
+    new ImageData(new Uint8ClampedArray(rgba.subarray(0, page.width * page.height * 4)), page.width, page.height),
+    0,
+    0,
+  )
+  return new Promise((res, rej) => c.toBlob((b) => (b ? res(b) : rej(new Error('tiff'))), 'image/png'))
+}
+
+/**
+ * Photoshop PSD/PSB: the flattened composite stored at the end of the file (8-bit RGB, grayscale or CMYK,
+ * raw or PackBits). Needs "Maximize compatibility", Photoshop's default; layers are not read.
+ */
+async function psdToPng(file: File): Promise<Blob> {
+  const b = new Uint8Array(await file.arrayBuffer())
+  const v = new DataView(b.buffer)
+  if (v.getUint32(0) !== 0x38425053) throw new Error('not psd') // "8BPS"
+  const psb = v.getUint16(4) === 2
+  const ch = v.getUint16(12),
+    h = v.getUint32(14),
+    w = v.getUint32(18),
+    depth = v.getUint16(22),
+    mode = v.getUint16(24)
+  if (depth !== 8 || ![1, 3, 4].includes(mode)) throw new Error('psd mode')
+  let o = 26
+  o += 4 + v.getUint32(o) // colour mode data
+  o += 4 + v.getUint32(o) // image resources
+  o += psb ? 8 + Number(v.getBigUint64(o)) : 4 + v.getUint32(o) // layer and mask info
+  const comp = v.getUint16(o)
+  o += 2
+  const planes = Math.min(ch, mode === 4 ? 4 : mode === 3 ? 3 : 1)
+  const plane = () => new Uint8Array(w * h)
+  const out = Array.from({ length: ch }, plane)
+  if (comp === 0) {
+    for (let c = 0; c < ch; c++, o += w * h) out[c]!.set(b.subarray(o, o + w * h))
+  } else if (comp === 1) {
+    const cs = psb ? 4 : 2
+    const counts: number[] = []
+    for (let r = 0; r < ch * h; r++, o += cs) counts.push(psb ? v.getUint32(o) : v.getUint16(o))
+    for (let r = 0; r < ch * h; r++) {
+      const dst = out[Math.floor(r / h)]!
+      let di = (r % h) * w
+      const end = o + counts[r]!
+      while (o < end) {
+        const n = (b[o++]! << 24) >> 24
+        if (n >= 0) {
+          dst.set(b.subarray(o, o + n + 1), di)
+          di += n + 1
+          o += n + 1
+        } else if (n !== -128) {
+          dst.fill(b[o++]!, di, di + 1 - n)
+          di += 1 - n
+        }
+      }
+    }
+  } else throw new Error('psd compression')
+  const rgba = new Uint8ClampedArray(w * h * 4)
+  for (let i = 0, p = 0; i < w * h; i++, p += 4) {
+    if (planes === 1) rgba[p] = rgba[p + 1] = rgba[p + 2] = out[0]![i]!
+    else if (mode === 4) {
+      // PSD stores CMYK inverted (0 = full ink).
+      const k = out[3]![i]! / 255
+      rgba[p] = out[0]![i]! * k
+      rgba[p + 1] = out[1]![i]! * k
+      rgba[p + 2] = out[2]![i]! * k
+    } else {
+      rgba[p] = out[0]![i]!
+      rgba[p + 1] = out[1]![i]!
+      rgba[p + 2] = out[2]![i]!
+    }
+    rgba[p + 3] = 255
+  }
+  const c = document.createElement('canvas')
+  c.width = w
+  c.height = h
+  ctx2d(c).putImageData(new ImageData(rgba, w, h), 0, 0)
+  return new Promise((res, rej) => c.toBlob((x) => (x ? res(x) : rej(new Error('psd'))), 'image/png'))
+}
+
+/**
+ * Camera RAW (DNG, CR2/CR3, NEF, ARW, RAF, ORF, RW2...) and PSD carry a JPEG preview inside: take the
+ * largest embedded JPEG (SOI ff d8 ff ... EOI ff d9). No RAW development, but the preview is what the camera
+ * showed, usually full size.
+ */
+async function embeddedJpeg(file: File): Promise<Blob> {
+  const b = new Uint8Array(await file.arrayBuffer())
+  let best: [number, number] | null = null
+  for (let i = 0; i < b.length - 3; i++) {
+    if (b[i] !== 0xff || b[i + 1] !== 0xd8 || b[i + 2] !== 0xff) continue
+    // Walk the JPEG segments to its end instead of searching for ff d9 (thumbnails nest inside EXIF).
+    let j = i + 2
+    let end = -1
+    while (j < b.length - 1) {
+      if (b[j] !== 0xff) break
+      const m = b[j + 1]!
+      if (m === 0xd9) {
+        end = j + 2
+        break
+      }
+      if (m === 0xd8 || (m >= 0xd0 && m <= 0xd7) || m === 0x01 || m === 0xff) {
+        j += m === 0xff ? 1 : 2
+        continue
+      }
+      const len = (b[j + 2]! << 8) | b[j + 3]!
+      if (m === 0xda) {
+        // Entropy-coded scan: skip to the next marker that is not a stuffed byte or restart.
+        j += 2 + len
+        while (j < b.length - 1 && !(b[j] === 0xff && b[j + 1] !== 0 && (b[j + 1]! < 0xd0 || b[j + 1]! > 0xd7))) j++
+        continue
+      }
+      j += 2 + len
+    }
+    if (end > 0) {
+      if (!best || end - i > best[1] - best[0]) best = [i, end]
+      i = end - 1
+    }
+  }
+  if (!best || best[1] - best[0] < 2048) throw new Error('no preview')
+  return new Blob([b.slice(best[0], best[1])], { type: 'image/jpeg' })
+}
+
+/**
+ * Any image file to a downscaled data URL. Native decode first (covers JPEG, PNG, GIF, WebP, AVIF, BMP, ICO,
+ * SVG and, in Safari, HEIC/TIFF); then HEIC via heic-to (libheif, ~3 MB, lazy, runtime-cached by the service
+ * worker on first use), TIFF via UTIF, and finally the embedded JPEG preview of camera RAW / PSD files.
+ */
+async function importImage(file: File, max: number) {
+  try {
+    return await downscale(file, max)
+  } catch (err) {
+    const asJpeg = (blob: Blob, ext: string) =>
+      downscale(new File([blob], file.name.replace(/\.[^.]+$/, ext), { type: blob.type }), max)
+    if (isHeic(file)) {
+      const { heicTo } = await import('heic-to')
+      return asJpeg(await heicTo({ blob: file, type: 'image/jpeg', quality: 0.9 }), '.jpg')
+    }
+    if (isTiff(file)) {
+      try {
+        return await asJpeg(await tiffToPng(file), '.png')
+      } catch {
+        /* some TIFFs (JPEG-in-TIFF, DNG-like) still have a preview: fall through */
+      }
+    }
+    if (/\.ps[db]$/i.test(file.name) || file.type === 'image/vnd.adobe.photoshop') {
+      try {
+        return await asJpeg(await psdToPng(file), '.png')
+      } catch {
+        /* 16-bit, Lab, no composite: fall back to the embedded thumbnail below */
+      }
+    }
+    try {
+      return await asJpeg(await embeddedJpeg(file), '.jpg')
+    } catch {
+      throw err
+    }
   }
 }
 
@@ -398,7 +615,7 @@ export function mountZine(root: HTMLElement): () => void {
         <button data-act="settings" role="menuitem" class="z-menu-compact">Impostazioni zine</button>
         <button data-act="print" role="menuitem" class="hot">Stampa / Scarica PDF</button>
       </div>
-      <input type="file" class="z-file-img" accept="image/*" multiple hidden>
+      <input type="file" class="z-file-img" accept="${IMAGE_ACCEPT}" multiple hidden>
       <input type="file" class="z-file-json" accept="application/json,.json" hidden>
     </header>
     <aside class="z-nav" aria-label="Pagine"><div class="z-sheet-head z-nav-head"></div><div class="z-nav-body"></div></aside>
@@ -715,13 +932,23 @@ export function mountZine(root: HTMLElement): () => void {
   }
 
   async function addImageFiles(files: Iterable<File | null>, pi = selPage) {
-    const list = [...files].filter((f): f is File => !!f && f.type.startsWith('image/'))
+    // No filtering by type or extension: every file gets a decode attempt, failures are reported by name.
+    const list = [...files].filter((f): f is File => !!f)
+    const failed: string[] = []
     if (!list.length) return
     const snap = structuredClone(zine)
+    let added = 0
     for (const f of list) {
-      const orig = await downscale(f, 1800)
-      const img = await loadImg(orig)
+      let orig: string, img: HTMLImageElement
+      try {
+        orig = await importImage(f, 1800)
+        img = await loadImg(orig)
+      } catch {
+        failed.push(f.name || 'immagine')
+        continue
+      }
       if (disposed) return
+      added++
       const ar = img.naturalHeight / img.naturalWidth
       let w = 110
       if (w * ar > 170) w = 170 / ar
@@ -746,6 +973,11 @@ export function mountZine(root: HTMLElement): () => void {
       pageAt(pi).els.push(el)
       sel = el.id
     }
+    if (failed.length)
+      alert(
+        `Non riesco ad aprire: ${failed.join(', ')}. Non sembra un'immagine leggibile: prova a esportarla in JPEG o PNG.`,
+      )
+    if (!added) return
     pushHistory(snap)
     save()
     render()
@@ -861,20 +1093,35 @@ export function mountZine(root: HTMLElement): () => void {
       }),
     )
     if (edit && zine.guides) {
-      const spineLeft = pi % 2 === 0 // pagine dispari (1,3,5…) stanno a destra: dorso a sinistra
-      d.append(
-        h('div', {
-          class: 'guides',
-          style: {
-            top: zine.margin + 'mm',
-            bottom: zine.margin + 'mm',
-            left: (spineLeft ? zine.gutter : zine.margin) + 'mm',
-            right: (spineLeft ? zine.margin : zine.gutter) + 'mm',
-          },
-        }),
+      // Each edge is a thin drag strip with a knob in the middle (pagine dispari stanno a destra: dorso a
+      // sinistra). The strip yields to elements under it, the knob only to the selected element.
+      const edges: Edge[] = ['top', 'bottom', 'left', 'right']
+      const g = h(
+        'div',
+        { class: 'guides' },
+        edges.map((edge) =>
+          h(
+            'div',
+            { class: `gh gh-${edge}`, 'data-edge': edge, title: `Margine ${SIDE_LABEL[sideOf(edge, pi)]}` },
+            h('div', { class: 'gh-knob' }),
+          ),
+        ),
       )
+      placeGuides(g, pi)
+      d.append(g)
     }
     return d
+  }
+  function placeGuides(g: HTMLElement, pi: number) {
+    const b = pageBox(zine.margins, pi)
+    for (const k of ['top', 'bottom', 'left', 'right'] as const) g.style[k] = b[k] + 'mm'
+  }
+  // Live update of the guides on screen while a margin is dragged (every page shown, mirrored).
+  function updateGuides() {
+    for (const p of spreadEl.querySelectorAll<HTMLElement>('.page[data-pi]')) {
+      const g = p.querySelector<HTMLElement>(':scope > .guides')
+      if (g) placeGuides(g, +(p.dataset.pi ?? 0))
+    }
   }
 
   // Zine colours as CSS variables on every root that holds pages (editor, print, PDF).
@@ -1288,33 +1535,40 @@ export function mountZine(root: HTMLElement): () => void {
       ),
       h(
         'div',
-        { class: 'row' },
-        field(
-          'Margine mm',
-          h('input', {
-            type: 'number',
-            min: 0,
-            max: 30,
-            value: zine.margin,
-            onchange: (e: Event) =>
-              change(() => {
-                zine.margin = +target(e).value
-              }),
-          }),
+        { class: 'z-margins' },
+        (
+          [
+            ['top', 'Alto mm'],
+            ['bottom', 'Basso mm'],
+            ['outer', 'Esterno mm'],
+            ['spine', 'Dorso mm'],
+          ] as const
+        ).map(([side, label]) =>
+          field(
+            label,
+            h('input', {
+              type: 'number',
+              inputmode: 'decimal',
+              min: 0,
+              max: 60,
+              step: 0.5,
+              value: zine.margins[side],
+              'data-margin': side,
+              onchange: (e: Event) => {
+                const v = parseFloat(target(e).value.replace(',', '.'))
+                if (isNaN(v)) return render()
+                change(() => {
+                  zine.margins = setMargin(zine.margins, side, v, zine.linkMargins)
+                })
+              },
+            }),
+          ),
         ),
-        field(
-          'Dorso mm',
-          h('input', {
-            type: 'number',
-            min: 0,
-            max: 40,
-            value: zine.gutter,
-            onchange: (e: Event) =>
-              change(() => {
-                zine.gutter = +target(e).value
-              }),
-          }),
-        ),
+      ),
+      check('collega alto, basso ed esterno', zine.linkMargins, (v) =>
+        change(() => {
+          zine.linkMargins = v
+        }),
       ),
       field(
         'Colore carta (anteprima)',
@@ -1388,14 +1642,14 @@ export function mountZine(root: HTMLElement): () => void {
             h(
               'p',
               { class: 'hint' },
-              'Tocca un elemento per le sue proprietà, doppio tocco su un testo per scriverlo. Con due dita su un elemento lo scali e lo ruoti. Sulla pagina vuota: scorri per sfogliare, pizzica per ingrandire.',
+              'Tocca un elemento per le sue proprietà, doppio tocco su un testo per scriverlo. Con due dita su un elemento lo scali e lo ruoti. Sulla pagina vuota: scorri per sfogliare, pizzica per ingrandire. Trascina le guide azzurre per spostare i margini.',
             ),
           ]
         : [
             h(
               'p',
               { class: 'hint' },
-              'Clicca una pagina per selezionarla. Trascina immagini dal computer direttamente sulla pagina, oppure incollale (Ctrl/Cmd+V).',
+              'Clicca una pagina per selezionarla. Trascina immagini dal computer direttamente sulla pagina, oppure incollale (Ctrl/Cmd+V). Trascina le guide azzurre per spostare i margini.',
             ),
             h(
               'p',
@@ -1549,12 +1803,18 @@ export function mountZine(root: HTMLElement): () => void {
           { class: 'row' },
           h(
             'button',
-            { title: 'Tutta la foto visibile, dentro i margini', onclick: () => change(() => fitImage(el, 'contain')) },
+            {
+              title: 'Tutta la foto visibile, dentro i margini',
+              onclick: () => change(() => fitImage(el, pi, 'contain')),
+            },
             'Adatta',
           ),
           h(
             'button',
-            { title: 'Riempie la pagina fino al bordo (al vivo)', onclick: () => change(() => fitImage(el, 'cover')) },
+            {
+              title: 'Riempie la pagina fino al bordo (al vivo)',
+              onclick: () => change(() => fitImage(el, pi, 'cover')),
+            },
             'Riempi al vivo',
           ),
         ),
@@ -1715,11 +1975,11 @@ export function mountZine(root: HTMLElement): () => void {
       selPage = t
     })
   }
-  function fitImage(el: ImageEl, how: 'contain' | 'cover') {
+  function fitImage(el: ImageEl, pi: number, how: 'contain' | 'cover') {
     const ar = el.h / el.w
-    const m = how === 'contain' ? zine.margin : 0
-    const bw = PW - 2 * m,
-      bh = PH - 2 * m
+    const m = how === 'contain' ? pageBox(zine.margins, pi) : { top: 0, bottom: 0, left: 0, right: 0 }
+    const bw = PW - m.left - m.right,
+      bh = PH - m.top - m.bottom
     const byHeight = how === 'contain' ? ar > bh / bw : ar < bh / bw
     if (byHeight) {
       el.h = bh
@@ -1728,8 +1988,8 @@ export function mountZine(root: HTMLElement): () => void {
       el.w = bw
       el.h = r1(bw * ar)
     }
-    el.x = r1((PW - el.w) / 2)
-    el.y = r1((PH - el.h) / 2)
+    el.x = r1(m.left + (bw - el.w) / 2)
+    el.y = r1(m.top + (bh - el.h) / 2)
     el.rot = 0
   }
   function swapPage(pi: number, dir: number) {
@@ -2091,7 +2351,7 @@ export function mountZine(root: HTMLElement): () => void {
         const z = JSON.parse(await f.text()) as Partial<ZineDoc>
         if (!Array.isArray(z.pages) || z.pages.length % 4) throw new Error('file non valido')
         pushHistory()
-        zine = { ...blankZine(), ...z }
+        zine = loadDoc(z)
         cur = 0
         sel = null
         afterLoad()
@@ -2114,7 +2374,10 @@ export function mountZine(root: HTMLElement): () => void {
   // empty space.
   function startPinch() {
     const p = two()
-    if (drag && drag.pointerType === 'touch') {
+    if (gesture?.kind === 'margin') {
+      finishMargin(gesture)
+      gesture = { kind: 'dead' }
+    } else if (drag && drag.pointerType === 'touch') {
       const { el, node, snap } = drag
       drag = null
       gesture = {
@@ -2141,6 +2404,23 @@ export function mountZine(root: HTMLElement): () => void {
     }
   }
   function moveGesture(e: PointerEvent, g: Gesture) {
+    if (g.kind === 'margin') {
+      if (e.pointerId !== g.id) return
+      const dx = e.clientX - g.sx,
+        dy = e.clientY - g.sy
+      if (!g.moved && Math.hypot(dx, dy) < (g.pointerType === 'mouse' ? 2 : 6)) return
+      if (!g.moved) {
+        g.moved = true
+        g.grip.classList.add('on')
+        spreadEl.classList.add('z-margin-drag')
+      }
+      const k = 1 / (scale * MM)
+      const delta = { top: dy, bottom: -dy, left: dx, right: -dx }[g.edge] * k
+      zine.margins = setMargin(g.start, g.side, g.start[g.side] + delta, zine.linkMargins)
+      g.grip.dataset.mm = `${String(zine.margins[g.side]).replace('.', ',')} mm`
+      updateGuides()
+      return
+    }
     if (g.kind === 'view') {
       if (e.pointerId !== g.id) return
       const dx = e.clientX - g.sx,
@@ -2204,7 +2484,25 @@ export function mountZine(root: HTMLElement): () => void {
       renderPanel()
     }
   }
+  // End of a margin drag: one undo step and a save if it moved; a press that did not move is a tap on the page.
+  function finishMargin(g: Extract<Gesture, { kind: 'margin' }>, tap = false) {
+    g.grip.classList.remove('on')
+    spreadEl.classList.remove('z-margin-drag')
+    if (!g.moved) {
+      if (tap) tapEmpty(g.target)
+      return
+    }
+    pushHistory(g.snap)
+    save()
+    renderPanel()
+  }
   function endGesture(e: PointerEvent, g: Gesture) {
+    if (g.kind === 'margin') {
+      if (e.pointerId !== g.id) return
+      finishMargin(g, e.type === 'pointerup')
+      gesture = touches.size ? { kind: 'dead' } : null
+      return
+    }
     if (g.kind === 'view') {
       if (e.pointerId !== g.id) return
       gesture = null
@@ -2237,7 +2535,7 @@ export function mountZine(root: HTMLElement): () => void {
   stage.addEventListener(
     'pointerdown',
     (e) => {
-      const tgt = e.target as HTMLElement
+      let tgt = e.target as HTMLElement
       if (tgt.closest('[contenteditable]')) return
       if (e.button > 0) return
       if (tgt.closest('.z-pager')) return
@@ -2249,6 +2547,44 @@ export function mountZine(root: HTMLElement): () => void {
           return
         }
         if (gesture) gesture = null
+      }
+      // Margin guides: the knob grabs unless the selected element (or its handles) is under the finger; the
+      // rest of the edge strip also lets any element under it win.
+      const grip = tgt.closest<HTMLElement>('.z-spread .gh')
+      if (grip) {
+        const knob = !!tgt.closest('.gh-knob')
+        const under = document
+          .elementsFromPoint(e.clientX, e.clientY)
+          .find(
+            (n) =>
+              n instanceof HTMLElement &&
+              !n.closest('.guides') &&
+              (n.classList.contains('handle') || !!n.closest(knob ? '.el.selected' : '.el')),
+          ) as HTMLElement | undefined
+        if (under) tgt = under
+        else {
+          const pageD = grip.closest<HTMLElement>('.page')!
+          const edge = grip.dataset.edge as Edge
+          const side = sideOf(edge, +(pageD.dataset.pi ?? 0))
+          if (editing) (document.activeElement as HTMLElement | null)?.blur()
+          gesture = {
+            kind: 'margin',
+            id: e.pointerId,
+            edge,
+            side,
+            sx: e.clientX,
+            sy: e.clientY,
+            start: { ...zine.margins },
+            snap: structuredClone(zine),
+            moved: false,
+            pointerType: e.pointerType,
+            grip,
+            target: pageD,
+          }
+          grip.dataset.mm = `${String(zine.margins[side]).replace('.', ',')} mm`
+          e.preventDefault()
+          return
+        }
       }
       const pageD = tgt.closest<HTMLElement>('.z-spread .page')
       // Compact + finger on empty space: a view gesture, resolved on lift (tap / swipe / pan / pinch).
@@ -2405,16 +2741,36 @@ export function mountZine(root: HTMLElement): () => void {
     { signal },
   )
 
-  stage.addEventListener('dragover', (e) => e.preventDefault(), { signal })
-  stage.addEventListener(
-    'drop',
-    (e) => {
-      e.preventDefault()
-      const pageD = (e.target as HTMLElement).closest<HTMLElement>('.z-spread .page')
-      void addImageFiles([...(e.dataTransfer?.files ?? [])], pageD ? +(pageD.dataset.pi ?? 0) : selPage)
-    },
-    { signal },
-  )
+  // Drops land anywhere in the editor (page, panels, thumbnails). While the zine is mounted the window also
+  // swallows drops, so a near miss never makes the browser open the image in place of the app.
+  const hasFiles = (e: DragEvent) =>
+    [...(e.dataTransfer?.types ?? [])].some((t) => t === 'Files' || t === 'text/uri-list')
+  on(window, 'dragover', (e) => {
+    if (!hasFiles(e)) return
+    e.preventDefault()
+    if (e.dataTransfer) e.dataTransfer.dropEffect = root.contains(e.target as Node) ? 'copy' : 'none'
+  })
+  on(window, 'drop', (e) => {
+    if (!hasFiles(e)) return
+    e.preventDefault()
+    if (!root.contains(e.target as Node)) return
+    const pageD = (e.target as HTMLElement).closest<HTMLElement>('.z-spread .page')
+    const pi = pageD ? +(pageD.dataset.pi ?? 0) : selPage
+    const files = [...(e.dataTransfer?.files ?? [])]
+    if (files.length) return void addImageFiles(files, pi)
+    // An image dragged from another web page: only a URL comes along. Fetch it if the site allows (CORS).
+    const url = e.dataTransfer
+      ?.getData('text/uri-list')
+      .split('\n')
+      .find((l) => l && !l.startsWith('#'))
+    if (!url) return
+    void fetch(url)
+      .then((r) => (r.ok ? r.blob() : Promise.reject(new Error(String(r.status)))))
+      .then((b) =>
+        addImageFiles([new File([b], url.split('/').pop()?.split('?')[0] || 'immagine', { type: b.type })], pi),
+      )
+      .catch(() => alert("Questo sito non lascia copiare l'immagine: salvala sul computer e trascina il file."))
+  })
   // Focus somewhere in the dashboard outside the editor (palette, dialogs): leave keys and paste alone.
   const focusElsewhere = () => {
     const a = document.activeElement
@@ -2534,11 +2890,11 @@ export function mountZine(root: HTMLElement): () => void {
     try {
       await store.open()
       if (disposed) return store.close()
-      const saved = await store.get<ZineDoc>('zine')
+      const saved = await store.get<Partial<ZineDoc>>('zine')
       if (disposed) return
       // Only take the saved zine if the user has not started editing in the meantime.
       if (saved && !past.length) {
-        zine = { ...blankZine(), ...saved }
+        zine = loadDoc(saved)
         afterLoad()
       }
     } catch (e) {

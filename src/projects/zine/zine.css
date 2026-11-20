@@ -349,7 +349,145 @@
 .zine-scope .guides {
   position: absolute;
   pointer-events: none;
-  border: calc(1px / var(--scale)) dashed #00a0ff99;
+  border: calc(1px / var(--scale)) dashed #00a0ffb3;
+  /* Drag strips: --gh = hit thickness, --kl/--kt = knob length/thickness (screen px, divided by the zoom). */
+  --gh: 10px;
+  --kl: 30px;
+  --kt: 6px;
+}
+@media (pointer: coarse) {
+  .zine-scope .guides {
+    --gh: 24px;
+    --kl: 38px;
+    --kt: 8px;
+  }
+}
+/* One strip per edge, centred on the dashed line. */
+.zine-app .gh {
+  position: absolute;
+  pointer-events: auto;
+  touch-action: none;
+  z-index: 1;
+}
+.zine-app .gh-top,
+.zine-app .gh-bottom {
+  left: 0;
+  right: 0;
+  height: calc(var(--gh) / var(--scale));
+  cursor: ns-resize;
+}
+.zine-app .gh-top {
+  top: calc(var(--gh) / var(--scale) / -2);
+}
+.zine-app .gh-bottom {
+  bottom: calc(var(--gh) / var(--scale) / -2);
+}
+.zine-app .gh-left,
+.zine-app .gh-right {
+  top: 0;
+  bottom: 0;
+  width: calc(var(--gh) / var(--scale));
+  cursor: ew-resize;
+}
+.zine-app .gh-left {
+  left: calc(var(--gh) / var(--scale) / -2);
+}
+.zine-app .gh-right {
+  right: calc(var(--gh) / var(--scale) / -2);
+}
+/* The knob: a pill in the middle of the edge; its hit area is wider than the pill (at least 24px thick). */
+.zine-app .gh-knob {
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+}
+.zine-app .gh-top .gh-knob,
+.zine-app .gh-bottom .gh-knob {
+  width: calc((var(--kl) + 16px) / var(--scale));
+  height: calc(max(24px, var(--gh)) / var(--scale));
+}
+.zine-app .gh-left .gh-knob,
+.zine-app .gh-right .gh-knob {
+  width: calc(max(24px, var(--gh)) / var(--scale));
+  height: calc((var(--kl) + 16px) / var(--scale));
+}
+.zine-app .gh-knob::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  translate: -50% -50%;
+  border-radius: 99px;
+  background: #00a0ff;
+  border: calc(1.5px / var(--scale)) solid #fff;
+  box-shadow: 0 0 0 calc(1px / var(--scale)) #0003;
+  opacity: 0.85;
+}
+.zine-app .gh-top .gh-knob::before,
+.zine-app .gh-bottom .gh-knob::before {
+  width: calc(var(--kl) / var(--scale));
+  height: calc(var(--kt) / var(--scale));
+}
+.zine-app .gh-left .gh-knob::before,
+.zine-app .gh-right .gh-knob::before {
+  width: calc(var(--kt) / var(--scale));
+  height: calc(var(--kl) / var(--scale));
+}
+.zine-app .gh.on .gh-knob::before {
+  opacity: 1;
+}
+@media (hover: hover) {
+  .zine-app .gh:hover .gh-knob::before {
+    opacity: 1;
+  }
+  .zine-app .gh:hover {
+    background: #00a0ff1a;
+  }
+}
+.zine-app .z-margin-drag .guides {
+  border-color: #00a0ff;
+}
+/* Live value while dragging, set inward of the edge so the finger does not cover it. */
+.zine-app .gh.on::after {
+  content: attr(data-mm);
+  position: absolute;
+  z-index: 3;
+  padding: calc(3px / var(--scale)) calc(7px / var(--scale));
+  border-radius: calc(5px / var(--scale));
+  background: #00a0ff;
+  color: #fff;
+  font:
+    700 calc(13px / var(--scale)) / 1.2 system-ui,
+    sans-serif;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.zine-app .gh-top.on::after {
+  left: 50%;
+  translate: -50% 0;
+  top: calc(100% + 30px / var(--scale));
+}
+.zine-app .gh-bottom.on::after {
+  left: 50%;
+  translate: -50% 0;
+  bottom: calc(100% + 30px / var(--scale));
+}
+.zine-app .gh-left.on::after {
+  top: 50%;
+  translate: 0 -50%;
+  left: calc(100% + 30px / var(--scale));
+}
+.zine-app .gh-right.on::after {
+  top: 50%;
+  translate: 0 -50%;
+  right: calc(100% + 30px / var(--scale));
+}
+.zine-app .z-margins {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 8px;
 }
 .zine-scope .pnum {
   position: absolute;

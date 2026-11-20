@@ -92,6 +92,8 @@ export default defineConfig({
         manualChunks(id) {
           if (id.includes('node_modules/@supabase')) return 'vendor-supabase'
           if (id.includes('node_modules/dexie')) return 'vendor-dexie'
+          // Zine's HEIC decoder (libheif, ~3 MB): runtime-cached on first use, not precached (see workbox).
+          if (id.includes('node_modules/heic-to')) return 'zine-heic'
         },
         chunkFileNames: chunkFileName,
       },
@@ -149,10 +151,21 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
+        globIgnores: ['**/assets/zine-heic-*.js'],
         // Course content is cached on demand, not on install (see learningContentPrecache).
         manifestTransforms: [learningContent.manifestTransform],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         runtimeCaching: [
+          {
+            // Zine HEIC decoder: fetched the first time an iPhone photo is imported in a browser without HEIC.
+            urlPattern: /\/assets\/zine-heic-[^/]+\.js$/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'zine-heic',
+              expiration: { maxEntries: 2 },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
           {
             // A RegExp (not a function: it is serialized into the service worker). Same-origin only.
             urlPattern: /\/assets\/learn-(course|vocab)-[^/]+\.js$/,
