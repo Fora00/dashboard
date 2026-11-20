@@ -377,7 +377,23 @@ function noise(n: number) {
   return (noiseCache[n] = `url(${c.toDataURL('image/png')})`)
 }
 
-async function downscale(file: File, max: number) {
+/** A picked file whose bytes the browser could not read (iCloud/Drive placeholder not downloaded, moved, locked). */
+class UnreadableFile extends Error {}
+
+/**
+ * Copy the file's bytes into memory first. An <img> pointed straight at a File re-reads it from disk with a
+ * short timeout; a file still downloading from iCloud Drive / Google Drive then fails with ERR_TIMED_OUT.
+ * arrayBuffer() waits for the provider instead.
+ */
+async function inMemory(file: File): Promise<Blob> {
+  try {
+    return new Blob([await file.arrayBuffer()], { type: file.type })
+  } catch {
+    throw new UnreadableFile(file.name)
+  }
+}
+
+async function downscale(file: Blob, max: number) {
   const url = URL.createObjectURL(file)
   try {
     const img = await loadImg(url)
@@ -547,7 +563,8 @@ async function embeddedJpeg(file: File): Promise<Blob> {
  * SVG and, in Safari, HEIC/TIFF); then HEIC via heic-to (libheif, ~3 MB, lazy, runtime-cached by the service
  * worker on first use), TIFF via UTIF, and finally the embedded JPEG preview of camera RAW / PSD files.
  */
-async function importImage(file: File, max: number) {
+async function importImage(original: File, max: number) {
+  const file = new File([await inMemory(original)], original.name, { type: original.type })
   try {
     return await downscale(file, max)
   } catch (err) {
@@ -935,6 +952,7 @@ export function mountZine(root: HTMLElement): () => void {
     // No filtering by type or extension: every file gets a decode attempt, failures are reported by name.
     const list = [...files].filter((f): f is File => !!f)
     const failed: string[] = []
+    const unreadable: string[] = []
     if (!list.length) return
     const snap = structuredClone(zine)
     let added = 0
@@ -943,8 +961,8 @@ export function mountZine(root: HTMLElement): () => void {
       try {
         orig = await importImage(f, 1800)
         img = await loadImg(orig)
-      } catch {
-        failed.push(f.name || 'immagine')
+      } catch (err) {
+        ;(err instanceof UnreadableFile ? unreadable : failed).push(f.name || 'immagine')
         continue
       }
       if (disposed) return
@@ -973,6 +991,10 @@ export function mountZine(root: HTMLElement): () => void {
       pageAt(pi).els.push(el)
       sel = el.id
     }
+    if (unreadable.length)
+      alert(
+        `Non riesco a leggere: ${unreadable.join(', ')}. Se il file è su iCloud Drive o Google Drive, scaricalo prima sul dispositivo (o copialo sul Desktop) e riprova.`,
+      )
     if (failed.length)
       alert(
         `Non riesco ad aprire: ${failed.join(', ')}. Non sembra un'immagine leggibile: prova a esportarla in JPEG o PNG.`,
