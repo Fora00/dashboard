@@ -1,16 +1,18 @@
 /* ZINE//SPORCA, ported from the standalone tool. Everything is scoped:
    .zine-scope = any container holding zine pages (the editor, the print root, the PDF root);
    .zine-app   = the editor UI itself (mounted inside the dashboard's <main>);
-   .zine-print = the print root, a direct child of <body> while the editor is mounted. */
+   .zine-print = the print root, a direct child of <body> while the editor is mounted.
+
+   Design system: the editor chrome follows the dashboard. Buttons, fields, headings, dialogs and menus get
+   their classes from src/components via ./ui.ts (Tailwind utilities on the slate + --accent tokens), so a
+   change there reaches the editor too. This file does LAYOUT only for the chrome; its few surface colours
+   use @apply with the same Tailwind tokens. Plain rules here beat Tailwind utilities (utilities live in a
+   cascade layer), so never set colours, borders or radii on elements that carry ui.ts classes.
+   Only the zine pages keep their own photocopy fonts and colours. */
+@reference '../../index.css';
 
 .zine-scope {
-  --ui-bg: #e6e1d4;
-  --ui-ink: #111;
-  --ui-paper: #f3efe4;
-  --ui-accent: #ff2e63;
   --scale: 1;
-  font-family: 'Courier Prime', ui-monospace, monospace;
-  color: var(--ui-ink);
   -webkit-print-color-adjust: exact;
   print-color-adjust: exact;
 }
@@ -20,120 +22,81 @@
 .zine-scope *::after {
   box-sizing: border-box;
 }
+.zine-scope .page {
+  font-family: 'Courier Prime', ui-monospace, monospace;
+}
 
 /* ---------- layout ---------- */
 /* The negative margins cancel <main>'s px-4 py-6 pb-16 (components/Layout.tsx) so the editor fills the
    content area edge to edge; --zine-top (set by the editor) is the root's distance from the page top. */
 .zine-app {
+  /* Selection outline + element handles on the page. */
+  --ui-accent: var(--accent);
   display: grid;
   grid-template-columns: 200px 1fr 290px;
   grid-template-rows: auto 1fr;
   grid-template-areas: 'bar bar bar' 'nav stage panel';
   margin: -1.5rem -1rem -4rem;
   height: max(440px, calc(100dvh - var(--zine-top, 0px) - env(safe-area-inset-bottom)));
-  background: var(--ui-bg);
   overflow: hidden;
+  @apply bg-slate-100 text-slate-900 dark:bg-slate-950 dark:text-slate-100;
 }
 @media (max-width: 1100px) {
   .zine-app {
     grid-template-columns: 150px 1fr 250px;
   }
 }
+/* Same surface as the dashboard's header. */
 .zine-app .z-bar {
   grid-area: bar;
   display: flex;
   gap: 6px;
   align-items: center;
   flex-wrap: wrap;
-  padding: 8px 12px;
-  background: #111;
-  color: var(--ui-paper);
+  padding: 6px 12px;
+  @apply border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900;
 }
 .zine-app .z-back {
-  color: var(--ui-paper);
   text-decoration: none;
-  font-weight: 700;
-  font-size: 18px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 40px;
-  min-height: 40px;
-  margin: -6px 0;
 }
 .zine-app .logo {
-  font-family: 'Rubik Mono One', sans-serif;
-  font-size: 18px;
-  letter-spacing: -1px;
-  margin-right: 12px;
-  transform: rotate(-2deg);
+  margin: 0 8px 0 2px;
+  white-space: nowrap;
+  @apply text-lg font-semibold tracking-tight;
 }
 .zine-app .sep {
   width: 1px;
   height: 22px;
-  background: #555;
   margin: 0 4px;
+  @apply bg-slate-200 dark:bg-slate-800;
 }
 .zine-app .grow {
   flex: 1;
 }
 
-.zine-app button {
-  font: inherit;
-  font-size: 13px;
-  font-weight: 700;
-  background: var(--ui-paper);
-  color: #111;
-  border: 2px solid #111;
-  padding: 4px 10px;
-  cursor: pointer;
-  box-shadow: 2px 2px 0 var(--ui-accent);
-  border-radius: 0;
-}
-.zine-app button:active {
-  transform: translate(1px, 1px);
-  box-shadow: 1px 1px 0 var(--ui-accent);
-}
-.zine-app button.hot {
-  background: var(--ui-accent);
-  color: #fff;
-  box-shadow: 2px 2px 0 var(--ui-paper);
-}
-.zine-app dialog button.hot,
-.zine-app .z-progress button.hot {
-  box-shadow: 2px 2px 0 #111;
-}
-.zine-app .z-bar button {
-  border-color: var(--ui-paper);
-}
-.zine-app button.on {
-  background: #111;
-  color: var(--ui-paper);
-}
-.zine-app button:disabled {
-  opacity: 0.5;
-  cursor: default;
-}
-
 .zine-app .z-nav {
   grid-area: nav;
   overflow: auto;
-  padding: 10px;
-  border-right: 2px solid #111;
+  padding: 12px;
+  @apply border-r border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900;
 }
 .zine-app .z-panel {
   grid-area: panel;
   overflow: auto;
-  padding: 12px 14px;
-  border-left: 2px solid #111;
+  padding: 14px 16px;
+  @apply border-l border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900;
 }
 .zine-app .z-stage {
   grid-area: stage;
   position: relative;
   overflow: hidden;
-  background:
-    radial-gradient(#0000001a 1px, transparent 1px) 0 0 / 14px 14px,
-    var(--ui-bg);
+  background-image: radial-gradient(--alpha(var(--color-slate-900) / 10%) 1px, transparent 1px);
+  background-size: 14px 14px;
+}
+@media (prefers-color-scheme: dark) {
+  .zine-app .z-stage {
+    background-image: radial-gradient(--alpha(var(--color-white) / 8%) 1px, transparent 1px);
+  }
 }
 .zine-app .z-spreadwrap {
   position: absolute;
@@ -144,24 +107,16 @@
   left: 0;
   right: 0;
   text-align: center;
-  font-size: 13px;
-  opacity: 0.7;
 }
 
 /* ---------- nav ---------- */
 .zine-app .nav-title {
-  font-family: 'Rubik Mono One';
-  font-size: 12px;
-  margin: 4px 0 8px;
+  margin: 2px 0 10px;
+  @apply text-sm font-semibold;
 }
 .zine-app .thumb {
   cursor: pointer;
   margin-bottom: 10px;
-  padding: 4px;
-  border: 2px solid transparent;
-}
-.zine-app .thumb.cur {
-  border-color: var(--ui-accent);
 }
 .zine-app .thumb-box {
   position: relative;
@@ -171,126 +126,67 @@
   pointer-events: none;
 }
 .zine-app .thumb-label {
-  font-size: 11px;
   text-align: center;
-  margin-top: 2px;
+  margin-top: 4px;
+  @apply text-xs text-slate-500 dark:text-slate-400;
 }
 .zine-app .nav-pages {
   display: flex;
   gap: 4px;
   align-items: center;
   margin-bottom: 12px;
-  font-size: 13px;
+  @apply text-sm;
 }
 
 /* ---------- panel ---------- */
-.zine-app .z-panel h3 {
-  font-family: 'Rubik Mono One';
-  font-size: 13px;
-  margin: 14px 0 8px;
-  border-bottom: 2px solid #111;
-  padding-bottom: 3px;
-  font-weight: 400;
-}
-.zine-app .z-panel h3:first-child {
-  margin-top: 0;
+.zine-app .z-panel h3:not(:first-child) {
+  margin-top: 22px;
 }
 .zine-app .field {
   display: flex;
   flex-direction: column;
-  gap: 3px;
-  margin-bottom: 9px;
-  font-size: 12px;
-}
-.zine-app .field > span {
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  font-size: 11px;
-}
-.zine-app .field input[type='text'],
-.zine-app .field input[type='number'],
-.zine-app .field select,
-.zine-app .field textarea {
-  font: inherit;
-  font-size: 13px;
-  padding: 4px 6px;
-  border: 2px solid #111;
-  background: #fff;
-  color: #111;
-  width: 100%;
-  border-radius: 0;
+  gap: 4px;
+  margin-bottom: 10px;
 }
 .zine-app .field textarea {
   min-height: 80px;
   resize: vertical;
 }
-.zine-app .field input[type='range'] {
-  width: 100%;
-  accent-color: var(--ui-accent);
-}
 .zine-app .check {
   display: flex;
-  gap: 6px;
+  gap: 8px;
   align-items: center;
-  font-size: 12px;
-  margin-bottom: 8px;
+  min-height: 40px;
+  @apply text-sm;
 }
 .zine-app .row {
   display: flex;
-  gap: 4px;
+  gap: 6px;
   flex-wrap: wrap;
-  margin-bottom: 9px;
+  margin-bottom: 10px;
 }
 .zine-app .swatches {
   display: flex;
-  gap: 4px;
+  gap: 6px;
   flex-wrap: wrap;
+  padding: 2px;
 }
-.zine-app .sw {
-  width: 24px;
-  height: 24px;
-  padding: 0;
-  border: 2px solid #111;
-  box-shadow: none;
+.zine-app .z-pos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
+  column-gap: 8px;
+  margin-bottom: 4px;
 }
-.zine-app .sw.on {
-  outline: 3px solid var(--ui-accent);
-  outline-offset: 1px;
+.zine-app .z-margins {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 8px;
 }
-.zine-app .hint {
-  font-size: 11px;
-  opacity: 0.7;
-  line-height: 1.4;
-}
-.zine-app .info {
-  font-size: 12px;
-  line-height: 1.5;
-  background: #fff8;
-  padding: 8px;
-  border: 1px dashed #111;
-}
-
-/* Touch (iPad): bigger targets, 16px inputs so iOS does not zoom. */
+/* Touch (iPad, phone): 40px swatches. */
 @media (pointer: coarse) {
-  .zine-app button {
-    min-height: 40px;
-  }
   .zine-app .sw {
     width: 40px;
     height: 40px;
-    min-height: 0;
-  }
-  .zine-app .field input[type='text'],
-  .zine-app .field input[type='number'],
-  .zine-app .field select,
-  .zine-app .field textarea {
-    font-size: 16px;
-    min-height: 40px;
-  }
-  .zine-app .check input {
-    width: 22px;
-    height: 22px;
   }
 }
 
@@ -653,46 +549,23 @@
   padding: 0.02em 0.25em;
 }
 
-/* ---------- dialog + progress ---------- */
-.zine-app dialog {
-  border: 3px solid #111;
-  box-shadow: 6px 6px 0 var(--ui-accent);
-  background: var(--ui-paper);
-  color: var(--ui-ink);
-  max-width: min(460px, calc(100vw - 32px));
-  max-height: calc(100dvh - 32px);
-  overflow: auto;
-  font-family: inherit;
-  padding: 16px;
-}
-.zine-app dialog::backdrop {
-  background: #0006;
-}
-.zine-app dialog h2 {
-  font-family: 'Rubik Mono One';
-  font-weight: 400;
-  font-size: 20px;
-  margin: 0 0 12px;
-}
+/* ---------- dialog + progress (look: ui.dialog) ---------- */
 .zine-app .dlg-actions {
   display: flex;
   justify-content: flex-end;
   flex-wrap: wrap;
   gap: 8px;
-  margin-top: 12px;
+  margin-top: 14px;
 }
-.zine-app .dlg-actions .pdf {
-  font-size: 15px;
-  padding: 8px 14px;
+.zine-app .z-info {
+  margin-top: 8px;
 }
 .zine-app .z-progress p {
   margin: 0 0 10px;
-  font-size: 13px;
+  @apply text-sm;
 }
 .zine-app .z-progress progress {
-  width: 100%;
   height: 14px;
-  accent-color: var(--ui-accent);
 }
 
 /* ---------- print ---------- */
@@ -777,33 +650,21 @@
 .zine-app.z-touch[data-mode='desktop'] {
   grid-template-columns: 150px minmax(0, 1fr) 260px;
 }
-.zine-app.z-touch .z-bar > button {
-  min-width: 44px;
-}
 .zine-app.z-touch[data-mode='desktop'] .z-bar > button {
-  white-space: nowrap;
-  padding: 4px 8px;
-}
-.zine-app.z-touch[data-mode='desktop'] .logo {
-  font-size: 14px;
-  margin-right: 4px;
   white-space: nowrap;
 }
 .zine-app.z-touch[data-mode='desktop'] .nav-pages {
-  gap: 2px;
   white-space: nowrap;
-}
-.zine-app.z-touch[data-mode='desktop'] .nav-pages button {
-  padding: 4px 8px;
 }
 .zine-app.z-touch[data-mode='desktop'] .z-file,
 .zine-app.z-touch[data-mode='desktop'] .z-menu-compact {
   display: none;
 }
 .zine-app.z-touch .z-more {
-  display: inline-flex;
+  display: flex;
 }
 .zine-app.z-touch .z-bar {
+  position: relative;
   flex-wrap: nowrap;
 }
 .zine-app.z-touch .z-stage,
@@ -841,96 +702,59 @@
   position: relative;
   z-index: 20;
   flex-wrap: nowrap;
-  gap: 6px;
+  gap: 4px;
   padding: 4px 8px;
 }
 .zine-app.z-compact .z-add,
 .zine-app.z-compact .z-file,
 .zine-app.z-compact .z-print,
-.zine-app.z-compact .z-spreadlabel {
+.zine-app.z-compact .z-spreadlabel,
+.zine-app.z-compact .grow {
   display: none;
 }
 .zine-app.z-compact .logo {
   flex: 1;
   min-width: 0;
   overflow: hidden;
-  white-space: nowrap;
-  text-overflow: clip;
-  font-size: 15px;
-  margin: 0 4px;
-  padding: 4px 0;
-}
-.zine-app.z-compact .z-bar button {
-  min-width: 44px;
-  min-height: 44px;
-  font-size: 20px;
-  padding: 0 6px;
+  text-overflow: ellipsis;
 }
 .zine-app.z-compact .z-more {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  display: flex;
 }
-.zine-app.z-compact .grow {
-  display: none;
-}
-/* bottom toolbar, thumb reach */
+/* bottom tab bar, thumb reach (items: ui.tab) */
 .zine-app.z-compact .z-tools {
   grid-area: tools;
   display: flex;
-  gap: 6px;
+  gap: 4px;
   position: relative;
   z-index: 20;
-  padding: 6px max(6px, env(safe-area-inset-right)) calc(6px + env(safe-area-inset-bottom))
+  padding: 4px max(6px, env(safe-area-inset-right)) calc(4px + env(safe-area-inset-bottom))
     max(6px, env(safe-area-inset-left));
-  background: #111;
+  @apply border-t border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900;
 }
 .zine-app.z-compact .z-tools button {
-  flex: 1 1 0;
-  min-width: 0;
-  min-height: 52px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 3px;
-  padding: 4px 2px;
-  font-size: 11px;
-  border-color: var(--ui-paper);
   white-space: nowrap;
   overflow: hidden;
 }
 .zine-app.z-compact .z-tools b {
   font-size: 18px;
   line-height: 1;
+  @apply text-slate-800 dark:text-slate-200;
 }
 .zine-app.z-compact.z-kb .z-tools {
   display: none;
 }
-/* page indicator + arrows */
+/* page indicator + arrows (ui.floating, ui.pill) */
 .zine-app.z-compact .z-pager {
   display: flex;
   align-items: center;
   gap: 8px;
   position: absolute;
   left: 50%;
-  bottom: 4px;
+  bottom: 6px;
   transform: translateX(-50%);
   z-index: 3;
   white-space: nowrap;
-}
-.zine-app.z-compact .z-pager button {
-  min-width: 44px;
-  min-height: 40px;
-  font-size: 22px;
-  line-height: 1;
-  padding: 0;
-}
-.zine-app.z-compact .z-pager-label {
-  font-size: 13px;
-  font-weight: 700;
-  background: #f3efe4d9;
-  padding: 4px 8px;
 }
 .zine-app.z-compact .z-spreadwrap.z-anim {
   transition:
@@ -938,7 +762,7 @@
     top 0.22s ease,
     translate 0.22s ease;
 }
-/* bottom sheets: properties (.z-panel) and pages (.z-nav), over the page area */
+/* bottom sheets: properties (.z-panel) and pages (.z-nav), over the page area; same look as <Sheet>. */
 .zine-app.z-compact .z-panel,
 .zine-app.z-compact .z-nav {
   grid-area: stage;
@@ -950,9 +774,6 @@
   min-height: min(240px, 100%);
   padding: 0;
   border: 0;
-  border-top: 3px solid #111;
-  background: var(--ui-paper);
-  box-shadow: 0 -10px 28px #0004;
   overflow: hidden;
   transform: translateY(105%);
   visibility: hidden;
@@ -960,6 +781,7 @@
     transform 0.22s ease,
     height 0.22s ease,
     visibility 0s linear 0.22s;
+  @apply rounded-t-2xl bg-white shadow-xl dark:bg-slate-900;
 }
 .zine-app.z-compact[data-sheet='panel'] .z-panel,
 .zine-app.z-compact[data-sheet='nav'] .z-nav {
@@ -979,21 +801,20 @@
   align-items: center;
   gap: 6px;
   position: relative;
-  padding: 14px 10px 8px;
-  border-bottom: 2px solid #111;
+  padding: 14px 8px 6px 16px;
   touch-action: none;
   cursor: grab;
+  @apply border-b border-slate-200 dark:border-slate-700;
 }
 .zine-app.z-compact .z-sheet-head::before {
   content: '';
   position: absolute;
   top: 5px;
   left: 50%;
-  width: 44px;
+  width: 40px;
   height: 4px;
-  margin-left: -22px;
-  background: #111;
-  opacity: 0.35;
+  margin-left: -20px;
+  @apply rounded-full bg-slate-300 dark:bg-slate-600;
 }
 .zine-app.z-compact .z-sheet-title {
   flex: 1;
@@ -1001,25 +822,16 @@
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-  font-family: 'Rubik Mono One';
-  font-size: 12px;
+  @apply text-base font-semibold;
 }
 .zine-app.z-compact .z-sheet-head button {
   min-width: 44px;
   min-height: 44px;
   padding: 0 8px;
-  font-size: 15px;
-}
-.zine-app.z-compact .z-sheet-head .z-del {
-  background: #111;
-  color: var(--ui-paper);
-}
-.zine-app.z-compact .z-sheet-head .z-x {
-  box-shadow: none;
 }
 .zine-app.z-compact .z-count {
-  font-size: 13px;
   white-space: nowrap;
+  @apply text-sm;
 }
 .zine-app.z-compact .z-panel-body,
 .zine-app.z-compact .z-nav-body {
@@ -1028,7 +840,7 @@
   overflow: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
-  padding: 12px max(14px, env(safe-area-inset-right)) 24px max(14px, env(safe-area-inset-left));
+  padding: 12px max(16px, env(safe-area-inset-right)) 24px max(16px, env(safe-area-inset-left));
 }
 .zine-app.z-compact .z-panel-body > h3:first-child {
   display: none;
@@ -1041,8 +853,7 @@
 }
 .zine-app.z-compact .z-reorder {
   align-items: center;
-  font-weight: 700;
-  font-size: 13px;
+  @apply text-sm font-medium;
 }
 .zine-app.z-compact .z-thumbs {
   display: grid;
@@ -1058,64 +869,17 @@
   flex-direction: column;
   align-items: center;
   margin: 0;
-  padding: 4px;
-  background: transparent;
-  border: 2px solid transparent;
-  box-shadow: none;
-  font-weight: 400;
-}
-.zine-app.z-compact .z-thumbs .thumb.cur {
-  border-color: var(--ui-accent);
 }
 .zine-app.z-compact .z-thumbs .thumb-box {
-  box-shadow: 0 2px 8px #0003;
-}
-/* inputs: 16px so iOS never zooms on focus */
-.zine-app.z-compact .field input[type='text'],
-.zine-app.z-compact .field input[type='number'],
-.zine-app.z-compact .field select,
-.zine-app.z-compact .field textarea {
-  font-size: 16px;
-  min-height: 40px;
-}
-.zine-app.z-compact .sw {
-  width: 40px;
-  height: 40px;
-}
-.zine-app.z-compact .check {
-  min-height: 40px;
-  font-size: 14px;
-}
-.zine-app.z-compact .check input {
-  width: 22px;
-  height: 22px;
-  flex: none;
-}
-.zine-app.z-compact .field input[type='range'] {
-  min-height: 40px;
+  @apply shadow-md;
 }
 
-/* ⋯ menu (compact and iPad landscape) */
+/* ⋯ menu (compact and iPad landscape; look: ui.menu) */
 .zine-app .z-menu:not([hidden]) {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
   position: absolute;
   top: 100%;
   right: max(8px, env(safe-area-inset-right));
   z-index: 30;
   min-width: 230px;
-  padding: 10px;
-  background: #111;
-  box-shadow: 4px 4px 0 var(--ui-accent);
-}
-.zine-app .z-bar .z-menu button {
-  display: block;
-  min-height: 44px;
-  font-size: 15px;
-  text-align: left;
-  padding: 0 12px;
-}
-.zine-app.z-touch .z-bar {
-  position: relative;
 }

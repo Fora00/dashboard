@@ -1,5 +1,6 @@
 import { useRef, type ReactNode } from 'react'
 import { useModalDialog } from '../lib/useModalDialog'
+import { ICON_BUTTON } from './Button'
 
 interface Props {
   open: boolean
@@ -34,12 +35,7 @@ export function Sheet({ open, onClose, title, children, footer }: Props) {
       <div className="flex max-h-[85dvh] w-full flex-col overflow-hidden rounded-t-2xl bg-white shadow-xl sm:max-w-md sm:rounded-2xl dark:bg-slate-900">
         <div className="flex shrink-0 items-center justify-between border-b border-slate-200 px-4 py-1 dark:border-slate-700">
           <h2 className="text-base font-semibold">{title}</h2>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close"
-            className="flex size-10 items-center justify-center rounded-lg text-lg text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
-          >
+          <button type="button" onClick={onClose} aria-label="Close" className={ICON_BUTTON}>
             ✕
           </button>
         </div>

@@ -44,6 +44,11 @@ const OFF: Record<Variant, string> = {
     'border-slate-200 bg-white text-slate-600 hover:bg-slate-100 active:bg-slate-200 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-300 dark:hover:bg-slate-800',
 }
 
+/** One segment's classes, for markup built outside React (the Zine editor's toggle rows). */
+export function segmentClass(variant: Variant, on: boolean): string {
+  return `${ITEM[variant]} ${FOCUS_RING_INSET} ${on ? ON[variant] : OFF[variant]}`
+}
+
 /** Single-choice segmented control with roving tabindex (Left/Right/Home/End move and select). */
 export function SegmentedTabs<T extends string>({
   options,
@@ -89,7 +94,7 @@ export function SegmentedTabs<T extends string>({
             {...(tabs ? { 'aria-selected': on } : { 'aria-checked': on })}
             tabIndex={o.id === active ? 0 : -1}
             onClick={() => onChange(o.id)}
-            className={`${ITEM[variant]} ${FOCUS_RING_INSET} ${on ? ON[variant] : OFF[variant]}`}
+            className={segmentClass(variant, on)}
           >
             {o.label}
           </button>

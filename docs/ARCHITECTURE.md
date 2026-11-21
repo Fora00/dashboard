@@ -128,6 +128,32 @@ a trigger. Owner plus per-project/per-area guests.
   no sidebar; 1180/1440 = sidebar, no header, accent line on top; also check
   the collapsed rail and keyboard order (Tab: skip link, sidebar, content).
 
+## Design system
+
+One look for every project, tools included. There is no separate theme file:
+the system is Tailwind's **slate** scale (surfaces, text, borders; light by
+default, `dark:` via `prefers-color-scheme`) plus the **accent variables**
+below, applied through the shared components in `src/components/`:
+
+- `Button` (primary = accent, ghost = slate, danger = rose), `ICON_BUTTON`
+  (40px icon-only), `field.ts` (`INPUT`/`SELECT`/`TEXTAREA`), `focus.ts`
+  (focus rings), `SegmentedTabs` (single choice), `Chip`, `Card`, `Sheet`
+  (bottom sheet / dialog), `SectionTitle`, `PageHeader`.
+- Rules: 40px touch targets (`min-h-10`), `rounded-lg` controls,
+  `rounded-xl` cards, `rounded-2xl` sheets/dialogs, `text-sm` UI text
+  (`text-base` on phones in fields so iOS does not zoom), selected state =
+  `--accent-selected` fill, never a hand-picked colour.
+- **Markup built outside React** (e.g. the Zine editor, `src/projects/zine/`)
+  uses the same class strings: `buttonClass()`, `ICON_BUTTON`,
+  `segmentClass()`, `SECTION_TITLE`, `field.ts`, collected in a small
+  per-tool map (`zine/ui.ts`). The tool's own CSS does layout only; plain
+  CSS beats Tailwind utilities (they sit in a cascade layer), so it must not
+  set colours, borders or radii on elements carrying those classes. Surface
+  colours it needs go through `@reference '../../index.css'` + `@apply` with
+  slate tokens, never hex values.
+- Content a tool renders as its *output* (zine pages, course figures) may
+  keep its own fonts and colours; the chrome around it may not.
+
 ## Project accent and Home Screen icon
 
 - **Accent (IC3).** `Layout` matches the route to the registry

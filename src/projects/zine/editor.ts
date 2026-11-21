@@ -3,6 +3,7 @@
    global listener, the print root and the @page style. Plain DOM on purpose (not React): the editor re-renders
    by hand and drags mutate the nodes directly. Data stays in its own per-device IndexedDB 'zine-sporca'. */
 
+import { ui } from './ui'
 import { selectSides, slug, type PrintOptions } from './imposition'
 import {
   DEFAULT_MARGINS,
@@ -609,28 +610,28 @@ export function mountZine(root: HTMLElement): () => void {
   // DOM skeleton (ids of the original became classes, queried inside root).
   root.innerHTML = `
     <header class="z-bar">
-      <a class="z-back" href="#/strumenti" aria-label="Strumenti" title="Strumenti">←</a>
-      <span class="logo">ZINE//SPORCA</span>
-      <button data-act="text" class="z-add">+ Testo</button>
-      <button data-act="image" class="z-add">+ Immagine</button>
-      <button data-act="tape" class="z-add">+ Nastro</button>
-      <button data-act="box" class="z-add">+ Blocco</button>
+      <a class="z-back ${ui.icon}" href="#/strumenti" aria-label="Strumenti" title="Strumenti">←</a>
+      <span class="logo"><span aria-hidden="true">✂️</span> Zine</span>
+      <button data-act="text" class="z-add ${ui.btn}">+ Testo</button>
+      <button data-act="image" class="z-add ${ui.btn}">+ Immagine</button>
+      <button data-act="tape" class="z-add ${ui.btn}">+ Nastro</button>
+      <button data-act="box" class="z-add ${ui.btn}">+ Blocco</button>
       <span class="sep z-add"></span>
-      <button data-act="undo" title="Ctrl+Z" aria-label="Annulla">↶</button>
-      <button data-act="redo" title="Ctrl+Shift+Z" aria-label="Ripeti">↷</button>
+      <button data-act="undo" class="${ui.icon}" title="Ctrl+Z" aria-label="Annulla">↶</button>
+      <button data-act="redo" class="${ui.icon}" title="Ctrl+Shift+Z" aria-label="Ripeti">↷</button>
       <span class="sep z-file"></span>
-      <button data-act="new" class="z-file">Nuova</button>
-      <button data-act="open" class="z-file">Apri .json</button>
-      <button data-act="export" class="z-file">Salva .json</button>
+      <button data-act="new" class="z-file ${ui.btn}">Nuova</button>
+      <button data-act="open" class="z-file ${ui.btn}">Apri .json</button>
+      <button data-act="export" class="z-file ${ui.btn}">Salva .json</button>
       <span class="grow"></span>
-      <button data-act="print" class="hot z-print">Stampa / PDF</button>
-      <button data-act="menu" class="z-more" aria-label="Altro" aria-haspopup="menu" aria-expanded="false">⋯</button>
-      <div class="z-menu" role="menu" hidden>
-        <button data-act="new" role="menuitem">Nuova zine</button>
-        <button data-act="open" role="menuitem">Apri .json</button>
-        <button data-act="export" role="menuitem">Salva .json</button>
-        <button data-act="settings" role="menuitem" class="z-menu-compact">Impostazioni zine</button>
-        <button data-act="print" role="menuitem" class="hot">Stampa / Scarica PDF</button>
+      <button data-act="print" class="z-print ${ui.primary}">Stampa / PDF</button>
+      <button data-act="menu" class="z-more ${ui.icon}" aria-label="Altro" aria-haspopup="menu" aria-expanded="false">⋯</button>
+      <div class="z-menu ${ui.menu}" role="menu" hidden>
+        <button data-act="new" role="menuitem" class="${ui.menuItem}">Nuova zine</button>
+        <button data-act="open" role="menuitem" class="${ui.menuItem}">Apri .json</button>
+        <button data-act="export" role="menuitem" class="${ui.menuItem}">Salva .json</button>
+        <button data-act="settings" role="menuitem" class="z-menu-compact ${ui.menuItem}">Impostazioni zine</button>
+        <button data-act="print" role="menuitem" class="${ui.primary} w-full justify-start">Stampa / Scarica PDF</button>
       </div>
       <input type="file" class="z-file-img" accept="${IMAGE_ACCEPT}" multiple hidden>
       <input type="file" class="z-file-json" accept="application/json,.json" hidden>
@@ -638,58 +639,58 @@ export function mountZine(root: HTMLElement): () => void {
     <aside class="z-nav" aria-label="Pagine"><div class="z-sheet-head z-nav-head"></div><div class="z-nav-body"></div></aside>
     <main class="z-stage">
       <div class="z-spreadwrap"><div class="z-spread spread"></div></div>
-      <div class="z-spreadlabel"></div>
+      <div class="z-spreadlabel ${ui.hint}"></div>
       <div class="z-pager">
-        <button data-act="prev" aria-label="Pagina precedente">‹</button>
-        <span class="z-pager-label" aria-live="polite"></span>
-        <button data-act="next" aria-label="Pagina successiva">›</button>
+        <button data-act="prev" class="${ui.floating}" aria-label="Pagina precedente">‹</button>
+        <span class="z-pager-label ${ui.pill}" aria-live="polite"></span>
+        <button data-act="next" class="${ui.floating}" aria-label="Pagina successiva">›</button>
       </div>
     </main>
     <aside class="z-panel" aria-label="Proprietà"><div class="z-sheet-head z-panel-head"></div><div class="z-panel-body"></div></aside>
     <nav class="z-tools" aria-label="Strumenti zine">
-      <button data-act="text"><b>T</b>Testo</button>
-      <button data-act="image"><b>▣</b>Immagine</button>
-      <button data-act="tape"><b>▱</b>Nastro</button>
-      <button data-act="box"><b>■</b>Blocco</button>
-      <button data-act="props"><b>✎</b>Modifica</button>
-      <button data-act="pages"><b>▤</b>Pagine</button>
+      <button data-act="text" class="${ui.tab}"><b>T</b>Testo</button>
+      <button data-act="image" class="${ui.tab}"><b>▣</b>Immagine</button>
+      <button data-act="tape" class="${ui.tab}"><b>▱</b>Nastro</button>
+      <button data-act="box" class="${ui.tab}"><b>■</b>Blocco</button>
+      <button data-act="props" class="${ui.tab}"><b>✎</b>Modifica</button>
+      <button data-act="pages" class="${ui.tab}"><b>▤</b>Pagine</button>
     </nav>
-    <dialog class="z-dlg">
+    <dialog class="z-dlg ${ui.dialog}">
       <form method="dialog" class="z-form">
-        <h2>Stampa / PDF</h2>
-        <label class="field"><span>Formato</span>
-          <select name="mode">
+        <h2 class="${ui.dialogTitle}">Stampa / PDF</h2>
+        <label class="field"><span class="${ui.label}">Formato</span>
+          <select name="mode" class="${ui.select}">
             <option value="booklet">Libretto A5 spillato (fogli A4 fronte/retro)</option>
             <option value="single">Pagine A5 singole (copisteria, spirale, cucitura)</option>
           </select>
         </label>
         <div class="booklet-only">
-          <label class="field"><span>Lati</span>
-            <select name="sides">
+          <label class="field"><span class="${ui.label}">Lati</span>
+            <select name="sides" class="${ui.select}">
               <option value="all">Fronte + retro (stampante duplex)</option>
               <option value="fronts">Solo fronti (duplex manuale, passo 1)</option>
               <option value="backs">Solo retri (passo 2)</option>
               <option value="backs-rev">Solo retri, ordine invertito (passo 2)</option>
             </select>
           </label>
-          <label class="field"><span>Creep (mm per foglio)</span>
-            <input type="number" name="creep" min="0" max="1" step="0.05" value="0">
+          <label class="field"><span class="${ui.label}">Creep (mm per foglio)</span>
+            <input type="number" name="creep" class="${ui.input}" min="0" max="1" step="0.05" value="0">
           </label>
-          <label class="check"><input type="checkbox" name="marks" checked> segni di piega</label>
+          <label class="check"><input type="checkbox" name="marks" class="${ui.check}" checked> segni di piega</label>
         </div>
-        <label class="check"><input type="checkbox" name="paper"> stampa il colore carta (lascia spento se usi carta colorata)</label>
-        <p class="z-info info"></p>
+        <label class="check"><input type="checkbox" name="paper" class="${ui.check}"> stampa il colore carta (lascia spento se usi carta colorata)</label>
+        <p class="z-info ${ui.info}"></p>
         <div class="dlg-actions">
-          <button value="cancel">Annulla</button>
-          <button value="ok">Stampa</button>
-          <button value="pdf" class="hot pdf">Scarica PDF</button>
+          <button value="cancel" class="${ui.btn}">Annulla</button>
+          <button value="ok" class="${ui.btn}">Stampa</button>
+          <button value="pdf" class="${ui.primary}">Scarica PDF</button>
         </div>
       </form>
     </dialog>
-    <dialog class="z-progress" aria-live="polite">
-      <h2>PDF</h2>
+    <dialog class="z-progress ${ui.dialog}" aria-live="polite">
+      <h2 class="${ui.dialogTitle}">PDF</h2>
       <p class="z-progress-msg"></p>
-      <progress max="1" value="0"></progress>
+      <progress class="${ui.range}" max="1" value="0"></progress>
       <div class="dlg-actions"></div>
     </dialog>`
   const q = <T extends Element = HTMLElement>(s: string) => root.querySelector(s) as T
@@ -1348,17 +1349,17 @@ export function mountZine(root: HTMLElement): () => void {
     renderNavHead()
     if (compact()) return renderNavSheet()
     nav.append(
-      h('div', { class: 'nav-title' }, 'PAGINE'),
+      h('div', { class: 'nav-title' }, 'Pagine'),
       h(
         'div',
         { class: 'nav-pages' },
-        h('button', { title: 'Togli 4 pagine', onclick: removePages }, '−4'),
+        h('button', { class: ui.btn, title: 'Togli 4 pagine', onclick: removePages }, '−4'),
         h('b', {}, `${N()} pag.`),
-        h('button', { title: 'Aggiungi 4 pagine (un foglio A4)', onclick: addPages }, '+4'),
+        h('button', { class: ui.btn, title: 'Aggiungi 4 pagine (un foglio A4)', onclick: addPages }, '+4'),
       ),
       h(
         'div',
-        { class: 'hint', style: { marginBottom: '10px' } },
+        { class: ui.hint, style: { marginBottom: '10px' } },
         `${N() / 4} fogli A4 · le pagine vanno a multipli di 4`,
       ),
     )
@@ -1376,7 +1377,7 @@ export function mountZine(root: HTMLElement): () => void {
         h(
           'div',
           {
-            class: 'thumb' + (i === cur ? ' cur' : ''),
+            class: ui.thumb(i === cur),
             onclick: () => {
               cur = i
               sel = null
@@ -1391,11 +1392,11 @@ export function mountZine(root: HTMLElement): () => void {
   }
   function renderNavHead() {
     navHead.replaceChildren(
-      h('span', { class: 'z-sheet-title' }, 'PAGINE'),
-      h('button', { 'data-act': 'rm4', 'aria-label': 'Togli 4 pagine' }, '−4'),
+      h('span', { class: 'z-sheet-title' }, 'Pagine'),
+      h('button', { class: ui.btn, 'data-act': 'rm4', 'aria-label': 'Togli 4 pagine' }, '−4'),
       h('b', { class: 'z-count' }, `${N()} pag.`),
-      h('button', { 'data-act': 'add4', 'aria-label': 'Aggiungi 4 pagine' }, '+4'),
-      h('button', { 'data-act': 'sheet-close', class: 'z-x', 'aria-label': 'Chiudi' }, '✕'),
+      h('button', { class: ui.btn, 'data-act': 'add4', 'aria-label': 'Aggiungi 4 pagine' }, '+4'),
+      h('button', { class: ui.icon, 'data-act': 'sheet-close', 'aria-label': 'Chiudi' }, '✕'),
     )
   }
   // Compact: a grid of thumbnails (single pages on the phone, spreads wider) plus reorder for the current page.
@@ -1406,8 +1407,8 @@ export function mountZine(root: HTMLElement): () => void {
         'div',
         { class: 'row z-reorder' },
         h('span', {}, `${pageLabel(selPage)}:`),
-        h('button', { 'data-act': 'pg-left', disabled: selPage === 0 }, '← Sposta'),
-        h('button', { 'data-act': 'pg-right', disabled: selPage === N() - 1 }, 'Sposta →'),
+        h('button', { class: ui.btn, 'data-act': 'pg-left', disabled: selPage === 0 }, '← Sposta'),
+        h('button', { class: ui.btn, 'data-act': 'pg-right', disabled: selPage === N() - 1 }, 'Sposta →'),
       ),
     )
     const grid = h('div', { class: 'z-thumbs' + (single ? ' single' : '') })
@@ -1428,7 +1429,7 @@ export function mountZine(root: HTMLElement): () => void {
         grid.append(
           h(
             'button',
-            { class: 'thumb' + (pi === selPage ? ' cur' : ''), onclick: pick(pi, 0) },
+            { class: ui.thumb(pi === selPage), onclick: pick(pi, 0) },
             h('div', { class: 'thumb-box', style: { width: tw + 'px', height: PH * MM * s + 'px' } }, sp),
             h('div', { class: 'thumb-label' }, pi === 0 ? 'Copertina' : pi === N() - 1 ? 'Retro' : String(pi + 1)),
           ),
@@ -1443,30 +1444,39 @@ export function mountZine(root: HTMLElement): () => void {
         grid.append(
           h(
             'button',
-            { class: 'thumb' + (i === cur ? ' cur' : ''), onclick: pick(0, i) },
+            { class: ui.thumb(i === cur), onclick: pick(0, i) },
             h('div', { class: 'thumb-box', style: { width: tw + 'px', height: PH * MM * s + 'px' } }, sp),
             h('div', { class: 'thumb-label' }, spreadLabel(i)),
           ),
         )
       })
-    nav.append(grid, h('p', { class: 'hint' }, `${N() / 4} fogli A4 · le pagine vanno a multipli di 4`))
+    nav.append(grid, h('p', { class: ui.hint }, `${N() / 4} fogli A4 · le pagine vanno a multipli di 4`))
   }
 
   /* ---------- panel ---------- */
-  const field = (label: string, ctrl: Node) => h('label', { class: 'field' }, h('span', {}, label), ctrl)
+  const field = (label: string, ctrl: Node) =>
+    h('label', { class: 'field' }, h('span', { class: ui.label }, label), ctrl)
   const range = (v: number, min: number, max: number, step: number, fn: (v: number) => void) =>
-    h('input', { type: 'range', min, max, step, value: v, oninput: (e: Event) => fn(+target(e).value) })
+    h('input', {
+      type: 'range',
+      class: ui.range,
+      min,
+      max,
+      step,
+      value: v,
+      oninput: (e: Event) => fn(+target(e).value),
+    })
   const select = (v: string, opts: Record<string, string>, fn: (v: string) => void) =>
     h(
       'select',
-      { onchange: (e: Event) => fn(target<HTMLSelectElement>(e).value) },
+      { class: ui.select, onchange: (e: Event) => fn(target<HTMLSelectElement>(e).value) },
       Object.entries(opts).map(([k, l]) => h('option', { value: k, selected: k === v }, l)),
     )
   const check = (label: string, v: boolean, fn: (v: boolean) => void) =>
     h(
       'label',
       { class: 'check' },
-      h('input', { type: 'checkbox', checked: v, onchange: (e: Event) => fn(target(e).checked) }),
+      h('input', { type: 'checkbox', class: ui.check, checked: v, onchange: (e: Event) => fn(target(e).checked) }),
       label,
     )
   const swatches = (v: string, keys: string[], fn: (v: string) => void) =>
@@ -1475,7 +1485,7 @@ export function mountZine(root: HTMLElement): () => void {
       { class: 'swatches' },
       keys.map((k) =>
         h('button', {
-          class: 'sw' + (k === v ? ' on' : ''),
+          class: ui.swatch(k === v),
           title: k,
           'aria-label': k,
           style: { background: k === 'ink' ? zine.ink : k === 'paper' ? zine.paper : COLORS[k] },
@@ -1486,21 +1496,22 @@ export function mountZine(root: HTMLElement): () => void {
 
   // Sheet header (compact): title, the element's quick actions, close. Hidden on desktop.
   function renderPanelHead(found: { el: El; pi: number } | null | '' | undefined) {
-    const close = h('button', { 'data-act': 'sheet-close', class: 'z-x', 'aria-label': 'Chiudi' }, '✕')
+    const close = h('button', { class: ui.icon, 'data-act': 'sheet-close', 'aria-label': 'Chiudi' }, '✕')
     if (!found) {
-      panelHead.replaceChildren(
-        h('span', { class: 'z-sheet-title' }, `ZINE · ${pageLabel(selPage).toUpperCase()}`),
-        close,
-      )
+      panelHead.replaceChildren(h('span', { class: 'z-sheet-title' }, `Zine · ${pageLabel(selPage)}`), close)
       return
     }
-    const name = { text: 'TESTO', image: 'IMMAGINE', tape: 'NASTRO', box: 'BLOCCO' }[found.el.type]
+    const name = { text: 'Testo', image: 'Immagine', tape: 'Nastro', box: 'Blocco' }[found.el.type]
     panelHead.replaceChildren(
       h('span', { class: 'z-sheet-title' }, name),
-      ...(found.el.type === 'text' ? [h('button', { 'data-act': 'el-edit' }, 'Scrivi')] : []),
-      h('button', { 'data-act': 'el-dup', 'aria-label': 'Duplica', title: 'Duplica' }, '⧉'),
-      h('button', { 'data-act': 'el-front', 'aria-label': 'In primo piano', title: 'In primo piano' }, '⬆'),
-      h('button', { 'data-act': 'el-del', class: 'z-del', 'aria-label': 'Elimina', title: 'Elimina' }, '🗑'),
+      ...(found.el.type === 'text' ? [h('button', { class: ui.btn, 'data-act': 'el-edit' }, 'Scrivi')] : []),
+      h('button', { class: ui.btn, 'data-act': 'el-dup', 'aria-label': 'Duplica', title: 'Duplica' }, '⧉'),
+      h(
+        'button',
+        { class: ui.btn, 'data-act': 'el-front', 'aria-label': 'In primo piano', title: 'In primo piano' },
+        '⬆',
+      ),
+      h('button', { class: ui.danger, 'data-act': 'el-del', 'aria-label': 'Elimina', title: 'Elimina' }, '🗑'),
       close,
     )
   }
@@ -1515,13 +1526,14 @@ export function mountZine(root: HTMLElement): () => void {
     }
 
     const page = pageAt(selPage)
-    const dirtLabel = h('span', {}, `Sporcizia fotocopia: ${Math.round(zine.dirt * 100)}%`)
+    const dirtLabel = h('span', { class: ui.label }, `Sporcizia fotocopia: ${Math.round(zine.dirt * 100)}%`)
     panel.append(
-      h('h3', {}, 'ZINE'),
+      h('h3', { class: ui.heading }, 'Zine'),
       field(
         'Titolo',
         h('input', {
           type: 'text',
+          class: ui.input,
           value: zine.title,
           oninput: (e: Event) => {
             zine.title = target(e).value
@@ -1570,6 +1582,7 @@ export function mountZine(root: HTMLElement): () => void {
             label,
             h('input', {
               type: 'number',
+              class: ui.input,
               inputmode: 'decimal',
               min: 0,
               max: 60,
@@ -1596,6 +1609,7 @@ export function mountZine(root: HTMLElement): () => void {
         'Colore carta (anteprima)',
         h('input', {
           type: 'color',
+          class: ui.color,
           value: zine.paper,
           onchange: (e: Event) =>
             change(() => {
@@ -1607,6 +1621,7 @@ export function mountZine(root: HTMLElement): () => void {
         'Colore inchiostro',
         h('input', {
           type: 'color',
+          class: ui.color,
           value: zine.ink,
           onchange: (e: Event) =>
             change(() => {
@@ -1614,14 +1629,14 @@ export function mountZine(root: HTMLElement): () => void {
             }),
         }),
       ),
-      h('h3', {}, `PAGINA ${selPage + 1}`),
+      h('h3', { class: ui.heading }, `Pagina ${selPage + 1}`),
       h(
         'div',
         { class: 'row' },
         h(
           'button',
           {
-            class: page.bg !== 'ink' ? 'on' : '',
+            class: ui.toggle(page.bg !== 'ink'),
             onclick: () =>
               change(() => {
                 page.bg = 'paper'
@@ -1632,7 +1647,7 @@ export function mountZine(root: HTMLElement): () => void {
         h(
           'button',
           {
-            class: page.bg === 'ink' ? 'on' : '',
+            class: ui.toggle(page.bg === 'ink'),
             onclick: () =>
               change(() => {
                 page.bg = 'ink'
@@ -1644,11 +1659,20 @@ export function mountZine(root: HTMLElement): () => void {
       h(
         'div',
         { class: 'row' },
-        h('button', { title: 'Scambia con la pagina precedente', onclick: () => swapPage(selPage, -1) }, '← Sposta'),
-        h('button', { title: 'Scambia con la pagina successiva', onclick: () => swapPage(selPage, 1) }, 'Sposta →'),
+        h(
+          'button',
+          { class: ui.btn, title: 'Scambia con la pagina precedente', onclick: () => swapPage(selPage, -1) },
+          '← Sposta',
+        ),
+        h(
+          'button',
+          { class: ui.btn, title: 'Scambia con la pagina successiva', onclick: () => swapPage(selPage, 1) },
+          'Sposta →',
+        ),
         h(
           'button',
           {
+            class: ui.btn,
             onclick: () => {
               if (confirm('Svuotare la pagina?'))
                 change(() => {
@@ -1663,19 +1687,19 @@ export function mountZine(root: HTMLElement): () => void {
         ? [
             h(
               'p',
-              { class: 'hint' },
+              { class: ui.hint },
               'Tocca un elemento per le sue proprietà, doppio tocco su un testo per scriverlo. Con due dita su un elemento lo scali e lo ruoti. Sulla pagina vuota: scorri per sfogliare, pizzica per ingrandire. Trascina le guide azzurre per spostare i margini.',
             ),
           ]
         : [
             h(
               'p',
-              { class: 'hint' },
+              { class: ui.hint },
               'Clicca una pagina per selezionarla. Trascina immagini dal computer direttamente sulla pagina, oppure incollale (Ctrl/Cmd+V). Trascina le guide azzurre per spostare i margini.',
             ),
             h(
               'p',
-              { class: 'hint' },
+              { class: ui.hint },
               'Scorciatoie: Canc elimina · frecce spostano (Shift = 5mm) · Cmd/Ctrl+D duplica · Shift mentre ridimensioni un testo = scala il font · Shift mentre ruoti = scatti di 15°.',
             ),
           ]),
@@ -1684,13 +1708,18 @@ export function mountZine(root: HTMLElement): () => void {
 
   function elementPanel(el: El, pi: number): Node[] {
     const out: Node[] = [
-      h('h3', {}, { text: 'TESTO', image: 'IMMAGINE', tape: 'NASTRO', box: 'BLOCCO' }[el.type] + ` · pag. ${pi + 1}`),
+      h(
+        'h3',
+        { class: ui.heading },
+        { text: 'Testo', image: 'Immagine', tape: 'Nastro', box: 'Blocco' }[el.type] + ` · pag. ${pi + 1}`,
+      ),
     ]
     if (el.type === 'text') {
       out.push(
         field(
           'Testo',
           h('textarea', {
+            class: ui.textarea,
             value: el.text,
             oninput: (e: Event) =>
               liveChange(() => {
@@ -1731,6 +1760,7 @@ export function mountZine(root: HTMLElement): () => void {
             h(
               'button',
               {
+                class: ui.btn,
                 onclick: () =>
                   change(() => {
                     el.seed = seed()
@@ -1757,7 +1787,7 @@ export function mountZine(root: HTMLElement): () => void {
               h(
                 'button',
                 {
-                  class: el.align === a ? 'on' : '',
+                  class: ui.toggle(el.align === a),
                   'aria-label': a,
                   onclick: () =>
                     change(() => {
@@ -1826,6 +1856,7 @@ export function mountZine(root: HTMLElement): () => void {
           h(
             'button',
             {
+              class: ui.btn,
               title: 'Tutta la foto visibile, dentro i margini',
               onclick: () => change(() => fitImage(el, pi, 'contain')),
             },
@@ -1834,6 +1865,7 @@ export function mountZine(root: HTMLElement): () => void {
           h(
             'button',
             {
+              class: ui.btn,
               title: 'Riempie la pagina fino al bordo (al vivo)',
               onclick: () => change(() => fitImage(el, pi, 'cover')),
             },
@@ -1881,18 +1913,18 @@ export function mountZine(root: HTMLElement): () => void {
       ['rot', '°'],
     ]
     out.push(
-      h('h3', {}, 'POSIZIONE'),
+      h('h3', { class: ui.heading }, 'Posizione'),
       h(
         'div',
-        { class: 'row' },
+        { class: 'z-pos' },
         ...keys.map(([k, l]) =>
           field(
             l,
             h('input', {
               type: 'number',
+              class: ui.input,
               step: k === 'rot' ? 1 : 0.5,
               value: nums[k] || 0,
-              style: { width: '58px' },
               onchange: (e: Event) =>
                 change(() => {
                   const v = +target(e).value
@@ -1910,6 +1942,7 @@ export function mountZine(root: HTMLElement): () => void {
         h(
           'button',
           {
+            class: ui.btn,
             onclick: () =>
               change(() => {
                 el.z = nextZ(pi)
@@ -1920,6 +1953,7 @@ export function mountZine(root: HTMLElement): () => void {
         h(
           'button',
           {
+            class: ui.btn,
             onclick: () =>
               change(() => {
                 const els = pageAt(pi).els
@@ -1935,9 +1969,9 @@ export function mountZine(root: HTMLElement): () => void {
       h(
         'div',
         { class: 'row' },
-        h('button', { onclick: duplicate }, 'Duplica'),
-        h('button', { onclick: () => moveToOtherPage(el, pi) }, 'Sposta su altra pag.'),
-        h('button', { onclick: removeSel }, 'Elimina'),
+        h('button', { class: ui.btn, onclick: duplicate }, 'Duplica'),
+        h('button', { class: ui.btn, onclick: () => moveToOtherPage(el, pi) }, 'Sposta su altra pag.'),
+        h('button', { class: ui.danger, onclick: removeSel }, 'Elimina'),
       ),
     )
     return out
@@ -2144,7 +2178,8 @@ export function mountZine(root: HTMLElement): () => void {
     progActions.replaceChildren(...actions)
     if (!progDlg.open) progDlg.showModal()
   }
-  const closeBtn = (label = 'Chiudi') => h('button', { type: 'button', onclick: () => progDlg.close() }, label)
+  const closeBtn = (label = 'Chiudi') =>
+    h('button', { class: ui.btn, type: 'button', onclick: () => progDlg.close() }, label)
 
   async function makePdf(opt: PrintOptions) {
     if (pdfBusy) return
@@ -2153,6 +2188,7 @@ export function mountZine(root: HTMLElement): () => void {
     const cancel = h(
       'button',
       {
+        class: ui.btn,
         type: 'button',
         onclick: () => {
           cancelPdf = true
@@ -2205,8 +2241,9 @@ export function mountZine(root: HTMLElement): () => void {
     const share = h(
       'button',
       {
+        class: ui.primary,
         type: 'button',
-        class: 'hot',
+
         onclick: () => {
           navigator
             .share({ files: [file], title: zine.title })
@@ -2219,7 +2256,7 @@ export function mountZine(root: HTMLElement): () => void {
       },
       'Condividi / salva PDF',
     )
-    const dl = h('button', { type: 'button', onclick: () => downloadBlob(name, blob) }, 'Scarica')
+    const dl = h('button', { class: ui.btn, type: 'button', onclick: () => downloadBlob(name, blob) }, 'Scarica')
     progress(`PDF pronto: ${name} (${mb} MB).`, 1, [closeBtn(), dl, share])
   }
 
