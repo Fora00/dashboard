@@ -92,7 +92,7 @@ describe('buildMonthMarkdown', () => {
     )
     expect(md).toContain('## Habits (live, from the Habits page)')
     expect(md).toContain(
-      '- 📖 Read: 20 done (3 floor) of 24 expected, 2 rest, 1 missed, 4 unmarked, 2 extra beyond the goal; target missed; reasons: Tired x2',
+      '- 📖 Read [no engine]: 20 done (3 floor) of 24 expected, 2 rest, 1 missed, 4 unmarked, 2 extra beyond the goal; target missed; reasons: Tired x2',
     )
   })
 })

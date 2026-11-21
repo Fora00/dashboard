@@ -327,6 +327,34 @@ an `upgrades` array in the JSON carry them (see "Upgrade list"). When the plan h
 `kind: "playbook"` (`ref: "playbook"`, `value.note?`). Local only (Dexie
 `eventMarks`/`eventPrefs`); code in `model/events.ts`. Copy to clipboard; `navigator.share` when available.
 
+### Habits and ISO week in the exports
+
+Added 2026-11-22 (for the `~/life` plans restructure: every month each Life
+Engine has experiments, each one a Habits-page habit).
+- **Week export header:** `# Life week 2026-W47 (16/11) · Week of 2026-11-16`
+  (ISO week, ISO year near New Year, Monday as dd/mm), so `/settimana` saves it
+  as `2026-W47_16-11_export.md` without computing anything.
+- **Week export `## Habits (live, from the Habits page)`**, after Trackers,
+  only when there are live habits: one line per active habit over the Mon-Sun
+  week, e.g. `- 📖 Habit A [Mind]: 3 done (1 floor), 1 rest, 0 missed, 1
+  unmarked, 2 to come of 7 days; target 5/week (3 expected): hit; reasons:
+  tired x1`. "Don't" habits show `slipped` and `limit N slips/week`. The
+  reasons are the day notes on rest days and misses (the Spock "why not?"
+  rows only exist for plan trackers). The JSON block gets a `habits` array
+  (`id, emoji, name, engine, avoid, target, grace?, experiment, done, floor,
+  rest, missed, unmarked, toCome, expected, hit, graceUsed, extra, reasons`).
+- **Engine tag on every habit line**, week and month: `[Physical Health]` …
+  `[Environment]`, `[no engine]` when untagged; an experiment habit (kind
+  `experiment`) adds `· experiment for YYYY-MM` (month of its cycle start) and
+  its verdict once judged. The free-text criterion is not stored yet.
+- **Month export `## Weeks`** (after Trackers): one line per week starting in
+  the month, up to today, Habits-page totals only, e.g. `- 2026-W46 (09/11):
+  📖 Habit A 5/5 hit · 🚭 Habit B 1 slip/limit 1 hit`; the current week says
+  `(week not over)` and `so far`.
+Code: `model/habits.ts` (`toLifeHabit`, line formatters, `isoWeekLabel`,
+`mondaysOf`), `week/lifeHabits.ts` (recap → LifeHabit), `ExportSection.tsx`,
+`MonthView.tsx`. Nothing stored: read live from `habits` / `habit_checks`.
+
 ## 2.5 History
 
 List of past weeks; tap → read-only view + re-export.

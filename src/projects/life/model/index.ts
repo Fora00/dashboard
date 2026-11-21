@@ -17,9 +17,19 @@ export {
   readShare,
   type MonthReport,
   type MonthHabit,
+  type MonthHabitWeek,
   type MonthTracker,
   type Reading,
 } from './month.ts'
+export {
+  toLifeHabit,
+  habitTag,
+  isoWeek,
+  isoWeekLabel,
+  mondaysOf,
+  type LifeHabit,
+  type HabitExperiment,
+} from './habits.ts'
 export { dayKey, isDateKey, parseDayKey, isMondayKey, addDays, weekKey, weekDays, daysBetween } from './dates.ts'
 export { parseWeekJson, parseChoresJson, validatePlan, type ParseResult } from './validate.ts'
 export { SCREEN_IDS, SCREEN_QUESTIONS } from './screenTime.ts'

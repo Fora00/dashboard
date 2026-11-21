@@ -16,15 +16,15 @@ import {
   weekKey,
   parseDayKey,
 } from '../model'
-import type { MonthHabit, MonthTracker, Reading } from '../model'
+import { addDays, mondaysOf, type MonthHabit, type MonthHabitWeek, type MonthTracker, type Reading } from '../model'
+import { lifeHabitsFor } from './lifeHabits'
 import { buildChartPoints } from './chartPoints'
 import { liveHabitRatiosByWeek } from './liveHabitRatios'
 import { recapMonths } from './monthRecap'
 import { RecapItems } from './RecapSection'
 import { EnginesSection } from './EnginesSection'
 import { HabitRecap } from '../../habits/HabitRecap'
-import { buildRecap, recapPeriod } from '../../habits/habitRecapData'
-import { reasonLabel } from '../../habits/habitStates'
+import { recapPeriod } from '../../habits/habitRecapData'
 import type { HabitDaysData } from '../../habits/habitDaysData'
 import { HabitSheets } from '../../habits/HabitSheets'
 import { useHabitSheets } from '../../habits/useHabitSheets'
@@ -233,34 +233,17 @@ export function MonthView({
       before: lineMean(points, prev, l.key),
     }))
     const live = habitData?.active ?? []
-    const habits: MonthHabit[] = buildRecap(
-      live,
-      habitData?.states ?? new Map(),
-      habitData?.notes ?? new Map(),
-      recapPeriod('month', `${month}-01`),
-      today,
-      habitData?.counts,
-      habitData?.slips,
-    ).map((r) => ({
-      emoji: r.habit.emoji,
-      name: r.habit.name,
-      avoid: r.habit.direction === 'avoid',
-      done: r.done,
-      floor: r.floor,
-      skip: r.skip,
-      fail: r.fail,
-      empty: r.empty,
-      expected: r.expected,
-      hit: r.hit,
-      graceUsed: r.graceUsed,
-      extra: r.extra,
-      reasons: Object.fromEntries(Object.entries(r.reasons).map(([k, n]) => [reasonLabel(k), n])),
+    const habits: MonthHabit[] = lifeHabitsFor(habitData, recapPeriod('month', `${month}-01`), today)
+    const habitWeeks: MonthHabitWeek[] = mondaysOf(month, today).map((week) => ({
+      week,
+      partial: addDays(week, 6) > today,
+      habits: lifeHabitsFor(habitData, recapPeriod('week', week), today),
     }))
     const [engineRows, prevEngineRows] = await Promise.all([
       db.lifeEngines.where('month').equals(month).toArray(),
       db.lifeEngines.where('month').equals(prev).toArray(),
     ])
-    const md = `${buildMonthMarkdown(report, lines, habits)}\n${buildEnginesMarkdown(month, engineRows, prevEngineRows, live)}`
+    const md = `${buildMonthMarkdown(report, lines, habits, habitWeeks)}\n${buildEnginesMarkdown(month, engineRows, prevEngineRows, live)}`
     try {
       await navigator.clipboard.writeText(md)
       flashCopied()

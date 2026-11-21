@@ -4,6 +4,7 @@ import { dayKey, weekDays } from './dates.ts'
 import { summarizeSavedEvents } from './events.ts'
 import { parseApps } from './apps.ts'
 import { fenceFor } from './fence.ts'
+import { habitsForJson, isoWeekLabel, weekHabitLine, type LifeHabit } from './habits.ts'
 import { describeLearningActivity, type LearningWeek } from './learning.ts'
 import { summarizeMealsWeek } from './meals.ts'
 import { SCREEN_QUESTIONS } from './screenTime.ts'
@@ -38,7 +39,7 @@ function energyPair(e: Extract<LifeEntry, { kind: 'tracker' }>): string | null {
   return `${b ?? '?'}→${a ?? '?'}`
 }
 
-/** Markdown for the week: focus, trackers per day + energy, Sunday, check-ins,
+/** Markdown for the week: focus, trackers per day + energy, the live Habits-page habits (when given), Sunday, check-ins,
  *  tasks, food (the meal diary's entries of the week, when given), entries removed from the plan, and the raw JSON in a <details>
  *  block. `today` (a day key) only marks overdue check-ins. */
 export function buildExportMarkdown(
@@ -54,11 +55,13 @@ export function buildExportMarkdown(
     favouriteCategories: [],
   },
   learning: LearningWeek | null = null,
+  habits: readonly LifeHabit[] = [],
 ): string {
   const plan = withCheckinIds(planIn)
   const s = summarizeWeek(plan, entries, today)
   const mine = entries.filter((e) => e.week === plan.week)
-  const out: string[] = [`# Week of ${plan.week}`, '']
+  // ISO week + Monday first, so /settimana can name the saved file without computing it.
+  const out: string[] = [`# Life week ${isoWeekLabel(plan.week)} · Week of ${plan.week}`, '']
   // Ideas travel across weeks (the caller passes them along with the week's entries).
   const ideasByHabit = new Map<string, Extract<LifeEntry, { kind: 'idea' }>[]>()
   for (const e of entries) {
@@ -121,6 +124,12 @@ export function buildExportMarkdown(
       const pairs = t.entries.map(energyPair).filter(Boolean)
       if (pairs.length) out.push(`  - energy: ${pairs.join(', ')}`)
     }
+    out.push('')
+  }
+
+  if (habits.length) {
+    out.push('## Habits (live, from the Habits page)', '')
+    for (const h of habits) out.push(weekHabitLine(h))
     out.push('')
   }
 
@@ -279,6 +288,8 @@ export function buildExportMarkdown(
           ),
         }
       : {}),
+    // Present only when the Habits page has live habits.
+    ...(habits.length ? { habits: habitsForJson(habits) } : {}),
     // Present only when the Upgrade list has something to say (open items, done/dropped this week).
     ...(upgrades.openCount || upgrades.doneThisWeek.length || upgrades.droppedThisWeek.length
       ? { upgrades: upgradesForExport(upgrades) }

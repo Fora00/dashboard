@@ -1,6 +1,7 @@
 import type { LifeEntry, LifePlan } from '../../../lib/db'
 import { shiftMonth } from '../../../lib/dates.ts'
 import { summarizeWeek } from './summary.ts'
+import { isoWeekLabel, monthHabitLine, weekHabitTotal, type LifeHabit } from './habits.ts'
 
 // --- Month check (read-only) ---------------------------------------------------
 // What a month said about each habit, from data the app already holds: the
@@ -69,25 +70,15 @@ export interface MonthReport {
 }
 
 /** One live Habits-page habit over the month (from the habit recap), for the export. */
-export interface MonthHabit {
-  emoji: string
-  name: string
-  /** 'avoid' = a "don't" habit: it counts slips, not done days. */
-  avoid: boolean
-  done: number
-  floor: number
-  skip: number
-  fail: number
-  /** Past, unmarked days. */
-  empty: number
-  expected: number
-  /** null when nothing was expected yet. */
-  hit: boolean | null
-  graceUsed: number
-  /** Overshoot: taps above the goal over the month. */
-  extra: number
-  /** Reason label -> times, over rest days and misses. */
-  reasons: Record<string, number>
+export type MonthHabit = LifeHabit
+
+/** One week of the month (its Monday in the month): the habits' totals. */
+export interface MonthHabitWeek {
+  /** Monday of the week. */
+  week: string
+  /** The week is not over yet (today falls in it). */
+  partial: boolean
+  habits: LifeHabit[]
 }
 
 /** Plans whose Monday falls in the month, with their entries, summarised per tracker label. */
@@ -155,6 +146,7 @@ export function buildMonthMarkdown(
   report: MonthReport,
   lines: readonly { label: string; now: number | null; before: number | null }[],
   habits: readonly MonthHabit[] = [],
+  weeks: readonly MonthHabitWeek[] = [],
 ): string {
   const out = [
     `# Life month ${report.month}`,
@@ -166,15 +158,7 @@ export function buildMonthMarkdown(
     '',
     '## Habits (live, from the Habits page)',
   ]
-  for (const h of habits) {
-    const reasons = Object.entries(h.reasons)
-      .map(([r, n]) => `${r} x${n}`)
-      .join(', ')
-    const verdict = h.hit === null ? 'not started' : h.hit ? 'target hit' : 'target missed'
-    out.push(
-      `- ${h.emoji} ${h.name}${h.avoid ? " (don't)" : ''}: ${h.done} done${h.floor ? ` (${h.floor} floor)` : ''} of ${h.expected} expected, ${h.skip} rest, ${h.fail} ${h.avoid ? 'slipped' : 'missed'}${h.graceUsed ? ` (${h.graceUsed} within grace)` : ''}, ${h.empty} unmarked${h.extra ? (h.avoid ? `, ${h.extra} slips past the limit (negative overshoot)` : `, ${h.extra} extra beyond the goal`) : ''}; ${verdict}${reasons ? `; reasons: ${reasons}` : ''}`,
-    )
-  }
+  for (const h of habits) out.push(monthHabitLine(h))
   if (habits.length === 0) out.push('- none')
   out.push('', '## Trackers')
   for (const t of report.trackers) {
@@ -185,5 +169,13 @@ export function buildMonthMarkdown(
     for (const w of t.weeks) if (w.why) out.push(`  - why, week ${w.week}: ${w.why}`)
   }
   if (report.trackers.length === 0) out.push('- none')
+  if (weeks.length) {
+    // One line per week starting in the month, totals only, to check against the month plan's "Weeks".
+    out.push('', '## Weeks (Habits-page totals per week starting in the month)')
+    for (const w of weeks)
+      out.push(
+        `- ${isoWeekLabel(w.week)}${w.partial ? ' (week not over)' : ''}: ${w.habits.map((h) => weekHabitTotal(h, w.partial)).join(' · ') || 'no habits'}`,
+      )
+  }
   return out.join('\n') + '\n'
 }

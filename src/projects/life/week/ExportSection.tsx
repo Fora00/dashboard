@@ -1,4 +1,8 @@
 import { useState } from 'react'
+import { recapPeriod } from '../../habits/habitRecapData'
+import { useHabitDays } from '../../habits/useHabitDays'
+import { useToday } from '../../../lib/useToday'
+import { lifeHabitsFor } from './lifeHabits'
 import type { EventMark, LifeEntry, LifePlan, MealEntry } from '../../../lib/db'
 import { buildExportMarkdown, type LearningWeek } from '../model'
 import { categoryLabel } from '../../events/model'
@@ -34,6 +38,9 @@ export function ExportSection({
   // text is shown in a textarea instead (fallbackText).
   const [copied, flashCopied] = useFlash(2000)
   const [fallbackText, setFallbackText] = useState<string | null>(null)
+  const today = useToday()
+  const habitData = useHabitDays(today)
+  const habits = () => lifeHabitsFor(habitData, recapPeriod('week', plan.week), today)
 
   async function doExport() {
     const md = buildExportMarkdown(
@@ -46,6 +53,7 @@ export function ExportSection({
         favouriteCategories: favouriteCategories.map(categoryLabel),
       },
       learning,
+      habits(),
     )
     if (navigator.clipboard) {
       try {
@@ -73,6 +81,7 @@ export function ExportSection({
         favouriteCategories: favouriteCategories.map(categoryLabel),
       },
       learning,
+      habits(),
     )
     try {
       const outcome = await shareOrCopy(md, { title: `Week of ${plan.week}` })
@@ -88,9 +97,9 @@ export function ExportSection({
   return (
     <CollapsibleSection title="Export" open={open} onToggle={onToggle} readOnly={readOnly}>
       <p className="mb-3 text-sm text-slate-500 dark:text-slate-400">
-        Copies a summary of this week — focus, trackers with energy, Sunday answers, check-ins, tasks, food, saved
-        events of next week — to paste into /settimana on your Mac. Exporting on or after Sunday also closes this week's
-        late answers on this device.
+        Copies a summary of this week — focus, trackers with energy, habits, Sunday answers, check-ins, tasks, food,
+        saved events of next week — to paste into /settimana on your Mac. Exporting on or after Sunday also closes this
+        week's late answers on this device.
       </p>
       <Card className="space-y-3 text-sm">
         <div className="flex flex-wrap gap-2">
