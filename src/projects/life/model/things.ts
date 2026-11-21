@@ -1,5 +1,5 @@
 import type { LifeTask } from '../../../lib/db'
-import { thingsUrl } from '../../../lib/things'
+import { thingsUrl } from '../../../lib/things.ts'
 
 // --- Things bridge -------------------------------------------------------------
 

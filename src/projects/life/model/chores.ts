@@ -1,5 +1,5 @@
 import type { LifeChoreEntry, LifeChoreValue, LifeEntry } from '../../../lib/db'
-import { fnv1aHex } from '../../../lib/hash'
+import { fnv1aHex } from '../../../lib/hash.ts'
 
 // --- Household chores (Things project "Casa catia") ----------------------------
 // A Mac script reads the project (and the completion history of its recurring
