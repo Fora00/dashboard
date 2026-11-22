@@ -7,6 +7,9 @@ import {
   MAX_PER_DAY,
   MAX_TARGET,
   MAX_TEXT_LENGTH,
+  MAX_LIMIT_APP_LENGTH,
+  MAX_LIMIT_MINUTES,
+  MAX_MEASURE_LIMITS,
   clipEmoji,
 } from '../../lib/habitCaps.ts'
 import { LIFE_IMPORT_BASE } from '../life/model/importLink.ts'
@@ -43,6 +46,8 @@ export const DETAIL_KEYS = [
   'cycleStart',
   'cycleEnd',
   'verdict',
+  'measure',
+  'measureLimits',
 ] as const satisfies readonly (keyof Habit)[]
 
 export type DetailKey = (typeof DETAIL_KEYS)[number]
@@ -67,6 +72,7 @@ const ENUMS = {
   graceScope: ['day', 'week'],
   social: ['person', 'alone'],
   verdict: ['up', 'stay', 'down', 'closed'],
+  measure: ['app-limits'],
 } as const
 const INTS = { target: [1, MAX_TARGET], perDay: [1, MAX_PER_DAY], grace: [0, MAX_GRACE] } as const
 
@@ -137,7 +143,56 @@ function validateItem(raw: unknown, p: string, err: (m: string) => void): HabitP
   }
   if (item.cycleStart && item.cycleEnd && item.cycleEnd < item.cycleStart)
     err(`${n}.cycleEnd (${item.cycleEnd}) is before cycleStart (${item.cycleStart})`)
+  if (raw.measureLimits !== undefined) {
+    const limits = validateLimits(raw.measureLimits, `${n}.measureLimits`, err)
+    if (limits !== undefined) item.measureLimits = limits
+  }
+  if (item.measure === 'app-limits' && item.direction === 'do')
+    err(`${n}: measure "app-limits" counts slips, so direction must be avoid (or left out)`)
   return item
+}
+
+/** measureLimits: null (clear) or 1-MAX_MEASURE_LIMITS rows of { app, minutes } (daily minutes), apps distinct. */
+function validateLimits(
+  v: unknown,
+  p: string,
+  err: (m: string) => void,
+): { app: string; minutes: number }[] | null | undefined {
+  if (v === null) return null
+  if (!Array.isArray(v) || v.length === 0) {
+    err(`${p} must be a non-empty array of { app, minutes } (or null to clear)`)
+    return undefined
+  }
+  if (v.length > MAX_MEASURE_LIMITS) {
+    err(`${p} has ${v.length} apps (max ${MAX_MEASURE_LIMITS})`)
+    return undefined
+  }
+  const out: { app: string; minutes: number }[] = []
+  const seen = new Set<string>()
+  let ok = true
+  v.forEach((r, i) => {
+    const q = `${p}[${i}]`
+    if (!isObj(r)) {
+      err(`${q} must be an object { app, minutes }`)
+      ok = false
+      return
+    }
+    for (const k of Object.keys(r)) if (k !== 'app' && k !== 'minutes') err(`${q}.${k} is not a limit field`)
+    const app = typeof r.app === 'string' ? r.app.trim() : ''
+    if (!app) err(`${q}.app is required`)
+    else if (app.length > MAX_LIMIT_APP_LENGTH) err(`${q}.app is too long (max ${MAX_LIMIT_APP_LENGTH})`)
+    else if (seen.has(app.toLowerCase())) err(`${q}.app "${app}" is listed twice`)
+    const m = r.minutes
+    const minutesOk = Number.isInteger(m) && (m as number) >= 1 && (m as number) <= MAX_LIMIT_MINUTES
+    if (!minutesOk) err(`${q}.minutes must be an integer 1–${MAX_LIMIT_MINUTES} (daily limit)`)
+    if (!app || app.length > MAX_LIMIT_APP_LENGTH || seen.has(app.toLowerCase()) || !minutesOk) {
+      ok = false
+      return
+    }
+    seen.add(app.toLowerCase())
+    out.push({ app, minutes: m as number })
+  })
+  return ok ? out : undefined
 }
 
 /** Validate a habits plan (the script's input, and the link's payload). */
@@ -228,13 +283,17 @@ export const FIELD_LABELS: Record<FieldChange['field'], string> = {
   cycleStart: 'Cycle start',
   cycleEnd: 'Cycle end',
   verdict: 'Verdict',
+  measure: 'Verification',
+  measureLimits: 'App limits (min/day)',
 }
 
 /** How a field value reads in the preview ("—" when unset). */
-export function showValue(field: FieldChange['field'], v: string | number | undefined | null): string {
+export function showValue(field: FieldChange['field'], v: unknown): string {
   if (v === undefined || v === null || v === '') return '—'
+  if (field === 'measureLimits' && Array.isArray(v))
+    return (v as { app: string; minutes: number }[]).map((l) => `${l.app} ${l.minutes}`).join(', ') || '—'
   if (field === 'engine' && isEngineKey(v)) return engineLabel(v)
-  return String(v)
+  return typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean' ? String(v) : JSON.stringify(v)
 }
 
 /** The details a habit carries now (only the plan-editable keys). */
@@ -250,7 +309,26 @@ function planDetails(item: HabitPlanItem): Details {
     const v = item[k]
     if (v !== undefined && v !== null && v !== '') (d as Record<string, unknown>)[k] = v
   }
+  if (d.measure) d.direction = 'avoid'
   return d
+}
+
+/** Values equal for the diff (the limits list by content, not identity). */
+function sameValue(a: unknown, b: unknown): boolean {
+  return a === b || (Array.isArray(a) && Array.isArray(b) && JSON.stringify(a) === JSON.stringify(b))
+}
+
+/** The measure fields as merged must make sense: app-limits needs limits and a habit to avoid. Mutates
+ *  `d` to set direction avoid when measured (the writer forces it too; the preview then shows it). */
+function measureErrors(d: Details): string[] {
+  if (d.measure === 'app-limits') {
+    if (!d.measureLimits?.length) return ['measure "app-limits" needs measureLimits (at least one app)']
+    if (d.direction === 'do') return ['measure "app-limits" counts slips, so direction must be avoid']
+    d.direction = 'avoid'
+    return []
+  }
+  if (d.measureLimits?.length) return ['measureLimits needs measure "app-limits"']
+  return []
 }
 
 /**
@@ -274,6 +352,8 @@ export function planHabitsImport(plan: HabitsPlan, habits: readonly Habit[]): Im
     if (!habit) {
       if (!item.emoji) return { kind: 'invalid', key, name: item.name, errors: ['A new habit needs an emoji'] }
       const details = planDetails(item)
+      const bad = measureErrors(details)
+      if (bad.length) return { kind: 'invalid', key, name: item.name, errors: bad }
       const fields: FieldChange[] = DETAIL_KEYS.filter((k) => details[k] !== undefined).map((k) => ({
         field: k,
         before: '—',
@@ -296,13 +376,19 @@ export function planHabitsImport(plan: HabitsPlan, habits: readonly Habit[]): Im
         name: item.name,
         errors: [`Cycle end (${details.cycleEnd}) would be before cycle start (${details.cycleStart})`],
       }
+    // Clearing the measure clears its limits too (a habit checked by hand has none).
+    if (item.measure === null) delete details.measureLimits
+    // Turning a habit into an app-limits one makes it a habit to avoid, unless the plan says otherwise.
+    if (item.measure && item.direction === undefined) details.direction = 'avoid'
+    const bad = measureErrors(details)
+    if (bad.length) return { kind: 'invalid', key, name: item.name, errors: bad }
     const name = item.name
     const emoji = item.emoji ?? habit.emoji
     const changes: FieldChange[] = []
     if (name !== habit.name) changes.push({ field: 'name', before: habit.name, after: name })
     if (emoji !== habit.emoji) changes.push({ field: 'emoji', before: habit.emoji, after: emoji })
     for (const k of DETAIL_KEYS)
-      if (before[k] !== details[k])
+      if (!sameValue(before[k], details[k]))
         changes.push({ field: k, before: showValue(k, before[k]), after: showValue(k, details[k]) })
     if (changes.length === 0) return { kind: 'same', key, habit }
     return { kind: 'update', key, habit, name, emoji, details, changes }

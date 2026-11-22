@@ -4,6 +4,7 @@ import { db, type LifeEntry, type LifeWeek } from '../../../lib/db'
 import { Card } from '../../../components/Card'
 import { buildChartPoints } from './chartPoints'
 import { liveHabitRatiosByWeek } from './liveHabitRatios'
+import { useAppsByWeek } from '../../habits/useHabitDays'
 import { useToday } from '../../../lib/useToday'
 
 const W = 320
@@ -33,6 +34,7 @@ export function ProgressChart({
   const today = useToday()
   const habitRows = useLiveQuery(() => db.habits.toArray(), [])
   const habitChecks = useLiveQuery(() => db.habitChecks.toArray(), [])
+  const apps = useAppsByWeek(!!habitRows?.some((h) => h.measure !== undefined))
   const points = buildChartPoints(
     weeks,
     entries,
@@ -44,6 +46,7 @@ export function ProgressChart({
       habitChecks ?? [],
       weeks.map((w) => w.week),
       today,
+      apps,
     ),
   )
   if (points.length < 2) return null

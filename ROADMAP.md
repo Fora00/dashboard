@@ -1874,6 +1874,37 @@ local part already works for anyone with the link; the cloud part still needs an
       MediaBox; adapt the T2 Playwright scripts (session scratchpad, may be gone: rewrite).
 - [ ] T6 Zine "Qualità" option [sonnet, XS, optional]: 200 / 300 dpi in the PDF dialog.
 
+## Measured habits 📏 (owner, 2026-11-22)
+
+"Non estendere telefono" (avoid habit) reads as kept whenever the owner forgets to mark a slip,
+which is exactly the days they scroll. Owner wants the habit **verified from data**: the screen
+time entered in the Sunday check (Life week, `screen-avg` / `screen-total`, `model/screenTime.ts`)
+gives a daily average for the week; over the limit = the week failed. Phone only for now (steps,
+weight later, same field). Unentered = **unverified**, never counted as a success.
+
+- [x] M1 App-limits-verified habit [opus, M], done 2026-11-22 (migration 20261122120000_habit_measure pushed + db:types; 1558 tests, build green; UI not browser-checked; Lifeboard and tile streak stay ticks-only on purpose; limits plan in ~/life/_sync/habits-plan-app-limits.json, apply by link after deploy) (redesigned 2026-11-22: the habit is "don't press
+      extend 15 min" on iOS app limits — Tinder 10, YouTube 40, Reddit 20, Instagram 15, Hinge 10,
+      Baba Is You 30 min/day): `Habit.measure?: 'app-limits'` + `measureLimits?: {app, minutes}[]`;
+      migration `measure text` + `measure_limits jsonb`, `habitSync.ts` mapping. From the Sunday
+      top-apps answer (`parseApps`, weekly minutes): per limited app, min extensions =
+      max(0, ceil((weekly - 7×limit) / 15)); week slips = max(manual ticks, verified sum), then the
+      normal grace rule. No top-apps answer = unverified (never a success). Manual ticks stay.
+      HabitForm: "Verifica: a mano / limiti app" + app/minutes rows. Recap, tile, week + month
+      exports show manual vs verified and which apps went over. Offline/signed out (Dexie only).
+      Also: the Sunday top-apps question always shows a locked row per limited app (minutes
+      required, 0 ok; apps cap 7 + limited apps), and the habits plan import accepts `measure` +
+      `measureLimits` so the orchestrator can set limits by link (owner added Bumble 10 min).
+      Habits with `measure` carry a "complessa" tag (tile, list, detail, export bracket) and
+      HabitDetail gets a per-app view (limit, weekly minutes vs 7×limit, min extensions, recent weeks).
+- [ ] M2 Habit detail route [opus, M] (after M1; owner 2026-11-22): every habit, simple or
+      complex, gets a page `/habits/:id` (route in App.tsx, HashRouter, works offline/signed out,
+      unknown id → back to /habits). The page = overview (stats, month calendar with day states,
+      suggestions, recap) + granular management (rest ranges, archive/delete, per-measure view and
+      editors such as M1's AppLimitsView / limits editor, keyed on `measure`). The sheet opened
+      from a tile shrinks to the basics (name, emoji, target/grace, quick day state) plus an
+      "Apri dettaglio" link. Today's `HabitDetail` sheet (via `HabitSheets.tsx`) is the source to
+      split. Back button returns to /habits; 40px targets, safe areas.
+
 ## Ideas / later
 
 - [ ] **🤝 Sharing review: what can be shared, and better ways to do it** [opus]

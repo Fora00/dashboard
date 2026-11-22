@@ -1,4 +1,12 @@
-import { db, type Habit, type HabitCheck, type HabitDayState, type HabitKind, type HabitVerdict } from './db'
+import {
+  db,
+  type Habit,
+  type HabitAppLimit,
+  type HabitCheck,
+  type HabitDayState,
+  type HabitKind,
+  type HabitVerdict,
+} from './db'
 import { createCloudSync, type TableSync } from './cloudSync'
 import { useSyncStatus } from './useSyncStatus'
 import { uuidV5 } from './uuidV5'
@@ -13,6 +21,7 @@ import {
   MAX_TARGET,
   MAX_TEXT_LENGTH,
   MAX_NOTE_LENGTH,
+  cleanLimits,
   clipEmoji,
 } from './habitCaps'
 export {
@@ -22,6 +31,10 @@ export {
   MAX_NOTE_LENGTH,
   MAX_PER_DAY,
   MAX_TEXT_LENGTH,
+  MAX_MEASURE_LIMITS,
+  MAX_LIMIT_APP_LENGTH,
+  MAX_LIMIT_MINUTES,
+  cleanLimits,
   clipEmoji,
 } from './habitCaps'
 
@@ -53,6 +66,8 @@ interface HabitRow {
   cycle_end: string | null
   verdict: string | null
   engine: string | null
+  measure: string | null
+  measure_limits: HabitAppLimit[] | null
 }
 
 interface HabitCheckRow {
@@ -69,7 +84,7 @@ const habitsTable: TableSync<Habit, HabitRow> = {
   remote: 'habits',
   table: () => db.habits,
   columns:
-    'id, name, emoji, created_at, archived_at, anchor, why, social, direction, per_day, grace, grace_scope, normal, floor, target, kind, cycle_start, cycle_end, verdict, engine',
+    'id, name, emoji, created_at, archived_at, anchor, why, social, direction, per_day, grace, grace_scope, normal, floor, target, kind, cycle_start, cycle_end, verdict, engine, measure, measure_limits',
   realtime: true,
   toRow: (h) => ({
     id: h.id,
@@ -92,6 +107,8 @@ const habitsTable: TableSync<Habit, HabitRow> = {
     cycle_end: h.cycleEnd ?? null,
     verdict: h.verdict ?? null,
     engine: h.engine ?? null,
+    measure: h.measure ?? null,
+    measure_limits: h.measureLimits ?? null,
   }),
   fromRow: (r) => ({
     id: r.id,
@@ -114,6 +131,7 @@ const habitsTable: TableSync<Habit, HabitRow> = {
     cycleEnd: r.cycle_end ?? undefined,
     verdict: (r.verdict as HabitVerdict | null) ?? undefined,
     engine: isEngineKey(r.engine) ? r.engine : undefined,
+    ...measureOf(r.measure, r.measure_limits),
   }),
 }
 
@@ -230,10 +248,21 @@ export type HabitDetails = Partial<
     | 'cycleEnd'
     | 'verdict'
     | 'engine'
+    | 'measure'
+    | 'measureLimits'
   >
 >
 
+/** A habit's measure fields, cleaned: 'app-limits' only with at least one valid limit, else neither. */
+function measureOf(measure: unknown, limits: unknown): Pick<Habit, 'measure' | 'measureLimits'> {
+  const clean = cleanLimits(limits)
+  return measure === 'app-limits' && clean.length > 0
+    ? { measure: 'app-limits', measureLimits: clean }
+    : { measure: undefined, measureLimits: undefined }
+}
+
 function cleanDetails(d: HabitDetails): HabitDetails {
+  const measured = measureOf(d.measure, d.measureLimits)
   const text = (v: string | undefined) => v?.trim().slice(0, MAX_TEXT_LENGTH) || undefined
   return {
     anchor: text(d.anchor),
@@ -253,6 +282,9 @@ function cleanDetails(d: HabitDetails): HabitDetails {
     // One of the seven Life Engines or nothing: anything else is dropped (the
     // habits_engine_check CHECK would reject it on the server).
     engine: isEngineKey(d.engine) ? d.engine : undefined,
+    ...measured,
+    // A measured habit counts extensions: always a "don't" habit.
+    ...(measured.measure ? { direction: 'avoid' as const, target: 7, perDay: 1 } : {}),
   }
 }
 

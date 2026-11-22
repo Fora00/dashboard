@@ -358,6 +358,8 @@ export type Database = {
           grace_scope: string | null
           id: string
           kind: string | null
+          measure: string | null
+          measure_limits: Json | null
           name: string
           normal: string | null
           per_day: number | null
@@ -380,6 +382,8 @@ export type Database = {
           grace_scope?: string | null
           id: string
           kind?: string | null
+          measure?: string | null
+          measure_limits?: Json | null
           name: string
           normal?: string | null
           per_day?: number | null
@@ -402,6 +406,8 @@ export type Database = {
           grace_scope?: string | null
           id?: string
           kind?: string | null
+          measure?: string | null
+          measure_limits?: Json | null
           name?: string
           normal?: string | null
           per_day?: number | null

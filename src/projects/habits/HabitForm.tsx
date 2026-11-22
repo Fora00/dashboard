@@ -2,9 +2,10 @@ import { DATE, INPUT } from '../../components/field'
 import { useState, type FormEvent, type ReactNode } from 'react'
 import type { HabitKind, HabitVerdict } from '../../lib/db'
 import { Button } from '../../components/Button'
-import { MAX_EMOJI_LENGTH, MAX_NAME_LENGTH, MAX_TEXT_LENGTH } from '../../lib/habitSync'
+import { cleanLimits, MAX_EMOJI_LENGTH, MAX_NAME_LENGTH, MAX_TEXT_LENGTH } from '../../lib/habitSync'
 import { ENGINES } from '../life/model/engines'
 import { shiftDayKey } from './habitStats'
+import { AppLimitsEditor } from './AppLimitsEditor'
 import { AVOID_IDEAS, AVOID_PRESETS, CYCLE_DAYS, IDEAS, PRESETS, type HabitFormValues } from './habitFormDefaults'
 
 const CHIP = 'min-h-10 rounded-lg border px-3 text-sm'
@@ -79,6 +80,8 @@ export function HabitForm({ initial, submitLabel, onSubmit, presets, verdict, ex
                   target: value === 'avoid' ? 7 : prev.target,
                   perDay: value === 'avoid' ? 1 : prev.perDay,
                   grace: value === 'avoid' ? prev.grace : 0,
+                  // A measured habit counts slips: only a habit to avoid can be one.
+                  measure: value === 'avoid' ? prev.measure : undefined,
                 }))
               }
               className={`${CHIP} flex-1 ${v.direction === value ? CHIP_ON : CHIP_OFF}`}
@@ -92,6 +95,42 @@ export function HabitForm({ initial, submitLabel, onSubmit, presets, verdict, ex
             ? 'Kept every day unless you mark a slip. Only days you used the app count, so a stopped log never looks like a perfect streak.'
             : 'Done when you tap it (or reach the taps you set).'}
         </span>
+      </div>
+
+      <div role="group" aria-label="Verifica" className="space-y-1">
+        <span className="text-sm font-medium">Verifica</span>
+        <div className="flex gap-2">
+          {(
+            [
+              [undefined, '✋ a mano'],
+              ['app-limits', '📱 limiti app'],
+            ] as const
+          ).map(([value, label]) => (
+            <button
+              key={label}
+              type="button"
+              aria-pressed={v.measure === value}
+              onClick={() =>
+                setV((prev) => ({
+                  ...prev,
+                  measure: value,
+                  ...(value ? { direction: 'avoid' as const, target: 7, perDay: 1 } : {}),
+                }))
+              }
+              className={`${CHIP} flex-1 ${v.measure === value ? CHIP_ON : CHIP_OFF}`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        <span className="block text-xs text-slate-500 dark:text-slate-400">
+          {v.measure === 'app-limits'
+            ? 'Abitudine complessa: le spunte restano, ma la domenica le “App più usate” provano il minimo di estensioni (una ogni 15 min oltre 7 × il limite). Conta il più alto dei due; senza dati la settimana resta da verificare.'
+            : 'Conta solo quello che segni.'}
+        </span>
+        {v.measure === 'app-limits' && (
+          <AppLimitsEditor value={v.measureLimits} onChange={(rows) => set('measureLimits', rows)} />
+        )}
       </div>
 
       {presets && (
@@ -413,7 +452,15 @@ export function HabitForm({ initial, submitLabel, onSubmit, presets, verdict, ex
       )}
 
       <div className="flex gap-2">
-        <Button type="submit" className="flex-1" disabled={!v.name.trim() || v.engine === undefined}>
+        <Button
+          type="submit"
+          className="flex-1"
+          disabled={
+            !v.name.trim() ||
+            v.engine === undefined ||
+            (v.measure === 'app-limits' && cleanLimits(v.measureLimits).length === 0)
+          }
+        >
           {submitLabel}
         </Button>
         {extra}

@@ -2,7 +2,16 @@
 // period expected, whether the target was reached, and the reasons given for
 // rest days and misses. Feeds the Week and Month views and, later, /settimana.
 
-import type { Habit, HabitDayState } from '../../lib/db'
+import type { Habit, HabitAppLimit, HabitDayState } from '../../lib/db'
+import {
+  isAppLimits,
+  measuredHit,
+  weeklyAllowance,
+  weekEvidence,
+  weekSlips,
+  type AppsByWeek,
+  type WeekEvidence,
+} from './habitMeasure'
 import { dayKey } from './habitStore'
 import { overshootOf } from './habitStates'
 import { displayCell, habitBounds, type DisplayCell } from './habitDayStates'
@@ -54,6 +63,36 @@ export interface RecapRow {
   reasons: Record<string, number>
   /** Overshoot: taps above the goal (or slips above the limit), summed over the period's days. */
   extra: number
+  /** Measured habits only (habitMeasure.ts): the weeks judged on data. `hit` above is then the measured verdict. */
+  measured?: MeasuredRecap
+}
+
+/** One week of a measured habit. */
+export interface MeasuredWeek {
+  week: string
+  /** Slips ticked by hand that week. */
+  manual: number
+  /** null = no apps answer that week: unverified. */
+  evidence: WeekEvidence | null
+  /** max(manual, verified); null when unverified. */
+  slips: number | null
+  /** The ticks alone, judged by the normal rule (null = nothing expected yet). */
+  manualHit: boolean | null
+  hit: boolean | null
+}
+
+export interface MeasuredRecap {
+  kind: 'app-limits'
+  limits: HabitAppLimit[]
+  /** Week: the one week. Month: the weeks starting in the month, up to today, while the habit ran. */
+  weeks: MeasuredWeek[]
+  /** Slips ticked over those weeks, and the minimum proven over the verified ones. */
+  manual: number
+  verified: number
+  verifiedWeeks: number
+  hitWeeks: number
+  /** Weeks that expected something but have no apps answer. */
+  unverifiedWeeks: number
 }
 
 export function buildRecap(
@@ -64,8 +103,10 @@ export function buildRecap(
   today: string,
   counts?: ReadonlyMap<string, ReadonlyMap<string, number>>,
   slips?: ReadonlyMap<string, ReadonlyMap<string, number>>,
+  /** Sunday apps answers by week, for app-limits habits; missing = every week unverified. */
+  apps?: AppsByWeek,
 ): RecapRow[] {
-  return habits.map((habit) => {
+  return habits.map((habit): RecapRow => {
     const st = states.get(habit.id)
     const nt = notes.get(habit.id)
     const bounds = habitBounds(habit, st)
@@ -111,8 +152,87 @@ export function buildRecap(
       (n, day) => n + overshootOf(habit, counts?.get(habit.id)?.get(day) ?? 0, slips?.get(habit.id)?.get(day) ?? 0),
       0,
     )
-    return { habit, cells, done, floor, skip, fail, empty, expected, hit, graceUsed: graced, reasons, extra }
+    const row: RecapRow = {
+      habit,
+      cells,
+      done,
+      floor,
+      skip,
+      fail,
+      empty,
+      expected,
+      hit,
+      graceUsed: graced,
+      reasons,
+      extra,
+    }
+    if (!isAppLimits(habit)) return row
+    const measured = measuredRecap(
+      row,
+      period,
+      today,
+      bounds,
+      st,
+      slips?.get(habit.id),
+      (week) => buildRecap([habit], states, notes, recapPeriod('week', week), today, counts, slips, apps)[0]!,
+      apps,
+    )
+    return { ...row, hit: measured.hit, measured: measured.recap }
   })
+}
+
+function measuredRecap(
+  row: RecapRow,
+  period: RecapPeriod,
+  today: string,
+  bounds: { start: string; end: string | undefined },
+  states: ReadonlyMap<string, HabitDayState> | undefined,
+  daySlips: ReadonlyMap<string, number> | undefined,
+  weekRow: (monday: string) => RecapRow,
+  apps: AppsByWeek | undefined,
+): { hit: boolean | null; recap: MeasuredRecap } {
+  const habit = row.habit
+  const limits = habit.measureLimits ?? []
+  let weeks: MeasuredWeek[]
+  if (period.kind === 'week') {
+    let manual = 0
+    for (const day of period.days) {
+      if (day > today || day < bounds.start || (bounds.end !== undefined && day > bounds.end)) continue
+      manual += daySlips?.get(day) ?? (states?.get(day) === 'fail' ? 1 : 0)
+    }
+    const evidence = weekEvidence(limits, apps?.get(period.from))
+    weeks = [
+      {
+        week: period.from,
+        manual,
+        evidence,
+        slips: evidence ? weekSlips(manual, evidence.verified) : null,
+        manualHit: row.hit,
+        hit: measuredHit(row.hit, manual, evidence, weeklyAllowance(habit)),
+      },
+    ]
+  } else {
+    weeks = period.days
+      .filter((d) => weekStart(d) === d && d <= today && shiftDayKey(d, 6) >= bounds.start)
+      .filter((d) => bounds.end === undefined || d <= bounds.end)
+      .map((monday) => weekRow(monday).measured!.weeks[0]!)
+  }
+  const verifiedWeeks = weeks.filter((w) => w.evidence !== null && w.manualHit !== null)
+  const recap: MeasuredRecap = {
+    kind: 'app-limits',
+    limits,
+    weeks,
+    manual: weeks.reduce((n, w) => n + w.manual, 0),
+    verified: verifiedWeeks.reduce((n, w) => n + (w.evidence?.verified ?? 0), 0),
+    verifiedWeeks: verifiedWeeks.length,
+    hitWeeks: verifiedWeeks.filter((w) => w.hit).length,
+    unverifiedWeeks: weeks.filter((w) => w.evidence === null && w.manualHit !== null).length,
+  }
+  let hit: boolean | null
+  if (period.kind === 'week') hit = weeks[0]!.hit
+  else if (recap.verifiedWeeks === 0) hit = null
+  else hit = row.hit !== false && verifiedWeeks.every((w) => w.hit !== false)
+  return { hit, recap }
 }
 
 export function periodDays(period: RecapPeriod, today: string): number {

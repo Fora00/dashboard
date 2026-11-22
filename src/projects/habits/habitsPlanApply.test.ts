@@ -81,4 +81,19 @@ describe('applyHabitsImport', () => {
     expect(r).toEqual({ created: 1, updated: 0 })
     expect((await db.habits.toArray()).map((h) => h.name)).toEqual(['Habit test ok'])
   })
+
+  it('app limits land on the habit, edits keep them, and a re-run is no change', async () => {
+    const limits = [{ app: 'App A', minutes: 10 }]
+    const p = plan({ habits: [{ name: 'Habit test M', emoji: '📱', measure: 'app-limits', measureLimits: limits }] })
+    expect(await applyHabitsImport(p)).toEqual({ created: 1, updated: 0 })
+    const [h] = await db.habits.toArray()
+    expect(h).toMatchObject({ measure: 'app-limits', measureLimits: limits, direction: 'avoid' })
+    expect(await applyHabitsImport(p)).toEqual({ created: 0, updated: 0 })
+    // An edit that doesn't mention the measure keeps it.
+    expect(await applyHabitsImport(plan({ habits: [{ name: 'Habit test M', why: 'test why' }] }))).toEqual({
+      created: 0,
+      updated: 1,
+    })
+    expect(await db.habits.get(h!.id)).toMatchObject({ measure: 'app-limits', measureLimits: limits, why: 'test why' })
+  })
 })

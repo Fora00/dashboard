@@ -18,6 +18,7 @@ import { MAX_OPEN } from './habitStates'
 import { tapHabit } from './habitTap'
 import { HabitTile } from './HabitTile'
 import { Lifeboard } from './Lifeboard'
+import { evidenceLine, latestEvidence } from './habitMeasure'
 import { SegmentedTabs } from '../../components/SegmentedTabs'
 
 const HABIT_VIEWS = ['today', 'week', 'month', 'board'] as const
@@ -91,6 +92,7 @@ export function HabitsPanel({ data, today, viewKey, defaultView = 'today', empty
           notes={data.notes}
           counts={data.counts}
           slips={data.slips}
+          apps={data.appsByWeek}
           today={today}
           onOpen={(id) => dispatch({ kind: 'detail', id })}
           onTapToday={tap}
@@ -116,6 +118,14 @@ export function HabitsPanel({ data, today, viewKey, defaultView = 'today', empty
                   const stats = habitStats(habit, states, today)
                   const bounds = habitBounds(habit, states)
                   const monday = weekStart(today)
+                  const measured = habit.measure
+                    ? latestEvidence(habit, data.appsByWeek, monday, shiftDayKey(monday, -7))
+                    : null
+                  const measureLine = !habit.measure
+                    ? undefined
+                    : measured
+                      ? `${measured.week === monday ? '' : 'sett. scorsa: '}${evidenceLine(measured.evidence)}`
+                      : 'da verificare domenica'
                   return (
                     <HabitTile
                       key={habit.id}
@@ -132,6 +142,7 @@ export function HabitsPanel({ data, today, viewKey, defaultView = 'today', empty
                           : undefined
                       }
                       todayIndex={daysBetween(monday, today)}
+                      measureLine={measureLine}
                       count={data.counts.get(habit.id)?.get(today) ?? 0}
                       slips={data.slips.get(habit.id)?.get(today) ?? 0}
                       onToggle={() => tap(habit)}

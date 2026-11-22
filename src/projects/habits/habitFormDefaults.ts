@@ -1,4 +1,13 @@
-import type { Habit, HabitDirection, HabitGraceScope, HabitKind, HabitSocial, HabitVerdict } from '../../lib/db'
+import type {
+  Habit,
+  HabitAppLimit,
+  HabitDirection,
+  HabitGraceScope,
+  HabitKind,
+  HabitMeasure,
+  HabitSocial,
+  HabitVerdict,
+} from '../../lib/db'
 import type { EngineKey } from '../life/model/engines'
 import { shiftDayKey } from './habitStats'
 
@@ -22,6 +31,10 @@ export interface HabitFormValues {
   verdict: HabitVerdict | undefined
   /** The Life Engine this habit feeds; undefined = untagged. */
   engine: EngineKey | undefined
+  /** How the habit is checked: undefined = by hand; 'app-limits' = against the Sunday apps answer. */
+  measure: HabitMeasure | undefined
+  /** Daily minutes per app (measure 'app-limits'); blank rows are dropped on save. */
+  measureLimits: HabitAppLimit[]
 }
 
 export const CYCLE_DAYS = 28
@@ -45,6 +58,8 @@ export function toForm(habit: Habit): HabitFormValues {
     cycleEnd: habit.cycleEnd ?? '',
     verdict: habit.verdict,
     engine: habit.engine,
+    measure: habit.measure,
+    measureLimits: habit.measureLimits ?? [],
   }
 }
 
@@ -68,6 +83,8 @@ export function newForm(today: string, kind: HabitKind): HabitFormValues {
     cycleEnd: shiftDayKey(today, CYCLE_DAYS - 1),
     verdict: undefined,
     engine: undefined,
+    measure: undefined,
+    measureLimits: [],
   }
 }
 

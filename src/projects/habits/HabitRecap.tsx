@@ -6,6 +6,8 @@ import { useLongPress } from '../../lib/useLongPress'
 import type { Habit, HabitDayState } from '../../lib/db'
 import { buildRecap, recapPeriod, shiftPeriod, tallyReasons, type RecapKind } from './habitRecapData'
 import { habitStats } from './habitStats'
+import { evidenceLine, type AppsByWeek } from './habitMeasure'
+import { MeasureBadge } from './MeasureBadge'
 import { suggest } from './habitSuggestions'
 import {
   OVERSHOOT_CELL,
@@ -42,6 +44,8 @@ interface Props {
   slips?: ReadonlyMap<string, ReadonlyMap<string, number>> | undefined
   onSetCount?: ((habit: Habit, day: string, count: number) => void) | undefined
   onSetSlips?: ((habit: Habit, day: string, slips: number) => void) | undefined
+  /** Sunday apps answers by week, for app-limits habits (habitMeasure.ts). */
+  apps?: AppsByWeek | undefined
 }
 
 const WEEKDAY = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
@@ -75,6 +79,7 @@ export function HabitRecap({
   slips,
   onSetCount,
   onSetSlips,
+  apps,
 }: Props) {
   const [offset, setOffset] = useState(0)
   // The day being picked; after Rest or Missed, `reasonFor` shows the one-tap reasons.
@@ -84,7 +89,7 @@ export function HabitRecap({
   const { bind, consumeLongPress } = useLongPress(() => setPicked({ id: pressed.current, day: today }), !!onSetDay)
   let period = recapPeriod(kind, anchor ?? today)
   if (offset !== 0) for (let i = 0; i < Math.abs(offset); i++) period = shiftPeriod(period, Math.sign(offset))
-  const rows = buildRecap(habits, states, notes, period, today, counts, slips)
+  const rows = buildRecap(habits, states, notes, period, today, counts, slips, apps)
 
   const counted = rows.filter((r) => r.hit !== null)
   const hits = counted.filter((r) => r.hit).length
@@ -164,8 +169,19 @@ export function HabitRecap({
             <div className="flex items-start gap-2">
               <span className="text-xl">{r.habit.emoji}</span>
               <div className="min-w-0 flex-1">
-                <div className="font-medium">{r.habit.name}</div>
+                <div className="font-medium">
+                  {r.habit.name} <MeasureBadge habit={r.habit} className="ml-1 align-middle" />
+                </div>
                 {r.habit.why && <div className="text-xs text-slate-500 italic">{r.habit.why}</div>}
+                {r.measured && (
+                  <div className="text-xs text-slate-600 dark:text-slate-300">
+                    {kind === 'week'
+                      ? r.measured.weeks[0]?.evidence
+                        ? evidenceLine(r.measured.weeks[0].evidence)
+                        : 'da verificare domenica (App più usate)'
+                      : `settimane verificate: ${r.measured.hitWeeks}/${r.measured.verifiedWeeks} ok${r.measured.unverifiedWeeks ? ` · ${r.measured.unverifiedWeeks} da verificare` : ''}`}
+                  </div>
+                )}
               </div>
               {onTapToday &&
                 offset === 0 &&
@@ -250,7 +266,9 @@ export function HabitRecap({
                 }`}
               >
                 {r.hit === null
-                  ? 'not started'
+                  ? r.measured
+                    ? `${r.measured.manual} slip · da verificare`
+                    : 'not started'
                   : `${r.done}/${r.expected}${r.graceUsed ? ` +${r.graceUsed} grace` : ''}${r.hit ? ' ✓' : ''}`}
                 {r.hit !== null && r.extra > 0 && (
                   <span

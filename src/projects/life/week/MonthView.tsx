@@ -157,6 +157,7 @@ function HabitsMonthCard({ month, today, data }: { month: string; today: string;
         notes={data.notes}
         counts={data.counts}
         slips={data.slips}
+        apps={data.appsByWeek}
         today={today}
         onOpen={(id) => dispatch({ kind: 'detail', id })}
       />
@@ -217,6 +218,7 @@ export function MonthView({
           habitData?.checks ?? [],
           weeks.map((w) => w.week),
           today,
+          habitData?.appsByWeek,
         ),
       )
   const prev = addMonths(month, -1)

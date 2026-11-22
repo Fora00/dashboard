@@ -11,6 +11,7 @@ import {
 import { daysBetween, type HabitStats } from './habitStats'
 import type { DisplayCell } from './habitDayStates'
 import { engineLabel } from '../life/model/engines'
+import { MeasureBadge } from './MeasureBadge'
 
 export type WeekCell = DisplayCell
 const CELL_STROKE: Record<WeekCell, string> = {
@@ -58,6 +59,8 @@ interface Props {
   /** Index (0 = Monday) of today in weekCells. */
   todayIndex?: number | undefined
   onOpen: () => void
+  /** Measured habits: what the latest data says ("verificate ≥3 estensioni (…)" / "da verificare domenica"). */
+  measureLine?: string | undefined
 }
 
 /** A big tappable tile: tap = done today, long-press = rest day (skip), the
@@ -77,6 +80,7 @@ export function HabitTile({
   slips = 0,
   weekCells,
   todayIndex = -1,
+  measureLine,
 }: Props) {
   const { week } = stats
   // Two-day rule: after an empty or missed day the tile quietly offers the floor.
@@ -166,6 +170,15 @@ export function HabitTile({
             className="text-[11px] font-medium tracking-wide text-slate-500 uppercase dark:text-slate-400"
           >
             {engineLabel(habit.engine)}
+          </span>
+        )}
+        <MeasureBadge habit={habit} />
+        {measureLine && (
+          <span
+            data-testid="tile-measure"
+            className="text-[11px] leading-tight font-medium text-violet-700 dark:text-violet-300"
+          >
+            {measureLine}
           </span>
         )}
         {habit.cycleEnd && !habit.verdict && habit.cycleEnd < today && (

@@ -18,6 +18,9 @@ import { REST_REASONS, STATE_CELL } from './habitStates'
 import { displayCell, habitBounds } from './habitDayStates'
 import { HabitLegend } from './HabitLegend'
 import { engineLabel } from '../life/model/engines'
+import { AppLimitsView } from './AppLimitsView'
+import { MeasureBadge } from './MeasureBadge'
+import type { AppsByWeek } from './habitMeasure'
 
 const WEEKDAYS = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
 /** The states a day can be set to from the calendar, never a partial one. A
@@ -40,9 +43,12 @@ interface Props {
   today: string
   onClose: () => void
   onArchive: (habit: Habit) => void
+  /** Measured habits: this habit's slips per day and the Sunday apps answers by week. */
+  slips?: ReadonlyMap<string, number> | undefined
+  apps?: AppsByWeek | undefined
 }
 
-export function HabitDetail({ habit, states, notes, openCount, wins, today, onClose, onArchive }: Props) {
+export function HabitDetail({ habit, states, notes, openCount, wins, today, onClose, onArchive, slips, apps }: Props) {
   return (
     <Sheet open={habit !== null} onClose={onClose} title={habit ? `${habit.emoji} ${habit.name}` : ''}>
       {habit && (
@@ -56,13 +62,26 @@ export function HabitDetail({ habit, states, notes, openCount, wins, today, onCl
           today={today}
           onClose={onClose}
           onArchive={onArchive}
+          slips={slips}
+          apps={apps}
         />
       )}
     </Sheet>
   )
 }
 
-function Body({ habit, states, notes, openCount, wins, today, onClose, onArchive }: Props & { habit: Habit }) {
+function Body({
+  habit,
+  states,
+  notes,
+  openCount,
+  wins,
+  today,
+  onClose,
+  onArchive,
+  slips,
+  apps,
+}: Props & { habit: Habit }) {
   const [month, setMonth] = useState(today.slice(0, 7))
   // The brush: one click on a day applies it (the same state again clears the day).
   const [brush, setBrush] = useState<HabitDayState | null>(habit.direction === 'avoid' ? 'fail' : 'done')
@@ -80,6 +99,16 @@ function Body({ habit, states, notes, openCount, wins, today, onClose, onArchive
         >
           {engineLabel(habit.engine)}
         </p>
+      )}
+      {habit.measure && <MeasureBadge habit={habit} className="-mb-3 ml-2" />}
+      {habit.measure === 'app-limits' && (
+        <AppLimitsView
+          habit={habit}
+          states={states}
+          slips={slips ?? new Map()}
+          apps={apps ?? new Map()}
+          today={today}
+        />
       )}
       <HabitSuggestionList
         suggestions={suggest({ habit, stats: s, states, notes, today, openCount })}

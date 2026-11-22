@@ -6,6 +6,7 @@ import type { Habit, HabitCheck } from '../../lib/db'
 import { habitDaysMaps, type HabitDaysMaps } from './habitDayStates'
 import { hasStarted } from './habitStates'
 import { buildLifeboard, type DayData } from './lifeboardData'
+import type { AppsByWeek } from './habitMeasure'
 
 export interface HabitDaysData extends HabitDaysMaps {
   /** Every habit, archived too, oldest first. */
@@ -19,9 +20,16 @@ export interface HabitDaysData extends HabitDaysMaps {
   archived: Habit[]
   /** Active habits done (or floor) today. */
   doneToday: number
+  /** Sunday "App più usate" answers by week (Life), for app-limits habits (habitMeasure.ts). */
+  appsByWeek: AppsByWeek
 }
 
-export function deriveHabitDays(habits: readonly Habit[], checks: readonly HabitCheck[], today: string): HabitDaysData {
+export function deriveHabitDays(
+  habits: readonly Habit[],
+  checks: readonly HabitCheck[],
+  today: string,
+  appsByWeek: AppsByWeek = new Map(),
+): HabitDaysData {
   const maps = habitDaysMaps(habits, checks, today)
   const boardData = new Map<string, DayData>()
   for (const h of habits) boardData.set(h.id, { states: maps.states.get(h.id)!, counts: maps.counts.get(h.id)! })
@@ -32,5 +40,5 @@ export function deriveHabitDays(habits: readonly Habit[], checks: readonly Habit
     const st = maps.states.get(h.id)?.get(today)
     return st === 'done' || st === 'floor'
   }).length
-  return { ...maps, habits: [...habits], checks: [...checks], boardData, wins, active, archived, doneToday }
+  return { ...maps, habits: [...habits], checks: [...checks], boardData, wins, active, archived, doneToday, appsByWeek }
 }

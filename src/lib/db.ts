@@ -95,6 +95,18 @@ export interface Habit {
   // The one Life Engine this habit feeds (EN2). Unset = untagged. Not indexed:
   // no Dexie version bump, old rows simply lack the field.
   engine?: LifeEngineKey | undefined
+  // M1: 'app-limits' = the habit is checked against the Sunday "App più usate"
+  // answer (Life week, ref 'screen-apps'): each app's weekly minutes past
+  // 7 x its daily limit prove extensions (one per 15 min). Implies direction
+  // 'avoid'. Not indexed: no Dexie version bump. See habits/habitMeasure.ts.
+  measure?: HabitMeasure | undefined
+  // Daily limit per app, in minutes (only with measure 'app-limits').
+  measureLimits?: HabitAppLimit[] | undefined
+}
+export type HabitMeasure = 'app-limits'
+export interface HabitAppLimit {
+  app: string
+  minutes: number
 }
 export type HabitDayState = 'done' | 'floor' | 'skip' | 'fail'
 export type HabitGraceScope = 'day' | 'week'

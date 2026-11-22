@@ -102,6 +102,8 @@ export function HabitSheets({ data, today, sheet, dispatch }: Props) {
         notes={(openHabit && data.notes.get(openHabit.id)) || noNotes}
         openCount={data.active.length}
         wins={(openHabit && data.wins.get(openHabit.id)) || 0}
+        slips={(openHabit && data.slips.get(openHabit.id)) || undefined}
+        apps={data.appsByWeek}
         today={today}
         onClose={close}
         onArchive={(habit) => {

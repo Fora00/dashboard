@@ -274,3 +274,57 @@ describe('engine tag (EN2)', () => {
     expect((await db.habits.get('hx'))?.engine).toBeUndefined()
   })
 })
+
+type MeasureRemote = { id: string; measure: string | null; measure_limits: unknown; direction: string | null }
+const remoteMeasure = (id: string) =>
+  ((fake.remote.habits ?? []) as unknown as MeasureRemote[]).find((r) => r.id === id)
+
+describe('app-limits measure (M1)', () => {
+  it('round-trips measure + limits through the server and forces a "don\'t" habit', async () => {
+    const h = await addHabit('Test habit M', '📱', {
+      measure: 'app-limits',
+      measureLimits: [
+        { app: ' App A ', minutes: 10.4 },
+        { app: 'app a', minutes: 20 }, // same app: dropped
+        { app: '', minutes: 5 }, // blank: dropped
+      ],
+    })
+    await settle()
+    expect(remoteMeasure(h.id)).toMatchObject({
+      measure: 'app-limits',
+      measure_limits: [{ app: 'App A', minutes: 10 }],
+      direction: 'avoid',
+    })
+    await db.habits.clear()
+    await sync.syncNow()
+    await settle()
+    expect(await db.habits.get(h.id)).toMatchObject({
+      measure: 'app-limits',
+      measureLimits: [{ app: 'App A', minutes: 10 }],
+      direction: 'avoid',
+    })
+  })
+
+  it('a measure without a valid limit is dropped; clearing writes nulls', async () => {
+    const h = await addHabit('Test habit N', '📱', { measure: 'app-limits', measureLimits: [] })
+    expect((await db.habits.get(h.id))?.measure).toBeUndefined()
+    await updateHabit(h, h.name, h.emoji, { measure: 'app-limits', measureLimits: [{ app: 'App B', minutes: 30 }] })
+    expect((await db.habits.get(h.id))?.measure).toBe('app-limits')
+    await updateHabit(h, h.name, h.emoji, {})
+    await settle()
+    expect((await db.habits.get(h.id))?.measureLimits).toBeUndefined()
+    expect(remoteMeasure(h.id)).toMatchObject({ measure: null, measure_limits: null })
+  })
+
+  it('a pulled row with an unknown measure or a malformed list is read as unmeasured', async () => {
+    const rows = [
+      { id: 'm1', name: 'Test habit O', emoji: '🅾', created_at: 1, measure: 'steps', measure_limits: null },
+      { id: 'm2', name: 'Test habit P', emoji: '🅿', created_at: 1, measure: 'app-limits', measure_limits: 'x' },
+    ]
+    fake.remote.habits = rows
+    await sync.syncNow()
+    await settle()
+    expect((await db.habits.get('m1'))?.measure).toBeUndefined()
+    expect((await db.habits.get('m2'))?.measure).toBeUndefined()
+  })
+})

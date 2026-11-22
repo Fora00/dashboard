@@ -45,6 +45,7 @@ export function WeekRecap({
           {habits.map((h) => {
             const met = h.avoid ? h.hit === true : h.done >= h.target
             const missed = h.avoid && h.slips > 0
+            const toVerify = h.verified === false
             return (
               <li key={h.id} className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
                 <span aria-hidden>{h.emoji}</span>
@@ -58,6 +59,9 @@ export function WeekRecap({
                         : 'text-slate-800 dark:text-slate-100'
                   }`}
                 >
+                  {toVerify && (
+                    <span className="mr-1 font-normal text-slate-500 dark:text-slate-400">da verificare</span>
+                  )}
                   {h.avoid
                     ? h.slips > 0
                       ? `${h.slips} slip${h.slips === 1 ? '' : 's'}`

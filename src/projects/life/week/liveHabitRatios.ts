@@ -3,27 +3,35 @@ import { habitDaysMaps } from '../../habits/habitDayStates'
 import { hasStarted } from '../../habits/habitStates'
 import { buildRecap, recapPeriod } from '../../habits/habitRecapData'
 import { habitTarget } from '../../habits/habitStats'
+import type { AppsByWeek } from '../../habits/habitMeasure'
 
 /**
  * Per week (Monday), the share of its expected days each live Habits-page habit
  * got done (0-1), for the progress line "Habits". A habit with nothing
- * expected that week (too new, only rest days) or that overshot its target (more done days than expected) is left out. Pure.
+ * expected that week (too new, only rest days) or that overshot its target (more done days than expected) is left out.
+ * A measured habit (habitMeasure.ts) is left out of an unverified week (no data is never a success), and the
+ * extensions the data proves beyond the ticked slips count as that many more slipped days. Pure.
  */
 export function liveHabitRatiosByWeek(
   habits: readonly Habit[],
   checks: readonly HabitCheck[],
   weeks: readonly string[],
   today: string,
+  apps?: AppsByWeek,
 ): Map<string, number[]> {
   const out = new Map<string, number[]>()
   const live = habits.filter((h) => h.archivedAt === undefined && hasStarted(h, today))
   if (live.length === 0) return out
-  const { states, notes } = habitDaysMaps(live, checks, today)
+  const { states, notes, slips } = habitDaysMaps(live, checks, today)
   for (const week of weeks) {
-    const ratios = buildRecap(live, states, notes, recapPeriod('week', week), today)
+    const ratios = buildRecap(live, states, notes, recapPeriod('week', week), today, undefined, slips, apps)
       // Overshoot (more done days than the week's target) is left out, not counted as a full 100%.
-      .filter((r) => r.expected > 0 && r.done <= r.expected)
-      .map((r) => r.done / r.expected)
+      .filter((r) => r.expected > 0 && r.done <= r.expected && (!r.measured || r.hit !== null))
+      .map((r) => {
+        const m = r.measured?.weeks[0]
+        const proven = m?.evidence ? Math.max(0, m.evidence.verified - m.manual) : 0
+        return Math.max(0, r.done - proven) / r.expected
+      })
     if (ratios.length > 0) out.set(week, ratios)
   }
   return out
@@ -42,6 +50,8 @@ export interface HabitWeekRow {
   avoid: boolean
   slips: number
   hit: boolean | null
+  /** Measured habits: false = no data that week (to verify), true = judged on data (`slips` = max(ticked, proven)). */
+  verified?: boolean
 }
 
 /**
@@ -54,12 +64,13 @@ export function habitWeekRows(
   checks: readonly HabitCheck[],
   weeks: readonly string[],
   today: string,
+  apps?: AppsByWeek,
 ): Map<string, HabitWeekRow[]> {
   const out = new Map<string, HabitWeekRow[]>()
   if (habits.length === 0) return out
-  const { states, notes } = habitDaysMaps(habits, checks, today)
+  const { states, notes, slips } = habitDaysMaps(habits, checks, today)
   for (const week of weeks) {
-    const rows = buildRecap(habits, states, notes, recapPeriod('week', week), today)
+    const rows = buildRecap(habits, states, notes, recapPeriod('week', week), today, undefined, slips, apps)
       .filter((r) => {
         // Not yet created / started that week: nothing to show.
         if (
@@ -77,8 +88,9 @@ export function habitWeekRows(
         done: r.done,
         target: habitTarget(r.habit),
         avoid: r.habit.direction === 'avoid',
-        slips: Math.max(0, r.fail - r.graceUsed),
+        slips: r.measured?.weeks[0]?.slips ?? Math.max(0, r.fail - r.graceUsed),
         hit: r.hit,
+        ...(r.measured ? { verified: r.measured.weeks[0]?.evidence != null } : {}),
       }))
     if (rows.length > 0) out.set(week, rows)
   }

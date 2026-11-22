@@ -186,3 +186,92 @@ describe('planHabitsImport', () => {
     expect(rows[0]?.kind).toBe('invalid')
   })
 })
+
+describe('measure + measureLimits (M1)', () => {
+  const limits = [
+    { app: 'App A', minutes: 10 },
+    { app: 'App B', minutes: 40 },
+  ]
+
+  it('accepts app limits on a new habit and makes it a habit to avoid', () => {
+    const [row] = planHabitsImport(
+      plan(
+        withRow({ name: 'Habit test M', emoji: '📱', engine: 'mind', measure: 'app-limits', measureLimits: limits }),
+      ),
+      [],
+    )
+    expect(row).toMatchObject({
+      kind: 'create',
+      details: { measure: 'app-limits', measureLimits: limits, direction: 'avoid' },
+    })
+    if (row?.kind !== 'create') throw new Error('expected create')
+    expect(row.fields).toContainEqual({ field: 'measureLimits', before: '—', after: 'App A 10, App B 40' })
+  })
+
+  it('rejects malformed limits, never clipping them', () => {
+    expect(errorsOf(withRow({ name: 'Habit test X', emoji: '✅', measure: 'app-limits', measureLimits: [] }))).toEqual([
+      expect.stringMatching(/measureLimits must be a non-empty array/),
+    ])
+    const errs = errorsOf(
+      withRow({
+        name: 'Habit test X',
+        emoji: '✅',
+        measure: 'app-limits',
+        measureLimits: [
+          { app: 'App A', minutes: 0 },
+          { app: 'app b', minutes: 10 },
+          { app: 'APP B', minutes: 10 },
+          { app: 'App C', minutes: 10, extra: 1 },
+        ],
+      }),
+    )
+    expect(errs).toEqual([
+      expect.stringMatching(/\[0\]\.minutes must be an integer 1–1440/),
+      expect.stringMatching(/\[2\]\.app "APP B" is listed twice/),
+      expect.stringMatching(/\[3\]\.extra is not a limit field/),
+    ])
+    expect(errorsOf(withRow({ name: 'Habit test X', emoji: '✅', measure: 'steps' }))).toEqual([
+      expect.stringMatching(/measure must be one of app-limits/),
+    ])
+    expect(
+      errorsOf(
+        withRow({ name: 'Habit test X', emoji: '✅', measure: 'app-limits', direction: 'do', measureLimits: limits }),
+      ),
+    ).toEqual([expect.stringMatching(/direction must be avoid/)])
+  })
+
+  it('a measure with no limits, or limits with no measure, is an invalid row', () => {
+    const [a] = planHabitsImport(plan(withRow({ name: 'Habit test M', emoji: '📱', measure: 'app-limits' })), [])
+    expect(a).toMatchObject({ kind: 'invalid', errors: [expect.stringMatching(/needs measureLimits/)] })
+    const [b] = planHabitsImport(plan(withRow({ name: 'Habit test M', emoji: '📱', measureLimits: limits })), [])
+    expect(b).toMatchObject({ kind: 'invalid', errors: [expect.stringMatching(/needs measure "app-limits"/)] })
+  })
+
+  it('edits show the limits list before → after; the same list is no change', () => {
+    const h = existing({ direction: 'avoid', measure: 'app-limits', measureLimits: limits })
+    const [same] = planHabitsImport(plan(withRow({ name: h.name, measureLimits: limits.map((l) => ({ ...l })) })), [h])
+    expect(same?.kind).toBe('same')
+    const next = [...limits, { app: 'App C', minutes: 15 }]
+    const [upd] = planHabitsImport(plan(withRow({ name: h.name, measureLimits: next })), [h])
+    if (upd?.kind !== 'update') throw new Error('expected update')
+    expect(upd.changes).toEqual([
+      { field: 'measureLimits', before: 'App A 10, App B 40', after: 'App A 10, App B 40, App C 15' },
+    ])
+    expect(upd.details).toMatchObject({ measure: 'app-limits', measureLimits: next, anchor: 'test anchor old' })
+  })
+
+  it('turning a "do" habit into a measured one switches it to avoid; null clears both fields', () => {
+    const [on] = planHabitsImport(
+      plan(withRow({ name: 'Habit test existing', measure: 'app-limits', measureLimits: limits })),
+      [existing({ direction: 'do' })],
+    )
+    if (on?.kind !== 'update') throw new Error('expected update')
+    expect(on.changes.map((c) => c.field)).toEqual(['direction', 'measure', 'measureLimits'])
+    const [off] = planHabitsImport(plan(withRow({ name: 'Habit test existing', measure: null })), [
+      existing({ direction: 'avoid', measure: 'app-limits', measureLimits: limits }),
+    ])
+    if (off?.kind !== 'update') throw new Error('expected update')
+    expect(off.details.measure).toBeUndefined()
+    expect(off.details.measureLimits).toBeUndefined()
+  })
+})

@@ -2,8 +2,10 @@ import { describe, expect, it } from 'vitest'
 import type { LifePlan } from '../../../lib/db'
 import { buildExportMarkdown } from './export'
 import {
+  habitsForJson,
   habitTag,
   isoWeek,
+  monthHabitLine,
   isoWeekLabel,
   mondaysOf,
   toLifeHabit,
@@ -144,5 +146,92 @@ describe('month export: Weeks', () => {
 
   it('leaves Weeks out when none are given', () => {
     expect(buildMonthMarkdown(buildMonthReport('2026-11', [], [], '2026-11-20'), [])).not.toContain('## Weeks')
+  })
+})
+
+describe('measured (app-limits) habits in the exports', () => {
+  const apps = [
+    { app: 'App A', limit: 40, weekly: 325, allowed: 280, extensions: 3 },
+    { app: 'App B', limit: 10, weekly: null, allowed: 70, extensions: 0 },
+  ]
+  const week = (over: Partial<NonNullable<LifeHabit['measured']>['weeks'][number]> = {}) => ({
+    week: '2026-11-16',
+    manual: 1,
+    evidence: { verified: 3, apps, missing: ['App B'] },
+    slips: 3,
+    hit: false,
+    ...over,
+  })
+  const measuredRow = (weeks: ReturnType<typeof week>[], hit: boolean | null) =>
+    row(
+      {
+        done: 6,
+        floor: 0,
+        skip: 0,
+        fail: 1,
+        empty: 0,
+        expected: 7,
+        hit,
+        reasons: {},
+        measured: {
+          kind: 'app-limits',
+          limits: [
+            { app: 'App A', minutes: 40 },
+            { app: 'App B', minutes: 10 },
+          ],
+          weeks,
+          manual: weeks.reduce((n, w) => n + w.manual, 0),
+          verified: weeks.reduce((n, w) => n + (w.evidence?.verified ?? 0), 0),
+          verifiedWeeks: weeks.filter((w) => w.evidence).length,
+          hitWeeks: weeks.filter((w) => w.evidence && w.hit).length,
+          unverifiedWeeks: weeks.filter((w) => !w.evidence).length,
+        },
+      },
+      { direction: 'avoid', grace: 0, measure: 'app-limits' },
+    )
+
+  it('tags the habit as complex', () => {
+    expect(habitTag(toLifeHabit(measuredRow([week()], false)))).toBe('[Mind · complex: app limits]')
+  })
+
+  it('week line: ticked vs verified vs counted, and the apps over their limit', () => {
+    const line = weekHabitLine(toLifeHabit(measuredRow([week()], false)))
+    expect(line).toContain(': missed; measured: 1 slips ticked, verified at least 3 extensions, counted 3')
+    expect(line).toContain('App A 325m vs 280m allowed (7 x 40m): +3')
+    expect(line).toContain('App B not in the top apps (no evidence)')
+  })
+
+  it('week line: no apps answer = unverified, never hit', () => {
+    const line = weekHabitLine(toLifeHabit(measuredRow([week({ evidence: null, slips: null, hit: null })], null)))
+    expect(line).toContain(': unverified; measured: unverified (no top apps entered); 1 slips ticked')
+    expect(
+      weekHabitTotal(toLifeHabit(measuredRow([week({ evidence: null, slips: null, hit: null })], null)), false),
+    ).toContain('unverified')
+  })
+
+  it('month line: weeks hit / verified, unverified counted apart', () => {
+    const h = toLifeHabit(
+      measuredRow(
+        [
+          week({ week: '2026-11-02', evidence: { verified: 0, apps: [], missing: [] }, slips: 1, hit: true }),
+          week({ week: '2026-11-09' }),
+          week({ week: '2026-11-16', evidence: null, slips: null, hit: null }),
+        ],
+        false,
+      ),
+    )
+    const line = monthHabitLine(h)
+    expect(line).toContain('measured weeks: 1 hit of 2 verified, 1 unverified (no top apps entered)')
+    expect(line).toContain('3 slips ticked, verified at least 3 extensions')
+    expect(line).toContain('over the limit: 2026-W46 (09/11) App A 325m vs 280m allowed (7 x 40m): +3')
+  })
+
+  it('JSON carries the measure and each week', () => {
+    const [j] = habitsForJson([toLifeHabit(measuredRow([week()], false))])
+    expect(j).toMatchObject({
+      hit: false,
+      measure: { kind: 'app-limits', slipsTicked: 1, verifiedMin: 3, weeks: [{ verified: true, counted: 3 }] },
+    })
+    expect(habitsForJson([toLifeHabit(row())])[0]).not.toHaveProperty('measure')
   })
 })
