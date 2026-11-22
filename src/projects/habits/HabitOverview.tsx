@@ -41,23 +41,23 @@ function PlainNumbers({ habit, states, wins, today }: Props) {
   const unit = s.streakUnit === 'weeks' ? 'w' : 'd'
   return (
     <>
-      <section aria-label="Numbers" className="grid grid-cols-2 gap-2 text-center sm:grid-cols-3">
-        <Stat label="forever wins" value={String(wins)} sub="boxes on the lifeboard" />
+      <section aria-label="Numeri" className="grid grid-cols-2 gap-2 text-center sm:grid-cols-3">
+        <Stat label="vittorie per sempre" value={String(wins)} sub="caselle sulla Board" />
         <Stat
-          label="days done"
+          label="giorni fatti"
           value={String(s.doneTotal)}
-          sub={s.floor30 ? `${s.floor30} floor in the last 30` : undefined}
+          sub={s.floor30 ? `${s.floor30} minimo negli ultimi 30` : undefined}
         />
-        <Stat label="this week" value={`${s.week.done}/${s.week.expected || s.target}`} />
-        <Stat label="current streak" value={`${s.streak}${unit}`} />
-        <Stat label="longest streak" value={`${s.bestStreak}${unit}`} />
-        <Stat label="came back" value={String(s.returns)} sub="after a miss" />
-        {s.cycle && <Stat label="cycle day" value={`${s.cycle.day}/${s.cycle.length}`} />}
+        <Stat label="questa settimana" value={`${s.week.done}/${s.week.expected || s.target}`} />
+        <Stat label="serie attuale" value={`${s.streak}${unit}`} />
+        <Stat label="serie più lunga" value={`${s.bestStreak}${unit}`} />
+        <Stat label="ripartenze" value={String(s.returns)} sub="dopo un mancato" />
+        {s.cycle && <Stat label="giorno del ciclo" value={`${s.cycle.day}/${s.cycle.length}`} />}
       </section>
 
       {s.lastWeeks.length > 0 && (
-        <section aria-label="Weeks">
-          <SectionTitle as="h3">Last weeks (target {s.target}/week)</SectionTitle>
+        <section aria-label="Settimane">
+          <SectionTitle as="h3">Ultime settimane (obiettivo {s.target}/sett.)</SectionTitle>
           <div className="flex items-end gap-1.5">
             {[...s.lastWeeks, s.week].map((w) => (
               <div
@@ -89,7 +89,7 @@ function MeasuredNumbers(input: SummaryInput) {
   const chip = weekChip(o.current)
   return (
     <>
-      <section aria-label="Numbers" className="grid grid-cols-2 gap-2 text-center sm:grid-cols-3">
+      <section aria-label="Numeri" className="grid grid-cols-2 gap-2 text-center sm:grid-cols-3">
         <Stat
           label="sett. rispettate"
           value={`${o.hitWeeks}/${o.verifiedWeeks}`}
@@ -102,7 +102,7 @@ function MeasuredNumbers(input: SummaryInput) {
       </section>
 
       {o.weeks.length > 0 && (
-        <section aria-label="Weeks">
+        <section aria-label="Settimane">
           <SectionTitle as="h3">Ultime settimane (verificate dai dati)</SectionTitle>
           <div className="flex items-end gap-1.5">
             {o.weeks.map((w) => {

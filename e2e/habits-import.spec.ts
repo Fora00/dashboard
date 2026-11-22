@@ -18,7 +18,7 @@ test('the import link previews, applies on tap, and is idempotent', async ({ pag
   await page.goto('#/habits')
   await page.getByRole('button', { name: /New habit/ }).click()
   const form = page.getByRole('dialog', { name: 'New habit' })
-  await form.getByLabel('Name').fill('Habit test existing')
+  await form.getByLabel('Nome').fill('Habit test existing')
   await form.getByRole('group', { name: 'Engine' }).getByRole('button', { name: 'Mind' }).click()
   await form.getByRole('button', { name: 'Create habit' }).click()
   await expect(form).toBeHidden()

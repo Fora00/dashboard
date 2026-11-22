@@ -9,7 +9,7 @@ test('the board shows forever wins and experiments, grouped by engine', async ({
 
   await page.getByRole('button', { name: /New habit/ }).click()
   let form = page.getByRole('dialog', { name: 'New habit' })
-  await form.getByLabel('Name').fill('Board test forever')
+  await form.getByLabel('Nome').fill('Board test forever')
   await form.getByRole('group', { name: 'Engine' }).getByRole('button', { name: 'Mind' }).click()
   await form.getByRole('button', { name: 'Create habit' }).click()
   await expect(form).toBeHidden()
@@ -20,10 +20,10 @@ test('the board shows forever wins and experiments, grouped by engine', async ({
 
   await page.getByRole('button', { name: /New habit/ }).click()
   form = page.getByRole('dialog', { name: 'New habit' })
-  await form.getByLabel('Name').fill('Board test experiment')
+  await form.getByLabel('Nome').fill('Board test experiment')
   await form
-    .getByRole('group', { name: 'Kind' })
-    .getByRole('button', { name: /Experiment/ })
+    .getByRole('group', { name: 'Tipo' })
+    .getByRole('button', { name: /Esperimento/ })
     .click()
   await form.getByRole('group', { name: 'Engine' }).getByRole('button', { name: 'Money' }).click()
   await form.getByRole('button', { name: 'Create habit' }).click()

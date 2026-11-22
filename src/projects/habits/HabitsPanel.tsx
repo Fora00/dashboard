@@ -1,7 +1,7 @@
 import { confirm } from '../../lib/confirm'
 import { SectionTitle } from '../../components/SectionTitle'
 import type { ReactNode } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import type { Habit } from '../../lib/db'
 import { Button } from '../../components/Button'
 import { SkeletonList } from '../../components/Skeleton'
@@ -37,15 +37,18 @@ interface Props {
   defaultView?: HabitView
   /** Shown instead of the tiles when there is no habit at all. */
   empty?: ReactNode
+  /** What the Week / Month recap's “Open” does: go to the habit page (/habits) or open the quick sheet in place (Life). */
+  recapOpens?: 'page' | 'sheet'
 }
 
 /** The Habits project's body: today / week / month / board tabs, the tiles,
  *  the legend, old habits and every sheet. Rendered as is on the Habits page
  *  and inside Life, so both look and behave the same. */
-export function HabitsPanel({ data, today, viewKey, defaultView = 'today', empty }: Props) {
+export function HabitsPanel({ data, today, viewKey, defaultView = 'today', empty, recapOpens = 'sheet' }: Props) {
   const [view, setView] = usePersistedState<HabitView>(viewKey, defaultView, (raw) => (isView(raw) ? raw : defaultView))
   const [sheet, dispatch] = useHabitSheets()
   const location = useLocation()
+  const navigate = useNavigate()
 
   const tap = (habit: Habit) =>
     void runSafe(async () => {
@@ -97,7 +100,11 @@ export function HabitsPanel({ data, today, viewKey, defaultView = 'today', empty
           slips={data.slips}
           apps={data.appsByWeek}
           today={today}
-          onOpen={(id) => dispatch({ kind: 'detail', id })}
+          onOpen={(id) =>
+            recapOpens === 'page'
+              ? navigate(habitPath(id), { state: { from: `${location.pathname}${location.search}` } })
+              : dispatch({ kind: 'detail', id })
+          }
           onTapToday={tap}
           onSetCount={(habit, day, n) => void runSafe(setDayCount, 'Could not save')(habit.id, day, n)}
           onSetSlips={(habit, day, n) => void runSafe(setSlipCount, 'Could not save')(habit.id, day, n)}

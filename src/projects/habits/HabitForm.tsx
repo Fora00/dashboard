@@ -13,14 +13,18 @@ const CHIP_ON = 'border-(color:--accent-ring) bg-(color:--accent)/15'
 const CHIP_OFF = 'border-slate-300 dark:border-slate-700'
 
 const VERDICTS: { value: HabitVerdict; label: string }[] = [
-  { value: 'up', label: '⬆ up' },
-  { value: 'stay', label: '＝ stay' },
-  { value: 'down', label: '⬇ down' },
-  { value: 'closed', label: '✕ closed' },
+  { value: 'up', label: '⬆ su' },
+  { value: 'stay', label: '＝ resta' },
+  { value: 'down', label: '⬇ giù' },
+  { value: 'closed', label: '✕ chiusa' },
 ]
 const KINDS: { value: HabitKind; label: string; hint: string }[] = [
-  { value: 'forever', label: '♾ Forever', hint: 'one of the 2–3 I truly want for life' },
-  { value: 'experiment', label: '🧪 Experiment', hint: 'a trial with an end date, closable without guilt' },
+  { value: 'forever', label: '♾ Per sempre', hint: 'una delle 2–3 che voglio davvero per la vita' },
+  {
+    value: 'experiment',
+    label: '🧪 Esperimento',
+    hint: 'una prova con una data di fine, chiudibile senza sensi di colpa',
+  },
 ]
 
 interface Props {
@@ -60,13 +64,13 @@ export function HabitForm({ initial, submitLabel, onSubmit, presets, verdict, ex
 
   return (
     <form onSubmit={submit} className="space-y-4">
-      <div role="group" aria-label="Direction" className="space-y-1">
-        <span className="text-sm font-medium">What kind of habit</span>
+      <div role="group" aria-label="Direzione" className="space-y-1">
+        <span className="text-sm font-medium">Che tipo di abitudine</span>
         <div className="flex gap-2">
           {(
             [
-              ['do', '✅ Something to do'],
-              ['avoid', '🚫 Something to avoid'],
+              ['do', '✅ Da fare'],
+              ['avoid', '🚫 Da evitare'],
             ] as const
           ).map(([value, label]) => (
             <button
@@ -92,8 +96,8 @@ export function HabitForm({ initial, submitLabel, onSubmit, presets, verdict, ex
         </div>
         <span className="block text-xs text-slate-500 dark:text-slate-400">
           {avoid
-            ? 'Kept every day unless you mark a slip. Only days you used the app count, so a stopped log never looks like a perfect streak.'
-            : 'Done when you tap it (or reach the taps you set).'}
+            ? 'Tenuta ogni giorno finché non segni uno scivolone. Contano solo i giorni in cui hai usato l’app, così un registro fermo non sembra mai una serie perfetta.'
+            : 'Fatta quando la tocchi (o raggiungi i tocchi impostati).'}
         </span>
       </div>
 
@@ -135,11 +139,11 @@ export function HabitForm({ initial, submitLabel, onSubmit, presets, verdict, ex
 
       {presets && (
         <details className="rounded-xl border border-slate-200 p-3 text-sm dark:border-slate-800">
-          <summary className="cursor-pointer font-medium">Ideas and ready-made habits</summary>
+          <summary className="cursor-pointer font-medium">Idee e abitudini pronte</summary>
           <div className="mt-3 space-y-3">
             {[
-              { area: avoid ? '⭐ Ready' : '⭐ The November cycles', items: avoid ? AVOID_PRESETS : PRESETS },
-              ...(avoid ? [{ area: '🚫 More to avoid', items: AVOID_IDEAS }] : IDEAS),
+              { area: avoid ? '⭐ Pronte' : '⭐ I cicli di novembre', items: avoid ? AVOID_PRESETS : PRESETS },
+              ...(avoid ? [{ area: '🚫 Altre da evitare', items: AVOID_IDEAS }] : IDEAS),
             ].map((g) => (
               <div key={g.area}>
                 <p className="mb-1.5 text-xs text-slate-500 dark:text-slate-400">{g.area}</p>
@@ -174,18 +178,18 @@ export function HabitForm({ initial, submitLabel, onSubmit, presets, verdict, ex
         <input
           value={v.name}
           onChange={(e) => set('name', e.target.value)}
-          placeholder="Name, e.g. Journal"
+          placeholder="Nome, es. Diario"
           maxLength={MAX_NAME_LENGTH}
           autoComplete="off"
           required
-          aria-label="Name"
+          aria-label="Nome"
           className={INPUT}
         />
       </div>
 
       <Field
-        label="Why"
-        hint="What this serves, and what it costs me. A habit with no stated price gets dropped in the first bad week."
+        label="Perché"
+        hint="A cosa serve e cosa mi costa. Un’abitudine senza un prezzo dichiarato si molla alla prima settimana storta."
       >
         <input
           value={v.why}
@@ -195,16 +199,16 @@ export function HabitForm({ initial, submitLabel, onSubmit, presets, verdict, ex
         />
       </Field>
 
-      <div role="group" aria-label="With whom" className="space-y-1">
-        <span className="text-sm font-medium">With whom</span>
+      <div role="group" aria-label="Con chi" className="space-y-1">
+        <span className="text-sm font-medium">Con chi</span>
         <span className="block text-xs text-slate-500 dark:text-slate-400">
-          Habits with a person hold; solo ones are the fragile ones.
+          Le abitudini con una persona reggono; quelle da soli sono le fragili.
         </span>
         <div className="flex gap-2">
           {(
             [
-              ['person', '👥 With a person'],
-              ['alone', '🧍 Alone'],
+              ['person', '👥 Con una persona'],
+              ['alone', '🧍 Da solo'],
             ] as const
           ).map(([value, label]) => (
             <button
@@ -221,17 +225,17 @@ export function HabitForm({ initial, submitLabel, onSubmit, presets, verdict, ex
       </div>
 
       <Field
-        label={avoid ? 'What I do instead' : 'Anchor'}
+        label={avoid ? 'Cosa faccio invece' : 'Ancora'}
         hint={
           avoid
-            ? 'When the urge comes: the replacement that makes it easier.'
-            : 'After what, and where. A habit with an anchor survives; without one it drifts.'
+            ? 'Quando arriva la voglia: il sostituto che rende tutto più facile.'
+            : 'Dopo cosa, e dove. Un’abitudine con un’àncora sopravvive; senza, va alla deriva.'
         }
       >
         <input
           value={v.anchor}
           onChange={(e) => set('anchor', e.target.value)}
-          placeholder="After dinner, journal on the table"
+          placeholder="Dopo cena, il diario sul tavolo"
           maxLength={MAX_TEXT_LENGTH}
           className={INPUT}
         />
@@ -239,8 +243,8 @@ export function HabitForm({ initial, submitLabel, onSubmit, presets, verdict, ex
 
       <>
         <Field
-          label={avoid ? 'Ideal' : 'Normal version'}
-          hint={avoid ? 'What a clean day looks like: none at all.' : 'What a good day looks like.'}
+          label={avoid ? 'Ideale' : 'Versione normale'}
+          hint={avoid ? 'Come è un giorno pulito: nessuno.' : 'Come è un buon giorno.'}
         >
           <input
             value={v.normal}
@@ -251,17 +255,17 @@ export function HabitForm({ initial, submitLabel, onSubmit, presets, verdict, ex
         </Field>
 
         <Field
-          label={avoid ? 'Limit (the floor)' : 'Floor'}
+          label={avoid ? 'Limite (il minimo)' : 'Minimo'}
           hint={
             avoid
-              ? 'The most I allow myself on a bad day. Staying within it still counts as kept; going past it is a slip.'
-              : 'The smallest version that still counts, on your worst day. It always runs; anything above is a bonus.'
+              ? 'Il massimo che mi concedo in un giorno storto. Restarci dentro vale ancora come tenuto; superarlo è uno scivolone.'
+              : 'La versione più piccola che conta ancora, nel tuo giorno peggiore. Vale sempre; tutto il resto è un bonus.'
           }
         >
           <input
             value={v.floor}
             onChange={(e) => set('floor', e.target.value)}
-            placeholder={avoid ? 'One coffee, before noon' : 'Date + one line'}
+            placeholder={avoid ? 'Un caffè, prima di mezzogiorno' : 'Data + una riga'}
             maxLength={MAX_TEXT_LENGTH}
             className={INPUT}
           />
@@ -269,19 +273,19 @@ export function HabitForm({ initial, submitLabel, onSubmit, presets, verdict, ex
         {!v.floor.trim() && (
           <p className="-mt-2 text-xs text-amber-700 dark:text-amber-300">
             {avoid
-              ? 'No limit yet: every bad day will count as a full slip.'
-              : 'No floor yet: on a bad day there is nothing to fall back on.'}
+              ? 'Ancora nessun limite: ogni giorno storto conterà come scivolone pieno.'
+              : 'Ancora nessun minimo: in un giorno storto non hai niente su cui ripiegare.'}
           </p>
         )}
       </>
       {avoid && (
-        <div role="group" aria-label="Grace" className="space-y-1">
-          <span className="text-sm font-medium">Grace</span>
-          <div className="flex gap-2" role="group" aria-label="Grace scope">
+        <div role="group" aria-label="Tolleranza" className="space-y-1">
+          <span className="text-sm font-medium">Tolleranza</span>
+          <div className="flex gap-2" role="group" aria-label="Ambito della tolleranza">
             {(
               [
-                ['day', 'a day'],
-                ['week', 'a week'],
+                ['day', 'al giorno'],
+                ['week', 'a settimana'],
               ] as const
             ).map(([value, label]) => (
               <button
@@ -291,7 +295,7 @@ export function HabitForm({ initial, submitLabel, onSubmit, presets, verdict, ex
                 onClick={() => set('graceScope', value)}
                 className={`${CHIP} flex-1 ${v.graceScope === value ? CHIP_ON : CHIP_OFF}`}
               >
-                slips {label}
+                scivoloni {label}
               </button>
             ))}
           </div>
@@ -304,23 +308,23 @@ export function HabitForm({ initial, submitLabel, onSubmit, presets, verdict, ex
                 onClick={() => set('grace', n)}
                 className={`${CHIP} min-w-11 ${v.grace === n ? CHIP_ON : CHIP_OFF}`}
               >
-                {n === 0 ? 'none' : `${n}×`}
+                {n === 0 ? 'nessuno' : `${n}×`}
               </button>
             ))}
           </div>
           <span className="block text-xs text-slate-500 dark:text-slate-400">
             {v.grace === 0
-              ? 'Every slip breaks the streak.'
+              ? 'Ogni scivolone spezza la serie.'
               : v.graceScope === 'day'
-                ? `Each tap on the tile is one slip. Up to ${v.grace} a day still count as a kept day (shown as within grace); the next one that day is a real slip.`
-                : `${v.grace} slip${v.grace === 1 ? '' : 's'} a week are tolerated and do not break the streak; the next one does. The mirror of a weekly target: here it is a ceiling.`}
+                ? `Ogni tocco sul riquadro è uno scivolone. Fino a ${v.grace} al giorno contano ancora come giorno tenuto (mostrato come nella tolleranza); il successivo di quel giorno è uno scivolone vero.`
+                : `${v.grace} scivolon${v.grace === 1 ? 'e' : 'i'} a settimana ${v.grace === 1 ? 'è tollerato e non spezza' : 'sono tollerati e non spezzano'} la serie; il successivo sì. Lo specchio di un obiettivo settimanale: qui è un tetto.`}
           </span>
         </div>
       )}
       {!avoid && (
         <>
-          <div role="group" aria-label="Times per week" className="space-y-1">
-            <span className="text-sm font-medium">How often</span>
+          <div role="group" aria-label="Volte a settimana" className="space-y-1">
+            <span className="text-sm font-medium">Quanto spesso</span>
             <div className="flex flex-wrap gap-2">
               {[1, 2, 3, 4, 5, 6, 7].map((n) => (
                 <button
@@ -330,19 +334,19 @@ export function HabitForm({ initial, submitLabel, onSubmit, presets, verdict, ex
                   onClick={() => set('target', n)}
                   className={`${CHIP} min-w-11 ${v.target === n ? CHIP_ON : CHIP_OFF}`}
                 >
-                  {n === 7 ? 'daily' : `${n}×`}
+                  {n === 7 ? 'ogni giorno' : `${n}×`}
                 </button>
               ))}
             </div>
             <span className="block text-xs text-slate-500 dark:text-slate-400">
               {v.target === 7
-                ? 'Every day: the two-day rule applies (never miss twice).'
-                : `${v.target} times a week: the ring counts the week, any days.`}
+                ? 'Ogni giorno: vale la regola dei due giorni (mai saltare due volte).'
+                : `${v.target} volte a settimana: l’anello conta la settimana, in qualsiasi giorno.`}
             </span>
           </div>
 
-          <div role="group" aria-label="Taps per day" className="space-y-1">
-            <span className="text-sm font-medium">Taps per day</span>
+          <div role="group" aria-label="Tocchi al giorno" className="space-y-1">
+            <span className="text-sm font-medium">Tocchi al giorno</span>
             <div className="flex flex-wrap gap-2">
               {[1, 2, 3, 4, 5, 6, 8, 10].map((n) => (
                 <button
@@ -352,14 +356,14 @@ export function HabitForm({ initial, submitLabel, onSubmit, presets, verdict, ex
                   onClick={() => set('perDay', n)}
                   className={`${CHIP} min-w-11 ${v.perDay === n ? CHIP_ON : CHIP_OFF}`}
                 >
-                  {n === 1 ? 'once' : `${n}×`}
+                  {n === 1 ? 'una volta' : `${n}×`}
                 </button>
               ))}
             </div>
             <span className="block text-xs text-slate-500 dark:text-slate-400">
               {v.perDay === 1
-                ? 'One tap makes the day done.'
-                : `Tap ${v.perDay} times a day (glasses of water, meals…): the day is done at ${v.perDay}.`}
+                ? 'Un tocco e il giorno è fatto.'
+                : `Tocca ${v.perDay} volte al giorno (bicchieri d’acqua, pasti…): il giorno è fatto a ${v.perDay}.`}
             </span>
           </div>
         </>
@@ -368,7 +372,8 @@ export function HabitForm({ initial, submitLabel, onSubmit, presets, verdict, ex
       <div role="group" aria-label="Engine" className="space-y-1">
         <span className="text-sm font-medium">Engine</span>
         <span className="block text-xs text-slate-500 dark:text-slate-400">
-          The one life area this habit feeds (required). The Month audit lists the habits of each engine.
+          L’unica area di vita che questa abitudine alimenta (obbligatoria). La verifica del mese elenca le abitudini di
+          ogni engine.
         </span>
         <div className="flex flex-wrap gap-2">
           {ENGINES.map((e) => (
@@ -385,8 +390,8 @@ export function HabitForm({ initial, submitLabel, onSubmit, presets, verdict, ex
         </div>
       </div>
 
-      <div role="group" aria-label="Kind" className="space-y-1">
-        <span className="text-sm font-medium">Kind</span>
+      <div role="group" aria-label="Tipo" className="space-y-1">
+        <span className="text-sm font-medium">Tipo</span>
         <div className="flex gap-2">
           {KINDS.map((k) => (
             <button
@@ -406,10 +411,10 @@ export function HabitForm({ initial, submitLabel, onSubmit, presets, verdict, ex
       </div>
 
       <div className="space-y-1">
-        <span className="text-sm font-medium">Cycle</span>
+        <span className="text-sm font-medium">Ciclo</span>
         <div className="flex gap-2">
           <label className="flex-1 text-xs text-slate-500">
-            Start
+            Inizio
             <input
               type="date"
               value={v.cycleStart}
@@ -418,7 +423,7 @@ export function HabitForm({ initial, submitLabel, onSubmit, presets, verdict, ex
             />
           </label>
           <label className="flex-1 text-xs text-slate-500">
-            End
+            Fine
             <input type="date" value={v.cycleEnd} onChange={(e) => set('cycleEnd', e.target.value)} className={DATE} />
           </label>
         </div>
@@ -428,13 +433,13 @@ export function HabitForm({ initial, submitLabel, onSubmit, presets, verdict, ex
           onClick={() => v.cycleStart && set('cycleEnd', shiftDayKey(v.cycleStart, CYCLE_DAYS - 1))}
           disabled={!v.cycleStart}
         >
-          4 weeks from the start
+          4 settimane dall’inizio
         </Button>
       </div>
 
       {verdict && (
-        <div role="group" aria-label="Verdict" className="space-y-1">
-          <span className="text-sm font-medium">Verdict</span>
+        <div role="group" aria-label="Verdetto" className="space-y-1">
+          <span className="text-sm font-medium">Verdetto</span>
           <div className="flex flex-wrap gap-2">
             {VERDICTS.map((x) => (
               <button

@@ -36,16 +36,16 @@ async function sameFlow(page: Page, root: Locator) {
   // Hold: today's state, with the rest reason, in a sheet on the same page.
   await hold(page, tile)
   const pick = page.getByRole('dialog', { name: new RegExp(NAME) })
-  await pick.getByRole('button', { name: /Rest day/ }).click()
-  await pick.getByRole('button', { name: /Vacation/ }).click()
+  await pick.getByRole('button', { name: /Giorno di riposo/ }).click()
+  await pick.getByRole('button', { name: /Vacanza/ }).click()
   await expect(pick).toBeHidden()
   await expect(tile).toHaveAccessibleName(new RegExp(`^${NAME}: rest day`))
 
   // ⋯ opens the sheet in place: quick state, the calendar, a link to the page.
-  await root.getByRole('button', { name: `Stats and settings for ${NAME}` }).click()
+  await root.getByRole('button', { name: `Scheda rapida per ${NAME}` }).click()
   const detail = page.getByRole('dialog', { name: new RegExp(NAME) })
   await expect(detail.getByRole('group', { name: 'Oggi: stato' })).toBeVisible()
-  await expect(detail.getByRole('region', { name: 'Calendar' })).toBeVisible()
+  await expect(detail.getByRole('region', { name: 'Calendario' })).toBeVisible()
   await expect(detail.getByRole('link', { name: /Apri dettaglio/ })).toBeVisible()
   await detail.getByRole('button', { name: 'Close', exact: true }).click()
   await expect(detail).toBeHidden()
@@ -58,7 +58,7 @@ async function sameFlow(page: Page, root: Locator) {
     .getByRole('button', { name: '⏸ Rest' })
     .click()
   const reasons = root.getByRole('group', { name: `Reason for ${dayKey()}` })
-  await expect(reasons.getByRole('button', { name: /Vacation/ })).toHaveAttribute('aria-pressed', 'true')
+  await expect(reasons.getByRole('button', { name: /Vacanza/ })).toHaveAttribute('aria-pressed', 'true')
   await reasons.getByRole('button', { name: 'Keep the reason' }).click()
   await expect(reasons).toBeHidden()
 
@@ -67,7 +67,7 @@ async function sameFlow(page: Page, root: Locator) {
   await hold(page, tile)
   await page
     .getByRole('dialog', { name: new RegExp(NAME) })
-    .getByRole('button', { name: 'Clear today' })
+    .getByRole('button', { name: 'Cancella oggi' })
     .click()
   await expect(tile).toHaveAttribute('aria-pressed', 'false')
 }
@@ -76,7 +76,7 @@ test('the Habits page and Life → Habits run the same flow in place', async ({ 
   await page.goto('#/habits')
   await page.getByRole('button', { name: /New habit/ }).click()
   const form = page.getByRole('dialog', { name: 'New habit' })
-  await form.getByLabel('Name').fill(NAME)
+  await form.getByLabel('Nome').fill(NAME)
   await form.getByRole('group', { name: 'Engine' }).getByRole('button', { name: 'Mind' }).click()
   await form.getByRole('button', { name: 'Create habit' }).click()
   await expect(form).toBeHidden()
@@ -84,15 +84,19 @@ test('the Habits page and Life → Habits run the same flow in place', async ({ 
   await sameFlow(page, page.locator('main'))
 
   // M2: "Apri dettaglio" goes to /habits/:id (calendar there), back returns to /habits.
-  await page.getByRole('button', { name: `Stats and settings for ${NAME}` }).click()
+  await page.getByRole('button', { name: `Scheda rapida per ${NAME}` }).click()
   await page
     .getByRole('dialog', { name: new RegExp(NAME) })
     .getByRole('link', { name: /Apri dettaglio/ })
     .click()
   await expect(page).toHaveURL(/#\/habits\/[^/]+$/)
   await expect(page.getByRole('heading', { level: 1, name: new RegExp(NAME) })).toBeVisible()
-  await expect(page.getByRole('region', { name: 'Calendar' })).toBeVisible()
-  await expect(page.getByRole('region', { name: 'Cycle and settings' })).toBeVisible()
+  await expect(page.getByRole('region', { name: 'Calendario' })).toBeVisible()
+  await expect(page.getByRole('region', { name: 'Ciclo e impostazioni' })).toBeVisible()
+  // M3: the legend explains the neutral "da verificare" day and the week chips.
+  await page.getByText('Legenda: colori e icone').click()
+  await expect(page.getByTestId('legend-unverified')).toBeVisible()
+  await expect(page.getByTestId('legend-chip')).toHaveCount(3)
   await page.getByRole('link', { name: /← Habits/ }).click()
   await expect(page).toHaveURL(/#\/habits$/)
 

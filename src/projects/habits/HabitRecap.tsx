@@ -430,7 +430,7 @@ export function HabitRecap({
                 {r.empty ? `${r.empty} unmarked` : ''}
               </span>
               <button type="button" onClick={() => onOpen(r.habit.id)} className="min-h-8 underline decoration-dotted">
-                Open
+                Apri
               </button>
             </div>
           </li>

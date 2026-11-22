@@ -20,6 +20,20 @@ export const STATE_CELL: Record<HabitDayState | 'missed' | 'empty', string> = {
   empty: 'bg-slate-100 dark:bg-slate-800',
 }
 
+/** "Da verificare": a neutral dashed day cell, never the kept green. Shared by the calendar and the legend. */
+export const UNVERIFIED_CELL =
+  'border border-dashed border-slate-400 text-slate-500 dark:border-slate-500 dark:text-slate-400'
+
+/** The week chip at the end of a calendar row (habitCalendarData.ts chipTone): shape and tones, shared with the legend. */
+export const CHIP_BASE =
+  'flex min-h-8 items-center justify-center self-center rounded-full px-1 text-[11px] font-medium whitespace-nowrap tabular-nums'
+export const CHIP_TONE: Record<'hit' | 'miss' | 'progress' | 'unverified', string> = {
+  hit: 'bg-emerald-400/20 text-emerald-700 dark:text-emerald-300',
+  miss: 'bg-rose-400/20 text-rose-700 dark:text-rose-300',
+  progress: 'bg-amber-400/20 text-amber-700 dark:text-amber-300',
+  unverified: 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400',
+}
+
 /** More open forever habits than this and none gets finished. */
 export const MAX_OPEN = 3
 
@@ -52,19 +66,19 @@ export function overshootOf(habit: Habit, count: number, slips: number): number 
 
 /** Why a day was a rest day or missed: one tap, saved as the check's note. */
 export const REST_REASONS = [
-  ['tired', '😴 Tired'],
-  ['sick', '🤒 Sick'],
-  ['vacation', '🏖 Vacation'],
-  ['away', '🧳 Away'],
-  ['planned', '🌿 Planned rest'],
-  ['other', '… Other'],
+  ['tired', '😴 Stanco'],
+  ['sick', '🤒 Malato'],
+  ['vacation', '🏖 Vacanza'],
+  ['away', '🧳 Fuori'],
+  ['planned', '🌿 Riposo pianificato'],
+  ['other', '… Altro'],
 ] as const
 export const MISS_REASONS = [
-  ['anchor', '⚓ The anchor'],
-  ['energy', '🔋 Energy'],
-  ['plan', '🗓 The plan'],
-  ['forgot', '🫥 Forgot'],
-  ['other', '… Other'],
+  ['anchor', '⚓ L’ancora'],
+  ['energy', '🔋 Energia'],
+  ['plan', '🗓 Il piano'],
+  ['forgot', '🫥 Dimenticato'],
+  ['other', '… Altro'],
 ] as const
 
 export function reasonLabel(note: string): string {

@@ -100,12 +100,12 @@ export function HabitDetail({ habit, states, notes, storedDays, openCount, wins,
 function HabitSettings({ habit }: { habit: Habit }) {
   const [saved, setSaved] = useState(false)
   return (
-    <section aria-label="Cycle and settings" className="space-y-3">
-      <h3 className="text-sm font-medium text-slate-500 dark:text-slate-400">Cycle and settings</h3>
+    <section aria-label="Ciclo e impostazioni" className="space-y-3">
+      <h3 className="text-sm font-medium text-slate-500 dark:text-slate-400">Ciclo e impostazioni</h3>
       <HabitForm
         key={habit.id}
         initial={toForm(habit)}
-        submitLabel="Save"
+        submitLabel="Salva"
         verdict
         onSubmit={async (v) => {
           await updateHabit(habit, v.name, v.emoji, v)
@@ -129,9 +129,9 @@ function HabitManage({ habit }: { habit: Habit }) {
   const archived = habit.archivedAt !== undefined
   async function remove() {
     const ok = await confirm({
-      title: `Delete “${habit.name}”?`,
-      body: 'Its whole history is deleted too.',
-      confirmLabel: 'Delete',
+      title: `Eliminare “${habit.name}”?`,
+      body: 'Anche tutta la sua storia viene eliminata.',
+      confirmLabel: 'Elimina',
       danger: true,
     })
     if (ok) void runSafe(deleteHabit, 'Could not delete habit')(habit)

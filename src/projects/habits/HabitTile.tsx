@@ -252,7 +252,7 @@ export function HabitTile({
       <button
         type="button"
         onClick={onOpen}
-        aria-label={`Stats and settings for ${habit.name}`}
+        aria-label={`Scheda rapida per ${habit.name}`}
         className="absolute top-1 right-1 flex size-10 items-center justify-center rounded-full text-slate-500 hover:bg-slate-200/60 dark:hover:bg-slate-700/60"
       >
         ⋯

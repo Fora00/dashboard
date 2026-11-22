@@ -59,6 +59,7 @@ export function Habits() {
         data={data}
         today={today}
         viewKey="habits:view"
+        recapOpens="page"
         empty={
           <EmptyState
             emoji="🌱"

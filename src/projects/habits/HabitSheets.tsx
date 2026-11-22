@@ -151,7 +151,7 @@ export function HabitSheets({ data, today, sheet, dispatch }: Props) {
       <Sheet open={pickHabit !== null} onClose={close} title={pickHabit ? `${pickHabit.emoji} ${pickHabit.name}` : ''}>
         {pickHabit && (
           <div className="space-y-2">
-            {pickHabit.normal && <p className="text-sm text-slate-500">Normal: {pickHabit.normal}</p>}
+            {pickHabit.normal && <p className="text-sm text-slate-500">Normale: {pickHabit.normal}</p>}
             {pickHabit.direction === 'avoid' &&
               slipsToday(pickHabit.id) >= (pickHabit.graceScope === 'day' ? slipLimit(pickHabit) : 1) && (
                 <Button
@@ -172,17 +172,17 @@ export function HabitSheets({ data, today, sheet, dispatch }: Props) {
                   close()
                 }}
               >
-                ↩ Undo one slip
+                ↩ Annulla uno scivolone
               </Button>
             )}
-            {pickHabit.floor && <p className="text-sm text-slate-500">Floor: {pickHabit.floor}</p>}
+            {pickHabit.floor && <p className="text-sm text-slate-500">Minimo: {pickHabit.floor}</p>}
             {reasonFor === null ? (
               (
                 [
-                  ['done', 'Normal: done as usual'],
-                  ['floor', 'Floor: only the minimum'],
-                  ['skip', 'Rest day'],
-                  ['fail', 'Missed'],
+                  ['done', 'Normale: fatto come al solito'],
+                  ['floor', 'Minimo: solo il minimo'],
+                  ['skip', 'Giorno di riposo'],
+                  ['fail', 'Mancato'],
                 ] as const
               ).map(([state, label]) => (
                 <Button
@@ -220,14 +220,14 @@ export function HabitSheets({ data, today, sheet, dispatch }: Props) {
                       close()
                     }}
                   >
-                    ◐ Do the floor instead
+                    ◐ Fai il minimo invece
                   </Button>
                 )}
                 <p className="text-sm text-slate-500">
                   {reasonFor === 'skip'
-                    ? 'A rest day is fine. What was it?'
-                    : 'A systems problem, not a flaw. What got in the way?'}{' '}
-                  One tap.
+                    ? 'Un giorno di riposo va bene. Com’era?'
+                    : 'Un problema di sistema, non un difetto. Cosa è andato storto?'}{' '}
+                  Un tocco.
                 </p>
                 <div className="grid grid-cols-2 gap-2">
                   {(reasonFor === 'skip' ? REST_REASONS : MISS_REASONS).map(([reason, label]) => (
@@ -256,7 +256,7 @@ export function HabitSheets({ data, today, sheet, dispatch }: Props) {
                     close()
                   }}
                 >
-                  No reason
+                  Nessun motivo
                 </Button>
               </>
             )}
@@ -284,7 +284,7 @@ export function HabitSheets({ data, today, sheet, dispatch }: Props) {
                 close()
               }}
             >
-              Clear today
+              Cancella oggi
             </Button>
           </div>
         )}

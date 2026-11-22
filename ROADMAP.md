@@ -1909,7 +1909,7 @@ weight later, same field). Unentered = **unverified**, never counted as a succes
       are not auto-"kept" (neutral "da verificare" until the week has a Sunday apps answer), and
       each week row carries a week chip (✓ / "≥N estensioni" ✕ / ?) from `habitMeasure.ts`,
       since proven extensions can't be placed on a specific day.
-- [ ] M3 Habit page polish [sonnet, S] (from M2): Italian for the remaining English on the page
+- [x] M3 Habit page polish [sonnet, S], done 2026-11-22 (1582 tests, build, habits e2e 5 specs desktop+iPhone; page/sheet/form/calendar/legend in Italian incl. shared rest/miss reason labels, so Life exports now carry Italian reasons; legend shows "da verificare" + week chips via shared classes in habitStates.ts; HabitsPanel `recapOpens` prop, /habits recap opens the page; kept English: Engine, New habit dialog, Close, error toasts, week/month recap strings, slip/reset sheets, HabitRules) (from M2): Italian for the remaining English on the page
       (Numbers, calendar state picker, Vacation, form labels); ⋯ aria-label "Scheda rapida per X"
       (update `e2e/habits-panel.spec.ts`); `HabitLegend` gets the "da verificare" cell and week
       chips; optional: HabitRecap "Open" on /habits goes straight to the page (sheet stays in Life).
