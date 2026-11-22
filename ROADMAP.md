@@ -1896,7 +1896,7 @@ weight later, same field). Unentered = **unverified**, never counted as a succes
       `measureLimits` so the orchestrator can set limits by link (owner added Bumble 10 min).
       Habits with `measure` carry a "complessa" tag (tile, list, detail, export bracket) and
       HabitDetail gets a per-app view (limit, weekly minutes vs 7×limit, min extensions, recent weeks).
-- [ ] M2 Habit detail route [opus, M] (after M1; owner 2026-11-22): every habit, simple or
+- [x] M2 Habit detail route [opus, M], done 2026-11-22 (1571 tests, build, e2e habits/offline 10/10 desktop+iPhone, dev demo driven headlessly: chips ✓ ≥3✕ ✓ ?; demo has a complex habit + Sunday apps weeks; owner review round: shared HabitOverview block = tiles + week bars + calendar in BOTH sheet and page, measured habits use verified weeks only, week chip per row for every habit, Vacanza in the sheet, experiment recap in the sheet, limits view collapsible; 1582 tests, e2e 12/12) (after M1; owner 2026-11-22): every habit, simple or
       complex, gets a page `/habits/:id` (route in App.tsx, HashRouter, works offline/signed out,
       unknown id → back to /habits). The page = overview (stats, month calendar with day states,
       suggestions, recap) + granular management (rest ranges, archive/delete, per-measure view and
@@ -1904,6 +1904,15 @@ weight later, same field). Unentered = **unverified**, never counted as a succes
       from a tile shrinks to the basics (name, emoji, target/grace, quick day state) plus an
       "Apri dettaglio" link. Today's `HabitDetail` sheet (via `HabitSheets.tsx`) is the source to
       split. Back button returns to /habits; 40px targets, safe areas.
+      Owner 2026-11-22: the sheet has too much, the month calendar above all → calendar moves to
+      the page. For a measured habit the calendar must reflect the data: unticked days of a week
+      are not auto-"kept" (neutral "da verificare" until the week has a Sunday apps answer), and
+      each week row carries a week chip (✓ / "≥N estensioni" ✕ / ?) from `habitMeasure.ts`,
+      since proven extensions can't be placed on a specific day.
+- [ ] M3 Habit page polish [sonnet, S] (from M2): Italian for the remaining English on the page
+      (Numbers, calendar state picker, Vacation, form labels); ⋯ aria-label "Scheda rapida per X"
+      (update `e2e/habits-panel.spec.ts`); `HabitLegend` gets the "da verificare" cell and week
+      chips; optional: HabitRecap "Open" on /habits goes straight to the page (sheet stays in Life).
 
 ## Ideas / later
 

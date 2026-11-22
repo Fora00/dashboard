@@ -1,14 +1,20 @@
 // Dev-only: fills this browser's Dexie with a few demo habits so the page can
 // be tried signed out. Writes straight to Dexie (no outbox), so nothing syncs.
-import { db, type Habit, type HabitCheck, type HabitDayState } from '../../lib/db'
+import { db, type Habit, type HabitCheck, type HabitDayState, type LifeEntry, type LifePlan } from '../../lib/db'
+import { serializeApps } from '../life/model/apps'
 import { dayKey } from './habitStore'
-import { shiftDayKey } from './habitStats'
+import { shiftDayKey, weekStart } from './habitStats'
 
 type Days = Record<number, HabitDayState | `fail:${string}` | `skip:${string}`>
 const run = (from: number, to: number): Days =>
   Object.fromEntries(Array.from({ length: to - from + 1 }, (_, i) => [from + i, 'done']))
 
-const DEMOS: { habit: Omit<Habit, 'id' | 'createdAt'>; days: Days }[] = [
+const DEMOS: {
+  habit: Omit<Habit, 'id' | 'createdAt'>
+  days: Days
+  /** Slips placed by week (this Monday in, day keys out), for the measured demo. */
+  slipsOn?: (monday: string) => string[]
+}[] = [
   {
     habit: {
       name: '🧪 Two empty days',
@@ -108,6 +114,32 @@ const DEMOS: { habit: Omit<Habit, 'id' | 'createdAt'>; days: Days }[] = [
     ) as Days,
   },
   {
+    // M1/M2: a measured "don't" habit, checked against the Sunday "App più usate"
+    // answers seeded by seedDemoScreenApps (one week each: hit, proven > ticked,
+    // at the limit, none).
+    habit: {
+      name: '🧪 Non estendere telefono',
+      emoji: '📱',
+      direction: 'avoid',
+      grace: 1,
+      graceScope: 'week',
+      why: 'a complex habit: verified from the Sunday apps answer',
+      social: 'alone',
+      anchor: 'when the limit pops up, close the app',
+      kind: 'forever',
+      target: 7,
+      measure: 'app-limits',
+      measureLimits: [
+        { app: 'YouTube', minutes: 40 },
+        { app: 'Instagram', minutes: 15 },
+        { app: 'Reddit', minutes: 20 },
+        { app: 'Tinder', minutes: 10 },
+      ],
+    },
+    days: {},
+    slipsOn: (monday) => [shiftDayKey(monday, -12), shiftDayKey(monday, -4), monday],
+  },
+  {
     habit: {
       name: '🧪 Done today',
       emoji: '🧪',
@@ -134,7 +166,7 @@ export async function seedDemoHabits(): Promise<void> {
   const today = dayKey(now)
   const habits: Habit[] = []
   const checks: HabitCheck[] = []
-  for (const { habit, days } of DEMOS) {
+  for (const { habit, days, slipsOn } of DEMOS) {
     const id = crypto.randomUUID()
     habits.push({
       ...habit,
@@ -154,6 +186,17 @@ export async function seedDemoHabits(): Promise<void> {
         note,
       })
     }
+    for (const day of slipsOn?.(weekStart(today)) ?? []) {
+      if (day <= today)
+        checks.push({
+          id: crypto.randomUUID(),
+          habitId: id,
+          day,
+          createdAt: now.getTime(),
+          status: 'fail',
+          note: 'forgot',
+        })
+    }
   }
   // Multi-tap demo: full days as perDay taps, today half done.
   for (const h of habits.filter((x) => (x.perDay ?? 1) > 1)) {
@@ -172,4 +215,85 @@ export async function seedDemoHabits(): Promise<void> {
     await db.habits.bulkPut(habits)
     await db.habitChecks.bulkPut(checks)
   })
+  await seedDemoScreenApps(today)
+}
+
+/** Weeks back from this Monday -> the Sunday "App più usate" answer (weekly minutes). */
+const DEMO_APPS: [weeksAgo: number, rows: [string, number][]][] = [
+  // Verified, hit: every limited app under 7 x its limit.
+  [
+    3,
+    [
+      ['YouTube', 200],
+      ['Instagram', 90],
+      ['Reddit', 100],
+      ['Tinder', 50],
+      ['Safari', 240],
+    ],
+  ],
+  // Verified, more proven than ticked: YouTube 325 vs 280 = 3 extensions, 1 slip ticked.
+  [
+    2,
+    [
+      ['YouTube', 325],
+      ['Instagram', 100],
+      ['Reddit', 120],
+      ['Tinder', 60],
+      ['WhatsApp', 180],
+    ],
+  ],
+  // Verified, exactly at the limits: 0 extensions, 1 slip ticked (within the grace).
+  [
+    1,
+    [
+      ['YouTube', 280],
+      ['Instagram', 105],
+      ['Reddit', 140],
+      ['Tinder', 70],
+      ['Safari', 200],
+    ],
+  ],
+  // This week: no answer, "?" until Sunday.
+]
+
+/** Dev only: Life weeks with a Sunday apps answer for the measured demo habit.
+ *  Never overwrites: a week that already exists, or already has an apps
+ *  answer, is left alone (stable ids, so a reset just re-puts the same rows). */
+export async function seedDemoScreenApps(today: string): Promise<void> {
+  const monday = weekStart(today)
+  const now = Date.now()
+  const weeks = await db.lifeWeeks.toArray()
+  for (const [ago, rows] of DEMO_APPS) {
+    const week = shiftDayKey(monday, -7 * ago)
+    if (!weeks.some((w) => w.week === week)) {
+      const plan: LifePlan = {
+        version: 1,
+        week,
+        focus: [],
+        rules: [],
+        tasks: [],
+        trackers: [],
+        sundayCheck: [],
+        checkins: [],
+      }
+      await db.lifeWeeks.put({ id: `demo-week-${week}`, week, plan, importedAt: now, updatedAt: now })
+    }
+    const existing = await db.lifeEntries
+      .where('[week+kind]')
+      .equals([week, 'sunday'])
+      .filter((e) => e.ref === 'screen-apps' && !e.id.startsWith('demo-'))
+      .count()
+    if (existing > 0) continue
+    const entry = {
+      id: `demo-${week}:sunday:screen-apps`,
+      kind: 'sunday',
+      week,
+      ref: 'screen-apps',
+      day: shiftDayKey(week, 6),
+      createdAt: now,
+      updatedAt: now,
+      value: { answer: serializeApps(rows.map(([app, minutes]) => ({ app, minutes }))) },
+    } as LifeEntry
+    await db.lifeEntries.put(entry)
+  }
 }

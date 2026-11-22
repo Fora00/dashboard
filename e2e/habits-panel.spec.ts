@@ -41,10 +41,12 @@ async function sameFlow(page: Page, root: Locator) {
   await expect(pick).toBeHidden()
   await expect(tile).toHaveAccessibleName(new RegExp(`^${NAME}: rest day`))
 
-  // ⋯ opens the detail in place.
+  // ⋯ opens the sheet in place: quick state, the calendar, a link to the page.
   await root.getByRole('button', { name: `Stats and settings for ${NAME}` }).click()
   const detail = page.getByRole('dialog', { name: new RegExp(NAME) })
+  await expect(detail.getByRole('group', { name: 'Oggi: stato' })).toBeVisible()
   await expect(detail.getByRole('region', { name: 'Calendar' })).toBeVisible()
+  await expect(detail.getByRole('link', { name: /Apri dettaglio/ })).toBeVisible()
   await detail.getByRole('button', { name: 'Close', exact: true }).click()
   await expect(detail).toBeHidden()
 
@@ -80,6 +82,23 @@ test('the Habits page and Life → Habits run the same flow in place', async ({ 
   await expect(form).toBeHidden()
 
   await sameFlow(page, page.locator('main'))
+
+  // M2: "Apri dettaglio" goes to /habits/:id (calendar there), back returns to /habits.
+  await page.getByRole('button', { name: `Stats and settings for ${NAME}` }).click()
+  await page
+    .getByRole('dialog', { name: new RegExp(NAME) })
+    .getByRole('link', { name: /Apri dettaglio/ })
+    .click()
+  await expect(page).toHaveURL(/#\/habits\/[^/]+$/)
+  await expect(page.getByRole('heading', { level: 1, name: new RegExp(NAME) })).toBeVisible()
+  await expect(page.getByRole('region', { name: 'Calendar' })).toBeVisible()
+  await expect(page.getByRole('region', { name: 'Cycle and settings' })).toBeVisible()
+  await page.getByRole('link', { name: /← Habits/ }).click()
+  await expect(page).toHaveURL(/#\/habits$/)
+
+  // An unknown id goes back to /habits.
+  await page.goto('#/habits/no-such-habit')
+  await expect(page).toHaveURL(/#\/habits$/)
 
   // Life needs a week to show its body.
   const plan = {

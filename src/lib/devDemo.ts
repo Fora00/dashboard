@@ -180,7 +180,7 @@ export async function seedDemoData(): Promise<void> {
     meal(ago(2), 'lunch', 'Lentil soup with bread', 560, 28, 85, 10, 5),
   ])
 
-  // Habits (the existing demo set)
+  // Habits (the existing demo set, plus the measured habit and its Sunday apps answers)
   await seedDemoHabits()
 
   // Life: this week's plan, today's focus, Streaks and chores

@@ -3,7 +3,7 @@ import { useReducer, type Dispatch } from 'react'
 /** Which habit sheet is open: one at a time. */
 export type HabitSheet =
   | { kind: 'none' }
-  /** Stats, calendar, vacation and settings. */
+  /** The habit sheet: quick state, vacation, numbers and calendar, link to /habits/:id. */
   | { kind: 'detail'; id: string }
   /** A slip on a "don't" habit: within the limit, or what was it. */
   | { kind: 'slip'; id: string }

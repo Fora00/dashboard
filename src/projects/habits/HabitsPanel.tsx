@@ -1,6 +1,7 @@
 import { confirm } from '../../lib/confirm'
 import { SectionTitle } from '../../components/SectionTitle'
 import type { ReactNode } from 'react'
+import { Link, useLocation } from 'react-router-dom'
 import type { Habit } from '../../lib/db'
 import { Button } from '../../components/Button'
 import { SkeletonList } from '../../components/Skeleton'
@@ -12,6 +13,7 @@ import type { HabitDaysData } from './habitDaysData'
 import { HabitLegend } from './HabitLegend'
 import { HabitRecap } from './HabitRecap'
 import { HabitSheets } from './HabitSheets'
+import { habitPath } from './habitRoute'
 import { useHabitSheets } from './useHabitSheets'
 import { daysBetween, habitStats, shiftDayKey, weekStart } from './habitStats'
 import { MAX_OPEN } from './habitStates'
@@ -43,6 +45,7 @@ interface Props {
 export function HabitsPanel({ data, today, viewKey, defaultView = 'today', empty }: Props) {
   const [view, setView] = usePersistedState<HabitView>(viewKey, defaultView, (raw) => (isView(raw) ? raw : defaultView))
   const [sheet, dispatch] = useHabitSheets()
+  const location = useLocation()
 
   const tap = (habit: Habit) =>
     void runSafe(async () => {
@@ -156,7 +159,7 @@ export function HabitsPanel({ data, today, viewKey, defaultView = 'today', empty
                 })}
               </ul>
               <p className="mt-2 text-xs text-slate-500">
-                Tap = done today. Hold = floor, rest or missed. ⋯ = stats and cycle.
+                Tap = done today. Hold = floor, rest or missed. ⋯ = scheda rapida e “Apri dettaglio”.
                 {active.length > MAX_OPEN && ` ${active.length} open: past ${MAX_OPEN} none gets finished. Close one?`}
               </p>
               <HabitLegend />
@@ -174,10 +177,14 @@ export function HabitsPanel({ data, today, viewKey, defaultView = 'today', empty
                     key={habit.id}
                     className="flex min-h-12 items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 px-4 py-2 dark:border-slate-800 dark:bg-slate-800/30"
                   >
-                    <span className="min-w-0 flex-1 truncate text-slate-500 dark:text-slate-400">
+                    <Link
+                      to={habitPath(habit.id)}
+                      state={{ from: `${location.pathname}${location.search}` }}
+                      className="flex min-h-10 min-w-0 flex-1 items-center truncate text-slate-500 hover:underline dark:text-slate-400"
+                    >
                       <span className="mr-2">{habit.emoji}</span>
                       {habit.name}
-                    </span>
+                    </Link>
                     <Button
                       variant="ghost"
                       onClick={() => void runSafe(setArchived, 'Could not restore')(habit, false)}

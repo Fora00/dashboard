@@ -36,7 +36,10 @@ export function HabitLegend() {
             <span className="ml-1.5">{label}</span>
           </li>
         ))}
-        <li>Tap a tile = done today. Hold = floor, rest or missed. ⋯ = stats, calendar and settings.</li>
+        <li>
+          Tap a tile = done today. Hold = floor, rest or missed. ⋯ = scheda rapida; “Apri dettaglio” porta a
+          statistiche, calendario e impostazioni.
+        </li>
         <li>Streak is in days (or weeks for “N times a week” habits); rest days never break it.</li>
       </ul>
     </details>

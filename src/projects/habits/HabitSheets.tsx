@@ -1,17 +1,18 @@
 import type { Dispatch } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import type { HabitDayState } from '../../lib/db'
 import { Button } from '../../components/Button'
 import { Sheet } from '../../components/Sheet'
 import { setArchived, setDayCount, setDayState, setSlipCount } from '../../lib/habitSync'
 import { runSafe } from '../../lib/runSafe'
-import { HabitDetail } from './HabitDetail'
+import { HabitQuickSheet } from './HabitQuickSheet'
+import { habitPath } from './habitRoute'
 import { NO_SHEET, type HabitSheet, type HabitSheetAction } from './useHabitSheets'
 import type { HabitDaysData } from './habitDaysData'
 import { habitStats, restWarnings, shiftDayKey } from './habitStats'
 import { MISS_REASONS, NEG_OVERSHOOT_ICON, OVERSHOOT_ICON, REST_REASONS, slipLimit, STATE_ICON } from './habitStates'
 
 const noStates = new Map<string, HabitDayState>()
-const noNotes = new Map<string, string>()
 
 interface Props {
   data: HabitDaysData
@@ -20,8 +21,9 @@ interface Props {
   dispatch: Dispatch<HabitSheetAction>
 }
 
-/** The Habits sheets (slip, today's state with its reason, reset, detail),
- *  shared by the Habits page and Life: all open in place. */
+/** The Habits sheets (slip, today's state with its reason, reset, the small
+ *  detail sheet), shared by the Habits page and Life: all open in place. The
+ *  full detail is the page /habits/:id (HabitPage), linked from the sheets. */
 export function HabitSheets({ data, today, sheet, dispatch }: Props) {
   const find = (kind: HabitSheet['kind']) =>
     sheet.kind === kind && sheet.kind !== 'none' ? (data.habits.find((h) => h.id === sheet.id) ?? null) : null
@@ -31,6 +33,10 @@ export function HabitSheets({ data, today, sheet, dispatch }: Props) {
   const resetHabit = find('reset')
   const reasonFor = sheet.kind === 'pick' ? sheet.reasonFor : null
   const close = () => dispatch(NO_SHEET)
+  const navigate = useNavigate()
+  const location = useLocation()
+  const openPage = (id: string) =>
+    navigate(habitPath(id), { state: { from: `${location.pathname}${location.search}` } })
   const save = runSafe(setDayState, 'Could not save')
   const statesOf = (id: string) => data.states.get(id) ?? noStates
   const slipsToday = (id: string) => data.slips.get(id)?.get(today) ?? 0
@@ -96,21 +102,7 @@ export function HabitSheets({ data, today, sheet, dispatch }: Props) {
         )}
       </Sheet>
 
-      <HabitDetail
-        habit={openHabit}
-        states={(openHabit && data.states.get(openHabit.id)) || noStates}
-        notes={(openHabit && data.notes.get(openHabit.id)) || noNotes}
-        openCount={data.active.length}
-        wins={(openHabit && data.wins.get(openHabit.id)) || 0}
-        slips={(openHabit && data.slips.get(openHabit.id)) || undefined}
-        apps={data.appsByWeek}
-        today={today}
-        onClose={close}
-        onArchive={(habit) => {
-          close()
-          void runSafe(setArchived, 'Could not archive')(habit, true)
-        }}
-      />
+      <HabitQuickSheet habit={openHabit} data={data} today={today} onClose={close} />
 
       <Sheet
         open={resetHabit !== null}
@@ -139,7 +131,7 @@ export function HabitSheets({ data, today, sheet, dispatch }: Props) {
             <p className="text-sm text-slate-500">
               This is the Spock test: facts, not blame. Now fix the setup within ten minutes:
             </p>
-            <Button className="w-full" onClick={() => dispatch({ kind: 'detail', id: resetHabit.id })}>
+            <Button className="w-full" onClick={() => openPage(resetHabit.id)}>
               Move the anchor or shrink the floor
             </Button>
             <Button

@@ -32,6 +32,7 @@ const Climbing = page(() => import('./projects/climbing/Climbing'), 'Climbing')
 const MealDiary = page(() => import('./projects/meal-diary/MealDiary'), 'MealDiary')
 const Habits = page(() => import('./projects/habits/Habits'), 'Habits')
 const HabitsImport = page(() => import('./projects/habits/HabitsImport'), 'HabitsImport')
+const HabitPage = page(() => import('./projects/habits/HabitPage'), 'HabitPage')
 const Events = page(() => import('./projects/events/Events'), 'Events')
 const Shows = page(() => import('./projects/events/Shows'), 'Shows')
 const EventInterests = page(() => import('./projects/events/Interests'), 'Interests')
@@ -99,6 +100,8 @@ export default function App() {
           <Route path="/climbing" element={<Climbing />} />
           <Route path="/habits" element={<Habits />} />
           <Route path="/habits/import" element={<HabitsImport />} />
+          {/* Static /habits/import ranks above this param route (and is listed first). */}
+          <Route path="/habits/:id" element={<HabitPage />} />
           <Route path="/meal-diary" element={<MealDiary />} />
           <Route path="/book-ideas" element={<BookIdeas />} />
           <Route path="/boardgame-ideas" element={<BoardgameIdeas />} />
