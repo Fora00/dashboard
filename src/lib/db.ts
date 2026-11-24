@@ -135,6 +135,24 @@ export interface HabitCheck {
 // One line of the meal diary. Cloud-syncable via the generic engine, owner-only
 // (src/lib/mealDiarySync.ts).
 export type MealKind = 'breakfast' | 'lunch' | 'dinner' | 'snack'
+// Soldi (/soldi): one month's total for one GreenBooks category, mirrored from
+// ~/life/money/data/monthly-totals.csv by the import link (life:money-link).
+// The CSV is the source of truth; the app never edits a row by hand. id is
+// `${month}:${category}`. Amounts are integer cents, signed (+ in, - out);
+// budget is that month's limit, signed like amount, null when none. Owner-only
+// synced table `money_totals` (src/lib/moneySync.ts).
+export type MoneyKind = 'income' | 'spend' | 'oneoff' | 'pass'
+
+export interface MoneyTotal {
+  id: string
+  month: string // YYYY-MM
+  category: string
+  kind: MoneyKind
+  amount: number // cents
+  budget: number | null // cents
+  updatedAt: number
+}
+
 export interface MealEntry {
   id: string
   // Local-date string 'YYYY-MM-DD' so an entry belongs to the day the user saw.
@@ -709,6 +727,7 @@ export interface OutboxMap {
   project_prefs: ProjectPref
   event_interest: EventInterest
   event_interest_profile: EventInterestProfile
+  money_totals: MoneyTotal
 }
 
 // Remote table names the engine can push to — also the discriminator on an
@@ -843,6 +862,7 @@ export const db = new Dexie('dashboard') as Dexie & {
   projectPrefs: EntityTable<ProjectPref, 'id'>
   eventInterest: EntityTable<EventInterest, 'id'>
   eventInterestProfile: EntityTable<EventInterestProfile, 'id'>
+  moneyTotals: EntityTable<MoneyTotal, 'id'>
 }
 
 /** Pure, in-place row-shape upgrades keyed by Dexie table name: the backfills
@@ -1552,6 +1572,46 @@ db.version(25).stores({
   learningSketches: 'id, courseId, [courseId+moduleId+itemId], createdAt',
   learningPosition: 'id',
   learningReviews: 'id, courseId',
+})
+
+// v26: moneyTotals, the Soldi page's monthly totals per category (synced owner-only by moneySync.ts). Brand-new
+// and empty: rows arrive only through the import link.
+db.version(26).stores({
+  files: 'id, name, createdAt, synced',
+  shopItems: 'id, done, createdAt, areaId',
+  shopAreas: 'id, createdAt',
+  outbox: '++seq, rowId',
+  climbSessions: 'id, date',
+  climbs: 'id, sessionId, date',
+  habits: 'id, createdAt',
+  habitChecks: 'id, habitId, day, [habitId+day]',
+  todos: 'id, done, createdAt',
+  bookIdeas: 'id, createdAt',
+  boardgameIdeas: 'id, createdAt',
+  links: 'id, read, createdAt, *tags',
+  projectStats: 'id, opens',
+  lifeWeeks: 'id, importedAt',
+  lifeEntries: 'id, week, [week+kind]',
+  eventsCache: 'id',
+  eventMarks: 'id, state, updatedAt',
+  eventPrefs: 'id',
+  tripIdeas: 'id, done, createdAt, *companionIds',
+  tripCompanions: 'id, createdAt',
+  customEvents: 'id, start, updatedAt',
+  meals: 'id, day, createdAt',
+  projectPrefs: 'id',
+  eventInterest: 'id, value',
+  eventInterestProfile: 'id',
+  lifeDayFocus: 'id, day',
+  learningQuiz: 'id, courseId, [courseId+moduleId]',
+  learningCards: 'id, courseId, [courseId+moduleId]',
+  learningPractice: 'id, courseId, [courseId+moduleId]',
+  lifeEngines: 'id, month',
+  learningChecks: 'id, courseId, [courseId+moduleId]',
+  learningSketches: 'id, courseId, [courseId+moduleId+itemId], createdAt',
+  learningPosition: 'id',
+  learningReviews: 'id, courseId',
+  moneyTotals: 'id, month',
 })
 
 // Ask the browser not to evict our data under storage pressure (important on iOS).

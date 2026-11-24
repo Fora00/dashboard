@@ -12,6 +12,7 @@ import { sync as learning } from './learningSync'
 import { sync as life } from './lifeSync'
 import { sync as links } from './linksSync'
 import { sync as mealDiary } from './mealDiarySync'
+import { sync as money } from './moneySync'
 import { sync as projectPrefs } from './projectPrefsSync'
 import { sync as shop } from './shopSync'
 import { sync as todo } from './todoSync'
@@ -45,6 +46,7 @@ export const watchedEngines: readonly WatchedEngine[] = [
   { label: 'Life', path: '/life', sync: life },
   { label: 'Learning', path: '/learning', sync: learning },
   { label: 'Meal diary', path: '/meal-diary', sync: mealDiary },
+  { label: 'Soldi', path: '/soldi', sync: money },
   { label: 'Trips', path: '/trips', sync: trips },
   { label: 'Events', path: '/events', sync: customEvents },
   { label: 'Events', path: '/events', sync: eventMarks },

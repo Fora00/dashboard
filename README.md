@@ -66,6 +66,7 @@ Workflows are described in [docs/CI.md](docs/CI.md).
 | `npm run new-project -- <id>` | Scaffold a new project (`--synced`, `--name`, `--emoji`); see [docs/NEW_PROJECT.md](docs/NEW_PROJECT.md) |
 | `npm run events:crawl` | Crawl event sources and write `public/events.json` |
 | `npm run life:link -- <week.json>` | Validate a Life week and print its import link |
+| `npm run life:money-link -- [csv] [--since YYYY-MM]` | Validate `~/life/money/data/monthly-totals.csv` and print the Soldi import link(s) |
 | `npm run life:things-lists -- <week.json>` | Resolve Life tasks to Things list ids (read-only, macOS) |
 | `npm run life:things-status` | Report what happened in Things to the tasks a Life week sent (read-only, macOS; reads an export on stdin) |
 | `npm run db:types` | Regenerate `src/lib/database.types.ts` from the hosted Supabase schema (owner, after a push) |

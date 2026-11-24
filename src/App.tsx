@@ -13,6 +13,7 @@ import { startLearningSync } from './lib/learningSync'
 import { startLifeSync } from './lib/lifeSync'
 import { startLinksSync } from './lib/linksSync'
 import { startMealDiarySync } from './lib/mealDiarySync'
+import { startMoneySync } from './lib/moneySync'
 import { startProjectPrefsSync } from './lib/projectPrefsSync'
 import { startShopSync } from './lib/shopSync'
 import { startTripsSync } from './lib/tripsSync'
@@ -42,6 +43,8 @@ const LifeEditor = page(() => import('./projects/life/LifeEditor'), 'LifeEditor'
 const LifeToday = page(() => import('./projects/life/LifeToday'), 'LifeToday')
 const LifeImport = page(() => import('./projects/life/LifeImport'), 'LifeImport')
 const Learning = page(() => import('./projects/learning/Learning'), 'Learning')
+const Money = page(() => import('./projects/money/Money'), 'Money')
+const MoneyImport = page(() => import('./projects/money/MoneyImport'), 'MoneyImport')
 const Links = page(() => import('./projects/links/Links'), 'Links')
 const Strumenti = page(() => import('./projects/strumenti/Strumenti'), 'Strumenti')
 const Zine = page(() => import('./projects/zine/Zine'), 'Zine')
@@ -75,6 +78,7 @@ export default function App() {
       startLifeSync(),
       startLearningSync(),
       startMealDiarySync(),
+      startMoneySync(),
       startTripsSync(),
       startCustomEventsSync(),
       startEventMarksSync(),
@@ -115,6 +119,8 @@ export default function App() {
           <Route path="/life/oggi" element={<LifeToday />} />
           <Route path="/life/import" element={<LifeImport />} />
           <Route path="/life/edit" element={<LifeEditor />} />
+          <Route path="/soldi" element={<Money />} />
+          <Route path="/soldi/import" element={<MoneyImport />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/sharing" element={<Sharing />} />
           <Route path="/join/:token" element={<JoinArea />} />

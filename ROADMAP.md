@@ -1914,6 +1914,67 @@ weight later, same field). Unentered = **unverified**, never counted as a succes
       (update `e2e/habits-panel.spec.ts`); `HabitLegend` gets the "da verificare" cell and week
       chips; optional: HabitRecap "Open" on /habits goes straight to the page (sheet stays in Life).
 
+## Soldi 💶 (owner, 2026-11-24)
+
+A read-only money page fed from `~/life/money/data/monthly-totals.csv` (written by
+`~/life/_sync/money-totals.py` at every GreenBooks sync: month, category, kind
+income|spend|oneoff|pass, signed amount, budget). The CSV is the source of truth;
+Supabase `money_totals` is a mirror. **No real figures in this repo** (tests and dev
+demo use invented numbers only).
+
+- [x] MO1 Bridge + page [orchestrator, M], done 2026-11-24 (not pushed; check + build green; dev demo,
+      import flow and table view driven headlessly in Chromium, desktop light + phone dark):
+      `npm run life:money-link -- [csv] [--since YYYY-MM]` (`scripts/life-money-link.ts`) parses and
+      validates the CSV (`src/projects/money/moneyCsv.ts`, amounts as integer cents) and prints
+      `#/soldi/import?d=<base64url(deflate-raw JSON)>`. Compressed because category names repeat:
+      the whole history usually fits one link; past the 20,000-char cap it splits by whole years, one link per chunk, contiguous year-aligned ranges
+      (`moneyLink.ts` `chunkPayloads`). Default = full history (idempotent, so resending unchanged
+      months costs nothing). Each payload carries `from..to`: importing replaces exactly those months
+      (`moneyDiff.ts` `planMoneyImport`; categories or months gone from the CSV are deleted, months
+      outside the range untouched, re-import plans nothing). `/soldi/import` previews nuovo /
+      cambiato / invariato / da svuotare with messo da parte before → after and writes only on
+      "Importa" (`applyMoneyImport` in `src/lib/moneySync.ts`, one Dexie transaction). `/soldi`: year +
+      "confronta con" selectors (newest year = year to date, compare cut at the same month), tiles
+      (entrate, uscite, messo da parte + rate, senza una tantum, una tantum), messo da parte per month
+      as diverging bars (sky above / orange below, compare year outlined; pair validated for CVD in
+      light and dark) with a tap/hover tooltip, spent vs budget per category (budget tick, ▲ over,
+      "senza budget", compare value), one-offs on their own scale, pass rows (loans/refunds) in their
+      own block, "Vedi come tabella". Owner-only table `money_totals` (migration
+      `20261124120000_money_totals.sql`, id `${month}:${category}`), Dexie v26 `moneyTotals`,
+      privateData, syncHealth, backup via the engine list. `database.types.ts` block hand-written.
+      Fix 2026-11-24 (before going online): a budget set or dropped mid-year only counts its own
+      months towards ▲ over (`categoryRows` `budgetMonths`/`rowMonths`), and the bar/table say which
+      months it covered ("budget ott–nov"); compared against the months the category has rows in
+      (`money-totals.py` writes a 0 row for a budgeted month with no spending). Demo: "Caffè" with a
+      budget from October.
+- [x] MO2 Apply the backend [orchestrator], done 2026-11-24: dry-run showed only
+      `20261124120000_money_totals.sql`; pushed; `npm run db:types` left the hand-written block
+      unchanged. Note: the Supabase CLI now targets the local stack by default, so push and dry-run
+      need `--remote`.
+- [ ] MO3 First import [owner, after deploy]: in ~/life `npm run --prefix ~/Dev/personal/dashboard
+      life:money-link`, open the link signed in, check the preview, Importa. The first import
+      pushes every row one request each through the outbox (a minute or two); later imports
+      push only changed rows.
+- [x] MO4 Kind per category, not per month [owner], done 2026-11-24 upstream: `money-totals.py`
+      now decides `kind` per category over the whole history (checked: no category changes kind
+      across months). Nothing left on the page: a refund month in a spend category just lowers
+      that category's spend (its bar clamps at 0).
+- [ ] MO5 Real-device pass [owner]: iPhone/iPad, dark mode, tap a month for the tooltip, the
+      import link on iOS (needs DecompressionStream: iOS 16.4+).
+- [ ] MO6 Comparisons with filters [orchestrator, M] (owner, 2026-11-24): choose the period and the
+      months to compare instead of the fixed "year vs year, same months". Kept as is on purpose
+      meanwhile: the current month counts while in progress (re-aligned at every weekly import), and
+      the first year is partial because the data starts mid-year. Ask the owner the details when
+      reached.
+- [ ] MO7 Spending trends [orchestrator, M] (owner, 2026-11-24): how spending moves over time, in
+      total and per category (e.g. moving average, year on year, categories rising/falling). Ask
+      the owner which trends, chart and window when reached.
+- [ ] MO8 Budgets editable during the year, from GreenBooks AND the dashboard [opus, L] (owner,
+      2026-11-24): GreenBooks stays the base (already flows month by month through the CSV); the
+      dashboard can override. Needs a decision first: a separate owner-only table for dashboard
+      budgets (the import never touches it) and which source wins per month. Ask the owner when
+      reached.
+
 ## Ideas / later
 
 - [ ] **🤝 Sharing review: what can be shared, and better ways to do it** [opus]

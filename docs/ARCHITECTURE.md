@@ -43,6 +43,7 @@ queue: `ROADMAP.md` (`npm run roadmap` lists the open tasks).
 | `learningSync.ts` | `learning_quiz`, `learning_cards`, `learning_practice`, `learning_checks`, `learning_position`, `learning_reviews` (Ripasso schedule) (owner-only: the learner's progress; content is static bundle data) |
 | `lifeSync.ts` | `life_entries`, `life_weeks`, `life_day_focus`, `life_engines` (owner-only; `life_engines` is the monthly Life Engines audit in Life → Month) |
 | `mealDiarySync.ts` | `meal_entries` (owner-only) |
+| `moneySync.ts` | `money_totals` (owner-only: Soldi, monthly totals per GreenBooks category mirrored from `~/life/money/data/monthly-totals.csv` by the import link; written only by `applyMoneyImport`) |
 | `projectPrefsSync.ts` | `project_prefs` (per user: the home grid's `starred`/`hidden`; open counts stay in local-only Dexie `projectStats`) |
 | `projectInvites.ts` | `project_invites`, `shareable_projects` + invite RPCs (not an engine table; per-project invite links) |
 | `transferSync.ts` | transfer files (signed links) |
@@ -53,7 +54,7 @@ queue: `ROADMAP.md` (`npm run roadmap` lists the open tasks).
   invite links (`#/join/p/<token>`). Applies to almost every synced project.
   A new synced project needs a row in `public.shareable_projects`.
 - **`shop_area_members`**: per shop area (shop-list only), its own invite links.
-- **Owner-only**: Life, Learning and meal-diary (`ownerOnly` in the registry), plus `/sharing`; settings is device-only.
+- **Owner-only**: Life, Learning, meal-diary and Soldi (`money`) (`ownerOnly` in the registry), plus `/sharing`; settings is device-only.
   Also gated by `is_owner()` while their page is public: the events tables
   `custom_events`, `event_marks`, `event_prefs`, `event_interest` and
   `event_interest_profile`. On any

@@ -108,6 +108,11 @@
       "icon": "graduation-cap",
       "color": "#8b5cf6",
       "area": "organizzazione"
+    },
+    "money": {
+      "icon": "wallet",
+      "color": "#0284c7",
+      "area": "organizzazione"
     }
   },
   "extras": {
