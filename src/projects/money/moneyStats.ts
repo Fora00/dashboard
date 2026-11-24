@@ -8,6 +8,12 @@ import type { MoneyKind } from '../../lib/db'
 // positive number; kept = income - spend - oneoff. `pass` rows (loans and
 // refunds, `*Debiti` in GreenBooks) are never income or spend: they only show
 // in their own block, as the net signed sum.
+//
+// `auto` rows (every category that is not stable: not a salary, one-off or
+// loan) are income or spend by the sign of the category's total over the
+// period being totalled: a year's tiles look at the year, a month's bar at the
+// month. So gifts can be income the year more came in than went out, and spend
+// the next. A total of exactly 0 counts as spend. Kept never depends on it.
 
 export interface Line {
   month: string
@@ -19,7 +25,7 @@ export interface Line {
 
 export interface Totals {
   income: number
-  /** Recurring spend (kind spend), positive = money out. */
+  /** Recurring spend (kind spend, and auto categories that net out), positive = money out. */
   spend: number
   /** One-off spend (kind oneoff), positive = money out. */
   oneoff: number
@@ -31,16 +37,28 @@ export const MONTHS_IT = ['gen', 'feb', 'mar', 'apr', 'mag', 'giu', 'lug', 'ago'
 
 export const emptyTotals = (): Totals => ({ income: 0, spend: 0, oneoff: 0, pass: 0 })
 
-export function addLine(t: Totals, l: Line): Totals {
-  if (l.kind === 'income') t.income += l.amount
-  else if (l.kind === 'spend') t.spend -= l.amount
-  else if (l.kind === 'oneoff') t.oneoff -= l.amount
-  else t.pass += l.amount
-  return t
+/** Net signed total per auto category over `lines`. */
+export function autoNets(lines: readonly Line[]): Map<string, number> {
+  const nets = new Map<string, number>()
+  for (const l of lines) if (l.kind === 'auto') nets.set(l.category, (nets.get(l.category) ?? 0) + l.amount)
+  return nets
 }
 
+/** income or spend for an auto category with this net total over the period. */
+export const autoKind = (net: number): 'income' | 'spend' => (net > 0 ? 'income' : 'spend')
+
+/** Totals of `lines`, auto categories decided by their total over these same lines. */
 export function totalsOf(lines: readonly Line[]): Totals {
-  return lines.reduce(addLine, emptyTotals())
+  const nets = autoNets(lines)
+  const t = emptyTotals()
+  for (const l of lines) {
+    const kind = l.kind === 'auto' ? autoKind(nets.get(l.category)!) : l.kind
+    if (kind === 'income') t.income += l.amount
+    else if (kind === 'spend') t.spend -= l.amount
+    else if (kind === 'oneoff') t.oneoff -= l.amount
+    else t.pass += l.amount
+  }
+  return t
 }
 
 /** All money out (recurring + one-off). */
@@ -93,15 +111,11 @@ export function periodLabel(year: number, last: number): string {
   return last === 12 ? String(year) : last === 1 ? `gen ${year}` : `gen–${MONTHS_IT[last - 1]} ${year}`
 }
 
-/** 12 entries for `year`: the month's totals, or null when it has no rows. */
+/** 12 entries for `year`: the month's totals (auto decided per month), or null when it has no rows. */
 export function monthlyTotals(lines: readonly Line[], year: number): (Totals | null)[] {
-  const out: (Totals | null)[] = Array.from({ length: 12 }, () => null)
-  for (const l of lines) {
-    if (Number(l.month.slice(0, 4)) !== year) continue
-    const i = Number(l.month.slice(5, 7)) - 1
-    out[i] = addLine(out[i] ?? emptyTotals(), l)
-  }
-  return out
+  const byMonth: Line[][] = Array.from({ length: 12 }, () => [])
+  for (const l of lines) if (Number(l.month.slice(0, 4)) === year) byMonth[Number(l.month.slice(5, 7)) - 1]!.push(l)
+  return byMonth.map((ls) => (ls.length ? totalsOf(ls) : null))
 }
 
 export interface CategoryRow {
@@ -125,17 +139,24 @@ export interface CategoryRow {
 }
 
 /**
- * Per category for one kind over the period. spend/oneoff: money out and the
- * limit; income: money in; pass: signed net. Sorted biggest first.
+ * Per category for one block over the period. spend/oneoff: money out and the
+ * limit; income: money in; pass: signed net. Sorted biggest first. An auto
+ * category goes to income or spend by its total over the period (or, when it
+ * has no rows in the period, over the compare period), and its compare value
+ * is signed for the block it landed in.
  */
 export function categoryRows(
   lines: readonly Line[],
-  kind: MoneyKind,
+  kind: Exclude<MoneyKind, 'auto'>,
   year: number,
   last: number,
   compareYear: number | null,
 ): CategoryRow[] {
   const sign = kind === 'spend' || kind === 'oneoff' ? -1 : 1
+  const nets = autoNets(lines.filter((l) => inPeriod(l, year, last)))
+  const compareNets = compareYear === null ? new Map<string, number>() : autoNets(periodLines(lines, compareYear, last))
+  const kindOf = (l: Line) =>
+    l.kind !== 'auto' ? l.kind : autoKind(nets.get(l.category) ?? compareNets.get(l.category) ?? 0)
   const acc = new Map<
     string,
     {
@@ -154,7 +175,7 @@ export function categoryRows(
     return r
   }
   for (const l of lines) {
-    if (l.kind !== kind) continue
+    if (kindOf(l) !== kind) continue
     if (inPeriod(l, year, last)) {
       const r = get(l.category)
       r.value += sign * l.amount

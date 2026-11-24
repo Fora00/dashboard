@@ -7,13 +7,15 @@ import type { MoneyKind } from '../../lib/db'
 // Header: month,category,kind,amount,budget
 //   month    YYYY-MM
 //   category GreenBooks name (may contain " | "), trimmed
-//   kind     income | spend | oneoff | pass (pass = loans/refunds, never income or spend)
+//   kind     income | spend | oneoff | pass | auto (pass = loans/refunds, never income
+//            or spend; auto = income or spend by the sign of the category's total
+//            over the period shown, see moneyStats.ts)
 //   amount   signed euros, at most 2 decimals (+ in, - out)
 //   budget   that month's limit, signed like amount, empty when none
 // Amounts become integer cents (string arithmetic, no float rounding).
 // Invalid rows are reported, never clipped or skipped.
 
-export const MONEY_KINDS = ['income', 'spend', 'oneoff', 'pass'] as const satisfies readonly MoneyKind[]
+export const MONEY_KINDS = ['income', 'spend', 'oneoff', 'pass', 'auto'] as const satisfies readonly MoneyKind[]
 export const MONEY_HEADER = ['month', 'category', 'kind', 'amount', 'budget'] as const
 /** Longest category name. MUST match the CHECK in supabase/migrations/20261124120000_money_totals.sql. */
 export const MAX_CATEGORY_LENGTH = 100

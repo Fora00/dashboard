@@ -9,6 +9,7 @@ import {
   euroShort,
   keptOf,
   lastMonthOf,
+  monthlyTotals,
   periodLabel,
   periodLines,
   totalsOf,
@@ -294,6 +295,50 @@ describe('totals', () => {
     expect(budgetMonthsLabel({ budgetMonths: [], rowMonths: 12 })).toBeNull()
     // Rows only in some months, a budget on each of them: not partial.
     expect(budgetMonthsLabel({ budgetMonths: [3, 7], rowMonths: 2 })).toBeNull()
+  })
+
+  it('auto categories are income or spend by their total over the period shown', () => {
+    const gift = (month: string, amount: number) => ({
+      month,
+      category: 'Gifts',
+      kind: 'auto' as const,
+      amount,
+      budget: null,
+    })
+    const pay = (month: string) => ({ month, category: 'Pay', kind: 'income' as const, amount: 100000, budget: null })
+    const all = [
+      pay('2025-01'),
+      gift('2025-01', -3000),
+      gift('2025-02', 8000), // 2025 nets +50: income for the year
+      pay('2026-01'),
+      gift('2026-01', -2000), // 2026 nets -20: spend
+    ]
+    // Year 2025: the year's total decides, so the whole +50 is income.
+    expect(totalsOf(periodLines(all, 2025, 12))).toEqual({ income: 105000, spend: 0, oneoff: 0, pass: 0 })
+    expect(totalsOf(periodLines(all, 2026, 12))).toEqual({ income: 100000, spend: 2000, oneoff: 0, pass: 0 })
+    // Month by month: January 2025 is spend, February income.
+    const months = monthlyTotals(all, 2025)
+    expect(months[0]).toEqual({ income: 100000, spend: 3000, oneoff: 0, pass: 0 })
+    expect(months[1]).toEqual({ income: 8000, spend: 0, oneoff: 0, pass: 0 })
+    // Kept is the same however auto is split.
+    expect(keptOf(totalsOf(periodLines(all, 2025, 12)))).toBe(105000)
+    // Category blocks: income in 2025 (compare 2026 signed as income), spend in 2026.
+    expect(categoryRows(all, 'income', 2025, 12, 2026).find((r) => r.category === 'Gifts')).toMatchObject({
+      value: 5000,
+      compare: -2000,
+    })
+    expect(categoryRows(all, 'spend', 2025, 12, null).find((r) => r.category === 'Gifts')).toBeUndefined()
+    expect(categoryRows(all, 'spend', 2026, 12, 2025).find((r) => r.category === 'Gifts')).toMatchObject({
+      value: 2000,
+      compare: -5000,
+    })
+    // Only in the compare period (January 2025 nets -30): placed by the compare total.
+    const only = [pay('2027-01'), ...all]
+    expect(categoryRows(only, 'spend', 2027, 1, 2025).find((r) => r.category === 'Gifts')).toMatchObject({
+      value: 0,
+      compare: 3000,
+    })
+    expect(categoryRows(only, 'income', 2027, 1, 2025).map((r) => r.category)).toEqual(['Pay'])
   })
 
   it('short labels', () => {

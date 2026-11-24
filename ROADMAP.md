@@ -1960,6 +1960,14 @@ demo use invented numbers only).
       now decides `kind` per category over the whole history (checked: no category changes kind
       across months). Nothing left on the page: a refund month in a spend category just lowers
       that category's spend (its bar clamps at 0).
+- [x] MO4b Dynamic kinds [orchestrator], done 2026-11-24 (owner: only stable categories are fixed,
+      the rest moves with time): `money-totals.py` writes `income` only for the salaries
+      (`STABLE_INCOME`), `oneoff` and `pass` as before, `auto` for every other category. The page
+      (`moneyStats.ts` `autoNets`/`autoKind`) counts an auto category as income or spend by the sign
+      of its total over the period shown: the year for tiles and categories, the month for the
+      month bars; 0 = spend; kept never changes. Migration `20261124140000_money_kind_auto.sql`
+      (CHECK only) applied. Checked against the GreenBooks yearly breakdowns: recurring + one-off
+      spend now match them except the `*Debiti` rows, kept apart on purpose.
 - [ ] MO5 Real-device pass [owner]. e2e DONE 2026-11-24: `e2e/money.spec.ts` (desktop + iPhone
       viewport, signed out, invented data): empty page, import link previewed and applied on tap,
       compare label, a mid-year budget not flagged over, table view, a replacing link (1 changed,
@@ -1984,7 +1992,8 @@ demo use invented numbers only).
       the first year is partial because the data starts mid-year. Ask the owner the details when
       reached.
 - [ ] MO7 Spending trends [orchestrator, M] (owner, 2026-11-24): how spending moves over time, in
-      total and per category (e.g. moving average, year on year, categories rising/falling). Ask
+      total and per category (e.g. moving average, year on year, categories rising/falling), plus a
+      "super total" over the whole history to read spending as a trend (owner, 2026-11-24). Ask
       the owner which trends, chart and window when reached.
 - [ ] MO8 Budgets editable during the year, from GreenBooks AND the dashboard [opus, L] (owner,
       2026-11-24): GreenBooks stays the base (already flows month by month through the CSV); the

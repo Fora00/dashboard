@@ -140,8 +140,9 @@ export type MealKind = 'breakfast' | 'lunch' | 'dinner' | 'snack'
 // The CSV is the source of truth; the app never edits a row by hand. id is
 // `${month}:${category}`. Amounts are integer cents, signed (+ in, - out);
 // budget is that month's limit, signed like amount, null when none. Owner-only
-// synced table `money_totals` (src/lib/moneySync.ts).
-export type MoneyKind = 'income' | 'spend' | 'oneoff' | 'pass'
+// synced table `money_totals` (src/lib/moneySync.ts). kind 'auto' = income or
+// spend by the sign of the category's total over the period shown.
+export type MoneyKind = 'income' | 'spend' | 'oneoff' | 'pass' | 'auto'
 
 export interface MoneyTotal {
   id: string
