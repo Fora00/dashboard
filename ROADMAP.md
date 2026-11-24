@@ -1951,7 +1951,8 @@ demo use invented numbers only).
       `20261124120000_money_totals.sql`; pushed; `npm run db:types` left the hand-written block
       unchanged. Note: the Supabase CLI now targets the local stack by default, so push and dry-run
       need `--remote`.
-- [ ] MO3 First import [owner, after deploy]: in ~/life `npm run --prefix ~/Dev/personal/dashboard
+- [x] MO3 First import [owner, after deploy], done 2026-11-24 (one link for the whole history, preview
+      checked and imported by the owner in Chrome; the page looks right): in ~/life `npm run --prefix ~/Dev/personal/dashboard
       life:money-link`, open the link signed in, check the preview, Importa. The first import
       pushes every row one request each through the outbox (a minute or two); later imports
       push only changed rows.
@@ -1959,8 +1960,24 @@ demo use invented numbers only).
       now decides `kind` per category over the whole history (checked: no category changes kind
       across months). Nothing left on the page: a refund month in a spend category just lowers
       that category's spend (its bar clamps at 0).
-- [ ] MO5 Real-device pass [owner]: iPhone/iPad, dark mode, tap a month for the tooltip, the
-      import link on iOS (needs DecompressionStream: iOS 16.4+).
+- [ ] MO5 Real-device pass [owner]. e2e DONE 2026-11-24: `e2e/money.spec.ts` (desktop + iPhone
+      viewport, signed out, invented data): empty page, import link previewed and applied on tap,
+      compare label, a mid-year budget not flagged over, table view, a replacing link (1 changed,
+      1 emptied, months outside the range kept), idempotent re-open, damaged link refused.
+      Still open, the iPhone checklist (iOS >= 16.4, Settings → General → About):
+      1. Update the PWA: open it, pull to refresh or close and reopen until Soldi is on the home.
+      2. /soldi signed in: the rows imported on the Mac arrive (sync card without errors).
+      3. Light and dark mode: month bars readable, sky above / orange below, tooltip on tap of a
+         month (and it closes on a second tap or elsewhere).
+      4. Year and "confronta con" selectors usable with the thumb; tiles do not overflow.
+      5. Spent vs budget: a category with "(budget …)" and a real ▲ readable; "Mostra tutte".
+      6. "Vedi come tabella": the table scrolls sideways, header aligned.
+      7. Import link on iOS: AirDrop or paste a link from `npm run life:money-link` into Safari
+         (or a `--since` link), the preview opens, "Niente da importare" when already imported.
+      8. Airplane mode: /soldi still shows everything; back online, no sync errors.
+      9. iPad: same page in landscape and portrait (layout `wide`).
+      Next (proposed 2026-11-24, owner to pick): MO6 first (its period selector is what MO7 builds
+      on), then MO7, then MO8 (new table + migration + a which-source-wins decision).
 - [ ] MO6 Comparisons with filters [orchestrator, M] (owner, 2026-11-24): choose the period and the
       months to compare instead of the fixed "year vs year, same months". Kept as is on purpose
       meanwhile: the current month counts while in progress (re-aligned at every weekly import), and
