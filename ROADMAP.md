@@ -1914,6 +1914,30 @@ weight later, same field). Unentered = **unverified**, never counted as a succes
       (update `e2e/habits-panel.spec.ts`); `HabitLegend` gets the "da verificare" cell and week
       chips; optional: HabitRecap "Open" on /habits goes straight to the page (sheet stays in Life).
 
+## Habits views 🗂️ (owner, 2026-11-25)
+
+"Ci serve una vista per le habits che stanno per scadere. Una vista recap diviso per categorie
+delle habits presenti, passate e future." One at a time: V1 first, then V2's questions.
+
+- [x] V1 Scadenze tab [orchestrator, S], done 2026-11-25 (1610 tests, build, e2e
+      `habit-expiring.spec.ts` + habits specs 6/6 desktop+iPhone): fifth tab "Scadenze" in
+      `HabitsPanel` (so /habits AND Life → Habits) with an amber count; lists active habits whose
+      `cycleEnd` is within 14 days (`EXPIRING_WINDOW`) or past it with no verdict, overdue first.
+      Row: engine · giorno N/M · weeks hit in the cycle (not for measured habits), "finisce tra N
+      giorni" + date or "scaduta da N giorni · dai il verdetto"; tap opens the habit (page on
+      /habits, sheet in Life). Pure logic `habits/habitExpiry.ts` (+ test), UI `HabitExpiring.tsx`.
+      Tabs now scroll (flex track) instead of a 4-column grid.
+- [x] V2 Categorie tab [orchestrator, M], done 2026-11-25 (1614 tests, build, e2e habits +
+      offline 14/14 desktop+iPhone; owner answers: new tab, all four row details, past =
+      archived or verdict 'closed'): sixth tab "Categorie" in `HabitsPanel`, every habit (archived
+      and planned too) grouped by engine in ENGINES order, then "Senza engine"; header counts
+      "N in corso · N future · N passate"; per phase rows with dates (start → end, or "dal …"),
+      present = giorno N/M + weeks hit in the cycle + verdict if set, future = "inizia tra N
+      giorni", past = verdict or "archiviata" + weeks hit up to the end. A cycle past its end with
+      no verdict stays "in corso" (and shows in Scadenze). Pure logic `habitCategoryGroups.ts`
+      (+ test, `cycleWeeks` shared with Scadenze), UI `HabitCategories.tsx`. Measured habits skip
+      the weeks figure (ticks only). Not eyeballed in a browser beyond e2e.
+
 ## Soldi 💶 (owner, 2026-11-24)
 
 A read-only money page fed from `~/life/money/data/monthly-totals.csv` (written by

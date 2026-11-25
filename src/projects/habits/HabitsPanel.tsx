@@ -22,8 +22,19 @@ import { HabitTile } from './HabitTile'
 import { Lifeboard } from './Lifeboard'
 import { evidenceLine, latestEvidence } from './habitMeasure'
 import { SegmentedTabs } from '../../components/SegmentedTabs'
+import { HabitExpiring } from './HabitExpiring'
+import { HabitCategories } from './HabitCategories'
+import { expiringHabits } from './habitExpiry'
 
-const HABIT_VIEWS = ['today', 'week', 'month', 'board'] as const
+const HABIT_VIEWS = ['today', 'week', 'month', 'board', 'expiring', 'categories'] as const
+const VIEW_LABEL: Record<HabitView, string> = {
+  today: 'Today',
+  week: 'Week',
+  month: 'Month',
+  board: 'Board',
+  expiring: 'Scadenze',
+  categories: 'Categorie',
+}
 export type HabitView = (typeof HABIT_VIEWS)[number]
 
 const isView = (v: unknown): v is HabitView => HABIT_VIEWS.includes(v as HabitView)
@@ -74,21 +85,42 @@ export function HabitsPanel({ data, today, viewKey, defaultView = 'today', empty
 
   const active = data?.active ?? []
   const archived = data?.archived ?? []
+  const expiringCount = expiringHabits(active, today).length
+  const openHabit = (id: string) =>
+    recapOpens === 'page'
+      ? navigate(habitPath(id), { state: { from: `${location.pathname}${location.search}` } })
+      : dispatch({ kind: 'detail', id })
 
   return (
     <div>
       <SegmentedTabs
         label="View"
-        options={HABIT_VIEWS.map((v) => ({ id: v, label: <span className="capitalize">{v}</span> }))}
+        options={HABIT_VIEWS.map((v) => ({
+          id: v,
+          label: (
+            <span>
+              {VIEW_LABEL[v]}
+              {v === 'expiring' && expiringCount > 0 && (
+                <span className="ml-1 rounded-full bg-amber-200 px-1.5 text-xs text-amber-900 dark:bg-amber-800 dark:text-amber-100">
+                  {expiringCount}
+                </span>
+              )}
+            </span>
+          ),
+        }))}
         value={view}
         onChange={setView}
-        className="mb-6 grid grid-cols-4 gap-1 rounded-xl bg-slate-100 p-1 dark:bg-slate-800"
+        className="mb-6 flex gap-1 overflow-x-auto rounded-xl bg-slate-100 p-1 dark:bg-slate-800"
       />
 
       {data === undefined ? (
         <SkeletonList rows={3} rowClassName="h-16" />
       ) : view === 'board' ? (
         <Lifeboard habits={data.habits} data={data.boardData} />
+      ) : view === 'expiring' ? (
+        <HabitExpiring habits={active} states={data.states} today={today} onOpen={openHabit} />
+      ) : view === 'categories' ? (
+        <HabitCategories habits={data.habits} states={data.states} today={today} onOpen={openHabit} />
       ) : view !== 'today' && active.length > 0 ? (
         <HabitRecap
           key={view}
@@ -100,11 +132,7 @@ export function HabitsPanel({ data, today, viewKey, defaultView = 'today', empty
           slips={data.slips}
           apps={data.appsByWeek}
           today={today}
-          onOpen={(id) =>
-            recapOpens === 'page'
-              ? navigate(habitPath(id), { state: { from: `${location.pathname}${location.search}` } })
-              : dispatch({ kind: 'detail', id })
-          }
+          onOpen={openHabit}
           onTapToday={tap}
           onSetCount={(habit, day, n) => void runSafe(setDayCount, 'Could not save')(habit.id, day, n)}
           onSetSlips={(habit, day, n) => void runSafe(setSlipCount, 'Could not save')(habit.id, day, n)}
