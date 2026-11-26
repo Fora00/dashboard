@@ -811,6 +811,63 @@ export type Database = {
         }
         Relationships: []
       }
+      money_budget_choices: {
+        Row: {
+          category: string
+          dash_cents: number
+          gb_cents: number
+          id: string
+          month: string
+          pick: string
+          updated_at: number
+        }
+        Insert: {
+          category: string
+          dash_cents: number
+          gb_cents: number
+          id: string
+          month: string
+          pick: string
+          updated_at: number
+        }
+        Update: {
+          category?: string
+          dash_cents?: number
+          gb_cents?: number
+          id?: string
+          month?: string
+          pick?: string
+          updated_at?: number
+        }
+        Relationships: []
+      }
+      money_budgets: {
+        Row: {
+          category: string
+          from_month: string
+          id: string
+          monthly_cents: number
+          to_month: string | null
+          updated_at: number
+        }
+        Insert: {
+          category: string
+          from_month: string
+          id: string
+          monthly_cents: number
+          to_month?: string | null
+          updated_at: number
+        }
+        Update: {
+          category?: string
+          from_month?: string
+          id?: string
+          monthly_cents?: number
+          to_month?: string | null
+          updated_at?: number
+        }
+        Relationships: []
+      }
       money_totals: {
         Row: {
           amount_cents: number

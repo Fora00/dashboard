@@ -20,6 +20,7 @@
     "life:link": "node --disable-warning=ExperimentalWarning scripts/life-link.ts",
     "life:habits-link": "node --disable-warning=ExperimentalWarning scripts/life-habits-link.ts",
     "life:money-link": "node --disable-warning=ExperimentalWarning scripts/life-money-link.ts",
+    "life:money-budgets": "node --disable-warning=ExperimentalWarning scripts/life-money-budgets.ts",
     "life:oggi-link": "node --disable-warning=ExperimentalWarning scripts/life-oggi-link.ts",
     "life:things-lists": "node --disable-warning=ExperimentalWarning scripts/life-things-lists.ts",
     "life:things-status": "node --disable-warning=ExperimentalWarning scripts/life-things-status.ts",

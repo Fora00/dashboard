@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { db, resetDb } from '../test/fakeDb'
 import { drain } from '../test/drain'
-import { applyMoneyImport } from './moneySync'
+import { applyMoneyImport, pickMoneyBudget, removeMoneyBudget, saveMoneyBudget } from './moneySync'
 
 // Soldi import writer: local-first (Dexie + outbox, no session needed). Invented figures.
 
@@ -43,5 +43,37 @@ describe('applyMoneyImport', () => {
       '2025-01:A -150',
     ])
     expect(await ops()).toContain('delete 2025-01:Gone')
+  })
+})
+
+describe('dashboard budgets (MO8), offline and signed out', () => {
+  it('saving truncates the earlier rule, picks "dashboard" where GreenBooks differs, and queues both', async () => {
+    await applyMoneyImport({
+      from: '2026-11',
+      to: '2026-12',
+      lines: [
+        { ...line('2026-11', 'Food', -100), budget: -15000 },
+        { ...line('2026-12', 'Food', -100), budget: -15000 },
+      ],
+    })
+    const first = await saveMoneyBudget({ category: 'Food', monthly: 10000, from: '2026-01', to: null })
+    const second = await saveMoneyBudget({ category: 'Food', monthly: 12000, from: '2026-12', to: null })
+    expect(await db.moneyBudgets.get(first.id)).toMatchObject({ to: '2026-11' })
+    expect(await db.moneyBudgets.get(second.id)).toMatchObject({ monthly: 12000, from: '2026-12', to: null })
+    expect(await db.moneyBudgetChoices.get('2026-12:Food')).toMatchObject({
+      pick: 'dashboard',
+      gb: -15000,
+      dash: 12000,
+    })
+    // The first save picked November too, against its own amount.
+    expect(await db.moneyBudgetChoices.get('2026-11:Food')).toMatchObject({ pick: 'dashboard', dash: 10000 })
+    const queued = (await db.outbox.toArray()).map((o) => o.table)
+    expect(queued).toContain('money_budgets')
+    expect(queued).toContain('money_budget_choices')
+
+    await pickMoneyBudget('Food', [{ month: '2026-12', gb: -15000, dash: 12000 }], 'greenbooks')
+    expect(await db.moneyBudgetChoices.get('2026-12:Food')).toMatchObject({ pick: 'greenbooks' })
+    await removeMoneyBudget(second.id)
+    expect(await db.moneyBudgets.get(second.id)).toBeUndefined()
   })
 })

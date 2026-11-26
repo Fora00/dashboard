@@ -2010,20 +2010,55 @@ demo use invented numbers only).
       9. iPad: same page in landscape and portrait (layout `wide`).
       Next (proposed 2026-11-24, owner to pick): MO6 first (its period selector is what MO7 builds
       on), then MO7, then MO8 (new table + migration + a which-source-wins decision).
-- [ ] MO6 Comparisons with filters [orchestrator, M] (owner, 2026-11-24): choose the period and the
-      months to compare instead of the fixed "year vs year, same months". Kept as is on purpose
-      meanwhile: the current month counts while in progress (re-aligned at every weekly import), and
-      the first year is partial because the data starts mid-year. Ask the owner the details when
-      reached.
-- [ ] MO7 Spending trends [orchestrator, M] (owner, 2026-11-24): how spending moves over time, in
-      total and per category (e.g. moving average, year on year, categories rising/falling), plus a
-      "super total" over the whole history to read spending as a trend (owner, 2026-11-24). Ask
-      the owner which trends, chart and window when reached.
-- [ ] MO8 Budgets editable during the year, from GreenBooks AND the dashboard [opus, L] (owner,
-      2026-11-24): GreenBooks stays the base (already flows month by month through the CSV); the
-      dashboard can override. Needs a decision first: a separate owner-only table for dashboard
-      budgets (the import never touches it) and which source wins per month. Ask the owner when
-      reached.
+- [x] MO6 Comparisons with filters [orchestrator, M], done 2026-11-26 (not pushed; check + build +
+      e2e green, controls eyeballed on desktop and iPhone viewport). Owner picked all four periods and
+      all four comparisons plus a toggle for the month in progress. `moneyPeriod.ts` (pure): a period
+      is `{from, to}` 'YYYY-MM' inclusive, may cross a year end; `Selection` → `resolvePeriod`
+      (Anno = year to date for the newest year, Intervallo di mesi, Ultimi 3/6/12, Un mese; all kept
+      inside the data) and `resolveComparison` (stesso periodo anno prima = default as before,
+      periodo precedente of the same length, scelgo io = pick the start, same length (in year mode
+      pick a year), media mensile storica = history total × length / months of history). A
+      comparison with no data says so instead of zeros; a partly covered one says "dati solo per N
+      mesi su M". `moneyStats` now takes line sets: `categoryRows(current, kind, {lines, scale})`,
+      `monthlyTotals(lines, period)`, budget months as 'YYYY-MM' (label carries the year across a
+      year end). Chart: one bar per month of the period (past 12 months values hide, names thin
+      out), compare bars aligned by position, the average as a dashed line. "Escludi il mese in
+      corso" (shown only when the data has the calendar month) drops that month everywhere. Selects
+      are tied to captions by id (wrapping put every option into the accessible name). Tests:
+      `money.test.ts` ported + MO6 block; e2e `money.spec.ts` MO6 test (month, prev, avg, range
+      across the year end with partial note, chosen year).
+- [x] MO7 Spending trends [orchestrator, M], done 2026-11-26 (not pushed; check + build + e2e green,
+      eyeballed on desktop and iPhone viewport). Owner picked all four trends, window selectable
+      3/6/12 (default 3), a third tab "Andamento" on /soldi (whole history, period controls hidden;
+      the tabs are now Grafici / Tabella / Andamento), one-offs left out with a toggle "Includi le
+      una tantum". Pure logic `moneyTrends.ts`: `spendSeries` (empty months inside the history = 0),
+      `movingAverage`, `yearOnYear` (moving average vs 12 months before, one decimal), `categoryMovers`
+      (last n months vs the n before; auto categories by their whole-history total; null under 2n
+      months), `cumulativeKept`, `superTotal` (totals + per month). UI `MoneyTrendView.tsx` (named so
+      to not clash with `moneyTrends.ts` on a case-insensitive disk) and `MoneyTrendChart.tsx` (SVG
+      line stretched to the width with non-scaling strokes, HTML labels/tooltip, crosshair; `fit`
+      scales around the values for the moving average, with the scale's top and bottom written).
+      Year on year: diverging bars, ▲ orange above = spent more, ▼ sky below = less, scale at least
+      ±5%. The "Escludi il mese in corso" toggle applies here too. Tests in `money.test.ts` (trends
+      block) and e2e `money.spec.ts` (trend view).
+- [x] MO8 Budgets editable from the dashboard [opus], done 2026-11-26 (opus-builder; not pushed;
+      check + build + e2e green; migration `20261126120000_money_budgets.sql` APPLIED (dry-run showed
+      only it), `db:types` regenerated). Owner decisions: a dashboard budget is a rule "category,
+      amount per month, from month, optional to month"; saving truncates/splits/deletes overlapping
+      rules of the category. When GreenBooks and the dashboard disagree for a month the row shows
+      "⚠ conflitto" and the owner picks (sheet: "Usa GreenBooks" / "Usa dashboard"); the pick holds
+      until either value changes (stored gb/dash cents); saving a rule = picking dashboard for the
+      months it covers; unresolved = GreenBooks used. Tables `money_budgets`, `money_budget_choices`
+      (owner-only), Dexie v27, money engine in `moneySync.ts` (`saveMoneyBudget`, `removeMoneyBudget`,
+      `pickMoneyBudget`). Pure `moneyBudgets.ts` `applyBudgets` runs right after the exclude-current
+      filter (zero rows synthesised in data months a rule covers). Sheet `MoneyBudgetSheet.tsx` on a
+      tap of a category row. Export: "Copia budget per ~/life" (CSV to the clipboard) +
+      `npm run life:money-budgets` (pbpaste → `~/life/money/data/budgets-dashboard.csv`; not yet run
+      on the real ~/life). Tests: money.test.ts MO8 block, moneySync.test.ts, e2e MO8 test.
+- [ ] MO9 Follow-ups [sonnet, each XS–S] (from MO8): confirm on "Rimuovi"; open the budget sheet
+      from the table view's rows; a reader for `budgets-dashboard.csv` on the ~/life side
+      (owner to decide how it reaches GreenBooks); add the sheet + conflict to the MO5 iPhone
+      checklist; the MO6/MO7 controls and the Andamento tab on a real iPhone.
 
 ## Ideas / later
 

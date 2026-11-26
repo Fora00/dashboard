@@ -1,11 +1,14 @@
-import { db, type MoneyKind, type MoneyTotal } from '../../lib/db'
+import { db, type MoneyBudget, type MoneyKind, type MoneyTotal } from '../../lib/db'
 import { lineKey } from './moneyCsv'
 
 // Dev-only demo for Soldi (seeded by src/lib/devDemo.ts): invented categories
 // and figures, NOT anyone's real money. Two full years plus the current year
 // to date, with a budget on some categories (one only from October of the
 // current year), one over-budget month pattern, a few one-offs, gifts that are
-// income in odd years (kind auto) and a loan that comes back.
+// income in odd years (kind auto) and a loan that comes back. MO8: two
+// dashboard budgets, one where GreenBooks has none ("Trasporti", from June of
+// the current year) and one that disagrees with GreenBooks ("Ristoranti" 150 €
+// against 120 €, from three months ago), so the page shows a "⚠ conflitto".
 
 const RECURRING: [string, number, number | null][] = [
   ['Affitto', 70000, 70000],
@@ -46,4 +49,24 @@ export async function seedDemoMoney(): Promise<void> {
     }
   }
   await db.moneyTotals.bulkPut(rows)
+  const ym = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+  const budgets: MoneyBudget[] = [
+    {
+      id: 'demo-trasporti',
+      category: 'Trasporti',
+      monthly: 10000,
+      from: `${now.getFullYear()}-06`,
+      to: null,
+      updatedAt: 1,
+    },
+    {
+      id: 'demo-ristoranti',
+      category: 'Ristoranti',
+      monthly: 15000,
+      from: ym(new Date(now.getFullYear(), now.getMonth() - 3, 1)),
+      to: null,
+      updatedAt: 1,
+    },
+  ]
+  await db.moneyBudgets.bulkPut(budgets)
 }

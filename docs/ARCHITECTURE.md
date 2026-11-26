@@ -43,7 +43,7 @@ queue: `ROADMAP.md` (`npm run roadmap` lists the open tasks).
 | `learningSync.ts` | `learning_quiz`, `learning_cards`, `learning_practice`, `learning_checks`, `learning_position`, `learning_reviews` (Ripasso schedule) (owner-only: the learner's progress; content is static bundle data) |
 | `lifeSync.ts` | `life_entries`, `life_weeks`, `life_day_focus`, `life_engines` (owner-only; `life_engines` is the monthly Life Engines audit in Life → Month) |
 | `mealDiarySync.ts` | `meal_entries` (owner-only) |
-| `moneySync.ts` | `money_totals` (owner-only: Soldi, monthly totals per GreenBooks category mirrored from `~/life/money/data/monthly-totals.csv` by the import link; written only by `applyMoneyImport`) |
+| `moneySync.ts` | `money_totals` (owner-only: Soldi, monthly totals per GreenBooks category mirrored from `~/life/money/data/monthly-totals.csv` by the import link; written only by `applyMoneyImport`), `money_budgets` (owner-only: budget rules set on /soldi, category + cents per month + from/to month, never overlapping per category; never touched by the import; exported to `~/life/money/data/budgets-dashboard.csv` only via the clipboard and `npm run life:money-budgets`), `money_budget_choices` (owner-only: per `month:category`, GreenBooks or dashboard when the two budgets differ, with both values at pick time so a later change reopens the conflict; logic in `src/projects/money/moneyBudgets.ts`) |
 | `projectPrefsSync.ts` | `project_prefs` (per user: the home grid's `starred`/`hidden`; open counts stay in local-only Dexie `projectStats`) |
 | `projectInvites.ts` | `project_invites`, `shareable_projects` + invite RPCs (not an engine table; per-project invite links) |
 | `transferSync.ts` | transfer files (signed links) |

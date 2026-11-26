@@ -154,6 +154,38 @@ export interface MoneyTotal {
   updatedAt: number
 }
 
+// Soldi (MO8): a budget set from the dashboard, on top of the GreenBooks
+// budgets in moneyTotals. A rule "category, amount per month, from month,
+// optional to month"; rules of one category never overlap (saving one
+// truncates the earlier rule, see moneyBudgets.ts planRuleSave). monthly is
+// positive cents; the page signs it like the category's rows. Owner-only
+// synced table `money_budgets`; the import link never touches it.
+export interface MoneyBudget {
+  id: string
+  category: string
+  monthly: number // cents, > 0
+  from: string // YYYY-MM
+  to: string | null // YYYY-MM inclusive, null = open
+  updatedAt: number
+}
+
+// Soldi (MO8): which budget wins for one (month, category) where GreenBooks and
+// a dashboard rule disagree. gb (signed, like MoneyTotal.budget) and dash
+// (positive, like MoneyBudget.monthly) are the values at pick time: when
+// either current value differs, the pick no longer applies. id is
+// `${month}:${category}`. Owner-only synced table `money_budget_choices`.
+export type MoneyBudgetPick = 'greenbooks' | 'dashboard'
+
+export interface MoneyBudgetChoice {
+  id: string
+  month: string
+  category: string
+  pick: MoneyBudgetPick
+  gb: number // cents, signed
+  dash: number // cents, positive
+  updatedAt: number
+}
+
 export interface MealEntry {
   id: string
   // Local-date string 'YYYY-MM-DD' so an entry belongs to the day the user saw.
@@ -729,6 +761,8 @@ export interface OutboxMap {
   event_interest: EventInterest
   event_interest_profile: EventInterestProfile
   money_totals: MoneyTotal
+  money_budgets: MoneyBudget
+  money_budget_choices: MoneyBudgetChoice
 }
 
 // Remote table names the engine can push to — also the discriminator on an
@@ -864,6 +898,8 @@ export const db = new Dexie('dashboard') as Dexie & {
   eventInterest: EntityTable<EventInterest, 'id'>
   eventInterestProfile: EntityTable<EventInterestProfile, 'id'>
   moneyTotals: EntityTable<MoneyTotal, 'id'>
+  moneyBudgets: EntityTable<MoneyBudget, 'id'>
+  moneyBudgetChoices: EntityTable<MoneyBudgetChoice, 'id'>
 }
 
 /** Pure, in-place row-shape upgrades keyed by Dexie table name: the backfills
@@ -1613,6 +1649,48 @@ db.version(26).stores({
   learningPosition: 'id',
   learningReviews: 'id, courseId',
   moneyTotals: 'id, month',
+})
+
+// v27: moneyBudgets + moneyBudgetChoices, Soldi budgets set from the dashboard and the per-month pick when
+// they disagree with GreenBooks (synced owner-only by moneySync.ts). Brand-new and empty.
+db.version(27).stores({
+  files: 'id, name, createdAt, synced',
+  shopItems: 'id, done, createdAt, areaId',
+  shopAreas: 'id, createdAt',
+  outbox: '++seq, rowId',
+  climbSessions: 'id, date',
+  climbs: 'id, sessionId, date',
+  habits: 'id, createdAt',
+  habitChecks: 'id, habitId, day, [habitId+day]',
+  todos: 'id, done, createdAt',
+  bookIdeas: 'id, createdAt',
+  boardgameIdeas: 'id, createdAt',
+  links: 'id, read, createdAt, *tags',
+  projectStats: 'id, opens',
+  lifeWeeks: 'id, importedAt',
+  lifeEntries: 'id, week, [week+kind]',
+  eventsCache: 'id',
+  eventMarks: 'id, state, updatedAt',
+  eventPrefs: 'id',
+  tripIdeas: 'id, done, createdAt, *companionIds',
+  tripCompanions: 'id, createdAt',
+  customEvents: 'id, start, updatedAt',
+  meals: 'id, day, createdAt',
+  projectPrefs: 'id',
+  eventInterest: 'id, value',
+  eventInterestProfile: 'id',
+  lifeDayFocus: 'id, day',
+  learningQuiz: 'id, courseId, [courseId+moduleId]',
+  learningCards: 'id, courseId, [courseId+moduleId]',
+  learningPractice: 'id, courseId, [courseId+moduleId]',
+  lifeEngines: 'id, month',
+  learningChecks: 'id, courseId, [courseId+moduleId]',
+  learningSketches: 'id, courseId, [courseId+moduleId+itemId], createdAt',
+  learningPosition: 'id',
+  learningReviews: 'id, courseId',
+  moneyTotals: 'id, month',
+  moneyBudgets: 'id, category',
+  moneyBudgetChoices: 'id, month',
 })
 
 // Ask the browser not to evict our data under storage pressure (important on iOS).
