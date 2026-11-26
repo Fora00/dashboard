@@ -2,6 +2,9 @@ import { db, type LinkItem } from './db'
 import { createCloudSync, type TableSync } from './cloudSync'
 import { useSyncStatus } from './useSyncStatus'
 import { displayHost, displayPath } from './idn'
+import { normalizeUrl } from './normalizeUrl'
+
+export { normalizeUrl }
 
 // Local-first sync for the links project, built on the generic engine in
 // cloudSync.ts. Copied from src/lib/todoSync.ts (THE reference integration) —
@@ -58,25 +61,10 @@ const engine = createCloudSync({
 })
 
 // --- URL helpers -------------------------------------------------------
-// Single source of truth for both addLink() and the page's Add-button
-// validation. Never fetches the page for a real title — this must work
+// normalizeUrl (src/lib/normalizeUrl.ts, re-exported above) is the single
+// source of truth for both addLink() and the page's Add-button validation (and
+// the Siti import link). Never fetches the page for a real title — this must work
 // offline, and a cross-origin fetch would be CORS-blocked anyway.
-
-function withScheme(raw: string): string {
-  const trimmed = raw.trim()
-  return /^[a-z][a-z0-9+.-]*:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`
-}
-
-/** Trim, add a default scheme, and validate. Returns null if it's not a usable http(s) URL. */
-export function normalizeUrl(raw: string): string | null {
-  try {
-    const url = new URL(withScheme(raw))
-    if (url.protocol !== 'http:' && url.protocol !== 'https:') return null
-    return url.toString()
-  } catch {
-    return null
-  }
-}
 
 export function defaultTitle(url: string): string {
   const parsed = new URL(url)

@@ -113,6 +113,11 @@
       "icon": "wallet",
       "color": "#0284c7",
       "area": "organizzazione"
+    },
+    "siti": {
+      "icon": "globe",
+      "color": "#10b981",
+      "area": "utility"
     }
   },
   "extras": {

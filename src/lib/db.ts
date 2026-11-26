@@ -213,6 +213,56 @@ export interface MoneyBalance {
   updatedAt: number
 }
 
+// Siti (/siti, SI1): one website the owner publishes. Rows with a `repo` come
+// from GitHub via the import link (npm run sites:link → /siti/import), which
+// refreshes only the GitHub fields; rows without a repo are added by hand.
+// Owner fields (name, notes, pinned, status) are never touched by an import.
+// A repo no longer listed by GitHub is flagged goneFromGithub, never deleted.
+// Owner-only synced table `sites` (src/lib/sitiSync.ts). Timestamps epoch ms.
+export type SiteStatus = 'live' | 'preview' | 'archived'
+export type SitePagesStatus = 'built' | 'errored' | 'building'
+
+export interface Site {
+  id: string
+  /** GitHub `owner/name`, unique when set; null for a site added by hand. */
+  repo: string | null
+  url: string
+  /** Owner's display name; '' = show the repo (or the host for a manual site). */
+  name: string
+  // GitHub fields (import only)
+  description: string
+  private: boolean
+  pushedAt: number | null
+  pagesStatus: SitePagesStatus | null
+  pagesBuiltAt: number | null
+  /** When the script read GitHub for this row; null for a manual site. */
+  fetchedAt: number | null
+  // Owner fields (never touched by an import)
+  notes: string
+  pinned: boolean
+  status: SiteStatus
+  goneFromGithub: boolean
+  createdAt: number
+  updatedAt: number
+}
+
+// Siti (SI3): a change or idea for one site, logged on /siti (the floating +
+// sheet or the site's list; nothing runs on the websites). Child of `sites` (server-side on
+// delete cascade). path is the page within the site, optional ('' = none).
+// Owner-only synced table `site_notes` (src/lib/sitiSync.ts).
+export type SiteNoteKind = 'change' | 'idea'
+
+export interface SiteNote {
+  id: string
+  siteId: string
+  kind: SiteNoteKind
+  text: string
+  path: string
+  done: boolean
+  createdAt: number
+  updatedAt: number
+}
+
 export interface MealEntry {
   id: string
   // Local-date string 'YYYY-MM-DD' so an entry belongs to the day the user saw.
@@ -792,6 +842,8 @@ export interface OutboxMap {
   money_budget_choices: MoneyBudgetChoice
   money_goals: MoneyGoal
   money_balances: MoneyBalance
+  sites: Site
+  site_notes: SiteNote
 }
 
 // Remote table names the engine can push to — also the discriminator on an
@@ -931,6 +983,8 @@ export const db = new Dexie('dashboard') as Dexie & {
   moneyBudgetChoices: EntityTable<MoneyBudgetChoice, 'id'>
   moneyGoals: EntityTable<MoneyGoal, 'id'>
   moneyBalances: EntityTable<MoneyBalance, 'id'>
+  sites: EntityTable<Site, 'id'>
+  siteNotes: EntityTable<SiteNote, 'id'>
 }
 
 /** Pure, in-place row-shape upgrades keyed by Dexie table name: the backfills
@@ -1809,6 +1863,97 @@ db.version(29).stores({
   moneyBudgetChoices: 'id, month',
   moneyGoals: 'id',
   moneyBalances: 'id, month',
+})
+
+// v30: sites, the Siti list of published websites (SI1, synced owner-only by sitiSync.ts).
+// Brand-new and empty.
+db.version(30).stores({
+  files: 'id, name, createdAt, synced',
+  shopItems: 'id, done, createdAt, areaId',
+  shopAreas: 'id, createdAt',
+  outbox: '++seq, rowId',
+  climbSessions: 'id, date',
+  climbs: 'id, sessionId, date',
+  habits: 'id, createdAt',
+  habitChecks: 'id, habitId, day, [habitId+day]',
+  todos: 'id, done, createdAt',
+  bookIdeas: 'id, createdAt',
+  boardgameIdeas: 'id, createdAt',
+  links: 'id, read, createdAt, *tags',
+  projectStats: 'id, opens',
+  lifeWeeks: 'id, importedAt',
+  lifeEntries: 'id, week, [week+kind]',
+  eventsCache: 'id',
+  eventMarks: 'id, state, updatedAt',
+  eventPrefs: 'id',
+  tripIdeas: 'id, done, createdAt, *companionIds',
+  tripCompanions: 'id, createdAt',
+  customEvents: 'id, start, updatedAt',
+  meals: 'id, day, createdAt',
+  projectPrefs: 'id',
+  eventInterest: 'id, value',
+  eventInterestProfile: 'id',
+  lifeDayFocus: 'id, day',
+  learningQuiz: 'id, courseId, [courseId+moduleId]',
+  learningCards: 'id, courseId, [courseId+moduleId]',
+  learningPractice: 'id, courseId, [courseId+moduleId]',
+  lifeEngines: 'id, month',
+  learningChecks: 'id, courseId, [courseId+moduleId]',
+  learningSketches: 'id, courseId, [courseId+moduleId+itemId], createdAt',
+  learningPosition: 'id',
+  learningReviews: 'id, courseId',
+  moneyTotals: 'id, month',
+  moneyBudgets: 'id, category',
+  moneyBudgetChoices: 'id, month',
+  moneyGoals: 'id',
+  moneyBalances: 'id, month',
+  sites: 'id, repo',
+})
+
+// v31: siteNotes, the Siti changes/ideas per site (SI3, synced owner-only by sitiSync.ts).
+// Brand-new and empty.
+db.version(31).stores({
+  files: 'id, name, createdAt, synced',
+  shopItems: 'id, done, createdAt, areaId',
+  shopAreas: 'id, createdAt',
+  outbox: '++seq, rowId',
+  climbSessions: 'id, date',
+  climbs: 'id, sessionId, date',
+  habits: 'id, createdAt',
+  habitChecks: 'id, habitId, day, [habitId+day]',
+  todos: 'id, done, createdAt',
+  bookIdeas: 'id, createdAt',
+  boardgameIdeas: 'id, createdAt',
+  links: 'id, read, createdAt, *tags',
+  projectStats: 'id, opens',
+  lifeWeeks: 'id, importedAt',
+  lifeEntries: 'id, week, [week+kind]',
+  eventsCache: 'id',
+  eventMarks: 'id, state, updatedAt',
+  eventPrefs: 'id',
+  tripIdeas: 'id, done, createdAt, *companionIds',
+  tripCompanions: 'id, createdAt',
+  customEvents: 'id, start, updatedAt',
+  meals: 'id, day, createdAt',
+  projectPrefs: 'id',
+  eventInterest: 'id, value',
+  eventInterestProfile: 'id',
+  lifeDayFocus: 'id, day',
+  learningQuiz: 'id, courseId, [courseId+moduleId]',
+  learningCards: 'id, courseId, [courseId+moduleId]',
+  learningPractice: 'id, courseId, [courseId+moduleId]',
+  lifeEngines: 'id, month',
+  learningChecks: 'id, courseId, [courseId+moduleId]',
+  learningSketches: 'id, courseId, [courseId+moduleId+itemId], createdAt',
+  learningPosition: 'id',
+  learningReviews: 'id, courseId',
+  moneyTotals: 'id, month',
+  moneyBudgets: 'id, category',
+  moneyBudgetChoices: 'id, month',
+  moneyGoals: 'id',
+  moneyBalances: 'id, month',
+  sites: 'id, repo',
+  siteNotes: 'id, siteId, createdAt',
 })
 
 // Ask the browser not to evict our data under storage pressure (important on iOS).

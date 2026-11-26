@@ -91,7 +91,7 @@ describe('db upgrade paths', () => {
       },
     )
     await db.open()
-    expect(db.verno).toBe(29)
+    expect(db.verno).toBe(31)
     expect((await db.shopAreas.get(DEFAULT_AREA_ID))?.name).toBe('Groceries')
     const items = await db.shopItems.orderBy('createdAt').toArray()
     expect(items.map((i) => [i.id, i.text, i.areaId])).toEqual([
@@ -132,7 +132,7 @@ describe('db upgrade paths', () => {
       await old.table('outbox').add({ table: 'links', op: 'upsert', rowId: 'l1', ts: 1 })
     })
     await db.open()
-    expect(db.verno).toBe(29)
+    expect(db.verno).toBe(31)
     expect(await db.eventMarks.count()).toBe(2)
     // Prefs written before v15 get updatedAt 0 ("merge me" on the server).
     expect(await db.eventPrefs.get('prefs')).toEqual({ id: 'prefs', favouriteCategories: ['music'], updatedAt: 0 })
@@ -170,7 +170,7 @@ describe('db upgrade paths', () => {
       await old.table('outbox').add({ table: 'links', op: 'upsert', rowId: 'l1', ts: 1 })
     })
     await db.open()
-    expect(db.verno).toBe(29)
+    expect(db.verno).toBe(31)
     expect(await db.projectPrefs.orderBy('id').toArray()).toEqual([
       { id: 'events', starred: 0, hidden: 1, updatedAt: 0 },
       { id: 'links', starred: 1, hidden: null, updatedAt: 0 },
@@ -218,7 +218,7 @@ describe('db upgrade paths', () => {
       await old.table('outbox').add({ table: 'event_marks', op: 'upsert', rowId: 'e1', ts: 1 })
     })
     await db.open()
-    expect(db.verno).toBe(29)
+    expect(db.verno).toBe(31)
     expect(await db.eventInterest.count()).toBe(0)
     expect(await db.eventMarks.get('e1')).toMatchObject({ state: 'hidden', updatedAt: 5 })
     expect(await db.projectPrefs.get('links')).toEqual({ id: 'links', starred: 1, hidden: null, updatedAt: 3 })
@@ -236,7 +236,7 @@ describe('db upgrade paths', () => {
       await old.table('outbox').add({ table: 'event_interest', op: 'upsert', rowId: 'e1', ts: 1 })
     })
     await db.open()
-    expect(db.verno).toBe(29)
+    expect(db.verno).toBe(31)
     expect(await db.eventInterestProfile.count()).toBe(0)
     expect(await db.eventInterest.get('e1')).toMatchObject({ value: -1, updatedAt: 7 })
     expect(await db.eventMarks.get('e1')).toMatchObject({ state: 'hidden', updatedAt: 7 })
@@ -266,7 +266,7 @@ describe('db upgrade paths', () => {
       await old.table('outbox').add({ table: 'life_day_focus', op: 'upsert', rowId: '2026-10-31:0', ts: 1 })
     })
     await db.open()
-    expect(db.verno).toBe(29)
+    expect(db.verno).toBe(31)
     expect(await db.lifeEngines.count()).toBe(0)
     expect(await db.lifeDayFocus.get('2026-10-31:0')).toMatchObject({ title: 'Engine test' })
     expect(await db.lifeWeeks.count()).toBe(1)
@@ -304,7 +304,7 @@ describe('db upgrade paths', () => {
       await old.table('outbox').add({ table: 'learning_practice', op: 'upsert', rowId: 'disegno:m1:p1', ts: 1 })
     })
     await db.open()
-    expect(db.verno).toBe(29)
+    expect(db.verno).toBe(31)
     expect(await db.learningChecks.count()).toBe(0)
     expect(await db.learningPosition.count()).toBe(0)
     expect(await db.learningReviews.count()).toBe(0) // v25: Ripasso, empty until the first grading
@@ -313,6 +313,8 @@ describe('db upgrade paths', () => {
     expect(await db.moneyBudgetChoices.count()).toBe(0)
     expect(await db.moneyGoals.count()).toBe(0) // v28: Soldi savings goal
     expect(await db.moneyBalances.count()).toBe(0) // v29: Soldi account balances
+    expect(await db.sites.count()).toBe(0) // v30: Siti
+    expect(await db.siteNotes.count()).toBe(0) // v31: Siti changes/ideas
     expect(await db.learningSketches.count()).toBe(0)
     expect(await db.learningPractice.get('disegno:m1:p1')).toMatchObject({ done: 1 })
     expect((await db.outbox.toArray()).map((e) => `${e.table} ${e.rowId}`)).toEqual(['learning_practice disegno:m1:p1'])
@@ -387,7 +389,7 @@ describe('db upgrade paths', () => {
       },
     )
     await db.open()
-    expect(db.verno).toBe(29)
+    expect(db.verno).toBe(31)
     expect(await db.moneyGoals.count()).toBe(0)
     expect(await db.moneyBudgets.get('b1')).toMatchObject({ monthly: 100 })
     expect((await db.outbox.toArray()).map((e) => `${e.table} ${e.rowId}`)).toEqual(['money_budgets b1'])
@@ -415,7 +417,7 @@ describe('db upgrade paths', () => {
       },
     )
     await db.open()
-    expect(db.verno).toBe(29)
+    expect(db.verno).toBe(31)
     expect(await db.moneyBalances.count()).toBe(0)
     expect(await db.moneyGoals.get('2026')).toMatchObject({ rateBp: 2500 })
     expect((await db.outbox.toArray()).map((e) => `${e.table} ${e.rowId}`)).toEqual(['money_goals 2026'])
@@ -428,5 +430,61 @@ describe('db upgrade paths', () => {
       updatedAt: 2,
     })
     expect(await db.moneyBalances.where('month').equals('2026-10').count()).toBe(1)
+  })
+
+  it('v29 → current: an empty sites table appears; balances and outbox kept', async () => {
+    await writeOld(
+      29,
+      {
+        ...V22_STORES,
+        learningChecks: 'id, courseId, [courseId+moduleId]',
+        learningSketches: 'id, courseId, [courseId+moduleId+itemId], createdAt',
+        learningPosition: 'id',
+        learningReviews: 'id, courseId',
+        moneyTotals: 'id, month',
+        moneyBudgets: 'id, category',
+        moneyBudgetChoices: 'id, month',
+        moneyGoals: 'id',
+        moneyBalances: 'id, month',
+      },
+      async (old) => {
+        await old.table('moneyBalances').add({
+          id: '2026-10:Conto test',
+          month: '2026-10',
+          account: 'Conto test',
+          group: 'liquidita',
+          balance: 1,
+          updatedAt: 1,
+        })
+        await old.table('outbox').add({ table: 'money_balances', op: 'upsert', rowId: '2026-10:Conto test', ts: 1 })
+      },
+    )
+    await db.open()
+    expect(db.verno).toBe(31)
+    expect(await db.sites.count()).toBe(0)
+    expect(await db.moneyBalances.count()).toBe(1)
+    expect((await db.outbox.toArray()).map((e) => `${e.table} ${e.rowId}`)).toEqual([
+      'money_balances 2026-10:Conto test',
+    ])
+    await db.sites.put({
+      id: 'site-1',
+      repo: 'example-user/demo',
+      url: 'https://example.org/',
+      name: '',
+      description: '',
+      private: false,
+      pushedAt: null,
+      pagesStatus: null,
+      pagesBuiltAt: null,
+      fetchedAt: null,
+      notes: '',
+      pinned: false,
+      status: 'live',
+      goneFromGithub: false,
+      createdAt: 1,
+      updatedAt: 1,
+    })
+    expect(await db.sites.where('repo').equals('example-user/demo').count()).toBe(1)
+    expect(await db.siteNotes.count()).toBe(0) // v31
   })
 })

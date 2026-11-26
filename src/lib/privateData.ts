@@ -4,7 +4,7 @@ import { db, type OutboxTable } from './db'
 // (local-first: signing out never deletes anything by itself). SyncCard offers
 // to remove it from the device right after a sign-out; it is NEVER run
 // automatically. Keep in sync with the owner-only synced tables (Life incl. Life Engines, Meal
-// Diary, Soldi, Learning progress, the owner's custom events, event marks/prefs, event interests and the interest profile).
+// Diary, Soldi, Siti, Learning progress, the owner's custom events, event marks/prefs, event interests and the interest profile).
 // NOT here on purpose: learningSketches (learningLocal.ts). The photo diary is
 // local-only with no cloud copy, so "remove from this device" would destroy it
 // for good, and it is written signed out too.
@@ -27,6 +27,8 @@ const PRIVATE_TABLES = [
   db.moneyBudgetChoices,
   db.moneyGoals,
   db.moneyBalances,
+  db.sites,
+  db.siteNotes,
   db.customEvents,
   db.eventMarks,
   db.eventPrefs,
@@ -52,6 +54,8 @@ const PRIVATE_REMOTES = new Set<OutboxTable>([
   'money_budget_choices',
   'money_goals',
   'money_balances',
+  'sites',
+  'site_notes',
   'custom_events',
   'event_marks',
   'event_prefs',
@@ -61,7 +65,7 @@ const PRIVATE_REMOTES = new Set<OutboxTable>([
 
 /** What the private-data texts (Settings, SyncCard) call it: one place, next
  *  to the table list above, so a new area is not forgotten in the copy. */
-export const PRIVATE_DATA_LABEL = 'Life, Learning, Meal Diary, Soldi and your events'
+export const PRIVATE_DATA_LABEL = 'Life, Learning, Meal Diary, Soldi, Siti and your events'
 
 /** Confirm text for "remove private data from this device" (Settings + SyncCard). */
 export function removePrivateDataConfirm(unsynced: number): { title: string; body: string } {

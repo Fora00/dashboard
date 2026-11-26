@@ -1131,6 +1131,104 @@ export type Database = {
           },
         ]
       }
+      site_notes: {
+        Row: {
+          created_at: number
+          done: boolean
+          id: string
+          kind: string
+          path: string
+          site_id: string
+          text: string
+          updated_at: number
+        }
+        Insert: {
+          created_at: number
+          done?: boolean
+          id: string
+          kind: string
+          path?: string
+          site_id: string
+          text: string
+          updated_at: number
+        }
+        Update: {
+          created_at?: number
+          done?: boolean
+          id?: string
+          kind?: string
+          path?: string
+          site_id?: string
+          text?: string
+          updated_at?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "site_notes_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "sites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sites: {
+        Row: {
+          created_at: number
+          description: string
+          fetched_at: number | null
+          gone_from_github: boolean
+          id: string
+          name: string
+          notes: string
+          pages_built_at: number | null
+          pages_status: string | null
+          pinned: boolean
+          private: boolean
+          pushed_at: number | null
+          repo: string | null
+          status: string
+          updated_at: number
+          url: string
+        }
+        Insert: {
+          created_at: number
+          description?: string
+          fetched_at?: number | null
+          gone_from_github?: boolean
+          id: string
+          name?: string
+          notes?: string
+          pages_built_at?: number | null
+          pages_status?: string | null
+          pinned?: boolean
+          private?: boolean
+          pushed_at?: number | null
+          repo?: string | null
+          status?: string
+          updated_at: number
+          url: string
+        }
+        Update: {
+          created_at?: number
+          description?: string
+          fetched_at?: number | null
+          gone_from_github?: boolean
+          id?: string
+          name?: string
+          notes?: string
+          pages_built_at?: number | null
+          pages_status?: string | null
+          pinned?: boolean
+          private?: boolean
+          pushed_at?: number | null
+          repo?: string | null
+          status?: string
+          updated_at?: number
+          url?: string
+        }
+        Relationships: []
+      }
       todos: {
         Row: {
           created_at: number

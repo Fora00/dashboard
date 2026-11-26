@@ -1,6 +1,6 @@
 // Icon data for the project registry.
 //
-// These 18 icons are copied from Lucide (https://lucide.dev), licensed under
+// These 19 icons are copied from Lucide (https://lucide.dev), licensed under
 // the ISC licence: https://github.com/lucide-icons/lucide/blob/main/LICENSE
 // (Copyright (c) Lucide Contributors; portions Copyright (c) 2013-2022 Cole
 // Bemis, MIT/Feather). All are 24x24, stroke currentColor, stroke width 2.
@@ -12,6 +12,11 @@
 export type IconElement = readonly [tag: 'path' | 'circle' | 'line' | 'rect', attrs: Record<string, string>]
 
 export const projectIcons: Record<string, readonly IconElement[]> = {
+  globe: [
+    ['circle', { cx: '12', cy: '12', r: '10' }],
+    ['path', { d: 'M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20' }],
+    ['path', { d: 'M2 12h20' }],
+  ],
   wrench: [
     [
       'path',

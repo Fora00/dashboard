@@ -14,6 +14,7 @@ import { startLifeSync } from './lib/lifeSync'
 import { startLinksSync } from './lib/linksSync'
 import { startMealDiarySync } from './lib/mealDiarySync'
 import { startMoneySync } from './lib/moneySync'
+import { startSitiSync } from './lib/sitiSync'
 import { startProjectPrefsSync } from './lib/projectPrefsSync'
 import { startShopSync } from './lib/shopSync'
 import { startTripsSync } from './lib/tripsSync'
@@ -48,6 +49,8 @@ const MoneyImport = page(() => import('./projects/money/MoneyImport'), 'MoneyImp
 const MoneyCategoryPage = page(() => import('./projects/money/MoneyCategoryPage'), 'MoneyCategoryPage')
 const MoneyBalances = page(() => import('./projects/money/MoneyBalances'), 'MoneyBalances')
 const MoneyBalancesImport = page(() => import('./projects/money/MoneyBalancesImport'), 'MoneyBalancesImport')
+const Siti = page(() => import('./projects/siti/Siti'), 'Siti')
+const SitiImport = page(() => import('./projects/siti/SitiImport'), 'SitiImport')
 const Links = page(() => import('./projects/links/Links'), 'Links')
 const Strumenti = page(() => import('./projects/strumenti/Strumenti'), 'Strumenti')
 const Zine = page(() => import('./projects/zine/Zine'), 'Zine')
@@ -82,6 +85,7 @@ export default function App() {
       startLearningSync(),
       startMealDiarySync(),
       startMoneySync(),
+      startSitiSync(),
       startTripsSync(),
       startCustomEventsSync(),
       startEventMarksSync(),
@@ -127,6 +131,8 @@ export default function App() {
           <Route path="/soldi/categoria/:name" element={<MoneyCategoryPage />} />
           <Route path="/soldi/patrimonio" element={<MoneyBalances />} />
           <Route path="/soldi/patrimonio/import" element={<MoneyBalancesImport />} />
+          <Route path="/siti" element={<Siti />} />
+          <Route path="/siti/import" element={<SitiImport />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/sharing" element={<Sharing />} />
           <Route path="/join/:token" element={<JoinArea />} />

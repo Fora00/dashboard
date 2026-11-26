@@ -25,6 +25,7 @@
     "life:oggi-link": "node --disable-warning=ExperimentalWarning scripts/life-oggi-link.ts",
     "life:things-lists": "node --disable-warning=ExperimentalWarning scripts/life-things-lists.ts",
     "life:things-status": "node --disable-warning=ExperimentalWarning scripts/life-things-status.ts",
+    "sites:link": "node --disable-warning=ExperimentalWarning scripts/sites-link.ts",
     "db:types": "node scripts/db-types.mjs",
     "e2e": "playwright test"
   },
