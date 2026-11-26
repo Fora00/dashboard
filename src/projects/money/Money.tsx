@@ -10,7 +10,7 @@ import {
 } from 'react'
 import { Link } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { db, type MoneyBudget, type MoneyBudgetChoice } from '../../lib/db'
+import { db, type MoneyBudget, type MoneyBudgetChoice, type MoneyGoal } from '../../lib/db'
 import { sync } from '../../lib/moneySync'
 import { Card } from '../../components/Card'
 import { EmptyState } from '../../components/EmptyState'
@@ -23,10 +23,15 @@ import { SELECT } from '../../components/field'
 import { Button } from '../../components/Button'
 import { TEXTAREA } from '../../components/field'
 import { MoneyBudgetSheet } from './MoneyBudgetSheet'
+import { MoneyGoalSheet } from './MoneyGoalSheet'
+import { goalFor, goalProgress, pctText, type YearGoal } from './moneyGoals'
 import { MoneyCategories } from './MoneyCategories'
 import { applyBudgets, budgetsCsv, type BudgetConflict, type BudgetedLine } from './moneyBudgets'
 import { MoneyMonthChart, type ChartCompare } from './MoneyMonthChart'
 import { MoneyTrends } from './MoneyTrendView'
+import { ProjectionCard } from './ProjectionCard'
+import { BudgetAlertsNote } from './BudgetAlertsNote'
+import { forecastBudget, forecastLabel, projectYear } from './moneyProjection'
 import {
   LAST_OPTIONS,
   addMonths,
@@ -77,11 +82,21 @@ export function Money() {
   const lines = useLiveQuery(() => db.moneyTotals.toArray())
   const rules = useLiveQuery(() => db.moneyBudgets.toArray())
   const choices = useLiveQuery(() => db.moneyBudgetChoices.toArray())
+  const goals = useLiveQuery(() => db.moneyGoals.toArray())
   return (
     <div>
       <PageHeader emoji="💶" title="Soldi" subtitle="Entrate, uscite e messo da parte, da GreenBooks." />
       <SyncCard sync={sync} />
-      {lines === undefined || rules === undefined || choices === undefined ? null : lines.length === 0 ? (
+      <Link
+        to="/soldi/patrimonio"
+        className="mt-3 inline-flex min-h-10 items-center text-sm font-medium text-slate-600 underline underline-offset-2 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100"
+      >
+        Patrimonio: saldi dei conti →
+      </Link>
+      {lines === undefined ||
+      rules === undefined ||
+      choices === undefined ||
+      goals === undefined ? null : lines.length === 0 ? (
         <div className="mt-6">
           <EmptyState
             emoji="💶"
@@ -90,11 +105,14 @@ export function Money() {
           />
         </div>
       ) : (
-        <MoneyBody lines={lines} rules={rules} choices={choices} />
+        <MoneyBody lines={lines} rules={rules} choices={choices} goals={goals} />
       )}
     </div>
   )
 }
+
+/** Window of the projection on Grafici (Andamento uses its own selector). */
+const PROJECTION_WINDOW = 3
 
 const PERIOD_MODES: { id: PeriodMode; label: string }[] = [
   { id: 'year', label: 'Anno' },
@@ -111,8 +129,8 @@ const COMPARE_MODES: { id: CompareMode; label: string }[] = [
   { id: 'none', label: 'nessuno' },
 ]
 
-function MoneyBody(props: { lines: Line[]; rules: MoneyBudget[]; choices: MoneyBudgetChoice[] }) {
-  const { lines: allLines, rules, choices } = props
+function MoneyBody(props: { lines: Line[]; rules: MoneyBudget[]; choices: MoneyBudgetChoice[]; goals: MoneyGoal[] }) {
+  const { lines: allLines, rules, choices, goals } = props
   const cur = currentMonth()
   const hasCurrent = allLines.some((l) => l.month === cur)
   const [excludeCurrent, setExclude] = useState(false)
@@ -145,6 +163,7 @@ function MoneyBody(props: { lines: Line[]; rules: MoneyBudget[]; choices: MoneyB
       lines={lines}
       raw={raw}
       rules={rules}
+      goals={goals}
       conflicts={applied.conflicts}
       months={months}
       sel={sel}
@@ -170,6 +189,7 @@ function MoneyView(props: {
   lines: BudgetedLine[]
   raw: Line[]
   rules: MoneyBudget[]
+  goals: MoneyGoal[]
   conflicts: Map<string, BudgetConflict[]>
   months: string[]
   sel: Selection
@@ -178,8 +198,9 @@ function MoneyView(props: {
   setView: (v: View) => void
   toggle: ReactNode
 }) {
-  const { lines, raw, rules, conflicts, months, sel, set, view, setView, toggle } = props
+  const { lines, raw, rules, goals, conflicts, months, sel, set, view, setView, toggle } = props
   const [editing, setEditing] = useState<string | null>(null)
+  const [goalOpen, setGoalOpen] = useState<number | null>(null)
   const period = useMemo(() => resolvePeriod(sel, months), [sel, months])
   const cmp = useMemo(() => {
     const c = resolveComparison(sel, period, lines)
@@ -226,9 +247,28 @@ function MoneyView(props: {
   const short = shortLabel(period)
   const multiYear = period.from.slice(0, 4) !== period.to.slice(0, 4)
   const cLabel = c?.short ?? null
+  // MO11: the current year to date gets a year-end projection and per-category budget forecasts.
+  const newest = months[months.length - 1]!
+  const ytd = sel.mode === 'year' && period.from.endsWith('-01') && period.to === newest && !newest.endsWith('-12')
+  const year = Number(newest.slice(0, 4))
+  const projection = useMemo(() => (ytd ? projectYear(lines, year, PROJECTION_WINDOW) : null), [ytd, lines, year])
+  const forecasts = useMemo(() => {
+    const m = new Map<string, string>()
+    if (!ytd) return m
+    for (const r of rows.spend) {
+      const f = forecastBudget(lines, r.category, year, PROJECTION_WINDOW)
+      if (f) m.set(r.category, forecastLabel(f, euro))
+    }
+    return m
+  }, [ytd, rows.spend, lines, year])
+  // MO13: the savings goal shows when the period is a year (whole or to date).
+  const goalYear = sel.mode === 'year' ? Number(period.from.slice(0, 4)) : null
+  const goal = goalYear === null ? null : goalFor(goals, goalYear)
+  const projectionGoal = goalFor(goals, year)
 
   return (
     <div className="mt-6 space-y-6">
+      <BudgetAlertsNote link={false} />
       <div className="flex flex-wrap items-center gap-3">
         {toggle}
         <div className="ml-auto w-full sm:w-96">
@@ -246,7 +286,7 @@ function MoneyView(props: {
         </div>
       </div>
       {view === 'trend' ? (
-        <MoneyTrends lines={lines} months={months} />
+        <MoneyTrends lines={lines} months={months} goals={goals} />
       ) : (
         <>
           <Controls sel={sel} set={set} months={months} period={period} />
@@ -266,7 +306,20 @@ function MoneyView(props: {
                 Il confronto ha dati solo per {c.covered} {c.covered === 1 ? 'mese' : 'mesi'} su {c.length}.
               </p>
             )}
-            <Tiles t={t} ct={ct} compareLabel={cLabel} />
+            <Tiles t={t} ct={ct} compareLabel={cLabel} goal={goal} />
+            {goalYear !== null && (
+              <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
+                <Button variant="ghost" onClick={() => setGoalOpen(goalYear)}>
+                  {goal ? `Obiettivo ${goalYear}` : `Imposta obiettivo ${goalYear}`}
+                </Button>
+                {goal?.inherited && (
+                  <span className="text-xs text-slate-500 dark:text-slate-400">ereditato dal {goal.fromYear}</span>
+                )}
+              </div>
+            )}
+            {projection && projection.remaining > 0 && (
+              <ProjectionCard p={projection} window={PROJECTION_WINDOW} compact goal={projectionGoal} />
+            )}
           </section>
 
           {view === 'charts' ? (
@@ -287,6 +340,7 @@ function MoneyView(props: {
                     empty="Nessuna uscita nel periodo."
                     flags={flags}
                     onOpen={setEditing}
+                    notes={forecasts}
                   />
                 </Card>
               </section>
@@ -314,6 +368,7 @@ function MoneyView(props: {
               rows={rows}
               multiYear={multiYear}
               flags={flags}
+              onOpen={setEditing}
             />
           )}
 
@@ -327,6 +382,7 @@ function MoneyView(props: {
             conflicts={editing === null ? [] : inPeriod(editing)}
             months={months}
           />
+          <MoneyGoalSheet year={goalOpen} onClose={() => setGoalOpen(null)} goals={goals} />
         </>
       )}
 
@@ -527,7 +583,17 @@ function vs(now: number, before: number | undefined, compareLabel: string | null
   return `${compareLabel}: ${euro(before)}${p ? ` (${p})` : ''}`
 }
 
-function Tiles({ t, ct, compareLabel }: { t: Totals; ct: Totals | null; compareLabel: string | null }) {
+function Tiles({
+  t,
+  ct,
+  compareLabel,
+  goal,
+}: {
+  t: Totals
+  ct: Totals | null
+  compareLabel: string | null
+  goal: YearGoal | null
+}) {
   const kept = keptOf(t)
   const rate = t.income > 0 ? Math.round((kept / t.income) * 100) : null
   return (
@@ -538,9 +604,37 @@ function Tiles({ t, ct, compareLabel }: { t: Totals; ct: Totals | null; compareL
         label={`messo da parte${rate !== null ? ` · ${rate}%` : ''}`}
         value={euro(kept)}
         sub={vs(kept, ct ? keptOf(ct) : undefined, compareLabel)}
-      />
+      >
+        {goal && <GoalBar t={t} goal={goal} />}
+      </Stat>
       <Stat label="uscite senza una tantum" value={euro(t.spend)} sub={vs(t.spend, ct?.spend, compareLabel)} />
       <Stat label="una tantum" value={euro(t.oneoff)} sub={vs(t.oneoff, ct?.oneoff, compareLabel)} />
+    </div>
+  )
+}
+
+/**
+ * MO13, under "messo da parte": the goal as text (▲ reached / ▼ still missing,
+ * so colour is never the only signal) and a thin bar of kept against target.
+ */
+function GoalBar({ t, goal }: { t: Totals; goal: YearGoal }) {
+  const g = goalProgress(t, goal.rateBp)
+  const share = g.target > 0 ? Math.max(0, Math.min(1, g.kept / g.target)) : g.reached ? 1 : 0
+  return (
+    <div className="mt-1" data-testid="money-goal-tile">
+      <div className="text-[10px] text-slate-600 dark:text-slate-300">
+        obiettivo {pctText(goal.rateBp)}
+        {goal.inherited ? ` (dal ${goal.fromYear})` : ''} · {g.reached ? '▲ raggiunto' : `▼ mancano ${euro(g.gap)}`}
+      </div>
+      <div
+        className="mx-auto mt-1 h-1 w-4/5 overflow-hidden rounded-full bg-slate-300 dark:bg-slate-600"
+        aria-hidden="true"
+      >
+        <div
+          className={`h-full rounded-full ${g.reached ? 'bg-sky-600 dark:bg-sky-400' : 'bg-slate-500 dark:bg-slate-300'}`}
+          style={{ width: `${Math.round(share * 100)}%` }}
+        />
+      </div>
     </div>
   )
 }
@@ -589,8 +683,10 @@ function Tables(props: {
   rows: Record<'spend' | 'oneoff' | 'income', CategoryRow[]>
   multiYear: boolean
   flags: ReadonlyMap<string, { dashboard: boolean; conflict: boolean }>
+  /** Opens the budget sheet for a spend or one-off category. */
+  onOpen: (category: string) => void
 }) {
-  const { label, compareLabel, months, values, compare, rows, multiYear, flags } = props
+  const { label, compareLabel, months, values, compare, rows, multiYear, flags, onOpen } = props
   const cell = (t: Totals | null, f: (x: Totals) => number) => (t ? euro(f(t)) : '—')
   const cmpAt = (i: number) => (compare ? ((compare.flat ? compare.values[0] : compare.values[i]) ?? null) : null)
   const kinds: [string, CategoryRow[]][] = [
@@ -656,7 +752,20 @@ function Tables(props: {
                     key={`${kind}:${r.category}`}
                     className="border-b border-slate-100 last:border-0 dark:border-slate-800"
                   >
-                    <td className="px-2 py-1.5">{r.category}</td>
+                    <td className="px-2 py-1.5">
+                      {kind === 'entrata' ? (
+                        r.category
+                      ) : (
+                        <button
+                          type="button"
+                          className="-my-1.5 min-h-10 text-left underline decoration-slate-300 underline-offset-2 dark:decoration-slate-600"
+                          onClick={() => onOpen(r.category)}
+                          aria-label={`Budget di ${r.category}`}
+                        >
+                          {r.category}
+                        </button>
+                      )}
+                    </td>
                     <td className="px-2 py-1.5 text-slate-500 dark:text-slate-400">{kind}</td>
                     <td className={TD}>{euro(r.value)}</td>
                     <td className={TD}>

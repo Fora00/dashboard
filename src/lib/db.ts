@@ -186,6 +186,33 @@ export interface MoneyBudgetChoice {
   updatedAt: number
 }
 
+// Soldi (MO13): the savings goal of one year, as a rate of income kept
+// ("messo da parte" / entrate) in basis points (3000 = 30%). id is the year
+// 'YYYY'. A year without a row inherits the latest earlier year's goal
+// (moneyGoals.ts goalFor). Owner-only synced table `money_goals`.
+export interface MoneyGoal {
+  id: string // YYYY
+  rateBp: number // 0..10000
+  updatedAt: number
+}
+
+// Soldi (MO17, /soldi/patrimonio): one GreenBooks account's balance at the end
+// of one month, mirrored from ~/life/money/data/account-balances.csv by the
+// import link (life:money-balances-link). The CSV is the source of truth; the
+// app never edits a row by hand. id is `${month}:${account}`. balance is signed
+// integer cents; for investments it is what went in, not the market value.
+// Owner-only synced table `money_balances` (src/lib/moneySync.ts).
+export type BalanceGroup = 'liquidita' | 'risparmi' | 'investimenti'
+
+export interface MoneyBalance {
+  id: string
+  month: string // YYYY-MM
+  account: string
+  group: BalanceGroup
+  balance: number // cents, signed
+  updatedAt: number
+}
+
 export interface MealEntry {
   id: string
   // Local-date string 'YYYY-MM-DD' so an entry belongs to the day the user saw.
@@ -763,6 +790,8 @@ export interface OutboxMap {
   money_totals: MoneyTotal
   money_budgets: MoneyBudget
   money_budget_choices: MoneyBudgetChoice
+  money_goals: MoneyGoal
+  money_balances: MoneyBalance
 }
 
 // Remote table names the engine can push to — also the discriminator on an
@@ -900,6 +929,8 @@ export const db = new Dexie('dashboard') as Dexie & {
   moneyTotals: EntityTable<MoneyTotal, 'id'>
   moneyBudgets: EntityTable<MoneyBudget, 'id'>
   moneyBudgetChoices: EntityTable<MoneyBudgetChoice, 'id'>
+  moneyGoals: EntityTable<MoneyGoal, 'id'>
+  moneyBalances: EntityTable<MoneyBalance, 'id'>
 }
 
 /** Pure, in-place row-shape upgrades keyed by Dexie table name: the backfills
@@ -1691,6 +1722,93 @@ db.version(27).stores({
   moneyTotals: 'id, month',
   moneyBudgets: 'id, category',
   moneyBudgetChoices: 'id, month',
+})
+
+// v28: moneyGoals, the Soldi yearly savings goal as a rate of income (synced owner-only by moneySync.ts).
+// Brand-new and empty.
+db.version(28).stores({
+  files: 'id, name, createdAt, synced',
+  shopItems: 'id, done, createdAt, areaId',
+  shopAreas: 'id, createdAt',
+  outbox: '++seq, rowId',
+  climbSessions: 'id, date',
+  climbs: 'id, sessionId, date',
+  habits: 'id, createdAt',
+  habitChecks: 'id, habitId, day, [habitId+day]',
+  todos: 'id, done, createdAt',
+  bookIdeas: 'id, createdAt',
+  boardgameIdeas: 'id, createdAt',
+  links: 'id, read, createdAt, *tags',
+  projectStats: 'id, opens',
+  lifeWeeks: 'id, importedAt',
+  lifeEntries: 'id, week, [week+kind]',
+  eventsCache: 'id',
+  eventMarks: 'id, state, updatedAt',
+  eventPrefs: 'id',
+  tripIdeas: 'id, done, createdAt, *companionIds',
+  tripCompanions: 'id, createdAt',
+  customEvents: 'id, start, updatedAt',
+  meals: 'id, day, createdAt',
+  projectPrefs: 'id',
+  eventInterest: 'id, value',
+  eventInterestProfile: 'id',
+  lifeDayFocus: 'id, day',
+  learningQuiz: 'id, courseId, [courseId+moduleId]',
+  learningCards: 'id, courseId, [courseId+moduleId]',
+  learningPractice: 'id, courseId, [courseId+moduleId]',
+  lifeEngines: 'id, month',
+  learningChecks: 'id, courseId, [courseId+moduleId]',
+  learningSketches: 'id, courseId, [courseId+moduleId+itemId], createdAt',
+  learningPosition: 'id',
+  learningReviews: 'id, courseId',
+  moneyTotals: 'id, month',
+  moneyBudgets: 'id, category',
+  moneyBudgetChoices: 'id, month',
+  moneyGoals: 'id',
+})
+
+// v29: moneyBalances, the Soldi month-end balances per GreenBooks account (MO17, synced owner-only by
+// moneySync.ts). Brand-new and empty.
+db.version(29).stores({
+  files: 'id, name, createdAt, synced',
+  shopItems: 'id, done, createdAt, areaId',
+  shopAreas: 'id, createdAt',
+  outbox: '++seq, rowId',
+  climbSessions: 'id, date',
+  climbs: 'id, sessionId, date',
+  habits: 'id, createdAt',
+  habitChecks: 'id, habitId, day, [habitId+day]',
+  todos: 'id, done, createdAt',
+  bookIdeas: 'id, createdAt',
+  boardgameIdeas: 'id, createdAt',
+  links: 'id, read, createdAt, *tags',
+  projectStats: 'id, opens',
+  lifeWeeks: 'id, importedAt',
+  lifeEntries: 'id, week, [week+kind]',
+  eventsCache: 'id',
+  eventMarks: 'id, state, updatedAt',
+  eventPrefs: 'id',
+  tripIdeas: 'id, done, createdAt, *companionIds',
+  tripCompanions: 'id, createdAt',
+  customEvents: 'id, start, updatedAt',
+  meals: 'id, day, createdAt',
+  projectPrefs: 'id',
+  eventInterest: 'id, value',
+  eventInterestProfile: 'id',
+  lifeDayFocus: 'id, day',
+  learningQuiz: 'id, courseId, [courseId+moduleId]',
+  learningCards: 'id, courseId, [courseId+moduleId]',
+  learningPractice: 'id, courseId, [courseId+moduleId]',
+  lifeEngines: 'id, month',
+  learningChecks: 'id, courseId, [courseId+moduleId]',
+  learningSketches: 'id, courseId, [courseId+moduleId+itemId], createdAt',
+  learningPosition: 'id',
+  learningReviews: 'id, courseId',
+  moneyTotals: 'id, month',
+  moneyBudgets: 'id, category',
+  moneyBudgetChoices: 'id, month',
+  moneyGoals: 'id',
+  moneyBalances: 'id, month',
 })
 
 // Ask the browser not to evict our data under storage pressure (important on iOS).

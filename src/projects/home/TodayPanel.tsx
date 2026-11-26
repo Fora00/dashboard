@@ -10,6 +10,8 @@ import { useOwner } from '../../lib/useOwner'
 import { parseDayKey, weekKey } from '../life/model'
 import { useToday } from '../../lib/useToday'
 import { useHabitWeekRows } from '../life/week/useHabitWeekRows'
+import { useBudgetAlerts } from '../money/useBudgetAlerts'
+import { euro } from '../money/moneyStats'
 import { ProjectIcon } from '../../components/ProjectIcon'
 import { FOCUS_RING_INSET } from '../../components/focus'
 
@@ -108,11 +110,14 @@ export function TodayPanel({ visibleIds }: { visibleIds: ReadonlySet<string> }) 
     return nextEvents(cache.file.events, now, 3).map((e) => ({ id: e.id, title: e.title, when: eventWhen(e, now) }))
   }, [today])
   const pending = useLiveQuery(() => db.outbox.count())
+  const alerts = useBudgetAlerts()
 
   const showHabits = visibleIds.has('habits') && habits !== undefined && habits.total > 0
   const showTodos = visibleIds.has('todo') && openTodos !== undefined && openTodos > 0
   const showEvents = visibleIds.has('events') && events !== undefined && events.length > 0
   const showLife = owner === true && visibleIds.has('life')
+  // MO12: owner only, like the Soldi project itself.
+  const showMoney = owner === true && visibleIds.has('money') && alerts !== undefined && alerts.length > 0
   const showSync = session !== null && session !== undefined && pending !== undefined && pending > 0
 
   const toggle = (
@@ -128,7 +133,7 @@ export function TodayPanel({ visibleIds }: { visibleIds: ReadonlySet<string> }) 
 
   if (!shown) return <div className="mb-4 flex justify-end">{toggle}</div>
   // Nothing to show at all: no empty frame, just the toggle-free page.
-  if (!showHabits && !showTodos && !showEvents && !showLife && !showSync) return null
+  if (!showHabits && !showTodos && !showEvents && !showLife && !showMoney && !showSync) return null
 
   return (
     <section aria-labelledby="home-today" className="mb-6">
@@ -167,6 +172,25 @@ export function TodayPanel({ visibleIds }: { visibleIds: ReadonlySet<string> }) 
           </TodayCard>
         )}
         {showLife && <LifeCard project={byId('life')} today={today} />}
+        {showMoney && alerts && (
+          <TodayCard project={byId('money')} title="Budget del mese" to="/soldi" wide>
+            <span className="block space-y-0.5" data-testid="home-money-alerts">
+              {alerts.slice(0, 2).map((a) => (
+                <span key={a.category} className="flex items-baseline gap-2">
+                  <span className="shrink-0 text-xs text-slate-500 dark:text-slate-400">
+                    {a.state === 'over' ? '▲ sopra' : '⏩ veloce'}
+                  </span>
+                  <span className="truncate">
+                    {a.category} {euro(a.spent)}/{euro(a.budget)}
+                  </span>
+                </span>
+              ))}
+              {alerts.length > 2 && (
+                <span className="block text-xs text-slate-500 dark:text-slate-400">+{alerts.length - 2} altre</span>
+              )}
+            </span>
+          </TodayCard>
+        )}
         {showSync && (
           <TodayCard title="Sync" to="/settings">
             <Big>{pending}</Big> <span className="text-slate-500 dark:text-slate-400">pending</span>

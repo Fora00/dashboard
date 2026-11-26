@@ -45,6 +45,9 @@ const LifeImport = page(() => import('./projects/life/LifeImport'), 'LifeImport'
 const Learning = page(() => import('./projects/learning/Learning'), 'Learning')
 const Money = page(() => import('./projects/money/Money'), 'Money')
 const MoneyImport = page(() => import('./projects/money/MoneyImport'), 'MoneyImport')
+const MoneyCategoryPage = page(() => import('./projects/money/MoneyCategoryPage'), 'MoneyCategoryPage')
+const MoneyBalances = page(() => import('./projects/money/MoneyBalances'), 'MoneyBalances')
+const MoneyBalancesImport = page(() => import('./projects/money/MoneyBalancesImport'), 'MoneyBalancesImport')
 const Links = page(() => import('./projects/links/Links'), 'Links')
 const Strumenti = page(() => import('./projects/strumenti/Strumenti'), 'Strumenti')
 const Zine = page(() => import('./projects/zine/Zine'), 'Zine')
@@ -121,6 +124,9 @@ export default function App() {
           <Route path="/life/edit" element={<LifeEditor />} />
           <Route path="/soldi" element={<Money />} />
           <Route path="/soldi/import" element={<MoneyImport />} />
+          <Route path="/soldi/categoria/:name" element={<MoneyCategoryPage />} />
+          <Route path="/soldi/patrimonio" element={<MoneyBalances />} />
+          <Route path="/soldi/patrimonio/import" element={<MoneyBalancesImport />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/sharing" element={<Sharing />} />
           <Route path="/join/:token" element={<JoinArea />} />

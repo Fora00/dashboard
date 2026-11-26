@@ -1,7 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { db, resetDb } from '../test/fakeDb'
 import { drain } from '../test/drain'
-import { applyMoneyImport, pickMoneyBudget, removeMoneyBudget, saveMoneyBudget } from './moneySync'
+import {
+  applyMoneyImport,
+  clearMoneyGoal,
+  pickMoneyBudget,
+  removeMoneyBudget,
+  saveMoneyBudget,
+  setMoneyGoal,
+} from './moneySync'
 
 // Soldi import writer: local-first (Dexie + outbox, no session needed). Invented figures.
 
@@ -75,5 +82,26 @@ describe('dashboard budgets (MO8), offline and signed out', () => {
     expect(await db.moneyBudgetChoices.get('2026-12:Food')).toMatchObject({ pick: 'greenbooks' })
     await removeMoneyBudget(second.id)
     expect(await db.moneyBudgets.get(second.id)).toBeUndefined()
+  })
+})
+
+describe('savings goal (MO13), offline and signed out', () => {
+  it('sets, replaces and clears a year goal, each queued for sync', async () => {
+    await setMoneyGoal(2026, 3000)
+    expect(await db.moneyGoals.get('2026')).toMatchObject({ rateBp: 3000 })
+    await setMoneyGoal(2026, 2500)
+    expect(await db.moneyGoals.get('2026')).toMatchObject({ rateBp: 2500 })
+    await clearMoneyGoal(2026)
+    expect(await db.moneyGoals.get('2026')).toBeUndefined()
+    const queued = (await db.outbox.toArray()).filter((o) => o.table === 'money_goals').map((o) => `${o.op} ${o.rowId}`)
+    expect(queued.at(-1)).toBe('delete 2026')
+    expect(queued.every((q) => q.endsWith(' 2026'))).toBe(true)
+  })
+
+  it('refuses a rate out of range or a bad year, writing nothing', async () => {
+    await expect(setMoneyGoal(2026, 10001)).rejects.toThrow()
+    await expect(setMoneyGoal(2026, 12.5)).rejects.toThrow()
+    await expect(setMoneyGoal(26, 3000)).rejects.toThrow()
+    expect(await db.moneyGoals.count()).toBe(0)
   })
 })

@@ -16,6 +16,7 @@ import { MonthView } from './week/MonthView'
 import { LastWeekCard } from './week/LastWeekCard'
 import { PastWeek } from './week/PastWeek'
 import { DayFocusSection } from './week/DayFocusSection'
+import { BudgetAlertsNote } from '../money/BudgetAlertsNote'
 import { WeekBody } from './week/WeekBody'
 
 // Week screen for the Life project (spec: docs/HANDOFF-life.md). Local-first:
@@ -113,6 +114,7 @@ export function Life() {
         {header}
         {lastWeek}
         <DayFocusSection day={today} />
+        <BudgetAlertsNote />
         <EmptyState
           emoji="🧭"
           title="No plan for this week"

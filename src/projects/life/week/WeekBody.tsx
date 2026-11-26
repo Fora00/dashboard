@@ -15,6 +15,7 @@ import { CheckinRow } from './CheckinRow'
 import { CollapsibleSection } from '../../../components/CollapsibleSection'
 import { ExportSection } from './ExportSection'
 import { DayFocusSection } from './DayFocusSection'
+import { BudgetAlertsNote } from '../../money/BudgetAlertsNote'
 import { PlaybookSection } from './PlaybookSection'
 import { FocusSection } from './FocusSection'
 import { FoodSection } from './FoodSection'
@@ -150,6 +151,7 @@ export function WeekBody({ week, plan, entries, readOnly, lateEdit = false, dayF
     blocks.oggi = (
       <>
         <DayFocusSection day={dayFocusDay} />
+        <BudgetAlertsNote />
         {/* Chores hidden for now: kept only as a reference in Things. */}
       </>
     )

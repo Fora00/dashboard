@@ -811,6 +811,33 @@ export type Database = {
         }
         Relationships: []
       }
+      money_balances: {
+        Row: {
+          account: string
+          balance_cents: number
+          grp: string
+          id: string
+          month: string
+          updated_at: number
+        }
+        Insert: {
+          account: string
+          balance_cents: number
+          grp: string
+          id: string
+          month: string
+          updated_at: number
+        }
+        Update: {
+          account?: string
+          balance_cents?: number
+          grp?: string
+          id?: string
+          month?: string
+          updated_at?: number
+        }
+        Relationships: []
+      }
       money_budget_choices: {
         Row: {
           category: string
@@ -864,6 +891,24 @@ export type Database = {
           id?: string
           monthly_cents?: number
           to_month?: string | null
+          updated_at?: number
+        }
+        Relationships: []
+      }
+      money_goals: {
+        Row: {
+          id: string
+          rate_bp: number
+          updated_at: number
+        }
+        Insert: {
+          id: string
+          rate_bp: number
+          updated_at: number
+        }
+        Update: {
+          id?: string
+          rate_bp?: number
           updated_at?: number
         }
         Relationships: []

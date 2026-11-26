@@ -4,8 +4,12 @@ import { SectionTitle } from '../../components/SectionTitle'
 import { Stat } from '../../components/Stat'
 import { SELECT } from '../../components/field'
 import { MoneyTrendChart } from './MoneyTrendChart'
+import { ProjectionCard } from './ProjectionCard'
+import { projectYear } from './moneyProjection'
+import { seasonality, type SeasonMonth } from './moneySeason'
 import { MONTHS_IT, periodLabel } from './moneyPeriod'
 import { euro, keptOf, monthlyTotals, outOf, type Line } from './moneyStats'
+import { goalFor, pctText, ratePct, yearRates, type GoalRow, type YearRate } from './moneyGoals'
 import {
   WINDOWS,
   categoryMovers,
@@ -26,7 +30,7 @@ import {
 
 const FIRST = 5
 
-export function MoneyTrends({ lines, months }: { lines: Line[]; months: string[] }) {
+export function MoneyTrends({ lines, months, goals }: { lines: Line[]; months: string[]; goals: readonly GoalRow[] }) {
   const [win, setWin] = useState<Window>(3)
   const [withOneoff, setOneoff] = useState(false)
   const range = { from: months[0]!, to: months[months.length - 1]! }
@@ -40,8 +44,12 @@ export function MoneyTrends({ lines, months }: { lines: Line[]; months: string[]
   const cumulative = useMemo(() => cumulativeKept(series), [series])
   const movers = useMemo(() => categoryMovers(lines, months, win, withOneoff), [lines, months, win, withOneoff])
   const { total, perMonth } = useMemo(() => superTotal(lines, months.length), [lines, months.length])
+  const newestYear = Number(months[months.length - 1]!.slice(0, 4))
+  const projection = useMemo(() => projectYear(lines, newestYear, win), [lines, newestYear, win])
+  const years = useMemo(() => yearRates(lines, goals), [lines, goals])
   const kept = keptOf(total)
   const rate = total.income > 0 ? Math.round((kept / total.income) * 100) : null
+  const season = useMemo(() => seasonality(months, spend), [months, spend])
   const spendWord = withOneoff ? 'uscite (con una tantum)' : 'uscite ricorrenti'
 
   return (
@@ -96,7 +104,15 @@ export function MoneyTrends({ lines, months }: { lines: Line[]; months: string[]
             format={euro}
           />
         </Card>
+        <YearRates rows={years} />
       </section>
+
+      {projection && projection.remaining > 0 && (
+        <section aria-label="Proiezione a fine anno">
+          <SectionTitle>Proiezione a fine {newestYear}</SectionTitle>
+          <ProjectionCard p={projection} window={win} goal={goalFor(goals, newestYear)} />
+        </section>
+      )}
 
       <section aria-label="Media mobile">
         <SectionTitle>Uscite mese per mese e media a {win} mesi</SectionTitle>
@@ -116,6 +132,13 @@ export function MoneyTrends({ lines, months }: { lines: Line[]; months: string[]
         <SectionTitle>Anno su anno · media a {win} mesi contro un anno prima</SectionTitle>
         <Card>
           <YearOnYear months={months} pct={yoy} ma={ma} />
+        </Card>
+      </section>
+
+      <section aria-label="Stagionalità">
+        <SectionTitle>Stagionalità · {spendWord}, mese tipico contro la media</SectionTitle>
+        <Card>
+          <Season rows={season} current={Number(months[months.length - 1]!.slice(5, 7))} />
         </Card>
       </section>
 
@@ -140,6 +163,62 @@ export function MoneyTrends({ lines, months }: { lines: Line[]; months: string[]
         </Card>
       </section>
     </div>
+  )
+}
+
+const TH = 'px-2 py-1.5 text-right font-medium text-slate-500 dark:text-slate-400'
+const TD = 'px-2 py-1.5 text-right tabular-nums'
+
+/** MO13: per year with data, the share of income kept against the goal that applies. */
+function YearRates({ rows }: { rows: YearRate[] }) {
+  return (
+    <Card className="mt-3 overflow-x-auto p-0">
+      <table className="w-full text-sm" aria-label="Messo da parte per anno">
+        <thead>
+          <tr className="border-b border-slate-200 dark:border-slate-700">
+            <th className={`${TH} text-left`}>Anno</th>
+            <th className={TH}>Messo da parte</th>
+            <th className={TH}>Obiettivo</th>
+          </tr>
+        </thead>
+        <tbody>
+          {[...rows].reverse().map((r) => {
+            const met = r.goal && r.rateBp !== null ? r.rateBp >= r.goal.rateBp : null
+            return (
+              <tr key={r.year} className="border-b border-slate-100 last:border-0 dark:border-slate-800">
+                <td className="px-2 py-1.5">
+                  {r.year}
+                  {r.months < 12 && (
+                    <span className="text-xs text-slate-500 dark:text-slate-400">
+                      {' '}
+                      ({r.months} {r.months === 1 ? 'mese' : 'mesi'})
+                    </span>
+                  )}
+                </td>
+                <td className={TD}>{r.rateBp === null ? '—' : ratePct(r.rateBp)}</td>
+                <td className={TD}>
+                  {r.goal === null ? (
+                    '—'
+                  ) : (
+                    <>
+                      {pctText(r.goal.rateBp)}
+                      {r.goal.inherited && (
+                        <span className="text-xs text-slate-500 dark:text-slate-400"> (dal {r.goal.fromYear})</span>
+                      )}
+                      {met !== null && (
+                        <span className="text-xs text-slate-500 dark:text-slate-400">
+                          {met ? ' · ▲ raggiunto' : ' · ▼ sotto'}
+                        </span>
+                      )}
+                    </>
+                  )}
+                </td>
+              </tr>
+            )
+          })}
+        </tbody>
+      </table>
+    </Card>
   )
 }
 
@@ -285,6 +364,46 @@ function YearOnYear({ months, pct, ma }: { months: string[]; pct: (number | null
           </div>
         )}
       </div>
+    </div>
+  )
+}
+
+// MO15: one row per calendar month, a bar from the middle line: right (orange,
+// ▲) = a month you usually spend more than the mean month, left (sky, ▼) =
+// less. The newest month in the data is marked "← ora". Text carries the
+// numbers; colour and side repeat them.
+function Season({ rows, current }: { rows: SeasonMonth[]; current: number }) {
+  const max = Math.max(10, ...rows.map((r) => Math.abs(r.index ?? 0)))
+  return (
+    <div>
+      <p className="mb-2 text-xs text-slate-500 dark:text-slate-400">
+        Media di ogni mese sugli anni in cui c’è, contro il mese medio. Aiuta a capire se un aumento è solo stagione.
+      </p>
+      <ul className="space-y-1 text-sm" data-testid="money-season">
+        {rows.map((r) => {
+          const w = r.index === null ? 0 : (Math.abs(r.index) / max) * 50
+          return (
+            <li key={r.month} className="grid grid-cols-[2.5rem_1fr_9.5rem] items-center gap-2">
+              <span className={r.month === current ? 'font-semibold' : ''}>{r.name}</span>
+              <span className="relative h-3 rounded bg-slate-100 dark:bg-slate-800" aria-hidden="true">
+                <span className="absolute inset-y-0 left-1/2 w-px bg-slate-400 dark:bg-slate-500" />
+                {r.index !== null && r.index !== 0 && (
+                  <span
+                    className={`absolute inset-y-0 ${r.index > 0 ? 'left-1/2 rounded-r bg-orange-600' : 'right-1/2 rounded-l bg-sky-600'}`}
+                    style={{ width: `${w}%` }}
+                  />
+                )}
+              </span>
+              <span className="text-right text-xs tabular-nums text-slate-600 dark:text-slate-300">
+                {r.index === null
+                  ? 'nessun dato'
+                  : `${r.index > 0 ? '▲ +' : r.index < 0 ? '▼ ' : ''}${r.index}% · ${euro(r.mean!)}`}
+                {r.month === current && <span className="ml-1 text-slate-500 dark:text-slate-400">← ora</span>}
+              </span>
+            </li>
+          )
+        })}
+      </ul>
     </div>
   )
 }

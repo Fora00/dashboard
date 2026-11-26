@@ -2055,10 +2055,56 @@ demo use invented numbers only).
       tap of a category row. Export: "Copia budget per ~/life" (CSV to the clipboard) +
       `npm run life:money-budgets` (pbpaste → `~/life/money/data/budgets-dashboard.csv`; not yet run
       on the real ~/life). Tests: money.test.ts MO8 block, moneySync.test.ts, e2e MO8 test.
-- [ ] MO9 Follow-ups [sonnet, each XS–S] (from MO8): confirm on "Rimuovi"; open the budget sheet
-      from the table view's rows; a reader for `budgets-dashboard.csv` on the ~/life side
-      (owner to decide how it reaches GreenBooks); add the sheet + conflict to the MO5 iPhone
-      checklist; the MO6/MO7 controls and the Andamento tab on a real iPhone.
+- [x] MO9 Follow-ups, done 2026-11-26: "Rimuovi" asks first (lib/confirm, danger); the table view's
+      spend/one-off category names open the budget sheet ("Budget di X"). Still open and moved: the
+      iPhone pass (MO5) — add the budget sheet + conflict, MO6/MO7 controls, Andamento, the goal
+      sheet, /soldi/categoria and /soldi/patrimonio to its checklist.
+- [x] MO10 Budgets back to GreenBooks, done 2026-11-26 (owner: reminder at sync): new
+      `~/life/_sync/money-budgets-check.py`, run by `greenbooks-sync.sh` (non-blocking), compares
+      `budgets-dashboard.csv` with GreenBooks for this month and the next and prints what to change
+      by hand. Read-only; tried on an invented CSV.
+- [x] MO11 Year-end projection, done 2026-11-26 (owner: moving average + seasonality; on Grafici,
+      Andamento and per category). `moneyProjection.ts`: `projectYear` (remaining months = same month
+      a year before × this year's last-n vs the same n a year before, separately for income and
+      recurring spend; else the last-n mean; one-offs not projected), `forecastBudget` (already over /
+      goes over in <month> / stays within, latest budget carried forward). `ProjectionCard.tsx`
+      (compact under the tiles when the period is the year to date, full in Andamento with its
+      window); per-category line under spend rows. Tests + e2e.
+- [x] MO12 Budget alerts, done 2026-11-26 (owner: home + Life → Oggi + /soldi; at the month's
+      pace). `budgetAlerts.ts`: over, or spent > budget × day/days where day is the date of the
+      newest import of this month's rows (weekly imports), effective budgets via applyBudgets.
+      `useBudgetAlerts`, `BudgetAlertsNote.tsx` (Oggi under the daily focus, top of /soldi), home
+      TodayPanel card "Budget del mese" (owner only, money visible). Tests + e2e (/soldi, fixed clock);
+      the home card is not e2e-covered (needs the owner session).
+- [x] MO13 Savings goal, done 2026-11-26 (opus-builder; owner: a rate of income, one per year,
+      inherited by later years, synced). Migration `20261126140000_money_goals.sql` (applied 2026-11-26),
+      Dexie v28 `moneyGoals`, `setMoneyGoal`/`clearMoneyGoal`, `moneyGoals.ts`, `MoneyGoalSheet.tsx`;
+      tile line + bar, "Imposta obiettivo {year}", projection line, per-year table in Andamento.
+      Follow-up: a demo goal in demoMoney.ts.
+- [x] MO14 Category drill-down, done 2026-11-26 (owner: a page; month by month + moving average,
+      year on year, budget over time, share). `/soldi/categoria/:name` (`MoneyCategoryPage.tsx`,
+      `moneyCategory.ts` + test): window 3/6/12, spend vs moving average, budget line vs spend with
+      the months over in text, year table (total, per month, change, share of recurring spend or
+      income), "Budget" opens the sheet for the year to date. Reached by the ↗ beside each row.
+- [x] MO15 Seasonality, done 2026-11-26: `moneySeason.ts` (+ test) — per calendar month the mean
+      over the years it appears vs the mean month; Andamento section with diverging bars (▲ orange
+      more / ▼ sky less), "← ora" on the newest month, follows the one-offs toggle.
+- [x] MO16 Easier import, done 2026-11-26 (owner: open in Chrome): `life:money-link -- --changed
+      --open` (`moneyChanged.ts` + test; snapshot `.monthly-totals.last-link.csv` next to the CSV,
+      from the first changed month; "nessun mese cambiato" otherwise), run by `greenbooks-sync.sh`.
+      The first run sends the whole history (idempotent).
+- [x] MO17 Net worth (Patrimonio), done 2026-11-26 (opus-builder + orchestrator; owner: month-end
+      balances, groups liquidità / risparmi / investimenti, zero accounts hidden). ~/life:
+      `_sync/money-balances.py` (StartBalance + all movements incl. transfers per account per month →
+      `money/data/account-balances.csv`, groups from `money/data/account-groups.tsv` — a proposal to
+      correct by hand; last balance checked against accounts.csv: all 13 match). Dashboard:
+      migration `20261126160000_money_balances.sql` (applied), Dexie v29 `moneyBalances`,
+      `balancesCsv/Link/Diff/Stats.ts`, `/soldi/patrimonio` (tiles vs month and year before, stacked
+      bars per group, validated blue/aqua/violet, account table with "mostra conti a zero") and
+      `/soldi/patrimonio/import`, `npm run life:money-balances-link` (--since/--changed/--open), run by
+      `greenbooks-sync.sh`; link from /soldi. Investments = money put in, not market value.
+      Follow-ups [sonnet]: one generic year chunker for both links; a SyncCard on Patrimonio; a demo
+      goal in demoMoney.ts.
 
 ## Ideas / later
 

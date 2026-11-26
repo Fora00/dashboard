@@ -3,6 +3,7 @@ import type { MoneyBudget, MoneyBudgetChoice, MoneyTotal } from '../../lib/db'
 import { lineKey, parseCents, parseMoneyCsv, type MoneyLine } from './moneyCsv'
 import { chunkPayloads, decodeMoneyParam, encodeMoneyLink, monthsBetween, payloadJson } from './moneyLink'
 import { planMoneyImport } from './moneyDiff'
+import { goalFor, goalProgress, goalProjectionText, parseRatePct, pctText, yearRates } from './moneyGoals'
 import {
   availableMonths,
   defaultSelection,
@@ -32,7 +33,18 @@ import {
   parseBudgetsCsv,
   planRuleSave,
 } from './moneyBudgets'
-import { budgetMonthsLabel, categoryRows, euroShort, keptOf, monthlyTotals, totalsOf, type Line } from './moneyStats'
+import { alertText, budgetAlerts } from './budgetAlerts'
+import { forecastBudget, forecastLabel, projectYear } from './moneyProjection'
+import {
+  budgetMonthsLabel,
+  categoryRows,
+  euro,
+  euroShort,
+  keptOf,
+  monthlyTotals,
+  totalsOf,
+  type Line,
+} from './moneyStats'
 
 // Soldi, pure part: CSV parser/validator, link round trip + chunking, import
 // diff, totals. Invented categories and figures only: never real data here.
@@ -729,5 +741,199 @@ describe('budgets (MO8)', () => {
       'category,monthly,from,to,updated\nA,1,2026-01,,2026-01-01\nA,2,2026-03,,2026-01-01',
     )
     expect(overlap.ok ? [] : overlap.errors).toEqual(['"A": the rule from 2026-03 overlaps the one from 2026-01'])
+  })
+})
+
+describe('year-end projection (MO11)', () => {
+  const L = (
+    month: string,
+    category: string,
+    kind: Line['kind'],
+    amount: number,
+    budget: number | null = null,
+  ): Line => ({
+    month,
+    category,
+    kind,
+    amount,
+    budget,
+  })
+  const mm = (y: number, m: number) => `${y}-${String(m).padStart(2, '0')}`
+
+  it('seasonal: remaining months = last year’s same months × this year’s recent ratio', () => {
+    const lines: Line[] = []
+    // 2025: pay 1000, food 100 a month, December food 300.
+    for (let m = 1; m <= 12; m++)
+      lines.push(L(mm(2025, m), 'Pay', 'income', 100000), L(mm(2025, m), 'Food', 'spend', m === 12 ? -30000 : -10000))
+    // 2026 to October: same pay, food 20% higher.
+    for (let m = 1; m <= 10; m++)
+      lines.push(L(mm(2026, m), 'Pay', 'income', 100000), L(mm(2026, m), 'Food', 'spend', -12000))
+    const p = projectYear(lines, 2026, 3)!
+    expect(p.method).toBe('seasonal')
+    expect(p.remaining).toBe(2)
+    expect(p.done).toEqual({ income: 1000000, spend: 120000, oneoff: 0, pass: 0 })
+    // Nov 100 × 1.2 + Dec 300 × 1.2.
+    expect(p.ahead.spend).toBe(12000 + 36000)
+    expect(p.ahead.income).toBe(200000)
+    expect(keptOf(p.total)).toBe(1200000 - 168000)
+    expect(projectYear(lines, 2025, 3)).toBeNull()
+  })
+
+  it('average when there is no year before; one-offs are not projected', () => {
+    const lines = [
+      L('2026-01', 'Pay', 'income', 100000),
+      L('2026-01', 'Food', 'spend', -10000),
+      L('2026-02', 'Pay', 'income', 100000),
+      L('2026-02', 'Food', 'spend', -20000),
+      L('2026-02', 'Trip', 'oneoff', -50000),
+    ]
+    const p = projectYear(lines, 2026, 2)!
+    expect(p.method).toBe('average')
+    expect(p.ahead.spend).toBe(15000 * 10)
+    expect(p.ahead.oneoff).toBe(0)
+    expect(p.total.oneoff).toBe(50000)
+  })
+
+  it('budget forecast: already over, goes over in a month, or stays within', () => {
+    const food = (m: number, spent: number, budget: number) => L(mm(2026, m), 'Food', 'spend', -spent, -budget)
+    const over = [food(1, 200, 100), food(2, 100, 100)]
+    expect(forecastBudget(over, 'Food', 2026, 2)).toEqual({ state: 'over', since: '2026-01' })
+    // 90 a month against 100: 10 under each month → stays within by December.
+    const within = Array.from({ length: 6 }, (_, i) => food(i + 1, 9000, 10000))
+    expect(forecastBudget(within, 'Food', 2026, 3)).toEqual({ state: 'within', spent: 108000, budget: 120000 })
+    // 95 a month (25 of cushion), then 110 recently: the cushion is gone in August.
+    const rising = [...[1, 2, 3, 4, 5].map((m) => food(m, 9500, 10000)), food(6, 11000, 10000)]
+    const f = forecastBudget(rising, 'Food', 2026, 1)!
+    expect(f.state).toBe('will-go-over')
+    expect(f.state === 'will-go-over' && f.month).toBe('2026-08')
+    expect(forecastLabel(f, euro)).toBe('fine anno: a questo ritmo sfora a ago')
+    // No budget: nothing to say.
+    expect(forecastBudget([L('2026-01', 'Fun', 'spend', -100)], 'Fun', 2026, 1)).toBeNull()
+  })
+})
+
+describe('budget alerts (MO12)', () => {
+  const T = (
+    category: string,
+    amount: number,
+    budget: number | null,
+    updatedAt: number,
+    kind: Line['kind'] = 'spend',
+  ) => ({
+    id: `2026-11:${category}`,
+    month: '2026-11',
+    category,
+    kind,
+    amount,
+    budget,
+    updatedAt,
+  })
+  // Data imported on 10 November, looked at on the 20th: the pace is at day 10 of 30.
+  const imported = new Date(2026, 10, 10, 9).getTime()
+  const now = new Date(2026, 10, 20, 12)
+
+  it('over first, then faster than the pace at the data’s date; within pace and income never alert', () => {
+    const totals = [
+      T('Food', -40000, -30000, imported), // over
+      T('Bars', -5000, -12000, imported), // 50 > 120 × 10/30 = 40: fast
+      T('Gym', -1000, -6000, imported), // 10 < 20: fine
+      T('Pay', 200000, 100000, imported, 'income'),
+      T('NoBudget', -99999, null, imported),
+    ]
+    const a = budgetAlerts(totals, [], [], now)
+    expect(a.map((x) => [x.category, x.state])).toEqual([
+      ['Food', 'over'],
+      ['Bars', 'fast'],
+    ])
+    expect(a[1]).toMatchObject({ day: 10, days: 30, allowed: 4000 })
+    expect(alertText(a[0]!, euro)).toBe(`Food: ${euro(40000)} su ${euro(30000)} · sopra di ${euro(10000)}`)
+    expect(alertText(a[1]!, euro)).toBe(
+      `Bars: ${euro(5000)} su ${euro(12000)} al giorno 10 su 30 · troppo veloce (ritmo ${euro(4000)})`,
+    )
+    // Another month only: nothing.
+    expect(budgetAlerts(totals, [], [], new Date(2026, 11, 2))).toEqual([])
+  })
+
+  it('a dashboard budget counts', () => {
+    const totals = [T('Food', -10000, null, imported)]
+    const rule = { id: 'r', category: 'Food', monthly: 9000, from: '2026-01', to: null, updatedAt: 1 }
+    expect(budgetAlerts(totals, [rule], [], now)[0]).toMatchObject({ category: 'Food', state: 'over', budget: 9000 })
+  })
+})
+
+describe('savings goal (MO13)', () => {
+  const goals = [
+    { id: '2024', rateBp: 2000 },
+    { id: '2026', rateBp: 3000 },
+  ]
+
+  it('a year uses its own goal, else the latest earlier one, else none', () => {
+    expect(goalFor(goals, 2026)).toEqual({ rateBp: 3000, fromYear: 2026, inherited: false })
+    expect(goalFor(goals, 2025)).toEqual({ rateBp: 2000, fromYear: 2024, inherited: true })
+    expect(goalFor(goals, 2030)).toEqual({ rateBp: 3000, fromYear: 2026, inherited: true })
+    expect(goalFor(goals, 2023)).toBeNull()
+    expect(goalFor([], 2026)).toBeNull()
+  })
+
+  it('progress: target is income × rate, the gap what is missing', () => {
+    const t = { income: 100000, spend: 70000, oneoff: 5000, pass: 0 }
+    expect(goalProgress(t, 3000)).toEqual({ kept: 25000, target: 30000, gap: 5000, rateBp: 2500, reached: false })
+    expect(goalProgress(t, 2500)).toMatchObject({ gap: 0, reached: true })
+    expect(goalProgress({ income: 0, spend: 100, oneoff: 0, pass: 0 }, 3000)).toMatchObject({
+      target: 0,
+      gap: 100,
+      rateBp: null,
+      reached: false,
+    })
+  })
+
+  it('percent input and labels', () => {
+    expect(parseRatePct('30')).toBe(3000)
+    expect(parseRatePct(' 27,5 % ')).toBe(2750)
+    expect(parseRatePct('12.25')).toBe(1225)
+    expect(parseRatePct('0')).toBe(0)
+    expect(parseRatePct('100')).toBe(10000)
+    for (const bad of ['', 'abc', '101', '-5', '1,234', '30%%']) expect(parseRatePct(bad)).toBeNull()
+    expect(pctText(3000)).toBe('30%')
+    expect(pctText(2750)).toBe('27,5%')
+    expect(pctText(1225)).toBe('12,25%')
+  })
+
+  it('the projection line: rate in December against the goal', () => {
+    const p = {
+      year: 2026,
+      through: '2026-10',
+      remaining: 2,
+      done: { income: 0, spend: 0, oneoff: 0, pass: 0 },
+      ahead: { income: 0, spend: 0, oneoff: 0, pass: 0 },
+      total: { income: 1000000, spend: 730000, oneoff: 0, pass: 0 },
+      method: 'average' as const,
+    }
+    expect(goalProjectionText(p, { rateBp: 3000, fromYear: 2026, inherited: false })).toBe(
+      `obiettivo 30%: a dicembre ≈ 27% (mancano ≈ ${euro(30000)})`,
+    )
+    expect(goalProjectionText(p, { rateBp: 2500, fromYear: 2024, inherited: true })).toBe(
+      'obiettivo 25% (dal 2024): a dicembre ≈ 27%, raggiunto',
+    )
+  })
+
+  it('per year with data: the actual rate and the goal that applies', () => {
+    const L = (month: string, category: string, kind: 'income' | 'spend', amount: number) => ({
+      month,
+      category,
+      kind,
+      amount,
+      budget: null,
+    })
+    const lines = [
+      L('2025-01', 'Pay', 'income', 100000),
+      L('2025-01', 'Food', 'spend', -80000),
+      L('2026-01', 'Pay', 'income', 100000),
+      L('2026-02', 'Food', 'spend', -60000),
+    ]
+    expect(yearRates(lines, [{ id: '2026', rateBp: 3000 }])).toEqual([
+      { year: 2025, months: 1, rateBp: 2000, goal: null },
+      { year: 2026, months: 2, rateBp: 4000, goal: { rateBp: 3000, fromYear: 2026, inherited: false } },
+    ])
   })
 })

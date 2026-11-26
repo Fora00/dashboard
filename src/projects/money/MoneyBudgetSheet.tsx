@@ -1,5 +1,6 @@
 import { useId, useState } from 'react'
 import type { MoneyBudget } from '../../lib/db'
+import { confirm } from '../../lib/confirm'
 import { pickMoneyBudget, removeMoneyBudget, saveMoneyBudget } from '../../lib/moneySync'
 import { Button } from '../../components/Button'
 import { Sheet } from '../../components/Sheet'
@@ -166,7 +167,15 @@ function SheetBody({ category, periodLabel, gbLines, rules, conflicts, months }:
                   variant="danger"
                   disabled={busy}
                   aria-label={`Rimuovi ${centsText(r.monthly)} € da ${monthLabel(r.from)}`}
-                  onClick={() => void removeMoneyBudget(r.id)}
+                  onClick={async () => {
+                    const ok = await confirm({
+                      title: 'Rimuovere questo budget?',
+                      body: `${euro(r.monthly)}/mese da ${monthLabel(r.from)}${r.to ? ` fino a ${monthLabel(r.to)}` : ''}. Si può rimettere quando vuoi.`,
+                      confirmLabel: 'Rimuovi',
+                      danger: true,
+                    })
+                    if (ok) await removeMoneyBudget(r.id)
+                  }}
                 >
                   Rimuovi
                 </Button>

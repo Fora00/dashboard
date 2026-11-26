@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { FOCUS_RING } from '../../components/focus'
 import { budgetMonthsLabel, euro, type CategoryRow } from './moneyStats'
 
@@ -25,9 +26,11 @@ interface Props {
   flags?: ReadonlyMap<string, { dashboard: boolean; conflict: boolean }>
   /** Tap on a category: open its budget sheet. */
   onOpen?: (category: string) => void
+  /** MO11: one extra line per category (the year-end budget forecast). */
+  notes?: ReadonlyMap<string, string>
 }
 
-export function MoneyCategories({ rows, compareLabel, multiYear = false, empty, flags, onOpen }: Props) {
+export function MoneyCategories({ rows, compareLabel, multiYear = false, empty, flags, onOpen, notes }: Props) {
   const [all, setAll] = useState(false)
   if (rows.length === 0) return <p className="text-sm text-slate-500 dark:text-slate-400">{empty}</p>
   const scale = Math.max(1, ...rows.map((r) => Math.max(r.value, r.budget ?? 0)))
@@ -67,13 +70,23 @@ export function MoneyCategories({ rows, compareLabel, multiYear = false, empty, 
           return (
             <li key={r.category} className="text-sm">
               {onOpen ? (
-                <button
-                  type="button"
-                  onClick={() => onOpen(r.category)}
-                  className={`-mx-1 flex min-h-10 w-[calc(100%+0.5rem)] flex-wrap items-center justify-between gap-x-3 rounded-md px-1 text-left hover:bg-slate-50 dark:hover:bg-slate-800/60 ${FOCUS_RING}`}
-                >
-                  {head}
-                </button>
+                <div className="-mx-1 flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => onOpen(r.category)}
+                    className={`flex min-h-10 min-w-0 flex-1 flex-wrap items-center justify-between gap-x-3 rounded-md px-1 text-left hover:bg-slate-50 dark:hover:bg-slate-800/60 ${FOCUS_RING}`}
+                  >
+                    {head}
+                  </button>
+                  <Link
+                    to={`/soldi/categoria/${encodeURIComponent(r.category)}`}
+                    aria-label={`Storia di ${r.category}`}
+                    title="Storia della categoria"
+                    className={`flex size-10 shrink-0 items-center justify-center rounded-md text-slate-500 hover:bg-slate-50 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800/60 dark:hover:text-slate-100 ${FOCUS_RING}`}
+                  >
+                    <span aria-hidden="true">↗</span>
+                  </Link>
+                </div>
               ) : (
                 <div className="flex flex-wrap items-baseline justify-between gap-x-3">{head}</div>
               )}
@@ -96,6 +109,11 @@ export function MoneyCategories({ rows, compareLabel, multiYear = false, empty, 
               {compareLabel !== null && r.compare !== null && (
                 <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
                   {compareLabel}: {euro(r.compare)}
+                </p>
+              )}
+              {notes?.get(r.category) && (
+                <p className="mt-0.5 text-xs text-slate-600 dark:text-slate-300" data-testid="money-forecast">
+                  {notes.get(r.category)}
                 </p>
               )}
             </li>

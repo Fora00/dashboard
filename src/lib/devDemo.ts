@@ -5,6 +5,7 @@
 // only when sync is off (the default in dev, see sync.ts). Re-fill any time
 // from the console: `await resetDemoData()`.
 import { seedDemoHabits } from '../projects/habits/demoHabits'
+import { seedDemoBalances } from '../projects/money/demoBalances'
 import { seedDemoMoney } from '../projects/money/demoMoney'
 import { dayKey, weekKey as mondayOf } from './dates'
 import { db, DEFAULT_AREA_ID, type LifeEntry, type LifePlan, type MealKind } from './db'
@@ -186,6 +187,7 @@ export async function seedDemoData(): Promise<void> {
 
   // Soldi (invented figures)
   await seedDemoMoney()
+  await seedDemoBalances()
 
   // Life: this week's plan, today's focus, Streaks and chores
   const week = mondayOf(new Date())

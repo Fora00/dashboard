@@ -91,7 +91,7 @@ describe('db upgrade paths', () => {
       },
     )
     await db.open()
-    expect(db.verno).toBe(27)
+    expect(db.verno).toBe(29)
     expect((await db.shopAreas.get(DEFAULT_AREA_ID))?.name).toBe('Groceries')
     const items = await db.shopItems.orderBy('createdAt').toArray()
     expect(items.map((i) => [i.id, i.text, i.areaId])).toEqual([
@@ -132,7 +132,7 @@ describe('db upgrade paths', () => {
       await old.table('outbox').add({ table: 'links', op: 'upsert', rowId: 'l1', ts: 1 })
     })
     await db.open()
-    expect(db.verno).toBe(27)
+    expect(db.verno).toBe(29)
     expect(await db.eventMarks.count()).toBe(2)
     // Prefs written before v15 get updatedAt 0 ("merge me" on the server).
     expect(await db.eventPrefs.get('prefs')).toEqual({ id: 'prefs', favouriteCategories: ['music'], updatedAt: 0 })
@@ -170,7 +170,7 @@ describe('db upgrade paths', () => {
       await old.table('outbox').add({ table: 'links', op: 'upsert', rowId: 'l1', ts: 1 })
     })
     await db.open()
-    expect(db.verno).toBe(27)
+    expect(db.verno).toBe(29)
     expect(await db.projectPrefs.orderBy('id').toArray()).toEqual([
       { id: 'events', starred: 0, hidden: 1, updatedAt: 0 },
       { id: 'links', starred: 1, hidden: null, updatedAt: 0 },
@@ -218,7 +218,7 @@ describe('db upgrade paths', () => {
       await old.table('outbox').add({ table: 'event_marks', op: 'upsert', rowId: 'e1', ts: 1 })
     })
     await db.open()
-    expect(db.verno).toBe(27)
+    expect(db.verno).toBe(29)
     expect(await db.eventInterest.count()).toBe(0)
     expect(await db.eventMarks.get('e1')).toMatchObject({ state: 'hidden', updatedAt: 5 })
     expect(await db.projectPrefs.get('links')).toEqual({ id: 'links', starred: 1, hidden: null, updatedAt: 3 })
@@ -236,7 +236,7 @@ describe('db upgrade paths', () => {
       await old.table('outbox').add({ table: 'event_interest', op: 'upsert', rowId: 'e1', ts: 1 })
     })
     await db.open()
-    expect(db.verno).toBe(27)
+    expect(db.verno).toBe(29)
     expect(await db.eventInterestProfile.count()).toBe(0)
     expect(await db.eventInterest.get('e1')).toMatchObject({ value: -1, updatedAt: 7 })
     expect(await db.eventMarks.get('e1')).toMatchObject({ state: 'hidden', updatedAt: 7 })
@@ -266,7 +266,7 @@ describe('db upgrade paths', () => {
       await old.table('outbox').add({ table: 'life_day_focus', op: 'upsert', rowId: '2026-10-31:0', ts: 1 })
     })
     await db.open()
-    expect(db.verno).toBe(27)
+    expect(db.verno).toBe(29)
     expect(await db.lifeEngines.count()).toBe(0)
     expect(await db.lifeDayFocus.get('2026-10-31:0')).toMatchObject({ title: 'Engine test' })
     expect(await db.lifeWeeks.count()).toBe(1)
@@ -304,13 +304,15 @@ describe('db upgrade paths', () => {
       await old.table('outbox').add({ table: 'learning_practice', op: 'upsert', rowId: 'disegno:m1:p1', ts: 1 })
     })
     await db.open()
-    expect(db.verno).toBe(27)
+    expect(db.verno).toBe(29)
     expect(await db.learningChecks.count()).toBe(0)
     expect(await db.learningPosition.count()).toBe(0)
     expect(await db.learningReviews.count()).toBe(0) // v25: Ripasso, empty until the first grading
     expect(await db.moneyTotals.count()).toBe(0) // v26: Soldi, empty until the first import link
     expect(await db.moneyBudgets.count()).toBe(0) // v27: Soldi dashboard budgets
     expect(await db.moneyBudgetChoices.count()).toBe(0)
+    expect(await db.moneyGoals.count()).toBe(0) // v28: Soldi savings goal
+    expect(await db.moneyBalances.count()).toBe(0) // v29: Soldi account balances
     expect(await db.learningSketches.count()).toBe(0)
     expect(await db.learningPractice.get('disegno:m1:p1')).toMatchObject({ done: 1 })
     expect((await db.outbox.toArray()).map((e) => `${e.table} ${e.rowId}`)).toEqual(['learning_practice disegno:m1:p1'])
@@ -362,5 +364,69 @@ describe('db upgrade paths', () => {
       'learning_checks upsert disegno:m1:p1',
     ])
     expect(await db.learningChecks.count()).toBe(1)
+  })
+
+  it('v27 → current: an empty moneyGoals appears; budgets, choices and outbox kept', async () => {
+    await writeOld(
+      27,
+      {
+        ...V22_STORES,
+        learningChecks: 'id, courseId, [courseId+moduleId]',
+        learningSketches: 'id, courseId, [courseId+moduleId+itemId], createdAt',
+        learningPosition: 'id',
+        learningReviews: 'id, courseId',
+        moneyTotals: 'id, month',
+        moneyBudgets: 'id, category',
+        moneyBudgetChoices: 'id, month',
+      },
+      async (old) => {
+        await old
+          .table('moneyBudgets')
+          .add({ id: 'b1', category: 'Food', monthly: 100, from: '2026-01', to: null, updatedAt: 1 })
+        await old.table('outbox').add({ table: 'money_budgets', op: 'upsert', rowId: 'b1', ts: 1 })
+      },
+    )
+    await db.open()
+    expect(db.verno).toBe(29)
+    expect(await db.moneyGoals.count()).toBe(0)
+    expect(await db.moneyBudgets.get('b1')).toMatchObject({ monthly: 100 })
+    expect((await db.outbox.toArray()).map((e) => `${e.table} ${e.rowId}`)).toEqual(['money_budgets b1'])
+    await db.moneyGoals.put({ id: '2026', rateBp: 3000, updatedAt: 2 })
+    expect(await db.moneyGoals.get('2026')).toMatchObject({ rateBp: 3000 })
+  })
+
+  it('v28 → current: an empty moneyBalances appears; goals and outbox kept', async () => {
+    await writeOld(
+      28,
+      {
+        ...V22_STORES,
+        learningChecks: 'id, courseId, [courseId+moduleId]',
+        learningSketches: 'id, courseId, [courseId+moduleId+itemId], createdAt',
+        learningPosition: 'id',
+        learningReviews: 'id, courseId',
+        moneyTotals: 'id, month',
+        moneyBudgets: 'id, category',
+        moneyBudgetChoices: 'id, month',
+        moneyGoals: 'id',
+      },
+      async (old) => {
+        await old.table('moneyGoals').add({ id: '2026', rateBp: 2500, updatedAt: 1 })
+        await old.table('outbox').add({ table: 'money_goals', op: 'upsert', rowId: '2026', ts: 1 })
+      },
+    )
+    await db.open()
+    expect(db.verno).toBe(29)
+    expect(await db.moneyBalances.count()).toBe(0)
+    expect(await db.moneyGoals.get('2026')).toMatchObject({ rateBp: 2500 })
+    expect((await db.outbox.toArray()).map((e) => `${e.table} ${e.rowId}`)).toEqual(['money_goals 2026'])
+    await db.moneyBalances.put({
+      id: '2026-10:Conto test',
+      month: '2026-10',
+      account: 'Conto test',
+      group: 'liquidita',
+      balance: 12345,
+      updatedAt: 2,
+    })
+    expect(await db.moneyBalances.where('month').equals('2026-10').count()).toBe(1)
   })
 })
