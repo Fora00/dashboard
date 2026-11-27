@@ -93,6 +93,24 @@ describe('ical adapter', () => {
       url: 'https://x.test/',
     })
   })
+  it('rewrites a placeholder URL prefix when configured', async () => {
+    const a = ical({
+      id: 'r',
+      name: 'R',
+      feed: 'https://x.test/e.ics',
+      city: 'Rovereto',
+      home: 'https://real.test/eventi/',
+      rewriteUrl: { from: 'https://fake.example/', to: 'https://real.test/' },
+    })
+    const out = await a.run(
+      ctx(
+        vcal(
+          'BEGIN:VEVENT\r\nUID:a\r\nSUMMARY:A\r\nDTSTART:20261010T180000Z\r\nURL:https://fake.example/eventi/a/\r\nEND:VEVENT',
+        ),
+      ),
+    )
+    expect(out[0]?.url).toBe('https://real.test/eventi/a/')
+  })
   it('treats an empty body as 0 events and a non-iCal body as an error', async () => {
     await expect(adapter.run(ctx('  '))).resolves.toEqual([])
     await expect(adapter.run(ctx('<html></html>'))).rejects.toThrow(/not iCalendar/)

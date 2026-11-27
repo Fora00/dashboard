@@ -24,6 +24,8 @@ export interface IcalConfig {
   area?: AreaId
   /** Coverage ring (default 'home'). */
   ring?: Ring
+  /** Rewrite a VEVENT URL prefix (a feed that links to a placeholder domain). */
+  rewriteUrl?: { from: string; to: string }
 }
 
 const REGION = /^(trentino|alto adige|s[üu]dtirol|veneto|italy|italia|tn|bz|vr)$|trentino-alto adige/i
@@ -63,7 +65,9 @@ export function ical(cfg: IcalConfig): Adapter {
         const last = endRaw ? addDays(endRaw.date, -1) : start.date
         end = dateToIso(last < start.date ? start.date : last)
       }
-      const url = ev.URL?.value.trim() || cfg.home
+      let url = ev.URL?.value.trim() || cfg.home
+      if (cfg.rewriteUrl && url.startsWith(cfg.rewriteUrl.from))
+        url = cfg.rewriteUrl.to + url.slice(cfg.rewriteUrl.from.length)
       const loc = ev.LOCATION ? place(unescapeText(ev.LOCATION.value), cfg.city) : { venue: null, city: cfg.city }
       out.push({
         nativeId: ev.UID?.value ?? `${url}@${start.iso}`,

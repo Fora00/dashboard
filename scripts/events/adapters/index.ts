@@ -188,6 +188,17 @@ export const ADAPTERS: Adapter[] = [
     home: 'https://www.buonconsiglio.it/agenda/',
     city: 'Trento',
   }),
+  // aMarticeramics Lab (Rovereto): the owner-built site's iCal feed. Its URLs
+  // point at the placeholder amarti.example domain, rewritten to Pages.
+  ical({
+    id: 'amarti',
+    name: 'aMarticeramics Lab',
+    feed: 'https://fora00.github.io/amarti/calendario.ics',
+    home: 'https://fora00.github.io/amarti/eventi/',
+    city: 'Rovereto',
+    defaultCategory: 'creative',
+    rewriteUrl: { from: 'https://amarti.example/', to: 'https://fora00.github.io/amarti/' },
+  }),
   trentinospettacoli,
   // MUSE (Trento science museum): dates only on each event page, see adapters/muse.ts.
   muse,
